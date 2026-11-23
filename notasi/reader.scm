@@ -1147,12 +1147,10 @@ cut at the piece's end, on the piece's kempli or a built-in one."
 ;;; Options a later slice of milestone 2 builds: `not-implemented' until
 ;;; then.
 (define score-options-not-yet
-  '(rows fill holds pattern-names pattern-level labels short from to
-    breaks))
+  '(pattern-names pattern-level labels short from to breaks))
 
 (define group-options-not-yet
-  '(rows fill holds pattern-names pattern-level labels short
-    from to breaks))
+  '(pattern-names pattern-level labels short from to breaks))
 
 (define (colour? x)
   (and (string? x)
@@ -1181,7 +1179,10 @@ cut at the piece's end, on the piece's kempli or a built-in one."
   `((note-names ,yes-no? . "yes or no")
     (scheme ,(lambda (v) (eq? v 'by-degree)) . "a colour scheme: by-degree")
     (palette ,palette? . "a palette name or a list of \"#rrggbb\" colours")
-    (colors ,colors? . "a list of (DEGREE \"#rrggbb\")")))
+    (colors ,colors? . "a list of (DEGREE \"#rrggbb\")")
+    (rows ,(lambda (v) (memq v '(notes parts single))) . "notes, parts or single")
+    (fill ,(lambda (v) (memq v '(colour none))) . "colour or none")
+    (holds ,(lambda (v) (memq v '(none dash))) . "none or dash")))
 
 (define score-only-options
   `((title ,string? . "a string")
@@ -1233,9 +1234,13 @@ DEFAULT (ADR 0033)."
 
 (define (make-score-group label subtitle members own score-opts location)
   (let ((colors (setting 'colors own score-opts '())))
-    (make-group label label subtitle 'first-long 'notes members
+    (make-group label label subtitle 'first-long
+                (setting 'rows own score-opts 'notes)
+                members
                 (eq? (setting 'note-names own score-opts 'no) 'yes)
-                'colour 'none 'none 0
+                (setting 'fill own score-opts 'colour)
+                (setting 'holds own score-opts 'none)
+                'none 0
                 (setting 'scheme own score-opts 'by-degree)
                 (setting 'palette own score-opts 'pastel1)
                 (map (match-lambda ((degree colour) (cons degree colour)))
@@ -1270,6 +1275,51 @@ instruments."
                          (instrument-name (part-instrument first))
                          (instrument-name (part-instrument part)))))))
         others)))))
+
+(define (check-group-names group line)
+  "A group whose rows show pitch by name needs names (invariant 7)."
+  (when (and (or (memq (group-rows group) '(parts single))
+                 (eq? (group-fill group) 'none))
+             (not (group-note-names? group)))
+    (syntax-error 'needs-note-names line
+                  "group `~a' shows its notes by name (:rows ~a, :fill ~a), so it needs :note-names yes"
+                  (group-label group) (group-rows group) (group-fill group))))
+
+(define (part-spans-of part)
+  (map (lambda (e)
+         (cons (event-start e) (+ (event-start e) (event-duration e))))
+       (part-events part)))
+
+(define (check-single-row group line)
+  "On a single row no two notes may sound in one column: the earliest
+shared column is reported, against the later of the two parts."
+  (when (eq? (group-rows group) 'single)
+    (let loop ((parts (group-parts group)) (earlier '()) (found #f))
+      (match parts
+        (()
+         (match found
+           (#f #t)
+           ((time . part)
+            (part-error 'notes-collide line (part-name part) time
+                        "on a single row, two notes sound in one column"))))
+        ((part . rest)
+         (let* ((spans (part-spans-of part))
+                (times (append-map
+                        (match-lambda
+                          ((s1 . e1)
+                           (filter-map (match-lambda
+                                         ((s2 . e2)
+                                          (and (< (max s1 s2) (min e1 e2))
+                                               (max s1 s2))))
+                                       earlier)))
+                        spans))
+                (found (if (null? times)
+                           found
+                           (let ((t (apply min times)))
+                             (if (or (not found) (< t (car found)))
+                                 (cons t part)
+                                 found)))))
+           (loop rest (append spans earlier) found)))))))
 
 (define (build-score form parts title length colotomy)
   "Build a score record from FORM.  PARTS are the parts a score may
@@ -1311,10 +1361,15 @@ print."
                                                 (cons part label)))
                                             member-forms)))
                                  (check-group-instruments members gline)
-                                 (make-score-group label (assq-ref own 'subtitle)
-                                                   members own opts
-                                                   (location gline)))))))))
+                                 (let ((group (make-score-group
+                                               label (assq-ref own 'subtitle)
+                                               members own opts
+                                               (location gline))))
+                                   (check-group-names group gline)
+                                   (cons group gline)))))))))
                      groups)))
+          (for-each (match-lambda ((group . gline) (check-single-row group gline)))
+                    built)
           (make-score name (or (assq-ref opts 'title) title)
                       (assq-ref opts 'subtitle) (assq-ref opts 'caption)
                       0 length
@@ -1328,7 +1383,7 @@ print."
                       (assq-ref opts 'font-size)
                       (or (assq-ref opts 'cell-width) "2em")
                       (or (assq-ref opts 'cell-height) "2em")
-                      built (location line))))))))
+                      (map car built) (location line))))))))
 
 (define (default-score parts title length colotomy)
   "A file with no score gets this one: every part in its own group."

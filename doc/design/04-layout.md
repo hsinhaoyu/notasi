@@ -1,9 +1,10 @@
 # 04 — Layout
 
-Status: partly implemented (iteration 2): milestone 2, slices 1–2 of 5
-(`feat/scores-form`, `feat/scores-contract`, see "Slices (iteration
-2)"). `layout-score` lays out a score as contract version 2, with
-`notes` rows, `:note-names`, one style per group, the sizes,
+Status: partly implemented (iteration 2): milestone 2, slices 1–3 of 5
+(`feat/scores-form`, `feat/scores-contract`, `feat/scores-rows`, see
+"Slices (iteration 2)"). `layout-score` lays out a score as contract
+version 2, with `notes`, `parts` and `single` rows, note names with
+their damped forms, `:fill`, `:holds`, one style per group, the sizes,
 `:system-length`, and the header rows and lines; the rest is planned.
 "What layout does today" lists what differs.
 "Note style" is **Implemented** and stays, with the style now built from
@@ -144,8 +145,9 @@ Layout works out every header number and every line, for every column:
 - **`rows` `single`**: one row for all the members, labelled `""`; every
   event's `lane` is 0. The reader has checked that no two notes share a
   cell.
-- A chord gives one event per note, with the same start and duration.
-  In `parts` and `single` rows its notes share the row. A voice's events
+- A chord gives one event per note, with the same start and duration,
+  in `notes` rows. In `parts` and `single` rows it is one event: its
+  notes' names joined by a space, with the look of its lowest note. A voice's events
   are sorted by start, then by lane.
 
 ### Note text, fill and holds
@@ -366,9 +368,21 @@ examples, golden files and manual pages it affects.
      event's `start`; a system in which no cycle starts has an empty
      `cycles` list, and the pickup has no mark. Hiding one header row
      leaves the other and the lines.
-3. `feat/scores-rows`: `:rows parts` and `single`, row labels, `:fill
+3. **Implemented.** `feat/scores-rows`: `:rows parts` and `single`, row labels, `:fill
    none`, `:holds dash`, the damped and open names, and
-   `needs-note-names` and `notes-collide`.
+   `needs-note-names` and `notes-collide`. Decided for this slice:
+   - The reader now reads `:rows`, `:fill` and `:holds` on a score and
+     on a group.
+   - On a `parts` or `single` row a chord is one event: its notes'
+     names joined by a space, with the look of its lowest note.
+   - With `:holds dash`, a note's event takes only its first column;
+     each column it is held after that gets a one-column `"-"` event.
+   - On a `single` row two notes collide when any column has both
+     sounding, held columns included, whatever parts they come from
+     (`notes-collide`, at the group's line, at the time of the first
+     shared column).
+   - A note shows its damped form when it lasts no longer than one
+     column, counting its whole length even if a system break cuts it.
 4. `feat/scores-overlays`: `:pattern-names` and `:pattern-level`,
    merged overlays, `pattern-names-overlap`, and the template's
    overlays.
@@ -388,9 +402,7 @@ iteration 2 is built:
   the events of the score's parts; there is no range (`:from`, `:to`)
   or `:breaks`, and systems start every `:system-length` pulses from
   the start of the piece.
-- Rows are `notes` only; a group's label is always its long label; note
-  names are the display form (no damped form); there are no holds,
-  `fill none` or overlays.
+- A group's label is always its long label; there are no overlays.
 - Golden tests: each `examples/NAME.nts` has the figure of its first
   score in `tests/golden/NAME.json`.
 

@@ -192,7 +192,8 @@ group                                  every setting filled in (ADR 0033)
   instrument because a note does not know its scale. For a stroke, which
   has no pitch, raises an `&error` whose irritants are the note name and
   instrument name.
-- `(note-display instrument note #:key damped?)`: the degree's display
+- `(note-display instrument note #:key damped?)` (**Implemented**): the
+  degree's display
   form, e.g. `"i"` for `ding2`; with `damped?` true, its damped form,
   or the display form if it has none. Used for the text in note cells.
 - `(note-label instrument note)` (**Implemented**): the display form plus
@@ -253,7 +254,6 @@ is built:
 - (`degree` has `damped` and `instrument` has no `show-names?` since
   iteration 2, slice 1: those two records are **Implemented** as
   above.)
-- `note-display` has no `damped?`.
 
 ## Open questions
 

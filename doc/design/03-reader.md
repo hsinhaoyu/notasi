@@ -576,10 +576,11 @@ The **[scores]** cases are built in milestone 2 (04, "Slices").
 iteration 2. It differs from the above as follows, and this section
 goes when iteration 2 is built:
 
-- Step 12 reads scores with milestone 2, slice 1's options; the later
-  slices' options raise `not-implemented`, and `bad-position`,
-  `bad-range`, `needs-note-names`, `notes-collide` and
-  `pattern-names-overlap` are not built.
+- Step 12 reads scores with the options of milestone 2's slices 1–3;
+  the later slices' options (`:pattern-names`, `:pattern-level`,
+  `:labels`, `:short`, `:from`, `:to`, `:breaks`) raise
+  `not-implemented`, and `bad-position`,
+  `bad-range` and `pattern-names-overlap` are not built.
 
 ## Open questions
 

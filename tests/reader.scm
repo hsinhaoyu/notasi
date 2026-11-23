@@ -186,6 +186,33 @@
 ;;; - All seven are score-only except `:subtitle` (01: "score, group"),
 ;;;   so the six others on a group are `option-wrong-level`. Whether a
 ;;;   score's `:subtitle` becomes its groups' default is not tested.
+;;;
+;;; Slice feat/scores-rows (04, "Slices (iteration 2)", slice 3 and its
+;;; decided bullets; 01, `:rows`, `:fill`, `:holds` and "Rules"; 02,
+;;; invariant 7; 03, [scores]): the reader now reads `:rows
+;;; notes|parts|single`, `:fill colour|none` and `:holds none|dash` on a
+;;; score and on a group; they leave the `not-implemented` lists, and
+;;; the two tests that used `:holds dash` or `:rows parts` to stand for
+;;; "a group option not built yet" use `:labels long` instead. New
+;;; cases: `needs-note-names` and `notes-collide`.
+;;; Choices made where the docs are not explicit:
+;;; - `:fill color` (American spelling) is `bad-option`: the choices are
+;;;   `colour` and `none`.
+;;; - `needs-note-names` is at the group's line, whether `:rows` or
+;;;   `:fill` was set on the group or inherited from the score; only its
+;;;   kind and line are tested.
+;;; - `notes-collide`: `part` is the later of the two parts in the
+;;;   group's member order, `time` the time of the first column where two
+;;;   notes sound. Tests write members in file order, so "later" means
+;;;   the same either way. With three parts, the earliest shared column
+;;;   decides, and the later part of the pair sounding there is named.
+;;; - A chord in one part on a `single` row is not a collision: 04 draws
+;;;   it as one event on that row.
+;;; - `needs-note-names` (the group's options) comes before
+;;;   `notes-collide` (the checks that need the music), and a later
+;;;   group's member errors come before an earlier group's collision
+;;;   (03, check 16: "then the checks that need the music"); a score's
+;;;   collision comes before a later score's errors.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -5357,12 +5384,12 @@ STR, or the raised object (or no-error) unchanged."
 
 ;;; The options later slices build (04, slice 1's decided bullets).
 (define later-score-options
-  '(":rows single" ":fill none" ":holds dash" ":pattern-names long"
-    ":pattern-level 1" ":labels short" ":from 1" ":to 4" ":breaks (3)"))
+  '(":pattern-names long" ":pattern-level 1" ":labels short" ":from 1"
+    ":to 4" ":breaks (3)"))
 
 (define later-group-options
-  '(":rows parts" ":fill none" ":holds dash" ":pattern-names short"
-    ":pattern-level 1" ":labels long" ":short \"U.\""))
+  '(":pattern-names short" ":pattern-level 1" ":labels long"
+    ":short \"U.\""))
 
 (test-group "[scores] not-implemented: options of later slices"
   (for-each
@@ -5376,7 +5403,7 @@ STR, or the raised object (or no-error) unchanged."
        (string-error (one-group (string-append "(group \"U\" " option " ugal)")))))
    later-group-options)
   (test-equal "on a group: at the group's line, not the score's" '(not-implemented 16)
-    (score-error "(score s" "  (group \"U\" ugal)" "  (group \"G\" :holds dash gong))"))
+    (score-error "(score s" "  (group \"U\" ugal)" "  (group \"G\" :labels long gong))"))
   (test-equal "fields: part and time #f" '(not-implemented 14 #f #f)
     (error-fields (scores+ "(score s :labels short (group \"U\" ugal))"))))
 
@@ -5580,7 +5607,7 @@ STR, or the raised object (or no-error) unchanged."
     (list "16: a group's options before its members" '(unknown-option 15)
           "(score a" "  (group \"A\" :tempo 1 nope))")
     (list "16: a group's not-implemented option before its members" '(not-implemented 15)
-          "(score a" "  (group \"A\" :rows parts nope))")
+          "(score a" "  (group \"A\" :labels long nope))")
     (list "16: option-wrong-level before members" '(option-wrong-level 15)
           "(score a" "  (group \"A\" :title \"T\" nope))")
     (list "16: members before instruments: undefined-part" '(undefined-part 15)
@@ -5591,6 +5618,271 @@ STR, or the raised object (or no-error) unchanged."
           "(score a (group \"A\" nope))" "(score b (group \"B\" ugal polos))")
     (list "16: scores in file order, the other way" '(mixed-pitched-group 14)
           "(score b (group \"B\" ugal polos))" "(score a (group \"A\" nope))"))))
+
+;;; ==================================================================
+;;; [scores] Rows, fill and holds (slice feat/scores-rows)
+;;; ==================================================================
+
+(define (rows-settings g)
+  "G's rows, note-names?, fill and holds."
+  (list (group-rows g) (group-note-names? g) (group-fill g) (group-holds g)))
+
+(define (groups-rows-settings pc name)
+  (map rows-settings (score-groups (score-named pc name))))
+
+(test-group "[scores] reading :rows, :fill and :holds"
+  (let ((pc (read-scores+ "(score s :rows parts :fill none :holds dash :note-names yes"
+                          "  (group \"U\" ugal)"
+                          "  (group \"R\" polos sangsih))")))
+    (test-equal "on a score: every group takes them"
+      '((parts #t none dash) (parts #t none dash))
+      (and pc (groups-rows-settings pc 's))))
+  (let ((pc (read-scores+ "(score s :rows single :fill none :holds dash :note-names yes"
+                          "  (group \"U\" :rows notes :fill colour :holds none ugal)"
+                          "  (group \"R\" :rows parts polos sangsih)"
+                          "  (group \"G\" gong))")))
+    (test-equal "a group's own values override the score's"
+      '((notes #t colour none) (parts #t none dash) (single #t none dash))
+      (and pc (groups-rows-settings pc 's))))
+  (let ((pc (read-scores+ "(score s :note-names yes"
+                          "  (group \"U\" :rows single ugal)"
+                          "  (group \"R\" :rows parts :fill none polos sangsih)"
+                          "  (group \"G\" :holds dash gong))")))
+    (test-equal "on groups only: the others keep the defaults"
+      '((single #t colour none) (parts #t none none) (notes #t colour dash))
+      (and pc (groups-rows-settings pc 's))))
+  (let ((pc (read-scores+ "(score s :rows notes :fill colour :holds none"
+                          "  (group \"U\" ugal))")))
+    (test-equal "the defaults written out"
+      '((notes #f colour none))
+      (and pc (groups-rows-settings pc 's))))
+  (let ((pc (read-scores+ "(score s (group \"U\" ugal))")))
+    (test-equal "not written: notes, colour, none"
+      '((notes #f colour none))
+      (and pc (groups-rows-settings pc 's))))
+  (let ((pc (read-scores+ "(score s :rows parts :note-names yes"
+                          "  (group \"R\" (polos :label \"Pol.\") (sangsih :label \"\")))")))
+    (test-equal "row labels with :rows parts, an empty one kept"
+      '(((polos "Pol.") (sangsih "")))
+      (and pc (map member-names (score-groups (score-named pc 's)))))
+    (test-equal "every other setting as before"
+      (list (list "R" "R" #f 'first-long 'parts #t 'colour 'none 'none 0
+                  'by-degree 'pastel1 '()))
+      (and pc (map group-settings (score-groups (score-named pc 's))))))
+  (let ((pc (read-scores+ "(score s :note-names yes"
+                          "  (group \"K\" :rows single gong))")))
+    (test-equal "stroke parts on a single row"
+      '((single #t colour none))
+      (and pc (groups-rows-settings pc 's))))
+  (test-assert ":holds dash needs no note names"
+    (piece? (read-scores+ "(score s :holds dash (group \"U\" ugal))")))
+  (test-assert ":holds dash on a group, without note names"
+    (piece? (read-scores+ "(score s (group \"U\" :holds dash ugal))"))))
+
+(test-group "[scores] :rows, :fill and :holds: bad-option"
+  (for-each
+   (match-lambda
+     ((name options)
+      (test-equal (string-append "on a score: " name) '(bad-option 14)
+        (score-error (string-append "(score s :note-names yes " options
+                                    " (group \"U\" ugal))")))
+      (test-equal (string-append "on a group: " name) '(bad-option 15)
+        (string-error
+         (one-group (string-append "(group \"U\" :note-names yes " options
+                                   " ugal)"))))))
+   (list
+    (list ":rows not a choice" ":rows lanes")
+    (list ":rows plural of nothing: part" ":rows part")
+    (list ":rows a string" ":rows \"parts\"")
+    (list ":rows a number" ":rows 2")
+    (list ":rows with no value" ":rows :fill none")
+    (list ":fill not a choice" ":fill white")
+    (list ":fill the American spelling" ":fill color")
+    (list ":fill no" ":fill no")
+    (list ":fill a string" ":fill \"none\"")
+    (list ":holds not a choice" ":holds dashes")
+    (list ":holds yes" ":holds yes")
+    (list ":holds a string" ":holds \"dash\"")
+    (list ":holds with no value" ":holds :rows parts")))
+  (test-equal "duplicate-option: :rows" '(duplicate-option 14)
+    (score-error "(score s :note-names yes :rows parts :rows single (group \"U\" ugal))"))
+  (test-equal "duplicate-option on a group: :fill" '(duplicate-option 15)
+    (string-error (one-group "(group \"U\" :note-names yes :fill none :fill none ugal)"))))
+
+(test-group "[scores] needs-note-names"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (apply score-error more))))
+   (list
+    (list "a group with :rows parts" '(needs-note-names 15)
+          "(score s" "  (group \"R\" :rows parts polos sangsih))")
+    (list "a group with :rows single" '(needs-note-names 15)
+          "(score s" "  (group \"U\" :rows single ugal))")
+    (list "a group with :fill none" '(needs-note-names 15)
+          "(score s" "  (group \"U\" :fill none ugal))")
+    (list "a group with :fill none, strokes" '(needs-note-names 15)
+          "(score s" "  (group \"G\" :fill none gong))")
+    (list "the score's :rows parts: at the group's line" '(needs-note-names 15)
+          "(score s :rows parts" "  (group \"U\" ugal))")
+    (list "the score's :fill none: at the group's line" '(needs-note-names 15)
+          "(score s :fill none" "  (group \"U\" ugal))")
+    (list "the second group, the first naming its notes" '(needs-note-names 16)
+          "(score s :rows single" "  (group \"U\" :note-names yes ugal)"
+          "  (group \"G\" gong))")
+    (list "a group's :note-names no over the score's yes" '(needs-note-names 16)
+          "(score s :rows parts :note-names yes" "  (group \"U\" ugal)"
+          "  (group \"G\" :note-names no gong))")
+    (list ":note-names no written on the group" '(needs-note-names 15)
+          "(score s" "  (group \"U\" :rows single :note-names no ugal))")
+    (list "the first group in order" '(needs-note-names 15)
+          "(score s" "  (group \"U\" :fill none ugal)"
+          "  (group \"G\" :rows parts gong))")))
+  (for-each
+   (match-lambda
+     ((name . more)
+      (test-assert name (piece? (apply read-scores+ more)))))
+   (list
+    (list "the score's :note-names yes covers a group's :rows parts"
+          "(score s :note-names yes" "  (group \"R\" :rows parts polos sangsih))")
+    (list "a group's own :note-names yes"
+          "(score s :rows single :fill none" "  (group \"U\" :note-names yes ugal))")
+    (list ":rows notes and :fill colour need no names"
+          "(score s :rows notes :fill colour" "  (group \"U\" ugal))"))))
+
+;;; Parts for notes-collide, on lines 14 to 16 (each 4 pulses long, on
+;;; reyong, so a group of them is one pitched instrument); the score
+;;; follows. polos and sangsih (lines 11, 12) strike every pulse.
+(define (collide-error . more)
+  "(KIND LINE PART TIME) for reading scores+ with the lines MORE."
+  (error-fields (apply scores+ more)))
+
+(test-group "[scores] notes-collide"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (apply collide-error more))))
+   (list
+    (list "two parts striking together: the later part, the first time"
+          '(notes-collide 15 sangsih 0)
+          "(score s :note-names yes" "  (group \"R\" :rows single polos sangsih))")
+    (list "a note struck while another is held"
+          '(notes-collide 17 b 1)
+          "(part reyong :name a 1 _ - -)"                         ; 14
+          "(part reyong :name b - 2 - -)"                         ; 15
+          "(score s :note-names yes" "  (group \"R\" :rows single a b))") ; 16, 17
+    (list "two held notes overlapping: the first shared column"
+          '(notes-collide 17 b 2)
+          "(part reyong :name a 1 _ _ -)"
+          "(part reyong :name b - - 2 _)"
+          "(score s :note-names yes" "  (group \"R\" :rows single a b))")
+    (list "half pulses: the time of the shared column"
+          '(notes-collide 17 b 1/2)
+          "(part reyong :name a 1:1/2 _ - - - - - -)"
+          "(part reyong :name b -:1/2 2 - - - - - -)"
+          "(score s :note-names yes" "  (group \"R\" :rows single a b))")
+    (list "three parts: the earliest collision decides"
+          '(notes-collide 18 c 1)
+          "(part reyong :name a - - 1 -)"                         ; 14
+          "(part reyong :name b - 2 _ -)"                         ; 15
+          "(part reyong :name c 3 _ _ -)"                         ; 16
+          "(score s :note-names yes" "  (group \"R\" :rows single a b c))") ; 17, 18
+    (list "the score's :rows single" '(notes-collide 18 b 1)
+          "(part reyong :name a 1 _ - -)"
+          "(part reyong :name b - 2 - -)"
+          "(score s :rows single :note-names yes"                 ; 16
+          "  (group \"U\" ugal)"                                  ; 17
+          "  (group \"R\" a b))")                                 ; 18
+    (list "the second group's line" '(notes-collide 16 sangsih 0)
+          "(score s :note-names yes"
+          "  (group \"U\" :rows single ugal)"
+          "  (group \"R\" :rows single polos sangsih))")))
+  (for-each
+   (match-lambda
+     ((name . more)
+      (test-assert name (piece? (apply read-scores+ more)))))
+   (list
+    (list "notes one after the other do not collide"
+          "(part reyong :name a 1 - - -)"
+          "(part reyong :name b - 2 - 3)"
+          "(score s :note-names yes" "  (group \"R\" :rows single a b))")
+    (list "a held note ending where the next starts"
+          "(part reyong :name a 1 _ - -)"
+          "(part reyong :name b - - 2 _)"
+          "(score s :note-names yes" "  (group \"R\" :rows single a b))")
+    (list "half pulses that interleave"
+          "(part reyong :name a 1:1/2 - 1 - 1 - 1 -)"
+          "(part reyong :name b -:1/2 2 - 2 - 2 - 2)"
+          "(score s :note-names yes" "  (group \"R\" :rows single a b))")
+    (list "a chord in one part is one event on its row"
+          "(part reyong :name a (1 3) - - -)"
+          "(score s :note-names yes" "  (group \"R\" :rows single a))")
+    (list "the same parts on :rows parts"
+          "(score s :note-names yes" "  (group \"R\" :rows parts polos sangsih))")
+    (list "the same parts on :rows notes"
+          "(score s" "  (group \"R\" polos sangsih))")
+    (list "one part alone on a single row"
+          "(score s :note-names yes" "  (group \"U\" :rows single ugal))")
+    (list "colliding parts in a score where they are on separate rows"
+          "(score a :note-names yes" "  (group \"R\" :rows single polos)"
+          "  (group \"S\" :rows single sangsih))")))
+  (test-assert "notes-collide is a &notasi-syntax-error with file #f"
+    (let ((c (catch-syntax-error
+              (lambda ()
+                (read-piece-string
+                 (scores+ "(score s :note-names yes"
+                          "  (group \"R\" :rows single polos sangsih))"))))))
+      (and (notasi-syntax-error? c)
+           (eq? 'notes-collide (notasi-syntax-error-kind c))
+           (not (notasi-syntax-error-file c))
+           (null? (notasi-syntax-error-uses c)))))
+  (let ((t (let ((c (catch-syntax-error
+                     (lambda ()
+                       (read-piece-string
+                        (scores+ "(part reyong :name a 1:1/2 _ - - - - - -)"
+                                 "(part reyong :name b -:1/2 2 - - - - - -)"
+                                 "(score s :note-names yes"
+                                 "  (group \"R\" :rows single a b))"))))))
+             (and (notasi-syntax-error? c) (notasi-syntax-error-time c)))))
+    (test-assert "the time is an exact rational"
+      (and (rational? t) (exact? t))))
+  (let* ((path (write-temp-file "collide.nts"
+                                (scores+ "(score s :note-names yes"
+                                         "  (group \"R\" :rows single polos sangsih))")))
+         (c (catch-syntax-error (lambda () (read-piece-file path)))))
+    (test-equal "from a file: kind, file, line, part and time"
+      (list 'notes-collide path 15 'sangsih 0)
+      (and (notasi-syntax-error? c)
+           (list (notasi-syntax-error-kind c) (notasi-syntax-error-file c)
+                 (notasi-syntax-error-line c) (notasi-syntax-error-part c)
+                 (notasi-syntax-error-time c))))))
+
+(test-group "[scores] check order: rows"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (apply score-error more))))
+   (list
+    (list "needs-note-names before notes-collide, in one group"
+          '(needs-note-names 15)
+          "(score s" "  (group \"R\" :rows single polos sangsih))")
+    (list "a bad :rows value before the members" '(bad-option 15)
+          "(score s :note-names yes" "  (group \"R\" :rows lanes nope))")
+    (list "a later group's needs-note-names before an earlier collision"
+          '(needs-note-names 16)
+          "(score s :note-names yes"
+          "  (group \"R\" :rows single polos sangsih)"
+          "  (group \"U\" :fill none :note-names no ugal))")
+    (list "a later group's member before an earlier collision"
+          '(undefined-part 16)
+          "(score s :note-names yes"
+          "  (group \"R\" :rows single polos sangsih)"
+          "  (group \"U\" nope))")
+    (list "a score's collision before a later score's errors"
+          '(notes-collide 15)
+          "(score a :note-names yes"
+          "  (group \"R\" :rows single polos sangsih))"
+          "(score b (group \"U\" nope))"))))
 
 (define runner (test-runner-current))
 (test-end "reader")

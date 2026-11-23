@@ -38,6 +38,16 @@
 ;;; - `piece-score` of a name the piece has no score for is #f, and the
 ;;;   first of two scores with one name is returned (the reader forbids
 ;;;   them; this only pins down that it looks names up, not positions).
+;;;
+;;; Slice feat/scores-rows (04, "Slices (iteration 2)", slice 3; 02,
+;;; "Derived values"): `(note-display instrument note #:damped? #t)` is
+;;; the degree's damped form, or its display form when it has none;
+;;; without `#:damped?`, or with #f, the display form as before.
+;;; Choices made where the docs are not explicit:
+;;; - Strokes take `:damped` like degrees (01, `strokes`: "the same
+;;;   syntax and options as a scale degree"), so `#:damped?` works on
+;;;   them too.
+;;; - `note-label` is unchanged by a damped form.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -492,6 +502,69 @@ one score holding GROUPS."
   (test-equal "stroke without display option" "du"
     (note-display kendang (inst-note kendang 2)))
   (test-equal "gong G" "G" (note-display gong (inst-note gong 0))))
+
+;;; note-display #:damped? (slice feat/scores-rows)
+
+;; baris: Tenzer's syllables, with damped forms for some degrees.
+;;   ding "neng"/"ne'", dong "nong" (no damped form), dang "nang"/"na'".
+(define baris
+  (make-scale 'baris
+              (list (make-degree 'ding '(i) "neng" "ne'" loc)
+                    (make-degree 'dong '(o) "nong" #f loc)
+                    (make-degree 'dang '(a nang) "nang" "na'" loc))
+              #t
+              loc))
+
+;; Indices: 0 ding1  1 dong1  2 dang1  3 ding2
+(define suling
+  (make-instrument 'suling baris
+                   (vector (pitched-note baris 'ding 1)
+                           (pitched-note baris 'dong 1)
+                           (pitched-note baris 'dang 1)
+                           (pitched-note baris 'ding 2))
+                   loc))
+
+;; kajar strokes: tak (display "T", damped "t"), tuk (no damped form).
+(define kajar-strokes
+  (make-scale 'kajar-strokes
+              (list (make-degree 'tak '() "T" "t" loc)
+                    (make-degree 'tuk '() "tuk" #f loc))
+              #f
+              loc))
+
+(define kajar
+  (make-instrument 'kajar kajar-strokes
+                   (vector (stroke-note kajar-strokes 'tak)
+                           (stroke-note kajar-strokes 'tuk))
+                   loc))
+
+(test-group "note-display #:damped?"
+  (test-equal "#:damped? #t: the damped form" "na'"
+    (note-display suling (inst-note suling 2) #:damped? #t))
+  (test-equal "#:damped? #f: the display form" "nang"
+    (note-display suling (inst-note suling 2) #:damped? #f))
+  (test-equal "without #:damped?: the display form" "nang"
+    (note-display suling (inst-note suling 2)))
+  (test-equal "another degree's damped form" "ne'"
+    (note-display suling (inst-note suling 0) #:damped? #t))
+  (test-equal "the octave does not change the damped form" "ne'"
+    (note-display suling (inst-note suling 3) #:damped? #t))
+  (test-equal "no damped form: the display form" "nong"
+    (note-display suling (inst-note suling 1) #:damped? #t))
+  (test-equal "no damped form anywhere in the scale: the display form" "i"
+    (note-display reyong (inst-note reyong 3) #:damped? #t))
+  (test-equal "display defaulted to the degree name, damped? #t" "dung"
+    (note-display plain-instrument (inst-note plain-instrument 1) #:damped? #t))
+  (test-equal "a stroke's damped form" "t"
+    (note-display kajar (inst-note kajar 0) #:damped? #t))
+  (test-equal "a stroke's display form without #:damped?" "T"
+    (note-display kajar (inst-note kajar 0)))
+  (test-equal "a stroke without a damped form" "tuk"
+    (note-display kajar (inst-note kajar 1) #:damped? #t))
+  (test-equal "a stroke without either option, damped? #t" "du"
+    (note-display kendang (inst-note kendang 2) #:damped? #t))
+  (test-equal "note-label keeps the display form" "nang1"
+    (note-label suling (inst-note suling 2))))
 
 ;;; note-label
 

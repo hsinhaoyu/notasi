@@ -266,6 +266,34 @@ In one score, each part can be in only one group (see
 
 Check the spelling of the part's name in the group.
 
+### A group of names without names
+
+```scheme
+{{#include mistakes/needs-note-names.nts}}
+```
+
+```text
+{{#include mistakes/needs-note-names.txt}}
+```
+
+Rows of parts, one row, and `:fill none` show the notes only by their
+names. Add `:note-names yes` to the group or the score (see
+[Scores](scores.md#rows-of-names)).
+
+### Two notes in one place on a single row
+
+```scheme
+{{#include mistakes/notes-collide.nts}}
+```
+
+```text
+{{#include mistakes/notes-collide.txt}}
+```
+
+On a single row, only one note can sound in each column. Here polos is
+still holding its note when sangsih strikes. Give the parts their own
+rows, or change the music.
+
 ### A pattern that doesn't exist
 
 ```scheme

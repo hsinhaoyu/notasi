@@ -269,9 +269,13 @@ for a stroke, which has no pitch."
     (+ (* (note-octave note) (length (scale-degrees scale)))
        (note-degree note))))
 
-(define (note-display instrument note)
-  "Return the short form of NOTE drawn in grid cells, e.g. \"i\" for ding2."
-  (degree-display (note-degree-record instrument note)))
+(define* (note-display instrument note #:key damped?)
+  "Return the short form of NOTE drawn in grid cells, e.g. \"i\" for ding2;
+with DAMPED?, its damped form (\"na'\"), or the display form when it has
+none."
+  (let ((degree (note-degree-record instrument note)))
+    (or (and damped? (degree-damped degree))
+        (degree-display degree))))
 
 (define (note-label instrument note)
   "Return NOTE's lane label: the display form plus the octave (\"i2\"),
