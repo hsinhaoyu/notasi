@@ -26,6 +26,28 @@ pattern, the part carries on with the length it had before.
 A pattern may start with `_`: it then holds the note before it, wherever
 it is used.
 
+## Printing pattern names
+
+A pattern can have names, `:short` and `:long`, and a use can give its
+own, so that a moved figure is named after the tone it plays. A
+[score](scores.md) can write them over the notes:
+
+```scheme
+{{#include examples/pattern-names.nts}}
+```
+
+![The norot figures with their names](figures/pattern-names.svg)
+
+| Setting | Where | What it does |
+|---|---|---|
+| `:pattern-names short` / `long` | score or group | Write each pattern's short or long name over its notes. `none`, the default, writes none. |
+| `:pattern-level N` | score or group | Which patterns to name: 0 (the default) for those used in the part, 1 for those inside them, and so on. |
+
+When polos and sangsih are in one group and play figures with the same
+name over the same pulses, the name is written once. Two different
+names over the same pulses would be written over each other, so notasi
+reports that as a mistake.
+
 ## The rules
 
 - Every pattern says which instrument it is for, with `:instrument`.

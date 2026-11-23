@@ -1,11 +1,13 @@
 # 04 — Layout
 
-Status: partly implemented (iteration 2): milestone 2, slices 1–3 of 5
-(`feat/scores-form`, `feat/scores-contract`, `feat/scores-rows`, see
-"Slices (iteration 2)"). `layout-score` lays out a score as contract
-version 2, with `notes`, `parts` and `single` rows, note names with
-their damped forms, `:fill`, `:holds`, one style per group, the sizes,
-`:system-length`, and the header rows and lines; the rest is planned.
+Status: partly implemented (iteration 2): milestone 2, slices 1–4 of 5
+(`feat/scores-form`, `feat/scores-contract`, `feat/scores-rows`,
+`feat/scores-overlays`, see "Slices (iteration 2)"). `layout-score`
+lays out a score as contract version 2, with `notes`, `parts` and
+`single` rows, note names with their damped forms, `:fill`, `:holds`,
+pattern-name overlays, one style per group, the sizes,
+`:system-length`, and the header rows and lines; the range, `:breaks`
+and `:labels` are planned.
 "What layout does today" lists what differs.
 "Note style" is **Implemented** and stays, with the style now built from
 a score's options. Modules: `(notasi style)`, `(notasi layout)`; tests
@@ -383,9 +385,21 @@ examples, golden files and manual pages it affects.
      shared column).
    - A note shows its damped form when it lasts no longer than one
      column, counting its whole length even if a system break cuts it.
-4. `feat/scores-overlays`: `:pattern-names` and `:pattern-level`,
+4. **Implemented.** `feat/scores-overlays`: `:pattern-names` and `:pattern-level`,
    merged overlays, `pattern-names-overlap`, and the template's
-   overlays.
+   overlays. Decided for this slice:
+   - The reader reads `:pattern-names` (`none`, `short`, `long`) and
+     `:pattern-level` (a whole number from 0) on a score and a group.
+   - Two spans at the chosen level that share some time and are not
+     identical (the same start, end and text) are
+     `pattern-names-overlap`, whatever their texts: at the group's line,
+     `part` the later part, `time` the first shared time. Identical ones
+     are merged.
+   - Pattern-span edges at the chosen level count towards the step.
+   - The template draws overlays in a layer of their own over the notes
+     (a grid can't overlap its cells): a white box at 80% opacity with
+     near-black text, centred over the overlay's columns and rows; a
+     continued overlay shows its text again.
 5. `feat/scores-range`: `:from` and `:to`, `:breaks`, `:labels`;
    `render-piece #:score` and `notasi render --score`; golden files,
    previews and manual figures per score.
@@ -402,7 +416,7 @@ iteration 2 is built:
   the events of the score's parts; there is no range (`:from`, `:to`)
   or `:breaks`, and systems start every `:system-length` pulses from
   the start of the piece.
-- A group's label is always its long label; there are no overlays.
+- A group's label is always its long label.
 - Golden tests: each `examples/NAME.nts` has the figure of its first
   score in `tests/golden/NAME.json`.
 

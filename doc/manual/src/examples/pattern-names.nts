@@ -1,0 +1,16 @@
+(piece "Norot with names")
+
+(use gong-kebyar)
+
+(pattern norot :instrument reyong :short "i" :long "Norot on i"
+  o2:1/4 i2 i2 - | i2 - i2 -)
+
+;; Each use is named after the tone it plays.
+(part reyong
+  @norot
+  (@ norot :step -1 :short "a" :long "Norot on a")
+  (@ norot :step 1 :short "o" :long "Norot on o")
+  @norot)
+
+(score names :pattern-names short
+  (group "Reyong" reyong))

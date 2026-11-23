@@ -1,0 +1,1 @@
+pattern-names-overlap.nts:7: part `sangsih', pulse 2: pattern names overlap in this group; they would be written over each other

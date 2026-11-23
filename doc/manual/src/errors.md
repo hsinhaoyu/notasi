@@ -294,6 +294,22 @@ On a single row, only one note can sound in each column. Here polos is
 still holding its note when sangsih strikes. Give the parts their own
 rows, or change the music.
 
+### Pattern names written over each other
+
+```scheme
+{{#include mistakes/pattern-names-overlap.nts}}
+```
+
+```text
+{{#include mistakes/pattern-names-overlap.txt}}
+```
+
+In one group, the names of the patterns must either match exactly (the
+same name over the same pulses, written once) or not overlap. Here
+sangsih's figures start a pulse later than polos's. Give them groups of
+their own, or choose another `:pattern-level` (see
+[Patterns](patterns.md#printing-pattern-names)).
+
 ### A pattern that doesn't exist
 
 ```scheme
