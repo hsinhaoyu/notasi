@@ -40,6 +40,8 @@ Drawing:
   shows cycle number `0`; the pickup doesn't join the first system.
 - [Lane labels](design_ideas/2026-11-23-lane-labels.md): `:octave-numbers`,
   and a line between the labels and the notes.
+- [Key numbers beside the row labels](design_ideas/2026-11-23-key-numbers.md):
+  `:key-numbers`, and `:row-labels` to hide the row labels.
 - [The cycle and pulse rows are labelled](design_ideas/2026-11-23-header-labels.md):
   `:cycle-label`, `:pulse-label`, "Cycle" and "Pulse" by default.
 - [Cycle and pulse numbers are centred over their pulse](design_ideas/2026-11-23-header-alignment.md).
