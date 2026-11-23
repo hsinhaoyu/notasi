@@ -50,6 +50,39 @@
 ;;; `bad-rep` at the rep's own line (03, "Error reporting" and slice 3's
 ;;; decided bullets), other errors inside a rep at the part's line. As in
 ;;; tests/expand.scm, bad-rep's time is where the rep starts.
+;;;
+;;; Slice feat/music-colotomy (slice 4, [colotomy]): `colotomy` forms in
+;;; a piece or a template, `:colotomy` and `:pickup`, `||` checks,
+;;; lengths of the pickup plus whole cycles, the generated parts (the
+;;; colotomy's, then the timekeeper `kempli`, always generated, on the
+;;; piece's `kempli` instrument or a built-in one), `part-origin`,
+;;; `piece-pickup` and `piece-colotomies`. Existing tests now expect the
+;;; generated `kempli` at the end of `piece-parts`, and, when the piece
+;;; has a `kempli` instrument, a default group for it; tests of part
+;;; lines and files look at the written parts only. examples/tenzer1.nts
+;;; loses its written kempli part (the generated one has the same
+;;; strokes).
+;;; Choices made where the docs are not explicit:
+;;; - The timekeeper is generated even for a piece of length 0: a part
+;;;   `kempli` with no events (and a default group when the piece has a
+;;;   `kempli` instrument).
+;;; - Without a colotomy, the timekeeper's location is not fixed; only
+;;;   its origin, instrument and events are tested.
+;;; - The colotomy in `piece-colotomies` starts at time 0.
+;;; - `||` is tested through the reader only: it is checked against the
+;;;   piece's colotomy and pickup, which `expand-tokens` is not given
+;;;   (its interface for that is not documented), so tests/expand.scm is
+;;;   unchanged.
+;;; - `||` at time 0 with no pickup is on a cycle boundary.
+;;; - `:pickup 0` without `:colotomy` is still `no-colotomy`.
+;;; - `:pickup 1.5` is `bad-option` (03, "Options"); `-1`, `1/2` and a
+;;;   pickup longer than the cycle are `bad-pickup`.
+;;; - `incomplete-cycle` and `colotomy-part-length` are checked for kind,
+;;;   line and (for the latter) part; their `time` is not fixed.
+;;; - A malformed colotomy is written on one line, so the colotomy's line
+;;;   and the line of a part list inside it are the same.
+;;; - unequal-length comes before incomplete-cycle (the order of check
+;;;   14).
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -138,7 +171,6 @@ tests follow their layout instead of hard-coding it."
   (rmdir tmp-dir))
 
 ;;; Forms that are known but not built in this slice.
-(define colotomy-form "(colotomy gilak 8 (gong gong G))")
 (define pattern-form "(pattern polos-1 :instrument ugal 1 2)")
 (define score-form "(score full (group \"Ugal\" ugal))")
 
@@ -154,8 +186,14 @@ tests follow their layout instead of hard-coding it."
     (test-equal "length is 0" 0 (piece-length pc))
     (test-equal "no scales" '() (piece-scales pc))
     (test-equal "no instruments" '() (piece-instruments pc))
-    (test-equal "no parts" '() (piece-parts pc))
-    (test-equal "no groups" '() (piece-groups pc)))
+    (test-equal "no written parts: only the timekeeper, with no events"
+      '((kempli timekeeper ()))
+      (map (lambda (p) (list (part-name p) (part-origin p) (part-events p)))
+           (piece-parts pc)))
+    (test-equal "no groups: the built-in kempli is not printed" '()
+      (piece-groups pc))
+    (test-equal "pickup 0" 0 (piece-pickup pc))
+    (test-equal "no colotomies" '() (piece-colotomies pc)))
 
   (let ((pc (try-read-string "(piece" "  \"Over two lines\")")))
     (test-equal "a title on the next line" "Over two lines"
@@ -200,7 +238,7 @@ tests follow their layout instead of hard-coding it."
       (lambda () (read-set! keywords 'prefix))
       (lambda ()
         (test-equal "`:key` is a key even when the caller reads :x as a keyword"
-          '(p)
+          '(p kempli)
           (map part-name
                (piece-parts
                 (read-piece-string
@@ -557,11 +595,7 @@ tests follow their layout instead of hard-coding it."
   (test-equal ":steps-per-pulse with a bad value: still unknown-option"
     '(unknown-option 1)
     (string-error "(piece \"P\" :steps-per-pulse 0)"))
-  ;; :colotomy and :pickup come in slice 4 (feat/music-colotomy).
-  (test-equal ":colotomy is not taken yet" '(unknown-option 1)
-    (string-error "(piece \"P\" :colotomy gilak)"))
-  (test-equal ":pickup is not taken yet" '(unknown-option 1)
-    (string-error "(piece \"P\" :pickup 1)"))
+  ;; :colotomy and :pickup are taken since slice 4: see "[colotomy]".
   (test-equal "keys are case-sensitive" '(unknown-option 1)
     (string-error "(piece \"P\" :Steps-Per-Pulse 4)"))
   (test-equal "a part's key is not a piece key" '(unknown-option 1)
@@ -579,7 +613,8 @@ tests follow their layout instead of hard-coding it."
 ;;; unknown key. `part options` tests duplicate-option.
 
 ;;; ------------------------------------------------------------------
-;;; colotomy, pattern and score are known forms, not built in this slice
+;;; pattern and score are known forms, not built in this slice (colotomy
+;;; is built since slice 4)
 
 (test-group "not-implemented"
   (for-each
@@ -588,8 +623,7 @@ tests follow their layout instead of hard-coding it."
       (test-equal (string-append head ": not-implemented at its own line")
         '(not-implemented 3)
         (string-error (lines "(piece \"P\")" ";; next" form)))))
-   (list (list "colotomy" colotomy-form)
-         (list "pattern" pattern-form)
+   (list (list "pattern" pattern-form)
          (list "score" score-form)))
   (for-each
    (match-lambda
@@ -597,15 +631,14 @@ tests follow their layout instead of hard-coding it."
       (test-equal (string-append head " with nothing in it: still not-implemented")
         '(not-implemented 2)
         (string-error (lines "(piece \"P\")" form)))))
-   (list (list "colotomy" "(colotomy)")
-         (list "pattern" "(pattern)")
+   (list (list "pattern" "(pattern)")
          (list "score" "(score)")))
   (test-equal "a multi-line score: the form's line" '(not-implemented 2)
     (string-error (lines "(piece \"P\")" "(score full" "  (group \"G\" a))")))
   (test-equal "the first not-implemented form in file order" '(not-implemented 4)
     (string-error (lines "(piece \"P\")" "" "" pattern-form score-form)))
   (let ((c (catch-syntax-error
-            (lambda () (read-piece-string (lines "(piece \"P\")" colotomy-form))))))
+            (lambda () (read-piece-string (lines "(piece \"P\")" pattern-form))))))
     (test-equal "not-implemented: file #f" #f
       (and (notasi-syntax-error? c) (notasi-syntax-error-file c)))
     (test-equal "not-implemented: part field #f" #f
@@ -805,8 +838,10 @@ so a test using it fails rather than passing on #f."
       '((dag 0 #f) (dug 1 #f))
       (instrument-note-fields (instrument-named pc 'kendang)))
     (test-equal "length 0" 0 (piece-length pc))
-    (test-equal "no parts" '() (piece-parts pc))
-    (test-equal "no groups" '() (piece-groups pc))
+    (test-equal "no written parts: only the timekeeper" '(kempli)
+      (map part-name (piece-parts pc)))
+    (test-equal "no groups: no kempli instrument, so it is not printed" '()
+      (piece-groups pc))
     (test-equal "title" "Definitions" (piece-title pc)))
 
   (let ((pc (try-read-string "(piece \"P\")"
@@ -954,8 +989,10 @@ so a test using it fails rather than passing on #f."
              (v (instrument-notes inst)))
         (list (note-label inst (vector-ref v 0))
               (note-label inst (vector-ref v 11)))))
-    (test-equal "length 0, no parts, no groups" '(0 () ())
-      (list (piece-length pc) (piece-parts pc) (piece-groups pc)))))
+    (test-equal "length 0, only the timekeeper, its default group"
+      '(0 (kempli) ("kempli"))
+      (list (piece-length pc) (map part-name (piece-parts pc))
+            (map group-label (piece-groups pc))))))
 
 ;;; ------------------------------------------------------------------
 ;;; Error cases for definitions. Each checks (KIND LINE).
@@ -1539,6 +1576,10 @@ so a test using it fails rather than passing on #f."
 
 (define (part-named pc name) (find-named part-name name (piece-parts pc)))
 
+(define (written-parts pc)
+  "The parts of PC that the file wrote, without the generated ones."
+  (filter (lambda (p) (eq? (part-origin p) 'written)) (piece-parts pc)))
+
 (define (group-labelled pc label)
   (or (find (lambda (g) (equal? (group-label g) label)) (piece-groups pc))
       (error "no group labelled:" label)))
@@ -1675,9 +1716,10 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
                "(part reyong 1 2 - -)" "(part gong G _ _ _)")))
   (let ((pc (read-defs+)))
     (test-equal "no parts: length 0" 0 (piece-length pc))
-    (test-equal "no parts: no groups" '() (piece-groups pc)))
+    (test-equal "no parts: only the timekeeper's group" '("kempli")
+      (map group-label (piece-groups pc))))
   (let ((pc (read-defs+ "(part reyong 1 2 - -)" "(part gong G _ _ _)")))
-    (test-equal "part-end is the end of the last event (ADR 0012)" '(2 4)
+    (test-equal "part-end is the end of the last event (ADR 0012)" '(2 4 4)
       (map part-end (piece-parts pc)))
     (test-assert "part-end <= piece-length"
       (every (lambda (p) (<= (part-end p) (piece-length pc)))
@@ -1694,10 +1736,13 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
                         "(part reyong :name sangsih 4 3 2 1)"))) ; 14
     (test-assert "reads into a piece" (piece? pc))
     (test-equal "parts in file order, named by :name or by their instrument"
-      '(polos ugal gong sangsih)
+      '(polos ugal gong sangsih kempli)
       (map part-name (piece-parts pc)))
+    (test-equal "written parts, then the generated timekeeper"
+      '(written written written written timekeeper)
+      (map part-origin (piece-parts pc)))
     (test-assert "parts are part records" (every part? (piece-parts pc)))
-    (test-equal "part instruments by name" '(reyong ugal gong reyong)
+    (test-equal "part instruments by name" '(reyong ugal gong reyong kempli)
       (map (lambda (p) (instrument-name (part-instrument p)))
            (piece-parts pc)))
     (test-assert "part instrument is the instrument record in the piece"
@@ -1711,36 +1756,36 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
                 (instrument-named pc 'gong))))
     (test-equal "part lines: the form's line" '(10 11 13 14)
       (map (lambda (p) (source-location-line (part-location p)))
-           (piece-parts pc)))
+           (written-parts pc)))
     (test-equal "part files are #f from a string" '(#f #f #f #f)
       (map (lambda (p) (source-location-file (part-location p)))
-           (piece-parts pc)))
+           (written-parts pc)))
     (test-equal "length" 4 (piece-length pc))
     (test-equal "instruments still in file order" '(reyong ugal gong kempli)
       (map instrument-name (piece-instruments pc))))
 
   (let ((pc (read-defs+ "(part ugal 1 2)")))
-    (test-equal "no :name: the part is named after its instrument" '(ugal)
+    (test-equal "no :name: the part is named after its instrument" '(ugal kempli)
       (map part-name (piece-parts pc)))
     (test-assert "no :name: its instrument"
       (eq? (part-instrument (part-named pc 'ugal)) (instrument-named pc 'ugal)))
-    (test-equal "no :name: its default group" '("ugal")
+    (test-equal "no :name: its default group" '("ugal" "kempli")
       (map group-label (piece-groups pc))))
 
   (let ((pc (read-defs+ "(part reyong"         ; 10
                         "  :name polos"        ; 11
                         "  1 2 3 4)")))        ; 12
-    (test-equal ":name on its own line" '(polos)
+    (test-equal ":name on its own line" '(polos kempli)
       (map part-name (piece-parts pc)))
     (test-equal ":name on its own line: the form's line" '(10)
       (map (lambda (p) (source-location-line (part-location p)))
-           (piece-parts pc)))
+           (written-parts pc)))
     (test-equal ":name on its own line: the events" '((0 1 (0)) (1 1 (1)) (2 1 (2)) (3 1 (3)))
       (part-triples pc 'polos)))
 
   (let ((pc (read-defs+ "(part reyong :name ugal 1 2)"
                         "(part ugal :name reyong 1 2)")))
-    (test-equal "a :name may be another instrument's name" '(ugal reyong)
+    (test-equal "a :name may be another instrument's name" '(ugal reyong kempli)
       (map part-name (piece-parts pc)))
     (test-assert "a part named like another instrument plays its own"
       (and (eq? (part-instrument (part-named pc 'ugal)) (instrument-named pc 'reyong))
@@ -1749,7 +1794,7 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
   (let ((pc (read-defs+ "(part reyong :name selisir 1)"
                         "(part gong :name gong-strokes G)")))
     (test-equal "parts may share names with scales and stroke sets"
-      '(selisir gong-strokes)
+      '(selisir gong-strokes kempli)
       (map part-name (piece-parts pc))))
 
   (let ((pc (read-defs+ "(part reyong :name polos 1 2)"
@@ -1757,7 +1802,7 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
                         "(part ugal 1 2)"
                         "(part gong G P)")))
     (test-equal "several named parts on one instrument, one part on others"
-      '(polos sangsih ugal gong)
+      '(polos sangsih ugal gong kempli)
       (map part-name (piece-parts pc)))))
 
 (test-group "parts read from a file"
@@ -1767,11 +1812,11 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
          (pc (try-read (lambda () (read-piece-file path)))))
     (test-equal "part files are the path given" (list path path)
       (map (lambda (p) (source-location-file (part-location p)))
-           (piece-parts pc)))
+           (written-parts pc)))
     (test-equal "part lines" '(10 11)
       (map (lambda (p) (source-location-line (part-location p)))
-           (piece-parts pc)))
-    (test-equal "default groups have no location, even from a file" '(#f #f)
+           (written-parts pc)))
+    (test-equal "default groups have no location, even from a file" '(#f #f #f)
       (map group-location (piece-groups pc)))))
 
 ;;; ------------------------------------------------------------------
@@ -1784,27 +1829,29 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
                         "(part reyong :name sangsih 4 3 2 1)"    ; 12
                         "(part gong G - - P)")))                 ; 13
     (test-equal "one group per part, in part order, labelled with its name"
-      '("ugal" "polos" "sangsih" "gong")
+      '("ugal" "polos" "sangsih" "gong" "kempli")
       (map group-label (piece-groups pc)))
     (test-assert "groups are group records" (every group? (piece-groups pc)))
-    (test-equal "one part each" '((ugal) (polos) (sangsih) (gong))
+    (test-equal "one part each" '((ugal) (polos) (sangsih) (gong) (kempli))
       (map group-part-names (piece-groups pc)))
-    (test-equal "subtitles #f" '(#f #f #f #f)
+    (test-equal "subtitles #f" '(#f #f #f #f #f)
       (map group-subtitle (piece-groups pc)))
-    (test-equal "locations #f" '(#f #f #f #f)
+    (test-equal "locations #f" '(#f #f #f #f #f)
       (map group-location (piece-groups pc)))
     (test-assert "a group's part is the piece's part record"
       (every (lambda (g) (eq? (car (group-parts g))
                               (part-named pc (car (group-part-names g)))))
              (piece-groups pc)))
-    (test-equal "parts stay in file order" '(ugal polos sangsih gong)
+    (test-equal "parts stay in file order, then the timekeeper"
+      '(ugal polos sangsih gong kempli)
       (map part-name (piece-parts pc))))
 
   (let ((pc (read-defs+ "(part reyong :name polos 1 2)"
                         "(part reyong :name sangsih 3 4)")))
-    (test-equal "two parts on one instrument: two groups" '("polos" "sangsih")
+    (test-equal "two parts on one instrument: two groups, then kempli"
+      '("polos" "sangsih" "kempli")
       (map group-label (piece-groups pc)))
-    (test-equal "group-lanes of each" '((dung1 deng1) (ding2 dang1))
+    (test-equal "group-lanes of each" '((dung1 deng1) (ding2 dang1) (K))
       (map (lambda (g) (map note-name (group-lanes g)))
            (piece-groups pc)))))
 
@@ -1828,10 +1875,11 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
     (test-assert "reads into a piece" (piece? pc))
     (test-equal "title" "Reyong kotekan" (piece-title pc))
     (test-equal "length: 3 pulses" 3 (piece-length pc))
-    (test-equal "parts" '(polos sangsih gong) (map part-name (piece-parts pc)))
+    (test-equal "parts, then the built-in timekeeper" '(polos sangsih gong kempli)
+      (map part-name (piece-parts pc)))
     (test-equal "part lines" '(7 8 9)
       (map (lambda (p) (source-location-line (part-location p)))
-           (piece-parts pc)))
+           (written-parts pc)))
     (test-equal "polos events"
       '((0 1/2 (0)) (1/2 1/4 (0)) (3/4 1/2 (1)) (5/4 1/4 (0))
         (3/2 1/2 (1)) (2 1/4 (1)) (9/4 1/2 (0)) (11/4 1/4 (1)))
@@ -1841,7 +1889,8 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
         (5/4 1/2 (3)) (7/4 1/2 (2)) (9/4 1/4 (3)) (5/2 1/2 (2)))
       (part-triples pc 'sangsih))
     (test-equal "gong events" '((0 1/4 (0))) (part-triples pc 'gong))
-    (test-equal "groups: one per part" '("polos" "sangsih" "gong")
+    (test-equal "groups: one per written part (the built-in kempli has none)"
+      '("polos" "sangsih" "gong")
       (map group-label (piece-groups pc)))
     (test-equal "group parts" '((polos) (sangsih) (gong))
       (map group-part-names (piece-groups pc)))
@@ -1853,17 +1902,17 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
       (map note-name (group-lanes (group-labelled pc "sangsih"))))
     (test-equal "group-lanes: gong" '(G)
       (map note-name (group-lanes (group-labelled pc "gong"))))
-    (test-equal "part-end" '(3 3 1/4) (map part-end (piece-parts pc)))
+    (test-equal "part-end" '(3 3 1/4 3) (map part-end (piece-parts pc)))
     (test-assert "part-end <= piece-length"
       (every (lambda (p) (<= (part-end p) (piece-length pc)))
              (piece-parts pc)))
-    (test-equal "events-at pulse 2: polos starts, sangsih holds"
-      '((polos 2 (1)) (sangsih 7/4 (2)))
+    (test-equal "events-at pulse 2: polos starts, sangsih holds, kempli"
+      '((polos 2 (1)) (sangsih 7/4 (2)) (kempli 2 (0)))
       (map (match-lambda
              ((p . e) (list (part-name p) (event-start e) (event-notes e))))
            (events-at pc 2)))
-    (test-equal "events-at 0: all three parts"
-      '((polos 0 (0)) (sangsih 0 (3)) (gong 0 (0)))
+    (test-equal "events-at 0: all four parts"
+      '((polos 0 (0)) (sangsih 0 (3)) (gong 0 (0)) (kempli 0 (0)))
       (map (match-lambda
              ((p . e) (list (part-name p) (event-start e) (event-notes e))))
            (events-at pc 0)))))
@@ -2017,7 +2066,7 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
          (list "a part of only rests" 3/2 "(part gong -:1/2 - -)")))
   (let ((pc (read-defs+ "(part reyong :name a 1:1/4 2 3 4)"
                         "(part reyong :name b 1:1/2 -)")))
-    (test-equal "part-end leaves out trailing rests" '(1 1/2)
+    (test-equal "part-end leaves out trailing rests" '(1 1/2 1)
       (and pc (map part-end (piece-parts pc))))
     (test-equal "the piece's length includes them" 1
       (and pc (piece-length pc)))))
@@ -2285,10 +2334,10 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
          (list "multi-line second part: its form's line" 11
                (defs+ "(part ugal 1 2)" "(part ugal" "  :name b 3 4)"))))
   (let ((pc (read-defs+ "(part reyong 1 2)" "(part ugal 3 4)")))
-    (test-equal "parts on different instruments need no names" '(reyong ugal)
+    (test-equal "parts on different instruments need no names" '(reyong ugal kempli)
       (and pc (map part-name (piece-parts pc)))))
   (let ((pc (read-defs+ "(part reyong :name a 1 2)" "(part reyong :name b 3 4)")))
-    (test-equal "two named parts on one instrument" '(a b)
+    (test-equal "two named parts on one instrument" '(a b kempli)
       (and pc (map part-name (piece-parts pc))))))
 
 (test-group "bad-form for part"
@@ -3090,7 +3139,8 @@ canonicalized, or the raised object (or no-error) unchanged."
         (err-at (string-in dir "(piece \"P\")" "(use \"t.nts\")"))))))
 
 ;;; A template may hold scale, strokes, instrument, colotomy, pattern and
-;;; use forms. colotomy and pattern are allowed but not built yet.
+;;; use forms. pattern is allowed but not built yet; colotomy is built
+;;; (see "[colotomy] colotomies in a template").
 (test-group "forms in a template"
   (let ((dir (fresh-dir)))
     (error-tests
@@ -3106,7 +3156,6 @@ canonicalized, or the raised object (or no-error) unchanged."
                 (list "score" score-form 'not-in-template)
                 (list "group" "(group \"G\" p)" 'group-outside-score)
                 (list "text" "(text \"x\")" 'unknown-form)
-                (list "colotomy" colotomy-form 'not-implemented)
                 (list "pattern" pattern-form 'not-implemented))))
     (let ((t (put-file dir "two.nts" "(scale s a)" score-form "(part x 1)")))
       (test-equal "not-in-template: the first such form in file order"
@@ -3409,6 +3458,762 @@ canonicalized, or the raised object (or no-error) unchanged."
       (kind-of (catch-syntax-error
                 (string-in dir "(piece \"P\")" "(use \"bf.nts\")" "(scale s a"))))))
 
+;;; ==================================================================
+;;; [colotomy] Colotomies, the pickup, `||` and generated parts
+;;; (slice feat/music-colotomy)
+;;; ==================================================================
+
+;;; ------------------------------------------------------------------
+;;; Fixtures. Line numbers matter: the comments give them. Parts start
+;;; on line 12.
+;;;
+;;;   ugal (7 notes):   0 o1  1 e1  2 u1  3 a1  4 i2  5 o2  6 e2
+;;;   gong (3 notes):   0 G  1 GL  2 P
+;;;   kempur (1 note):  0 P
+;;;   kempli (1 note):  0 K
+;;;
+;;; gilak's gong over one cycle: GL at 3, P at 4, P at 6, G at 7.
+;;; pair's kempur (2 pulses, twice a cycle): P at 1 and 3; its gong: G at 3.
+;;; long's gong: P at 2, held 2 pulses (to the cycle's end).
+
+(define colo-lines
+  (list "(scale selisir (ding :alias i) (dong :alias o) (deng :alias e) (dung :alias u) (dang :alias a))" ; 2
+        "(strokes gong-strokes G GL P)"                       ; 3
+        "(strokes kempli-strokes K)"                          ; 4
+        "(instrument ugal selisir o1 e1 u1 a1 i2 o2 e2)"      ; 5
+        "(instrument gong gong-strokes G GL P)"               ; 6
+        "(instrument kempur gong-strokes P)"                  ; 7
+        "(instrument kempli kempli-strokes K)"                ; 8
+        "(colotomy gilak 8 (gong gong -:3 GL:1 P - P G))"     ; 9
+        "(colotomy pair 4 (kempur kempur - P) (gong gong -:3 G:1))" ; 10
+        "(colotomy long 4 (gong gong -:2 P:2))"))             ; 11
+
+(define (piece-with options)
+  "The piece form on line 1, with OPTIONS (a string) after its title."
+  (string-append "(piece \"C\" " options ")"))
+
+(define (colo+ options . more)
+  "A piece with OPTIONS, the colotomy fixtures, then the lines MORE from
+line 12."
+  (apply lines (piece-with options) (append colo-lines more)))
+
+(define (read-colo+ options . more)
+  (try-read-string (apply colo+ options more)))
+
+;;; No kempli instrument: the timekeeper plays the built-in one. Parts
+;;; start on line 7.
+;;;   u (2 notes): 0 a1  1 b1
+(define bare-lines
+  (list "(scale s a b)"                                       ; 2
+        "(strokes gong-strokes G GL P)"                       ; 3
+        "(instrument u s a1 b1)"                              ; 4
+        "(instrument gong gong-strokes G GL P)"               ; 5
+        "(colotomy gilak 8 (gong gong -:3 GL:1 P - P G))"))   ; 6
+
+(define (bare+ options . more)
+  (apply lines (piece-with options) (append bare-lines more)))
+
+(define (read-bare+ options . more)
+  (try-read-string (apply bare+ options more)))
+
+(define (safe thunk)
+  "THUNK's value, or #f if it raises, for bindings outside test forms."
+  (guard (c (#t #f)) (thunk)))
+
+(define (ones from to note)
+  "One-pulse events of NOTE at every pulse from FROM below TO."
+  (map (lambda (i) (list i 1 (list note))) (iota (- to from) from)))
+
+(define (the-colotomy pc)
+  "The colotomy of PC's single entry in piece-colotomies."
+  (cdr (car (piece-colotomies pc))))
+
+(define (colotomy-part-named c name)
+  (find-named part-name name (colotomy-parts c)))
+
+(define (line-of-part pc name)
+  (source-location-line (part-location (part-named pc name))))
+
+(define (file-of-part pc name)
+  (source-location-file (part-location (part-named pc name))))
+
+(define gilak-gong-1
+  ;; gilak's gong over its one cycle, in the colotomy record
+  '((3 1 (1)) (4 1 (2)) (6 1 (2)) (7 1 (0))))
+
+;;; ------------------------------------------------------------------
+;;; Reading a colotomy
+
+(test-group "[colotomy] the colotomy record"
+  (let* ((pc (read-colo+ ":colotomy gilak" "(part ugal 1:16)"))
+         (c (safe (lambda () (the-colotomy pc)))))
+    (test-equal "piece-colotomies: one entry, starting at 0" '(0)
+      (map car (piece-colotomies pc)))
+    (test-assert "a colotomy record" (colotomy? c))
+    (test-equal "name" 'gilak (colotomy-name c))
+    (test-equal "length in pulses" 8 (colotomy-length c))
+    (test-equal "timekeeper" 'kempli (colotomy-timekeeper c))
+    (test-equal "location: its form's line, file #f from a string" '(#f 9)
+      (let ((loc (colotomy-location c)))
+        (list (source-location-file loc) (source-location-line loc))))
+    (test-equal "parts, named as the colotomy names them" '(gong)
+      (map part-name (colotomy-parts c)))
+    (test-assert "its part plays the piece's gong"
+      (eq? (part-instrument (colotomy-part-named c 'gong))
+           (instrument-named pc 'gong)))
+    (test-equal "its part's events over one cycle" gilak-gong-1
+      (map event-triple (part-events (colotomy-part-named c 'gong)))))
+
+  (let* ((pc (read-colo+ ":colotomy pair" "(part ugal 1:8)"))
+         (c (safe (lambda () (the-colotomy pc)))))
+    (test-equal "two parts, in the colotomy's order" '(kempur gong)
+      (map part-name (colotomy-parts c)))
+    (test-equal "a shorter part is written out over the cycle"
+      '((1 1 (0)) (3 1 (0)))
+      (map event-triple (part-events (colotomy-part-named c 'kempur))))
+    (test-equal "the other part" '((3 1 (0)))
+      (map event-triple (part-events (colotomy-part-named c 'gong)))))
+
+  (let ((pc (read-colo+ ":colotomy one"
+                        "(colotomy one 8 (gong gong G))"    ; 12
+                        "(part ugal 1:8)")))
+    (test-equal "a part of one pulse is written out on every pulse"
+      (ones 0 8 0)
+      (map event-triple
+           (part-events (colotomy-part-named (the-colotomy pc) 'gong))))
+    (test-equal "a part of one pulse: the generated gong" (ones 0 8 0)
+      (part-triples pc 'gong)))
+
+  (let ((pc (read-colo+ ":colotomy gilak"
+                        "(colotomy gong 4 (gong gong G:4))" ; 12
+                        "(part ugal 1:8)")))
+    (test-assert "a colotomy may share its name with an instrument" (piece? pc)))
+
+  (for-each
+   (match-lambda
+     ((name form)
+      (test-assert name
+        (piece? (read-colo+ "" form)))))
+   (list (list "a part as long as the cycle" "(colotomy c 8 (gong gong G:8))")
+         (list "a part of half the cycle" "(colotomy c 8 (gong gong G:4))")
+         (list "a part of a quarter of the cycle" "(colotomy c 8 (gong gong G -))")
+         (list "several parts" "(colotomy c 8 (gong gong G:8) (kempur kempur P:4))")
+         (list "a colotomy on several lines"
+               "(colotomy c 8\n  (gong gong -:7 G:1)\n  (kempur kempur - P))")
+         (list "a part with rep and |"
+               "(colotomy c 8 (gong gong (rep 2 -:3 | G:1)))"))))
+
+(test-group "[colotomy] a colotomy that the piece does not use"
+  (let ((pc (read-colo+ "" "(part gong G - - -)" "(part kempur P - - -)")))
+    (test-assert "reads" (piece? pc))
+    (test-equal "no colotomies, pickup 0" '(() 0)
+      (and pc (list (piece-colotomies pc) (piece-pickup pc))))
+    (test-equal "written gong and kempur parts are allowed; then kempli"
+      '((gong written) (kempur written) (kempli timekeeper))
+      (and pc (map (lambda (p) (list (part-name p) (part-origin p)))
+                   (piece-parts pc))))
+    (test-equal "a length that is not whole cycles is fine" 4
+      (and pc (piece-length pc)))))
+
+;;; ------------------------------------------------------------------
+;;; Generated parts
+
+(test-group "[colotomy] generated parts, no pickup"
+  (let ((pc (read-colo+ ":colotomy gilak" "(part ugal 1:16)")))  ; 12
+    (test-equal "length: two cycles" 16 (piece-length pc))
+    (test-equal "pickup 0" 0 (piece-pickup pc))
+    (test-equal "written parts, then the colotomy's, then kempli"
+      '(ugal gong kempli)
+      (map part-name (piece-parts pc)))
+    (test-equal "origins" '(written colotomy timekeeper)
+      (map part-origin (piece-parts pc)))
+    (test-equal "gong: the cycle laid end to end"
+      '((3 1 (1)) (4 1 (2)) (6 1 (2)) (7 1 (0))
+        (11 1 (1)) (12 1 (2)) (14 1 (2)) (15 1 (0)))
+      (part-triples pc 'gong))
+    (test-equal "kempli: K on every pulse" (ones 0 16 0)
+      (part-triples pc 'kempli))
+    (test-assert "gong plays the piece's gong"
+      (eq? (part-instrument (part-named pc 'gong)) (instrument-named pc 'gong)))
+    (test-assert "kempli plays the piece's kempli"
+      (eq? (part-instrument (part-named pc 'kempli))
+           (instrument-named pc 'kempli)))
+    (test-equal "generated parts have the colotomy's location" '((#f 9) (#f 9))
+      (map (lambda (name) (list (file-of-part pc name) (line-of-part pc name)))
+           '(gong kempli)))
+    (test-equal "the written part keeps its own line" 12 (line-of-part pc 'ugal))
+    (test-equal "default groups: one per part, generated ones included"
+      '("ugal" "gong" "kempli")
+      (map group-label (piece-groups pc)))
+    (test-equal "part-end of each" '(16 16 16) (map part-end (piece-parts pc))))
+
+  (let ((pc (read-colo+ ":colotomy gilak :pickup 0" "(part ugal 1:16)")))
+    (test-equal ":pickup 0 is no pickup" '(0 16)
+      (list (piece-pickup pc) (piece-length pc)))
+    (test-equal ":pickup 0: the same gong"
+      '((3 1 (1)) (4 1 (2)) (6 1 (2)) (7 1 (0))
+        (11 1 (1)) (12 1 (2)) (14 1 (2)) (15 1 (0)))
+      (part-triples pc 'gong)))
+
+  (let ((pc (read-colo+ ":colotomy gilak" "(part ugal :name a 1:8)"
+                        "(part ugal :name b -:8)")))
+    (test-equal "several written parts come first"
+      '(a b gong kempli)
+      (map part-name (piece-parts pc)))))
+
+(test-group "[colotomy] generated parts with a pickup"
+  (let ((pc (read-colo+ ":colotomy gilak :pickup 1" "(part ugal 1:17)")))
+    (test-equal "length: the pickup plus two cycles" 17 (piece-length pc))
+    (test-equal "pickup" 1 (piece-pickup pc))
+    (test-equal "gong: every cycle ends on the gong; the pickup is its last pulse"
+      '((0 1 (0))
+        (4 1 (1)) (5 1 (2)) (7 1 (2)) (8 1 (0))
+        (12 1 (1)) (13 1 (2)) (15 1 (2)) (16 1 (0)))
+      (part-triples pc 'gong))
+    (test-equal "kempli: K on every pulse, the pickup included" (ones 0 17 0)
+      (part-triples pc 'kempli))
+    (test-equal "time->position: the pickup is cycle 0, pulse 8"
+      '((0 8) (1 1) (1 8) (2 1) (2 8))
+      (map (lambda (t) (time->position pc t)) '(0 1 8 9 16)))
+    (test-equal "position->time" '(0 1 9)
+      (list (position->time pc 0 8) (position->time pc 1 1)
+            (position->time pc 2 1))))
+
+  (let ((pc (read-colo+ ":colotomy gilak :pickup 8" "(part ugal 1:16)")))
+    (test-equal "a pickup of a whole cycle" '(8 16)
+      (list (piece-pickup pc) (piece-length pc)))
+    (test-equal "a pickup of a whole cycle: the gong as without one"
+      '((3 1 (1)) (4 1 (2)) (6 1 (2)) (7 1 (0))
+        (11 1 (1)) (12 1 (2)) (14 1 (2)) (15 1 (0)))
+      (part-triples pc 'gong)))
+
+  (let ((pc (read-colo+ ":colotomy gilak :pickup 3" "(part ugal 1:11)")))
+    (test-equal "a pickup of 3: strokes before time 0 are left out"
+      '((1 1 (2)) (2 1 (0))
+        (6 1 (1)) (7 1 (2)) (9 1 (2)) (10 1 (0)))
+      (part-triples pc 'gong)))
+
+  (let ((pc (read-colo+ ":colotomy pair :pickup 1" "(part ugal 1:9)")))
+    (test-equal "two colotomy parts, in the colotomy's order, then kempli"
+      '(ugal kempur gong kempli)
+      (map part-name (piece-parts pc)))
+    (test-equal "origins" '(written colotomy colotomy timekeeper)
+      (map part-origin (piece-parts pc)))
+    (test-equal "kempur: a part of half the cycle, repeated"
+      '((0 1 (0)) (2 1 (0)) (4 1 (0)) (6 1 (0)) (8 1 (0)))
+      (part-triples pc 'kempur))
+    (test-equal "gong" '((0 1 (0)) (4 1 (0)) (8 1 (0)))
+      (part-triples pc 'gong))
+    (test-equal "kempli" (ones 0 9 0) (part-triples pc 'kempli))
+    (test-equal "locations: the colotomy's line" '(10 10 10)
+      (map (lambda (name) (line-of-part pc name)) '(kempur gong kempli)))
+    (test-equal "default groups" '("ugal" "kempur" "gong" "kempli")
+      (map group-label (piece-groups pc))))
+
+  (let ((pc (read-colo+ ":colotomy long :pickup 1" "(part ugal 1:5)")))
+    (test-equal "a stroke starting before time 0 is cut at 0"
+      '((0 1 (2)) (3 2 (2)))
+      (part-triples pc 'gong))))
+
+(test-group "[colotomy] 01's Gilak"
+  (let ((pc (read-colo+ ":colotomy gilak :pickup 1"
+                        "(part ugal  a1 ||  o2 i2 e2 o2 | a1 o2 i2 a1 ||)")))
+    (test-assert "reads" (piece? pc))
+    (test-equal "length 9" 9 (and pc (piece-length pc)))
+    (test-equal "ugal events"
+      '((0 1 (3)) (1 1 (5)) (2 1 (4)) (3 1 (6)) (4 1 (5))
+        (5 1 (3)) (6 1 (5)) (7 1 (4)) (8 1 (3)))
+      (and pc (part-triples pc 'ugal)))
+    (test-equal "parts" '(ugal gong kempli)
+      (and pc (map part-name (piece-parts pc))))))
+
+;;; ------------------------------------------------------------------
+;;; The timekeeper
+
+(test-group "[colotomy] the built-in kempli"
+  (let* ((pc (read-bare+ ":colotomy gilak" "(part u 1:8)"))   ; 7
+         (k (safe (lambda () (part-named pc 'kempli))))
+         (inst (safe (lambda () (part-instrument k)))))
+    (test-equal "parts: written, colotomy, timekeeper" '(u gong kempli)
+      (map part-name (piece-parts pc)))
+    (test-equal "origin" 'timekeeper (part-origin k))
+    (test-equal "events: K on every pulse" (ones 0 8 0) (part-triples pc 'kempli))
+    (test-equal "an instrument called kempli with one stroke, K" '(kempli (K))
+      (list (instrument-name inst)
+            (map note-name (vector->list (instrument-notes inst)))))
+    (test-assert "not in piece-instruments"
+      (not (memq inst (piece-instruments pc))))
+    (test-equal "piece-instruments are the file's" '(u gong)
+      (instrument-names pc))
+    (test-assert "its stroke set is not in piece-scales"
+      (not (memq (instrument-scale inst) (piece-scales pc))))
+    (test-equal "piece-scales are the file's" '(s gong-strokes) (scale-names pc))
+    (test-equal "never printed: no default group" '("u" "gong")
+      (map group-label (piece-groups pc)))
+    (test-equal "location: the colotomy's" 6 (line-of-part pc 'kempli)))
+
+  (let* ((pc (read-bare+ "" "(part u 1 2 1)"))
+         (k (safe (lambda () (part-named pc 'kempli)))))
+    (test-equal "without a colotomy: still generated" '(u kempli)
+      (map part-name (piece-parts pc)))
+    (test-equal "without a colotomy: origin" 'timekeeper (part-origin k))
+    (test-equal "without a colotomy: events" (ones 0 3 0)
+      (part-triples pc 'kempli))
+    (test-equal "without a colotomy: the built-in instrument" 'kempli
+      (instrument-name (part-instrument k)))
+    (test-assert "without a colotomy: not in piece-instruments"
+      (not (memq (part-instrument k) (piece-instruments pc))))
+    (test-equal "without a colotomy: no group" '("u")
+      (map group-label (piece-groups pc)))))
+
+(test-group "[colotomy] the piece's kempli"
+  (let* ((pc (read-defs+ "(part ugal 1 2 3)"))
+         (k (safe (lambda () (part-named pc 'kempli)))))
+    (test-equal "without a colotomy: after the written parts" '(ugal kempli)
+      (map part-name (piece-parts pc)))
+    (test-equal "origin" 'timekeeper (part-origin k))
+    (test-assert "plays the piece's kempli instrument"
+      (eq? (part-instrument k) (instrument-named pc 'kempli)))
+    (test-equal "events" (ones 0 3 0) (part-triples pc 'kempli))
+    (test-equal "printed: it has a default group" '("ugal" "kempli")
+      (map group-label (piece-groups pc)))))
+
+(test-group "[colotomy] the timekeeper in a piece of fractional length"
+  (for-each
+   (match-lambda
+     ((name part expected)
+      (test-equal name expected
+        (part-triples (read-bare+ "" part) 'kempli))))
+   (list (list "2 1/2 pulses: the last stroke cut at the end" "(part u 1:5/2)"
+               '((0 1 (0)) (1 1 (0)) (2 1/2 (0))))
+         (list "half a pulse" "(part u 1:1/2)"
+               '((0 1/2 (0))))
+         (list "2 1/4 pulses, trailing rests counted" "(part u 1:7/4 -:1/2)"
+               '((0 1 (0)) (1 1 (0)) (2 1/4 (0))))
+         (list "a whole number of pulses: no cut" "(part u 1:1/2 2:5/2)"
+               '((0 1 (0)) (1 1 (0)) (2 1 (0))))))
+  (test-equal "on the piece's kempli too"
+    '((0 1 (0)) (1 1/2 (0)))
+    (part-triples (read-defs+ "(part ugal 1:3/2)") 'kempli)))
+
+;;; ------------------------------------------------------------------
+;;; `||` checks
+
+(test-group "[colotomy] || on a cycle boundary reads"
+  (for-each
+   (match-lambda
+     ((name options part length)
+      (test-equal name length
+        (and=> (read-colo+ options part) piece-length))))
+   (list (list "at the end of each cycle" ":colotomy gilak"
+               "(part ugal 1:8 || 2:8 ||)" 16)
+         (list "at time 0 with no pickup" ":colotomy gilak"
+               "(part ugal || 1:8 ||)" 8)
+         (list "after the pickup" ":colotomy gilak :pickup 1"
+               "(part ugal 1 || 2:8 ||)" 9)
+         (list "with durations of a fraction" ":colotomy gilak"
+               "(part ugal 1:1/2 2 3:7 ||)" 8)
+         (list "in a rep, every repetition" ":colotomy gilak"
+               "(part ugal (rep 2 1:8 ||))" 16)
+         (list "in a rep after a pickup" ":colotomy gilak :pickup 1"
+               "(part ugal 1 || (rep 2 2:8 ||))" 17)
+         (list "a cycle of 4" ":colotomy pair"
+               "(part ugal 1:4 || 2:4 ||)" 8)
+         (list "with | checks too" ":colotomy pair"
+               "(part ugal 1 | 2 | 3 | 4 || 5:4 ||)" 8))))
+
+(test-group "misplaced-cycle-check"
+  (for-each
+   (match-lambda
+     ((name options part time)
+      (test-equal name (list 'misplaced-cycle-check 12 'p time)
+        (error-fields (colo+ options part)))))
+   (list (list "after three pulses" ":colotomy gilak"
+               "(part ugal :name p 1:3 || 2:5)" 3)
+         (list "after half a pulse" ":colotomy gilak"
+               "(part ugal :name p 1:1/2 || 2:1/2 3:7)" 1/2)
+         (list "a pulse after the cycle" ":colotomy gilak"
+               "(part ugal :name p 1:9 || 2:7)" 9)
+         (list "the second check" ":colotomy gilak"
+               "(part ugal :name p 1:8 || 2:4 || 3:4)" 12)
+         (list "in a rep: the first repetition" ":colotomy gilak"
+               "(part ugal :name p (rep 2 1:4 ||))" 4)
+         (list "in a rep: a later repetition" ":colotomy gilak"
+               "(part ugal :name p 1:4 (rep 2 2:4 ||))" 12)
+         (list "with a pickup: the end of a cycle without it" ":colotomy gilak :pickup 1"
+               "(part ugal :name p 1:8 || 2:9)" 8)
+         (list "with a pickup: time 0" ":colotomy gilak :pickup 1"
+               "(part ugal :name p || 1:9)" 0)
+         (list "a cycle of 4: after 2 pulses" ":colotomy pair"
+               "(part ugal :name p 1:2 || 2:2)" 2)))
+  (test-equal "a multi-line part: the form's line" '(misplaced-cycle-check 12 p 3)
+    (error-fields (colo+ ":colotomy gilak" "(part ugal :name p" "  1:3 || 2:5)")))
+  (test-equal "without :name: part is the instrument's name"
+    '(misplaced-cycle-check 12 ugal 3)
+    (error-fields (colo+ ":colotomy gilak" "(part ugal 1:3 || 2:5)"))))
+
+(test-group "no-colotomy for ||"
+  (for-each
+   (match-lambda
+     ((name text expected)
+      (test-equal name expected (error-fields text))))
+   (list (list "after a pulse" (defs+ "(part reyong :name p 1 || 2)")
+               '(no-colotomy 10 p 1))
+         (list "at time 0" (defs+ "(part reyong :name p || 1)")
+               '(no-colotomy 10 p 0))
+         (list "a colotomy defined but not the piece's"
+               (colo+ "" "(part ugal :name p 1:8 ||)")
+               '(no-colotomy 12 p 8))
+         (list "in a rep" (defs+ "(part reyong :name p 1 (rep 2 2 ||))")
+               '(no-colotomy 10 p 2)))))
+
+;;; ------------------------------------------------------------------
+;;; Lengths
+
+(test-group "incomplete-cycle"
+  (for-each
+   (match-lambda
+     ((name options line . parts)
+      (test-equal name (list 'incomplete-cycle line)
+        (string-error (apply colo+ options parts)))))
+   (list (list "a pulse short of a cycle" ":colotomy gilak" 12 "(part ugal 1:7)")
+         (list "a pulse more than a cycle" ":colotomy gilak" 12 "(part ugal 1:9)")
+         (list "half a pulse short" ":colotomy gilak" 12 "(part ugal 1:15/2)")
+         (list "the first written part's line" ":colotomy gilak" 12
+               "(part ugal :name a 1:7)" "(part ugal :name b 1:7)")
+         (list "a multi-line first part" ":colotomy gilak" 12
+               "(part ugal" "  1:7)")
+         (list "with a pickup: whole cycles without it" ":colotomy gilak :pickup 1" 12
+               "(part ugal 1:16)")
+         (list "with a pickup: the pickup short" ":colotomy gilak :pickup 1" 12
+               "(part ugal 1:8)")
+         (list "a pickup of a whole cycle" ":colotomy gilak :pickup 8" 12
+               "(part ugal 1:9)")
+         (list "a cycle of 4" ":colotomy pair" 12 "(part ugal 1:6)")))
+  (test-equal "the first written part's line, after other forms"
+    '(incomplete-cycle 13)
+    (string-error (colo+ ":colotomy gilak" "" "(part ugal 1:7)")))
+  (for-each
+   (match-lambda
+     ((name options length . parts)
+      (test-equal name length
+        (and=> (apply read-colo+ options parts) piece-length))))
+   (list (list "one cycle" ":colotomy gilak" 8 "(part ugal 1:8)")
+         (list "three cycles" ":colotomy gilak" 24 "(part ugal 1:24)")
+         (list "fractions adding up to a cycle" ":colotomy gilak" 8
+               "(part ugal 1:15/2 -:1/2)")
+         (list "pickup 1 plus one cycle" ":colotomy gilak :pickup 1" 9 "(part ugal 1:9)")
+         (list "pickup 3 plus one cycle" ":colotomy gilak :pickup 3" 11 "(part ugal 1:11)")
+         (list "a cycle of 4: three cycles" ":colotomy pair" 12 "(part ugal 1:12)"))))
+
+;;; ------------------------------------------------------------------
+;;; Colotomy forms: errors
+
+(test-group "bad-form of a colotomy"
+  (table-tests 'bad-form
+   (map (match-lambda
+          ((name form) (list name 12 (colo+ "" form))))
+        (list (list "no name" "(colotomy)")
+              (list "a name that is not a symbol" "(colotomy \"c\" 8 (gong gong G:8))")
+              (list "a number for a name" "(colotomy 8 (gong gong G:8))")
+              (list "no length" "(colotomy c (gong gong G:8))")
+              (list "only a name" "(colotomy c)")
+              (list "length 0" "(colotomy c 0 (gong gong G))")
+              (list "a negative length" "(colotomy c -8 (gong gong G))")
+              (list "a fractional length" "(colotomy c 15/2 (gong gong G))")
+              (list "an inexact length" "(colotomy c 8.0 (gong gong G:8))")
+              (list "a symbol for a length" "(colotomy c x (gong gong G:8))")
+              (list "a string for a length" "(colotomy c \"8\" (gong gong G:8))")
+              (list "no parts" "(colotomy c 8)")
+              (list "a part that is not a list" "(colotomy c 8 gong)")
+              (list "a part with no instrument" "(colotomy c 8 (gong))")
+              (list "a part with no tokens" "(colotomy c 8 (gong gong))")
+              (list "a part whose name is not a symbol" "(colotomy c 8 (\"gong\" gong G:8))")
+              (list "a part whose instrument is not a symbol" "(colotomy c 8 (gong 3 G:8))")
+              (list "an empty part" "(colotomy c 8 ())"))))
+  (test-equal "a colotomy option that doesn't exist: unknown-option"
+    '(unknown-option 12)
+    (string-error (colo+ "" "(colotomy c 8 :foo 1 (gong gong G:8))"))))
+
+(test-group "duplicate-definition of a colotomy"
+  (table-tests 'duplicate-definition
+   (list (list "two colotomies of one name: the second" 12
+               (colo+ "" "(colotomy gilak 4 (gong gong G:4))"))
+         (list "identical colotomies are still duplicates" 12
+               (colo+ "" "(colotomy pair 4 (kempur kempur - P) (gong gong -:3 G:1))"))))
+  (test-assert "a colotomy may have a part's name"
+    (piece? (read-colo+ "" "(part ugal :name gilak 1)"))))
+
+(test-group "token errors in a colotomy part"
+  (for-each
+   (match-lambda
+     ((name form expected)
+      (test-equal name expected (error-fields (colo+ "" form)))))
+   (list (list "unknown-note" "(colotomy c 8 (gong gong G:4 X))"
+               '(unknown-note 12 gong 4))
+         (list "a stroke of another instrument" "(colotomy c 8 (kempur kempur G:8))"
+               '(unknown-note 12 kempur 0))
+         (list "note-out-of-range" "(colotomy c 8 (gong gong G 4 -:6))"
+               '(note-out-of-range 12 gong 1))
+         (list "hold-without-note" "(colotomy c 8 (gong gong _ G:7))"
+               '(hold-without-note 12 gong 0))
+         (list "bad-duration" "(colotomy c 8 (gong gong G:0))"
+               '(bad-duration 12 gong 0))
+         (list "misplaced-pulse-check" "(colotomy c 8 (gong gong G:1/2 | G:15/2))"
+               '(misplaced-pulse-check 12 gong 1/2))
+         (list "unknown-token" "(colotomy c 8 (gong gong G:4 \"x\" -:3))"
+               '(unknown-token 12 gong 4))
+         (list "in the second part" "(colotomy c 8 (gong gong G:8) (kempur kempur P:2 X))"
+               '(unknown-note 12 kempur 2)))))
+
+(test-group "undefined-instrument in a colotomy"
+  (for-each
+   (match-lambda
+     ((name form expected)
+      (test-equal name expected (error-kind+line+part (colo+ "" form)))))
+   (list (list "nothing by that name" "(colotomy c 8 (gong nowhere G:8))"
+               '(undefined-instrument 12 gong))
+         (list "a scale's name" "(colotomy c 8 (gong gong-strokes G:8))"
+               '(undefined-instrument 12 gong))
+         (list "the second part" "(colotomy c 8 (gong gong G:8) (kp nowhere P:8))"
+               '(undefined-instrument 12 kp)))))
+
+(test-group "colotomy-part-length"
+  (for-each
+   (match-lambda
+     ((name form part)
+      (test-equal name (list 'colotomy-part-length 12 part)
+        (error-kind+line+part (colo+ "" form)))))
+   (list (list "3 pulses in a cycle of 8" "(colotomy c 8 (gong gong G - -))" 'gong)
+         (list "longer than the cycle" "(colotomy c 8 (gong gong G:9))" 'gong)
+         (list "twice the cycle" "(colotomy c 8 (gong gong G:16))" 'gong)
+         (list "a fraction that does not divide" "(colotomy c 8 (gong gong G:5/2))" 'gong)
+         (list "6 pulses in a cycle of 8" "(colotomy c 8 (gong gong -:5 G:1))" 'gong)
+         (list "the second part" "(colotomy c 8 (gong gong G:8) (kempur kempur P:3))"
+               'kempur)))
+  (test-equal "a multi-line colotomy: its form's line"
+    '(colotomy-part-length 12 gong)
+    (error-kind+line+part (colo+ "" "(colotomy c 8" "  (gong gong G:3))"))))
+
+;;; ------------------------------------------------------------------
+;;; The piece's :colotomy and :pickup
+
+(test-group "undefined-colotomy"
+  (for-each
+   (match-lambda
+     ((name text)
+      (test-equal name '(undefined-colotomy 1) (string-error text))))
+   (list (list "nothing by that name" (colo+ ":colotomy nowhere" "(part ugal 1:8)"))
+         (list "names are case-sensitive" (colo+ ":colotomy Gilak" "(part ugal 1:8)"))
+         (list "an instrument's name" (colo+ ":colotomy gong" "(part ugal 1:8)"))
+         (list "a part's name" (colo+ ":colotomy ugal" "(part ugal 1:8)"))
+         (list "no colotomies at all" "(piece \"P\" :colotomy gilak)")
+         (list "with a pickup" (colo+ ":colotomy nowhere :pickup 1" "(part ugal 1:9)"))))
+  (test-equal "the piece form's line" '(undefined-colotomy 2)
+    (string-error (lines ";; c" "(piece \"P\" :colotomy gilak)")))
+  (let ((c (catch-syntax-error
+            (lambda () (read-piece-string "(piece \"P\" :colotomy gilak)")))))
+    (test-equal "part and time #f" '(#f #f)
+      (and (notasi-syntax-error? c)
+           (list (notasi-syntax-error-part c) (notasi-syntax-error-time c))))))
+
+(test-group ":colotomy and :pickup option errors"
+  (for-each
+   (match-lambda
+     ((name kind options)
+      (test-equal name (list kind 1)
+        (string-error (colo+ options "(part ugal 1:9)")))))
+   (list (list ":colotomy with no value" 'bad-option ":colotomy")
+         (list ":colotomy followed by a key" 'bad-option ":colotomy :pickup 1")
+         (list ":colotomy a number" 'bad-option ":colotomy 8")
+         (list ":colotomy a string" 'bad-option ":colotomy \"gilak\"")
+         (list ":pickup with no value" 'bad-option ":colotomy gilak :pickup")
+         (list ":pickup 1.5" 'bad-option ":colotomy gilak :pickup 1.5")
+         (list ":colotomy twice" 'duplicate-option ":colotomy gilak :colotomy gilak")
+         (list ":pickup twice" 'duplicate-option ":colotomy gilak :pickup 1 :pickup 1"))))
+
+(test-group "bad-pickup"
+  (for-each
+   (match-lambda
+     ((name options)
+      (test-equal name '(bad-pickup 1)
+        (string-error (colo+ options "(part ugal 1:9)")))))
+   (list (list "more than a cycle" ":colotomy gilak :pickup 9")
+         (list "two cycles" ":colotomy gilak :pickup 16")
+         (list "negative" ":colotomy gilak :pickup -1")
+         (list "a fraction of a pulse" ":colotomy gilak :pickup 1/2")
+         (list "a whole number and a fraction" ":colotomy gilak :pickup 3/2")
+         (list "more than a cycle of 4" ":colotomy pair :pickup 5")
+         (list "the key order does not matter" ":pickup 9 :colotomy gilak")))
+  (for-each
+   (match-lambda
+     ((name options part)
+      (test-assert name (piece? (read-colo+ options part)))))
+   (list (list "pickup 0" ":colotomy gilak :pickup 0" "(part ugal 1:8)")
+         (list "pickup of one cycle" ":colotomy gilak :pickup 8" "(part ugal 1:16)")
+         (list "pickup of one cycle of 4" ":colotomy pair :pickup 4" "(part ugal 1:8)")
+         (list ":pickup before :colotomy" ":pickup 1 :colotomy gilak" "(part ugal 1:9)"))))
+
+(test-group "no-colotomy for :pickup"
+  (for-each
+   (match-lambda
+     ((name text)
+      (test-equal name '(no-colotomy 1) (string-error text))))
+   (list (list ":pickup 1 alone" "(piece \"P\" :pickup 1)")
+         (list ":pickup 0 alone" "(piece \"P\" :pickup 0)")
+         (list "colotomies defined, none named" (colo+ ":pickup 1" "(part ugal 1:9)"))))
+  (let ((c (catch-syntax-error
+            (lambda () (read-piece-string "(piece \"P\" :pickup 1)")))))
+    (test-equal "part and time #f" '(#f #f)
+      (and (notasi-syntax-error? c)
+           (list (notasi-syntax-error-part c) (notasi-syntax-error-time c))))))
+
+;;; ------------------------------------------------------------------
+;;; Generated parts' names
+
+(test-group "duplicate-definition of a generated part"
+  (for-each
+   (match-lambda
+     ((name expected text)
+      (test-equal name expected (string-error text))))
+   (list (list "a written gong with gilak" '(duplicate-definition 12)
+               (colo+ ":colotomy gilak" "(part gong G:8)"))
+         (list "a written kempli with a colotomy" '(duplicate-definition 13)
+               (colo+ ":colotomy gilak" "(part ugal 1:8)" "(part kempli K:8)"))
+         (list "a :name of kempli" '(duplicate-definition 12)
+               (colo+ ":colotomy gilak" "(part ugal :name kempli 1:8)"))
+         (list "a :name of a colotomy part" '(duplicate-definition 12)
+               (colo+ ":colotomy gilak" "(part ugal :name gong 1:8)"))
+         (list "the second part of a colotomy" '(duplicate-definition 13)
+               (colo+ ":colotomy pair" "(part ugal :name a 1:4)"
+                      "(part ugal :name kempur 1:4)"))
+         (list "a written kempli without a colotomy" '(duplicate-definition 10)
+               (defs+ "(part kempli K)"))
+         (list "a :name of kempli without a colotomy" '(duplicate-definition 10)
+               (defs+ "(part reyong :name kempli 1)"))
+         (list "kempli with the built-in timekeeper" '(duplicate-definition 7)
+               (bare+ "" "(part u :name kempli 1)"))
+         (list "the first such part" '(duplicate-definition 12)
+               (colo+ ":colotomy gilak" "(part ugal :name kempli 1:8)"
+                      "(part ugal :name gong 1:8)")))))
+
+;;; ------------------------------------------------------------------
+;;; Check order (03, "Error reporting", items 4, 7, 9, 10, 12 to 15)
+
+(test-group "[colotomy] check order"
+  (for-each
+   (match-lambda
+     ((name expected text)
+      (test-equal name expected (string-error text))))
+   (list
+    (list "4 before 10: a piece option before a colotomy" '(bad-option 1)
+          (colo+ ":colotomy gilak :pickup 1.5" "(colotomy c 8 (gong gong G:3))"))
+    (list "6 before 10: a colotomy's shape before another's tokens" '(bad-form 13)
+          (colo+ "" "(colotomy c 8 (gong gong X:8))" "(colotomy d 0 (gong gong G))"))
+    (list "7 before 10: duplicate parts before a colotomy's tokens"
+          '(duplicate-definition 14)
+          (colo+ "" "(colotomy c 8 (gong gong X:8))"
+                 "(part ugal :name a 1)" "(part ugal :name a 1)"))
+    (list "9 before 10: an instrument before a colotomy" '(unknown-note 13)
+          (colo+ "" "(colotomy c 8 (gong gong X:8))" "(instrument bad gong-strokes X)"))
+    (list "10: colotomies in file order" '(colotomy-part-length 12)
+          (colo+ "" "(colotomy c 8 (gong gong G:3))" "(colotomy d 8 (gong gong X:8))"))
+    (list "10: a part's tokens before its length" '(note-out-of-range 12)
+          (colo+ "" "(colotomy c 8 (gong gong G 9 -))"))
+    (list "10 before 12: a colotomy before the piece's" '(colotomy-part-length 12)
+          (colo+ ":colotomy nowhere" "(colotomy c 8 (gong gong G:3))"))
+    (list "10 before 12: an unused colotomy is checked" '(colotomy-part-length 12)
+          (colo+ ":colotomy gilak" "(colotomy c 8 (gong gong G:3))" "(part ugal 1:8)"))
+    (list "12: undefined-colotomy before bad-pickup" '(undefined-colotomy 1)
+          (colo+ ":colotomy nowhere :pickup 99" "(part ugal 1:8)"))
+    (list "12 before 13: undefined-colotomy before a part" '(undefined-colotomy 1)
+          (colo+ ":colotomy nowhere" "(part ugal 99)"))
+    (list "12 before 13: bad-pickup before a part" '(bad-pickup 1)
+          (colo+ ":colotomy gilak :pickup 9" "(part nowhere 1)"))
+    (list "12 before 13: no-colotomy before a part" '(no-colotomy 1)
+          (colo+ ":pickup 1" "(part ugal 99)"))
+    (list "13: a misplaced || before the length" '(misplaced-cycle-check 12)
+          (colo+ ":colotomy gilak" "(part ugal 1:3 || 2)"))
+    (list "13 before 14: a later part's token before the length" '(note-out-of-range 13)
+          (colo+ ":colotomy gilak" "(part ugal :name a 1:7)" "(part ugal :name b 99)"))
+    (list "14: unequal-length before incomplete-cycle" '(unequal-length 13)
+          (colo+ ":colotomy gilak" "(part ugal :name a 1:7)" "(part ugal :name b 1:8)"))
+    (list "14 before 15: the length before a generated name" '(incomplete-cycle 12)
+          (colo+ ":colotomy gilak" "(part gong G:7)"))
+    (list "14 before 15: unequal-length before a generated name" '(unequal-length 13)
+          (colo+ ":colotomy gilak" "(part kempli K:8)" "(part ugal 1:7)"))
+    (list "7 before 15: written duplicates first" '(duplicate-definition 13)
+          (colo+ ":colotomy gilak" "(part ugal :name gong 1:8)" "(part ugal :name gong 1:8)")))))
+
+;;; ------------------------------------------------------------------
+;;; Colotomies in templates (03, step 3)
+
+(test-group "[colotomy] colotomies in a template"
+  (let* ((dir (fresh-dir))
+         (tpl (put-file dir "colo.nts"
+                        "(strokes gs G P)"                       ; 1
+                        "(instrument gong gs G P)"               ; 2
+                        "(colotomy gilak 4 (gong gong -:3 G:1))")) ; 3
+         (pc (read-in dir
+                      "(piece \"P\" :colotomy gilak)"            ; 1
+                      "(use \"colo.nts\")"                       ; 2
+                      "(scale s a)"                              ; 3
+                      "(instrument u s a1)"                      ; 4
+                      "(part u 1:8)")))                          ; 5
+    (test-assert "reads" (piece? pc))
+    (test-equal "the template's colotomy: file and line" (list (canon tpl) 3)
+      (and pc (let ((loc (colotomy-location (the-colotomy pc))))
+                (list (canon (source-location-file loc))
+                      (source-location-line loc)))))
+    (test-equal "generated parts have the colotomy's location, in the template"
+      (list (list (canon tpl) 3) (list (canon tpl) 3))
+      (and pc (map (lambda (name) (file+line (part-named pc name)))
+                   '(gong kempli))))
+    (test-equal "the written part has the piece's location" '(#f 5)
+      (and pc (list (file-of-part pc 'u) (line-of-part pc 'u))))
+    (test-equal "gong events" '((3 1 (0)) (7 1 (0)))
+      (and pc (part-triples pc 'gong))))
+
+  (let* ((dir (fresh-dir))
+         (tpl (put-file dir "colo.nts"
+                        "(strokes gs G P)"
+                        "(instrument gong gs G P)"
+                        "(colotomy gilak 4 (gong gong -:3 G:1))"))
+         (pc (read-in dir
+                      "(piece \"P\" :colotomy gilak)"            ; 1
+                      "(use \"colo.nts\")"                       ; 2
+                      "(colotomy gilak 2 (gong gong - P))"       ; 3
+                      "(scale s a)"
+                      "(instrument u s a1)"
+                      "(part u 1:4)")))
+    (test-equal "the piece's colotomy replaces the template's" '(2 #f 3)
+      (and pc (let* ((c (the-colotomy pc)) (loc (colotomy-location c)))
+                (list (colotomy-length c) (source-location-file loc)
+                      (source-location-line loc)))))
+    (test-equal "the replacement's gong" '((1 1 (1)) (3 1 (1)))
+      (and pc (part-triples pc 'gong))))
+
+  (let* ((dir (fresh-dir))
+         (a (put-file dir "a.nts" "(strokes gs G)" "(instrument gong gs G)"
+                      "(colotomy c 4 (gong gong -:3 G:1))"))
+         (b (put-file dir "b.nts" "(colotomy c 2 (gong gong - G))")))
+    (error-tests
+     (list (list "the same colotomy from two templates: template-conflict"
+                 (at 'template-conflict b 1)
+                 (string-in dir "(piece \"P\")" "(use \"a.nts\")" "(use \"b.nts\")")))))
+
+  (let* ((dir (fresh-dir))
+         (t (put-file dir "bad.nts" "(strokes gs G)" "(instrument gong gs G)"
+                      "(colotomy c 4 (gong gong G - -))")))
+    (error-tests
+     (list (list "an error in a template's colotomy: the template's file and line"
+                 (at 'colotomy-part-length t 3)
+                 (string-in dir "(piece \"P\")" "(use \"bad.nts\")"))
+           (list "a bad-form colotomy in a template"
+                 (let ((t2 (put-file dir "bf.nts" "(colotomy c)")))
+                   (at 'bad-form t2 1))
+                 (string-in dir "(piece \"P\")" "(use \"bf.nts\")"))))))
+
 ;;; ------------------------------------------------------------------
 ;;; examples/tenzer1.nts reads end to end
 
@@ -3425,15 +4230,24 @@ canonicalized, or the raised object (or no-error) unchanged."
     (test-equal "instruments, including those no part plays"
       '(ugal reyong kempli gong kendang)
       (instrument-names pc))
-    (test-equal "parts, each named after its instrument" '(ugal kempli gong)
+    (test-equal "parts: the written ugal and gong, then the generated kempli"
+      '(ugal gong kempli)
       (map part-name (piece-parts pc)))
-    (test-equal "groups: one default group per part" '("ugal" "kempli" "gong")
+    (test-equal "origins" '(written written timekeeper)
+      (map part-origin (piece-parts pc)))
+    (test-equal "no colotomy, no pickup" '(() 0)
+      (list (piece-colotomies pc) (piece-pickup pc)))
+    (test-assert "the kempli plays the template's kempli instrument"
+      (eq? (part-instrument (part-named pc 'kempli))
+           (instrument-named pc 'kempli)))
+    (test-equal "groups: one default group per part, kempli printed"
+      '("ugal" "gong" "kempli")
       (map group-label (piece-groups pc)))
     (test-equal "ugal events"
       '((0 1 (3)) (1 1 (5)) (2 1 (4)) (3 1 (6)) (4 1 (5))
         (5 1 (3)) (6 1 (5)) (7 1 (4)) (8 1 (3)))
       (part-triples pc 'ugal))
-    (test-equal "kempli events"
+    (test-equal "kempli events: one K per pulse"
       (map (lambda (i) (list i 1 '(0))) (iota 9))
       (part-triples pc 'kempli))
     (test-equal "gong events"
@@ -3460,12 +4274,12 @@ canonicalized, or the raised object (or no-error) unchanged."
       (map (lambda (name)
              (list "tenzer1.nts"
                    (line-in tenzer-file (string-append "(part " name " "))))
-           '("ugal" "kempli" "gong"))
+           '("ugal" "gong"))
       (map (lambda (p)
              (let ((loc (part-location p)))
                (list (basename (source-location-file loc))
                      (source-location-line loc))))
-           (piece-parts pc)))
+           (written-parts pc)))
     (test-equal "groups have no location" '(#f #f #f)
       (map group-line (piece-groups pc)))))
 

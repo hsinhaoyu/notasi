@@ -34,6 +34,7 @@ Not every pulse strikes a new note:
 | `-` | Rest: silence for as long as a note. The note before is damped. |
 | `/` | Nothing: a separator to make the line easier to read. It takes no time. |
 | `\|` | A pulse check: it takes no time, and must fall at the start of a pulse. |
+| `\|\|` | A cycle check: it takes no time, and must fall at the end of a gong cycle (see [Gong cycles](gong-cycles.md)). |
 
 So in the example, `a1` sounds for pulses 1 to 3, pulse 4 is silent,
 `i2` sounds for pulses 5 and 6, and `o2` for pulse 7.

@@ -250,7 +250,9 @@ parts that mark it.
 - A piece with `:colotomy NAME` gets each of its parts, generated for
   the whole piece and named as the colotomy names them (`gong`).
 - The timekeeper is implied, with or without a colotomy: a part
-  `kempli`, on the instrument `kempli`, with one stroke per pulse.
+  `kempli`, with one stroke per pulse, on the piece's instrument
+  `kempli`. A piece without one gets a built-in kempli, and then the
+  timekeeper is in the music but never printed.
 - Generated parts are parts like any other: scores print them by name,
   and part names stay unique, so a written part cannot take a generated
   part's name.
@@ -538,14 +540,15 @@ rest.
 milestone 1, slice 1). It differs from the rest as follows, and this
 section goes when iteration 2 is built:
 
-- Durations, `_`, `-`, `/`, `|` (slice 2) and `rep` (slice 3) are read.
-  `piece` takes no options yet, and there are no `||`, patterns or
-  colotomies.
+- Durations, `_`, `-`, `/`, `|` (slice 2), `rep` (slice 3), colotomies,
+  `:colotomy`, `:pickup` and `||` (slice 4) are read. There are no
+  patterns yet.
   A figure is one system for the whole piece.
 - `colotomy`, `pattern` and `score` forms raise `not-implemented`.
   There are no scores yet: every part is drawn in its own group, and no
   note shows its name.
-- A template may use only `scale`, `strokes`, `instrument` and `use`.
+- A template may use `scale`, `strokes`, `instrument`, `colotomy` and
+  `use` (`pattern` comes in slice 5).
 
 The manual describes this notation until then.
 

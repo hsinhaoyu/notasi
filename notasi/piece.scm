@@ -11,14 +11,20 @@
   #:use-module (ice-9 match)
   #:export (note-pitch-index note-display note-label
             group-lanes part-end events-at
+            time->position position->time
 
 make-source-location source-location?
             source-location-file source-location-line
 
             make-piece piece?
             piece-title
-            piece-length piece-scales piece-instruments piece-parts
+            piece-length piece-pickup piece-colotomies
+            piece-scales piece-instruments piece-parts
             piece-groups
+
+            make-colotomy colotomy?
+            colotomy-name colotomy-length colotomy-timekeeper
+            colotomy-parts colotomy-location
 
             make-scale scale?
             scale-name scale-degrees scale-pitched? scale-location
@@ -35,7 +41,8 @@ make-source-location source-location?
             note-name note-degree note-octave
 
             make-part part?
-            part-name part-instrument part-events part-location
+            part-name part-instrument part-events part-origin
+            part-location
 
             make-event event?
             event-start event-duration event-notes
@@ -53,10 +60,13 @@ make-source-location source-location?
 
 ;;; A whole piece after reading, with templates merged.
 (define-record-type <piece>
-  (make-piece title length scales instruments parts groups)
+  (make-piece title length pickup colotomies scales instruments parts
+              groups)
   piece?
   (title            piece-title)
   (length           piece-length)           ; pulses, an exact rational
+  (pickup           piece-pickup)           ; pulses; 0 without a colotomy
+  (colotomies       piece-colotomies)       ; ((START . COLOTOMY)) or ()
   (scales           piece-scales)           ; includes stroke sets
   (instruments      piece-instruments)
   (parts            piece-parts)
@@ -104,12 +114,25 @@ make-source-location source-location?
 
 ;;; EVENTS are sorted by start.
 (define-record-type <part>
-  (make-part name instrument events location)
+  (make-part name instrument events origin location)
   part?
   (name       part-name)
   (instrument part-instrument)
   (events     part-events)
+  (origin     part-origin)       ; written, timekeeper or colotomy
   (location   part-location))
+
+;;; A colotomic meter: a cycle of LENGTH pulses and the colotomic PARTS
+;;; that mark it, each written out over one cycle.  TIMEKEEPER is the
+;;; timekeeper's instrument name (kempli).
+(define-record-type <colotomy>
+  (make-colotomy name length timekeeper parts location)
+  colotomy?
+  (name       colotomy-name)
+  (length     colotomy-length)
+  (timekeeper colotomy-timekeeper)
+  (parts      colotomy-parts)
+  (location   colotomy-location))
 
 ;;; NOTES are 0-based indices into the instrument's notes; more than one
 ;;; is a chord.
@@ -208,3 +231,34 @@ start through its holds."
                         (cons part e)))
                  (part-events part)))
    (piece-parts piece)))
+
+;;; ------------------------------------------------------------------
+;;; Positions (02, "Derived values"): derived from time, never stored.
+
+(define (piece-cycle piece)
+  "The length of PIECE's colotomy, or #f without one."
+  (match (piece-colotomies piece)
+    (() #f)
+    (((_ . colotomy) . _) (colotomy-length colotomy))))
+
+(define (time->position piece time)
+  "TIME as a position: (CYCLE PULSE) with a colotomy, PULSE counting
+from 1 and the pickup being cycle 0; without one, the pulse number
+TIME + 1."
+  (match (piece-cycle piece)
+    (#f (+ time 1))
+    (n (let ((t (- time (piece-pickup piece))))
+         (list (+ (floor (/ t n)) 1)
+               (+ (- t (* n (floor (/ t n)))) 1))))))
+
+(define position->time
+  (case-lambda
+    ((piece pulse)
+     "The time of pulse PULSE, in a piece without a colotomy."
+     (- pulse 1))
+    ((piece cycle pulse)
+     "The time of CYCLE and PULSE in PIECE: the inverse of
+`time->position'."
+     (+ (piece-pickup piece)
+        (* (piece-cycle piece) (- cycle 1))
+        (- pulse 1)))))

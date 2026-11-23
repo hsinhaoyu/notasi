@@ -6,6 +6,17 @@
 ;;; `piece` is (make-piece title length scales instruments parts groups),
 ;;; times are exact rationals in pulses, `part-end` replaces `part-steps`
 ;;; and `events-at` takes a time.
+;;;
+;;; Slice feat/music-colotomy (03, slice 4's decided bullets; 02,
+;;; "Records" and "Derived values"): `(make-piece title length pickup
+;;; colotomies scales instruments parts groups)`, `(make-part name
+;;; instrument events origin location)`, the `colotomy` record, and
+;;; `time->position` / `position->time`.
+;;; Choices made where the docs are not explicit:
+;;; - A piece's colotomy starts at time 0: `piece-colotomies` is
+;;;   ((0 . colotomy)), the pickup included.
+;;; - `time->position` follows 02's formula for any time, the piece's end
+;;;   included (it is the first pulse of the next cycle).
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -113,7 +124,11 @@
   (make-event start duration notes))
 
 (define (mk-part name instrument . events)
-  (make-part name instrument events loc))
+  (make-part name instrument events 'written loc))
+
+(define (mk-piece title length scales instruments parts groups)
+  "A piece without a colotomy: pickup 0, no colotomies."
+  (make-piece title length 0 '() scales instruments parts groups))
 
 (define (mk-group label . parts)
   (make-group label #f parts #f))
@@ -192,12 +207,17 @@
 
 (test-group "part record"
   (let* ((events (list (ev 0 1 0) (ev 1 1 1)))
-         (p (make-part 'polos reyong events loc)))
+         (p (make-part 'polos reyong events 'written loc)))
     (test-assert "predicate" (part? p))
     (test-eq "name" 'polos (part-name p))
     (test-eq "instrument" reyong (part-instrument p))
     (test-equal "events" events (part-events p))
-    (test-eq "location" loc (part-location p))))
+    (test-eq "origin" 'written (part-origin p))
+    (test-eq "location" loc (part-location p)))
+  (test-equal "origin is one of written, timekeeper, colotomy"
+    '(written timekeeper colotomy)
+    (map (lambda (o) (part-origin (make-part 'x gong '() o loc)))
+         '(written timekeeper colotomy))))
 
 (test-group "group record"
   (let* ((p (mk-part 'polos reyong))
@@ -214,7 +234,7 @@
 (test-group "piece record"
   (let* ((p (mk-part 'polos reyong (ev 0 1 0)))
          (g (mk-group "Reyong" p))
-         (pc (make-piece "Test" 8
+         (pc (make-piece "Test" 8 0 '()
                          (list selisir gong-strokes)
                          (list reyong gong)
                          (list p)
@@ -222,14 +242,35 @@
     (test-assert "predicate" (piece? pc))
     (test-equal "title" "Test" (piece-title pc))
     (test-equal "length" 8 (piece-length pc))
+    (test-equal "pickup" 0 (piece-pickup pc))
+    (test-equal "colotomies" '() (piece-colotomies pc))
     (test-equal "scales" (list selisir gong-strokes) (piece-scales pc))
     (test-equal "instruments" (list reyong gong) (piece-instruments pc))
     (test-equal "parts" (list p) (piece-parts pc))
     (test-equal "groups" (list g) (piece-groups pc)))
   (test-equal "length may be a fraction of a pulse" 9/2
-    (piece-length (make-piece "T" 9/2 '() '() '() '())))
+    (piece-length (mk-piece "T" 9/2 '() '() '() '())))
   (test-equal "length stays exact" #t
-    (exact? (piece-length (make-piece "T" 1/3 '() '() '() '())))))
+    (exact? (piece-length (mk-piece "T" 1/3 '() '() '() '()))))
+  (let* ((c (make-colotomy 'gilak 8 'kempli '() loc))
+         (pc (make-piece "Gilak" 17 1 (list (cons 0 c)) '() '() '() '())))
+    (test-equal "with a colotomy: pickup" 1 (piece-pickup pc))
+    (test-equal "with a colotomy: colotomies are (start . colotomy)"
+      (list (cons 0 c)) (piece-colotomies pc))
+    (test-equal "with a colotomy: length includes the pickup" 17
+      (piece-length pc))))
+
+(test-group "colotomy record"
+  (let* ((p (mk-part 'gong gong (ev 3 1 1) (ev 7 1 0)))
+         (c (make-colotomy 'gilak 8 'kempli (list p) loc)))
+    (test-assert "predicate" (colotomy? c))
+    (test-eq "name" 'gilak (colotomy-name c))
+    (test-equal "length" 8 (colotomy-length c))
+    (test-eq "timekeeper" 'kempli (colotomy-timekeeper c))
+    (test-equal "parts" (list p) (colotomy-parts c))
+    (test-eq "location" loc (colotomy-location c))
+    (test-assert "not a part or a piece"
+      (not (or (part? c) (piece? c) (colotomy? p))))))
 
 (test-assert "records are distinct types"
   (not (or (note? (ev 0 1 0))
@@ -396,7 +437,7 @@
        (e-k0 (ev 0 1 0))
        (e-k6 (ev 6 1 0))
        (kp (mk-part 'kempli kempli e-k0 e-k6))
-       (pc (make-piece "Test" 8
+       (pc (mk-piece "Test" 8
                        (list selisir kempli-strokes)
                        (list reyong kempli)
                        (list polos sangsih kp)
@@ -449,7 +490,7 @@
        (e2 (ev 1/4 1/4 1))
        (e3 (ev 3/4 1/4 2))
        (p (mk-part 'polos reyong e1 e2 e3))
-       (pc (make-piece "Quarters" 1 (list selisir) (list reyong) (list p)
+       (pc (mk-piece "Quarters" 1 (list selisir) (list reyong) (list p)
                        (list (mk-group "R" p)))))
   (define (events-at* time) (map cdr (events-at pc time)))
   (test-group "events-at: fractions of a pulse"
@@ -464,11 +505,104 @@
 
 (let* ((a (mk-part 'a kempli (ev 0 1 0)))
        (b (mk-part 'b kempli (ev 0 1 0)))
-       (pc (make-piece "Order" 4 '() (list kempli) (list b a)
+       (pc (mk-piece "Order" 4 '() (list kempli) (list b a)
                        (list (mk-group "x" b a)))))
   (test-equal "events-at follows piece-parts order, not part names"
     '(b a)
     (map (lambda (pr) (part-name (car pr))) (events-at pc 0))))
+
+;;; time->position and position->time (02, "Derived values"): with a
+;;; pickup P and a cycle of N pulses, TIME is cycle floor((TIME-P)/N)+1,
+;;; pulse (TIME-P) mod N + 1; the pickup is cycle 0. Without a colotomy,
+;;; the pulse number TIME + 1.
+
+(define gilak (make-colotomy 'gilak 8 'kempli '() loc))
+
+(define (colotomy-piece length pickup)
+  (make-piece "Gilak" length pickup (list (cons 0 gilak))
+              (list gong-strokes) (list gong) '() '()))
+
+(define no-pickup (colotomy-piece 16 0))
+(define pickup-1 (colotomy-piece 17 1))
+(define pickup-8 (colotomy-piece 16 8))
+(define plain (mk-piece "Plain" 10 '() '() '() '()))
+
+(test-group "time->position: a colotomy, no pickup"
+  (for-each
+   (match-lambda
+     ((time position)
+      (test-equal (format #f "time ~a" time) position
+        (time->position no-pickup time))))
+   '((0 (1 1)) (1 (1 2)) (7 (1 8)) (8 (2 1)) (15 (2 8))
+     (16 (3 1))
+     (1/2 (1 3/2)) (7/2 (1 9/2)) (31/4 (1 35/4)) (17/2 (2 3/2))))
+  (test-assert "the pulse stays exact"
+    (exact? (cadr (time->position no-pickup 7/2)))))
+
+(test-group "time->position: a pickup of one pulse is cycle 0"
+  (for-each
+   (match-lambda
+     ((time position)
+      (test-equal (format #f "time ~a" time) position
+        (time->position pickup-1 time))))
+   '((0 (0 8)) (1/2 (0 17/2)) (1 (1 1)) (2 (1 2)) (8 (1 8))
+     (9 (2 1)) (16 (2 8)) (33/2 (2 17/2)))))
+
+(test-group "time->position: a pickup of a whole cycle"
+  (for-each
+   (match-lambda
+     ((time position)
+      (test-equal (format #f "time ~a" time) position
+        (time->position pickup-8 time))))
+   '((0 (0 1)) (7 (0 8)) (8 (1 1)) (15 (1 8)) (3/2 (0 5/2)))))
+
+(test-group "time->position: no colotomy, a pulse number"
+  (for-each
+   (match-lambda
+     ((time pulse)
+      (test-equal (format #f "time ~a" time) pulse
+        (time->position plain time))))
+   '((0 1) (1 2) (9 10) (3/2 5/2) (1/4 5/4)))
+  (test-assert "a number, not a list" (number? (time->position plain 3))))
+
+(test-group "position->time"
+  (for-each
+   (match-lambda
+     ((name pc cycle pulse time)
+      (test-equal name time (position->time pc cycle pulse))))
+   (list (list "no pickup: cycle 1, pulse 1" no-pickup 1 1 0)
+         (list "no pickup: cycle 1, pulse 8" no-pickup 1 8 7)
+         (list "no pickup: cycle 2, pulse 1" no-pickup 2 1 8)
+         (list "no pickup: cycle 2, pulse 4 1/2" no-pickup 2 9/2 23/2)
+         (list "pickup 1: cycle 0, pulse 8" pickup-1 0 8 0)
+         (list "pickup 1: cycle 0, pulse 8 1/2" pickup-1 0 17/2 1/2)
+         (list "pickup 1: cycle 1, pulse 1" pickup-1 1 1 1)
+         (list "pickup 1: cycle 2, pulse 8" pickup-1 2 8 16)
+         (list "pickup 8: cycle 0, pulse 1" pickup-8 0 1 0)
+         (list "pickup 8: cycle 1, pulse 1" pickup-8 1 1 8)))
+  (for-each
+   (match-lambda
+     ((pulse time)
+      (test-equal (format #f "no colotomy: pulse ~a" pulse) time
+        (position->time plain pulse))))
+   '((1 0) (2 1) (10 9) (5/2 3/2)))
+  (test-assert "the time stays exact"
+    (exact? (position->time pickup-1 0 17/2))))
+
+(test-group "position->time inverts time->position"
+  (for-each
+   (lambda (pc)
+     (for-each
+      (lambda (time)
+        (test-equal (format #f "~a, time ~a" (piece-pickup pc) time) time
+          (apply position->time pc (time->position pc time))))
+      '(0 1/2 1 7 15/2 8 9 13/4 16)))
+   (list no-pickup pickup-1 pickup-8))
+  (for-each
+   (lambda (time)
+     (test-equal (format #f "no colotomy, time ~a" time) time
+       (position->time plain (time->position plain time))))
+   '(0 1/3 1 9)))
 
 (define runner (test-runner-current))
 (test-end "piece")

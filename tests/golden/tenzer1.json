@@ -107,6 +107,63 @@
           ]
         },
         {
+          "label": "gong",
+          "subtitle": null,
+          "lanes": ["G", "P"],
+          "voices": [
+            {
+              "name": "gong",
+              "events": [
+                {
+                  "start": 0,
+                  "dur": 1,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 4,
+                  "dur": 1,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 5,
+                  "dur": 1,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 7,
+                  "dur": 1,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 8,
+                  "dur": 1,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                }
+              ]
+            }
+          ]
+        },
+        {
           "label": "kempli",
           "subtitle": null,
           "lanes": ["K"],
@@ -181,63 +238,6 @@
                   "start": 7,
                   "dur": 1,
                   "lane": 0,
-                  "text": null,
-                  "fill": "#cccccc",
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 8,
-                  "dur": 1,
-                  "lane": 0,
-                  "text": null,
-                  "fill": "#cccccc",
-                  "text_color": "#222222",
-                  "continued": false
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "label": "gong",
-          "subtitle": null,
-          "lanes": ["G", "P"],
-          "voices": [
-            {
-              "name": "gong",
-              "events": [
-                {
-                  "start": 0,
-                  "dur": 1,
-                  "lane": 0,
-                  "text": null,
-                  "fill": "#cccccc",
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 4,
-                  "dur": 1,
-                  "lane": 0,
-                  "text": null,
-                  "fill": "#cccccc",
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 5,
-                  "dur": 1,
-                  "lane": 1,
-                  "text": null,
-                  "fill": "#cccccc",
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 7,
-                  "dur": 1,
-                  "lane": 1,
                   "text": null,
                   "fill": "#cccccc",
                   "text_color": "#222222",

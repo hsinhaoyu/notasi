@@ -1,0 +1,1 @@
+incomplete-cycle.nts:4: part `ugal': the piece lasts 7 pulses, which is not a whole number of 8-pulse cycles

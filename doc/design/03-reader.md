@@ -1,18 +1,20 @@
 # 03 — Reader and validation
 
-Status: partly implemented (iteration 2): milestone 1, slices 1–3 of 5
-(`feat/music-syntax`, `feat/music-durations`, `feat/music-rep`, see
-"Slices (iteration 2)"); the rest is planned.
+Status: partly implemented (iteration 2): milestone 1, slices 1–4 of 5
+(`feat/music-syntax`, `feat/music-durations`, `feat/music-rep`,
+`feat/music-colotomy`, see "Slices (iteration 2)"); the rest is
+planned.
 "What the reader reads today" says what `(notasi reader)` does in the
 meantime. Tests in `tests/reader.scm`.
 
 Everything in this document is **Planned** unless it says otherwise.
 **Implemented** since slices 1 and 2: steps 1, 2 (with `colotomy`,
 `pattern` and `score` raising `not-implemented`), 3 to 7, step 9 for
-tokens and `rep` (durations, `_`, `-`, `/`, `|`, fragments with lead
-holds, without patterns or spans) in `(notasi expand)`, step 10 without
-colotomies, the condition's `time` and `uses`, and every **[syntax]**,
-**[durations]** and **[rep]** case.
+tokens and `rep` (durations, `_`, `-`, `/`, `|`, `||`, fragments with
+lead holds, without patterns or spans) in `(notasi expand)`, which takes
+`#:cycle` and `#:pickup` for `||`; steps 10 and 11; the condition's
+`time` and `uses`; and every **[syntax]**, **[durations]**, **[rep]**
+and **[colotomy]** case.
 
 ## Responsibility
 
@@ -382,7 +384,8 @@ All at the part's line, with `part` and `time` set.
 - [colotomy] `:colotomy` naming a colotomy that isn't defined:
   `undefined-colotomy`, at the `piece` form.
 - [colotomy] `:pickup` that is not a whole number of pulses from 0 to
-  one cycle: `bad-pickup`; `:pickup` without `:colotomy`: `no-colotomy`.
+  one cycle (`-1`, `1/2`, `3/2`, more than a cycle): `bad-pickup` (a
+  decimal such as `1.5` is not exact, so it is `bad-option`); `:pickup` without `:colotomy`: `no-colotomy`.
   Both at the `piece` form.
 - [colotomy] A written part with the name of a generated part
   (`kempli`, or a colotomy part's): `duplicate-definition`, at the
@@ -511,11 +514,33 @@ error cases tagged with its feature, and the steps above that they need.
    - `rep` may be nested. A `|` in the body is checked at every
      repetition; any other mistake in the body is reported at its time
      in the first repetition.
-4. `feat/music-colotomy` **[colotomy]**: `colotomy` forms, `:colotomy`
+4. **Implemented.** `feat/music-colotomy` **[colotomy]**: `colotomy` forms, `:colotomy`
    and `:pickup`, generated parts (step 11), `||` checks, lengths
    (step 10), positions as `cycle C, pulse P`, `time->position` and
-   `position->time`. The open question about a piece without a `kempli`
-   instrument is decided before this slice starts.
+   `position->time`. Decided for this slice:
+   - The timekeeper `kempli` is always generated, with or without a
+     colotomy. It plays the piece's instrument `kempli` when there is
+     one; otherwise a built-in one (instrument `kempli`, one stroke `K`),
+     which is not in `piece-instruments` or `piece-scales`. A timekeeper
+     on the built-in instrument is never printed: it gets no default
+     group (and, in milestone 2, the default score leaves it out and a
+     score that names it is `undefined-part`). A written part called
+     `kempli` is `duplicate-definition`.
+   - Records: `(make-piece title length pickup colotomies scales
+     instruments parts groups)`; `(make-part name instrument events
+     origin location)`, `origin` one of `written`, `timekeeper`,
+     `colotomy` (slice 5 adds `spans` before `location`);
+     `(make-colotomy name length timekeeper parts location)`, its parts
+     over one cycle, `timekeeper` the symbol `kempli`. `(time->position
+     piece time)` is `(CYCLE PULSE)`, or the pulse number `TIME + 1`
+     without a colotomy; `(position->time piece cycle pulse)` and
+     `(position->time piece pulse)` invert it.
+   - Generated parts come after the written ones, the colotomy's parts
+     first, then `kempli`. A colotomy part is laid so that every cycle
+     ends on the colotomy's last pulse; with a pickup it starts partway
+     through cycle 0, and a stroke starting before time 0 is cut at 0.
+     The timekeeper strikes `K` at every whole pulse, one pulse long,
+     the last stroke cut at the piece's end.
 5. `feat/music-patterns` **[patterns]**: `pattern` forms, checked where
    they are defined (step 8), `@NAME` and `(@ NAME :step :short :long)`,
    spans, and errors that name the chain of uses.
@@ -530,16 +555,12 @@ The **[scores]** cases are built in milestone 2 (04, "Slices").
 iteration 2. It differs from the above as follows, and this section
 goes when iteration 2 is built:
 
-- `piece` takes no options yet (no `:colotomy` or `:pickup`).
-- There are no `||` checks, patterns, colotomies or scores.
-  Steps 8, 11 and 12 are not built; `uses` is always `'()`.
+- There are no patterns or scores. Steps 8 and 12 are not built;
+  `uses` is always `'()`.
 - Every part is in its own default group (`piece-groups`).
 
 ## Open questions
 
-- A piece with no instrument called `kempli`: is the timekeeper left out,
-  or is that an error? The templates define one, but a small piece that
-  defines its own instruments may not.
 - Collecting several errors instead of stopping at the first.
 
 ## Not the reader's job

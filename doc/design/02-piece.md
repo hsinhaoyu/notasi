@@ -3,7 +3,9 @@
 Status: partly implemented (iteration 2). `degree` (with `damped`) and
 `instrument` (without `show-names?`) are as below since
 `feat/music-syntax`; times are exact rationals in pulses, with
-`part-end` and `events-at` taking a time, since `feat/music-durations`.
+`part-end` and `events-at` taking a time, since `feat/music-durations`;
+`pickup`, `colotomies`, `part-origin`, the `colotomy` record,
+`time->position` and `position->time` since `feat/music-colotomy`.
 The other records are agreed and not yet built:
 `(notasi piece)` still implements their v1 form, summarised under "What
 the code implements today". Tests in `tests/piece.scm`.
@@ -242,18 +244,16 @@ construction, since events are built from the tokens.
 records. It differs as follows, and this section goes when iteration 2
 is built:
 
-- `piece` is `(make-piece title length scales instruments parts
-  groups)`: `length` in pulses, and `groups` (every part in exactly one
-  group) instead of `scores`; there are no `pickup`, `colotomies` or
-  `patterns` fields yet.
-- `part` has no `origin` or `spans`; there are no `colotomy`, `pattern`,
-  `pattern-span` or `score` records.
+- `piece` is `(make-piece title length pickup colotomies scales
+  instruments parts groups)`: `groups` (every part in exactly one group,
+  except a timekeeper on the built-in kempli) instead of `scores`, and
+  no `patterns` field yet. `part` has no `spans` yet.
+- There are no `pattern`, `pattern-span` or `score` records.
 - (`degree` has `damped` and `instrument` has no `show-names?` since
   iteration 2, slice 1: those two records are **Implemented** as
   above.)
 - `group` is `label`, `subtitle`, `parts`, `location`.
-- `note-display` has no `damped?`; there are no `time->position`,
-  `position->time` or `piece-score`.
+- `note-display` has no `damped?`; there is no `piece-score`.
 - Invariant 4 is "every part belongs to exactly one group": the reader
   makes one default group per part.
 

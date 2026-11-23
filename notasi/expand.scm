@@ -107,10 +107,29 @@ octave (ding2, i2); for a stroke, each name and alias."
 ;;; `|', built from a string: Guile's default reader, which reads this
 ;;; file, doesn't read a bare `|' as a symbol.
 (define pulse-check (string->symbol "|"))
+(define cycle-check (string->symbol "||"))
 
 (define (structural-token? token)
   "A token that marks time or layout rather than naming a note."
-  (or (memq token '(_ - /)) (eq? token pulse-check)))
+  (or (memq token '(_ - /)) (eq? token pulse-check) (eq? token cycle-check)))
+
+;;; The piece's meter, for `||': its cycle length in pulses and its
+;;; pickup, or #f for a piece without a colotomy.
+(define (check! kind time meter)
+  "Check a `|' (KIND pulse) or `||' (KIND cycle) at TIME in the piece."
+  (match kind
+    ('pulse
+     (unless (integer? time)
+       (expansion-error 'misplaced-pulse-check time
+                        "`|' is not at the start of a pulse")))
+    ('cycle
+     (match meter
+       (#f (expansion-error 'no-colotomy time
+                            "`||' marks the end of a gong cycle, but the piece has no :colotomy"))
+       ((cycle . pickup)
+        (unless (integer? (/ (- time pickup) cycle))
+          (expansion-error 'misplaced-cycle-check time
+                           "`||' is not at the end of a gong cycle")))))))
 
 (define (resolve-note token instrument table fail)
   "The 0-based index of the note TOKEN (a key number or a name) on
@@ -214,7 +233,7 @@ FAIL is called for a bad duration."
 (define (rep-form? token)
   (and (pair? token) (eq? (car token) 'rep)))
 
-(define (expand-fragment tokens duration offset top? instrument table)
+(define (expand-fragment tokens duration offset top? instrument table meter)
   "Expand TOKENS into a fragment, starting with DURATION.  OFFSET is the
 fragment's time in the piece where it is first placed, so errors give
 times there.  At the top of a part (TOP?), a leading `_' has nothing to
@@ -258,14 +277,11 @@ hold; inside a `rep' it becomes the fragment's lead."
                            "a part cannot start with `_' (hold): there is no note to hold"
                            "`_' (hold) after a rest: there is no note to hold"))))))
                  ((placed-checks)
-                  (map (lambda (t) (+ time t))
+                  (map (match-lambda ((t . kind) (cons (+ time t) kind)))
                        (fragment-checks fragment))))
               (when (> i 0)
-                (for-each (lambda (t)
-                            (unless (integer? (at t))
-                              (expansion-error
-                               'misplaced-pulse-check (at t)
-                               "`|' is not at the start of a pulse")))
+                (for-each (match-lambda
+                            ((t . kind) (check! kind (at t) meter)))
                           (reverse (fragment-checks fragment))))
               (place-loop (1+ i)
                           (+ time (fragment-length fragment))
@@ -291,7 +307,7 @@ hold; inside a `rep' it becomes the fragment's lead."
           (=> bad)
           (if (and (positive? times) (list? token))
               (place (expand-fragment (cddr token) duration (+ offset time)
-                                      #f instrument table)
+                                      #f instrument table meter)
                      times rest)
               (bad)))
          (_ (expansion-error-at
@@ -301,10 +317,12 @@ hold; inside a `rep' it becomes the fragment's lead."
       ((token . rest)
        (match (split-duration token fail)
          (('/ . #f) (loop rest time duration previous events checks lead))
-         (((? (lambda (t) (eq? t pulse-check))) . #f)
-          (unless (integer? (+ offset time))
-            (fail 'misplaced-pulse-check "`|' is not at the start of a pulse"))
-          (loop rest time duration previous events (cons time checks) lead))
+         (((and check (or (? (lambda (t) (eq? t pulse-check)))
+                          (? (lambda (t) (eq? t cycle-check))))) . #f)
+          (let ((kind (if (eq? check pulse-check) 'pulse 'cycle)))
+            (check! kind (+ offset time) meter)
+            (loop rest time duration previous events
+                  (cons (cons time kind) checks) lead)))
          (('- . d)
           (let ((duration (or d duration)))
             (loop rest (+ time duration) duration 'rest events checks lead)))
@@ -330,16 +348,19 @@ hold; inside a `rep' it becomes the fragment's lead."
           (strike (resolve-chord token instrument table fail)
                   rest duration))
          (_ (fail 'unknown-token
-                  "~s is not a note, a chord, a repeat, `_', `-', `/' or `|'"
+                  "~s is not a note, a chord, a repeat, `_', `-', `/', `|' or `||'"
                   token)))))))
 
-(define (expand-tokens tokens instrument)
+(define* (expand-tokens tokens instrument #:key cycle (pickup 0))
   "Turn TOKENS, a part's music on INSTRUMENT, into timed events.  Return
 (EVENTS . LENGTH): event records with exact rational starts and
 durations in pulses, sorted by start, and the written length in pulses
-(trailing rests included).  Raise an &expansion-error on a mistake."
+(trailing rests included).  CYCLE and PICKUP are the piece's colotomy
+length and pickup, for `||' checks; without CYCLE, `||' is an error.
+Raise an &expansion-error on a mistake."
   (let ((fragment (expand-fragment tokens 1 0 #t instrument
-                                   (note-name-table instrument))))
+                                   (note-name-table instrument)
+                                   (and cycle (cons cycle pickup)))))
     (cons (reverse-map (match-lambda
                          ((start duration notes)
                           (make-event start duration notes)))

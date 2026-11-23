@@ -1,0 +1,10 @@
+(piece "Gilak" :colotomy gilak :pickup 1)
+
+(use gong-kebyar)
+
+;; An eight-pulse cycle: kempur on pulses 4 and 6, gong on pulse 8.
+(colotomy gilak 8
+  (gong gong  -:3 P:1 -  P  -  G))
+
+;; One pulse before the cycle, on the gong; then the cycle.
+(part ugal  a1 || o2 i2 e2 o2 | a1 o2 i2 a1 ||)
