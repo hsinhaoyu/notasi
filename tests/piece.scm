@@ -17,6 +17,13 @@
 ;;;   ((0 . colotomy)), the pickup included.
 ;;; - `time->position` follows 02's formula for any time, the piece's end
 ;;;   included (it is the first pulse of the next cycle).
+;;;
+;;; Slice feat/music-patterns (03, slice 5's decided bullets; 02,
+;;; "Records"): `(make-piece title length pickup colotomies scales
+;;; instruments patterns parts groups)`, `(make-part name instrument
+;;; events origin spans location)`, and the `pattern` and `pattern-span`
+;;; records. Existing tests build records with the new arities (no
+;;; patterns, no spans) and check what they checked before.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -124,11 +131,11 @@
   (make-event start duration notes))
 
 (define (mk-part name instrument . events)
-  (make-part name instrument events 'written loc))
+  (make-part name instrument events 'written '() loc))
 
 (define (mk-piece title length scales instruments parts groups)
-  "A piece without a colotomy: pickup 0, no colotomies."
-  (make-piece title length 0 '() scales instruments parts groups))
+  "A piece without a colotomy or patterns: pickup 0, no colotomies."
+  (make-piece title length 0 '() scales instruments '() parts groups))
 
 (define (mk-group label . parts)
   (make-group label #f parts #f))
@@ -207,17 +214,24 @@
 
 (test-group "part record"
   (let* ((events (list (ev 0 1 0) (ev 1 1 1)))
-         (p (make-part 'polos reyong events 'written loc)))
+         (p (make-part 'polos reyong events 'written '() loc)))
     (test-assert "predicate" (part? p))
     (test-eq "name" 'polos (part-name p))
     (test-eq "instrument" reyong (part-instrument p))
     (test-equal "events" events (part-events p))
     (test-eq "origin" 'written (part-origin p))
+    (test-equal "spans: none" '() (part-spans p))
     (test-eq "location" loc (part-location p)))
   (test-equal "origin is one of written, timekeeper, colotomy"
     '(written timekeeper colotomy)
-    (map (lambda (o) (part-origin (make-part 'x gong '() o loc)))
-         '(written timekeeper colotomy))))
+    (map (lambda (o) (part-origin (make-part 'x gong '() o '() loc)))
+         '(written timekeeper colotomy)))
+  (let* ((pat (make-pattern 'polos-1 reyong "1" "Norot polos on 1" loc))
+         (s1 (make-pattern-span pat "1" "Norot polos on 1" 0 2 0))
+         (s2 (make-pattern-span pat "6" "Norot polos on 6" 2 4 0))
+         (p (make-part 'polos reyong (list (ev 0 1 3)) 'written (list s1 s2) loc)))
+    (test-equal "spans, in order" (list s1 s2) (part-spans p))
+    (test-eq "the location comes after the spans" loc (part-location p))))
 
 (test-group "group record"
   (let* ((p (mk-part 'polos reyong))
@@ -234,9 +248,11 @@
 (test-group "piece record"
   (let* ((p (mk-part 'polos reyong (ev 0 1 0)))
          (g (mk-group "Reyong" p))
+         (pat (make-pattern 'polos-1 reyong "1" "1" loc))
          (pc (make-piece "Test" 8 0 '()
                          (list selisir gong-strokes)
                          (list reyong gong)
+                         (list pat)
                          (list p)
                          (list g))))
     (test-assert "predicate" (piece? pc))
@@ -246,6 +262,7 @@
     (test-equal "colotomies" '() (piece-colotomies pc))
     (test-equal "scales" (list selisir gong-strokes) (piece-scales pc))
     (test-equal "instruments" (list reyong gong) (piece-instruments pc))
+    (test-equal "patterns" (list pat) (piece-patterns pc))
     (test-equal "parts" (list p) (piece-parts pc))
     (test-equal "groups" (list g) (piece-groups pc)))
   (test-equal "length may be a fraction of a pulse" 9/2
@@ -253,7 +270,7 @@
   (test-equal "length stays exact" #t
     (exact? (piece-length (mk-piece "T" 1/3 '() '() '() '()))))
   (let* ((c (make-colotomy 'gilak 8 'kempli '() loc))
-         (pc (make-piece "Gilak" 17 1 (list (cons 0 c)) '() '() '() '())))
+         (pc (make-piece "Gilak" 17 1 (list (cons 0 c)) '() '() '() '() '())))
     (test-equal "with a colotomy: pickup" 1 (piece-pickup pc))
     (test-equal "with a colotomy: colotomies are (start . colotomy)"
       (list (cons 0 c)) (piece-colotomies pc))
@@ -272,11 +289,38 @@
     (test-assert "not a part or a piece"
       (not (or (part? c) (piece? c) (colotomy? p))))))
 
+(test-group "pattern record"
+  (let ((pat (make-pattern 'polos-1 reyong "1" "Norot polos on 1" loc)))
+    (test-assert "predicate" (pattern? pat))
+    (test-eq "name" 'polos-1 (pattern-name pat))
+    (test-eq "instrument" reyong (pattern-instrument pat))
+    (test-equal "short" "1" (pattern-short pat))
+    (test-equal "long" "Norot polos on 1" (pattern-long pat))
+    (test-eq "location" loc (pattern-location pat))))
+
+(test-group "pattern-span record"
+  (let* ((pat (make-pattern 'polos-1 reyong "1" "Norot polos on 1" loc))
+         (s (make-pattern-span pat "6" "Norot polos on 6" 3/2 7/2 1)))
+    (test-assert "predicate" (pattern-span? s))
+    (test-eq "pattern" pat (pattern-span-pattern s))
+    (test-equal "short: the names in force at the use" "6" (pattern-span-short s))
+    (test-equal "long" "Norot polos on 6" (pattern-span-long s))
+    (test-equal "start" 3/2 (pattern-span-start s))
+    (test-equal "end" 7/2 (pattern-span-end s))
+    (test-equal "depth" 1 (pattern-span-depth s))
+    (test-assert "times stay exact"
+      (and (exact? (pattern-span-start s)) (exact? (pattern-span-end s))))))
+
 (test-assert "records are distinct types"
   (not (or (note? (ev 0 1 0))
            (event? (make-note 'dag 0 #f))
            (scale? reyong)
-           (part? (mk-group "g")))))
+           (part? (mk-group "g"))
+           (pattern? (mk-part 'p reyong))
+           (pattern-span? (make-pattern 'p reyong "p" "p" loc))
+           (part? (make-pattern 'p reyong "p" "p" loc))
+           (pattern? (make-pattern-span (make-pattern 'p reyong "p" "p" loc)
+                                        "p" "p" 0 1 0)))))
 
 ;;; note-pitch-index
 
@@ -520,7 +564,7 @@
 
 (define (colotomy-piece length pickup)
   (make-piece "Gilak" length pickup (list (cons 0 gilak))
-              (list gong-strokes) (list gong) '() '()))
+              (list gong-strokes) (list gong) '() '() '()))
 
 (define no-pickup (colotomy-piece 16 0))
 (define pickup-1 (colotomy-piece 17 1))

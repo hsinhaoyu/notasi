@@ -1,0 +1,15 @@
+(piece "Norot")
+
+(use gong-kebyar)
+
+;; A two-pulse norot figure on the tone i (ding).
+(pattern norot :instrument reyong
+  o2:1/4 i2 i2 - | i2 - i2 -)
+
+;; The figure on i, moved down a degree (to a), up a degree (to o),
+;; and on i again: eight pulses.
+(part reyong
+  @norot
+  (@ norot :step -1)
+  (@ norot :step 1)
+  @norot)

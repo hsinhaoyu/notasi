@@ -1,0 +1,4 @@
+(piece "Gilak")
+(use gong-kebyar)
+(pattern pokok :instrument ugal a1 o2 i2 e2)
+(part reyong @pokok)

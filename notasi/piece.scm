@@ -19,8 +19,16 @@ make-source-location source-location?
             make-piece piece?
             piece-title
             piece-length piece-pickup piece-colotomies
-            piece-scales piece-instruments piece-parts
+            piece-scales piece-instruments piece-patterns piece-parts
             piece-groups
+
+            make-pattern pattern?
+            pattern-name pattern-instrument pattern-short pattern-long
+            pattern-location
+
+            make-pattern-span pattern-span?
+            pattern-span-pattern pattern-span-short pattern-span-long
+            pattern-span-start pattern-span-end pattern-span-depth
 
             make-colotomy colotomy?
             colotomy-name colotomy-length colotomy-timekeeper
@@ -42,7 +50,7 @@ make-source-location source-location?
 
             make-part part?
             part-name part-instrument part-events part-origin
-            part-location
+            part-spans part-location
 
             make-event event?
             event-start event-duration event-notes
@@ -60,8 +68,8 @@ make-source-location source-location?
 
 ;;; A whole piece after reading, with templates merged.
 (define-record-type <piece>
-  (make-piece title length pickup colotomies scales instruments parts
-              groups)
+  (make-piece title length pickup colotomies scales instruments patterns
+              parts groups)
   piece?
   (title            piece-title)
   (length           piece-length)           ; pulses, an exact rational
@@ -69,6 +77,7 @@ make-source-location source-location?
   (colotomies       piece-colotomies)       ; ((START . COLOTOMY)) or ()
   (scales           piece-scales)           ; includes stroke sets
   (instruments      piece-instruments)
+  (patterns         piece-patterns)
   (parts            piece-parts)
   (groups           piece-groups))
 
@@ -114,13 +123,38 @@ make-source-location source-location?
 
 ;;; EVENTS are sorted by start.
 (define-record-type <part>
-  (make-part name instrument events origin location)
+  (make-part name instrument events origin spans location)
   part?
   (name       part-name)
   (instrument part-instrument)
   (events     part-events)
   (origin     part-origin)       ; written, timekeeper or colotomy
+  (spans      part-spans)        ; pattern-spans, sorted by start
   (location   part-location))
+
+;;; A pattern: a named figure for one INSTRUMENT (ADR 0029).  Its body
+;;; is used up by expansion; the piece keeps its names for its spans.
+(define-record-type <pattern>
+  (make-pattern name instrument short long location)
+  pattern?
+  (name       pattern-name)
+  (instrument pattern-instrument)
+  (short      pattern-short)
+  (long       pattern-long)
+  (location   pattern-location))
+
+;;; One use of a pattern in a part: the names in force at that use, its
+;;; START and END in pulses, and its DEPTH (0 for a use in the part, 1
+;;; inside such a pattern, ...).
+(define-record-type <pattern-span>
+  (make-pattern-span pattern short long start end depth)
+  pattern-span?
+  (pattern pattern-span-pattern)
+  (short   pattern-span-short)
+  (long    pattern-span-long)
+  (start   pattern-span-start)
+  (end     pattern-span-end)
+  (depth   pattern-span-depth))
 
 ;;; A colotomic meter: a cycle of LENGTH pulses and the colotomic PARTS
 ;;; that mark it, each written out over one cycle.  TIMEKEEPER is the

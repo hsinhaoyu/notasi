@@ -53,7 +53,7 @@ Each slice is its own branch and PR into `dev`, started with
 `/start-milestone <branch>`. After each one, `make check` passes and
 the manual describes what the code does.
 
-1. **`feat/music`**: the music (01, 02, 03), in five slices, see
+1. **`feat/music`** (done): the music (01, 02, 03), in five slices, see
    [03-reader.md](../../design/03-reader.md#slices-iteration-2):
    1. `feat/music-syntax`
    2. `feat/music-durations`

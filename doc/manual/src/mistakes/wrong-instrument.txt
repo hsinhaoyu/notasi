@@ -1,0 +1,1 @@
+wrong-instrument.nts:4: part `reyong', pulse 1: pattern `pokok' is written for `ugal', not `reyong'

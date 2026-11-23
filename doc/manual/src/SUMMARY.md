@@ -17,6 +17,7 @@
 - [Gong cycles](gong-cycles.md)
 - [Notes, rests and holds](notes-rests-and-holds.md)
 - [Chords](chords.md)
+- [Patterns](patterns.md)
 - [Several parts on one instrument](parts.md)
 
 # Templates

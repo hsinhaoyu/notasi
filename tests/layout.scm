@@ -59,6 +59,9 @@
 ;;; the same strokes) or play an instrument called `kajar` instead
 ;;; (ten-steps, the one-letter sizes test). examples/tenzer1.nts loses
 ;;; its written kempli part, so its generated kempli group comes last.
+;;;
+;;; Slice feat/music-patterns (03, slice 5): `make-piece` takes the
+;;; patterns after the instruments, so `regroup` passes them on.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -126,6 +129,7 @@ has (ADR 0031)."
               (piece-colotomies piece)
               (piece-scales piece)
               (piece-instruments piece)
+              (piece-patterns piece)
               (piece-parts piece)
               (map (match-lambda
                      ((label subtitle . names)
