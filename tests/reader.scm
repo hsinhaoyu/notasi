@@ -83,6 +83,39 @@
 ;;;   and the line of a part list inside it are the same.
 ;;; - unequal-length comes before incomplete-cycle (the order of check
 ;;;   14).
+;;;
+;;; Slice feat/music-patterns (slice 5, [patterns]): `pattern` forms in a
+;;; piece or a template, checked where they are defined (step 8, check
+;;; 11); `@NAME` and `(@ NAME :step :short :long)` in parts; spans
+;;; (`part-spans`) and `piece-patterns`; errors at a use with the part,
+;;; the time in the piece and the uses, innermost first, as
+;;; (PATTERN . LINE-OF-ITS-FORM). `pattern` is no longer
+;;; `not-implemented`: those tests now cover `score` only, and the
+;;; template test that read a pattern now expects it to be checked.
+;;; Choices made where the docs are not explicit:
+;;; - `uses` lists the patterns the offending token lies inside. For
+;;;   `undefined-pattern`, `wrong-instrument` and `pattern-cycle` the
+;;;   offending token is the use itself, so the pattern it names is not
+;;;   in the list: `@nope` written in a part has uses '().
+;;; - `undefined-pattern` and `pattern-cycle` are reported where the
+;;;   pattern is used (01, "Errors where the pattern is used"), with the
+;;;   part set; tests don't read pieces where such a pattern is unused.
+;;; - Errors in a pattern's body where it is defined are at the pattern
+;;;   form's line (or a `rep`'s line, for bad-rep), part #f, time within
+;;;   the pattern; their `uses` is not tested.
+;;; - Option errors in a `(@ ...)` use (bad-option, unknown-option,
+;;;   duplicate-option) are at the line of the `(@ ...)` list, like
+;;;   bad-pattern-use (03, "Options": "at the line of the list that
+;;;   holds the option"); a key with no value is bad-option.
+;;; - A `(@ ...)` whose name is missing, not a symbol, or followed by a
+;;;   token that is not a key is bad-pattern-use.
+;;; - A pattern's `:instrument` that is not a symbol is bad-option, a
+;;;   name starting with `:` (no name) is bad-form, and `:step` on a
+;;;   pattern form is unknown-option.
+;;; - missing-option is check 11 (03 lists it there), so an earlier
+;;;   pattern's token error comes before a later pattern's missing
+;;;   `:instrument`; bad-form and the option kinds are check 6.
+;;; - Spans that start together are not tested for order.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -170,7 +203,8 @@ tests follow their layout instead of hard-coding it."
   (for-each (lambda (f) (when (file-exists? f) (delete-file f))) tmp-files)
   (rmdir tmp-dir))
 
-;;; Forms that are known but not built in this slice.
+;;; A pattern on an instrument no fixture defines (ugal is not defined
+;;; where this is used), and a score, the one form not built yet.
 (define pattern-form "(pattern polos-1 :instrument ugal 1 2)")
 (define score-form "(score full (group \"Ugal\" ugal))")
 
@@ -613,8 +647,8 @@ tests follow their layout instead of hard-coding it."
 ;;; unknown key. `part options` tests duplicate-option.
 
 ;;; ------------------------------------------------------------------
-;;; pattern and score are known forms, not built in this slice (colotomy
-;;; is built since slice 4)
+;;; score is a known form, not built yet (colotomy is built since slice
+;;; 4, pattern since slice 5)
 
 (test-group "not-implemented"
   (for-each
@@ -623,22 +657,20 @@ tests follow their layout instead of hard-coding it."
       (test-equal (string-append head ": not-implemented at its own line")
         '(not-implemented 3)
         (string-error (lines "(piece \"P\")" ";; next" form)))))
-   (list (list "pattern" pattern-form)
-         (list "score" score-form)))
+   (list (list "score" score-form)))
   (for-each
    (match-lambda
      ((head form)
       (test-equal (string-append head " with nothing in it: still not-implemented")
         '(not-implemented 2)
         (string-error (lines "(piece \"P\")" form)))))
-   (list (list "pattern" "(pattern)")
-         (list "score" "(score)")))
+   (list (list "score" "(score)")))
   (test-equal "a multi-line score: the form's line" '(not-implemented 2)
     (string-error (lines "(piece \"P\")" "(score full" "  (group \"G\" a))")))
   (test-equal "the first not-implemented form in file order" '(not-implemented 4)
-    (string-error (lines "(piece \"P\")" "" "" pattern-form score-form)))
+    (string-error (lines "(piece \"P\")" "" "" score-form "(score other)")))
   (let ((c (catch-syntax-error
-            (lambda () (read-piece-string (lines "(piece \"P\")" pattern-form))))))
+            (lambda () (read-piece-string (lines "(piece \"P\")" score-form))))))
     (test-equal "not-implemented: file #f" #f
       (and (notasi-syntax-error? c) (notasi-syntax-error-file c)))
     (test-equal "not-implemented: part field #f" #f
@@ -3139,8 +3171,8 @@ canonicalized, or the raised object (or no-error) unchanged."
         (err-at (string-in dir "(piece \"P\")" "(use \"t.nts\")"))))))
 
 ;;; A template may hold scale, strokes, instrument, colotomy, pattern and
-;;; use forms. pattern is allowed but not built yet; colotomy is built
-;;; (see "[colotomy] colotomies in a template").
+;;; use forms. colotomy and pattern are built (see "[colotomy]
+;;; colotomies in a template" and "[patterns] patterns in a template").
 (test-group "forms in a template"
   (let ((dir (fresh-dir)))
     (error-tests
@@ -3155,8 +3187,7 @@ canonicalized, or the raised object (or no-error) unchanged."
                 (list "part" "(part x 1)" 'not-in-template)
                 (list "score" score-form 'not-in-template)
                 (list "group" "(group \"G\" p)" 'group-outside-score)
-                (list "text" "(text \"x\")" 'unknown-form)
-                (list "pattern" pattern-form 'not-implemented))))
+                (list "text" "(text \"x\")" 'unknown-form))))
     (let ((t (put-file dir "two.nts" "(scale s a)" score-form "(part x 1)")))
       (test-equal "not-in-template: the first such form in file order"
         (at 'not-in-template t 2)
@@ -3165,9 +3196,10 @@ canonicalized, or the raised object (or no-error) unchanged."
       (test-equal "a later group comes before an earlier part's not-in-template"
         (at 'group-outside-score t 2)
         (err-at (string-in dir "(piece \"P\")" "(use \"grp.nts\")"))))
-    (let* ((piece (put-file dir "pat-piece.nts" "(piece \"P\")" "(use \"pattern.nts\")")))
-      (test-equal "not-implemented in a template, the piece read from a file"
-        (at 'not-implemented (string-append dir "/pattern.nts") 2)
+    (let* ((t (put-file dir "pattern.nts" "(scale s a)" pattern-form "(scale s2 a)"))
+           (piece (put-file dir "pat-piece.nts" "(piece \"P\")" "(use \"pattern.nts\")")))
+      (test-equal "a pattern in a template is read and checked: undefined-instrument, the piece read from a file"
+        (at 'undefined-instrument t 2)
         (err-at (file-thunk piece))))))
 
 (test-group "use-not-first"
@@ -4282,6 +4314,537 @@ line 12."
            (written-parts pc)))
     (test-equal "groups have no location" '(#f #f #f)
       (map group-line (piece-groups pc)))))
+
+;;; ==================================================================
+;;; [patterns] Patterns, their uses and spans (slice feat/music-patterns)
+;;; ==================================================================
+
+;;; ------------------------------------------------------------------
+;;; Fixtures. parts-defs (lines 1 to 9: reyong, ugal, gong, kempli), then
+;;; these patterns on lines 10 to 18, then the lines given, from line 19.
+;;;   reyong: key k is index k-1; i2 = 3, a2 = 7.  ugal: a1 = 3.
+
+(define pat-lines
+  (list "(pattern two :instrument reyong 3 4)"                            ; 10
+        "(pattern named :instrument reyong :short \"1\" :long \"Norot on 1\" 3 4)" ; 11
+        "(pattern short-only :instrument reyong :short \"S\" 1)"           ; 12
+        "(pattern outer :instrument reyong 1:1/2 @two 2)"                 ; 13
+        "(pattern hold :instrument reyong _ 3)"                           ; 14
+        "(pattern checked :instrument reyong 1 |)"                        ; 15
+        "(pattern top :instrument reyong a2)"                             ; 16
+        "(pattern g :instrument gong G P)"                                ; 17
+        "(pattern a1 :instrument ugal 2)"))                               ; 18
+
+(define (pat+ . more)
+  "parts-defs, pat-lines, then the lines MORE from line 19."
+  (apply lines parts-defs (append pat-lines more)))
+
+(define (read-pat+ . more)
+  (try-read-string (apply pat+ more)))
+
+(define (pattern-named pc name)
+  (find-named pattern-name name (piece-patterns pc)))
+
+(define (span-row s)
+  "(NAME SHORT LONG START END DEPTH) of the pattern-span S."
+  (list (pattern-name (pattern-span-pattern s))
+        (pattern-span-short s) (pattern-span-long s)
+        (pattern-span-start s) (pattern-span-end s)
+        (pattern-span-depth s)))
+
+(define (part-span-rows pc name)
+  (map span-row (part-spans (part-named pc name))))
+
+(define (pattern-file+line pat)
+  (let ((loc (pattern-location pat)))
+    (list (canon (source-location-file loc)) (source-location-line loc))))
+
+(define (use-error str)
+  "(KIND LINE PART TIME USES) of the &notasi-syntax-error raised reading
+STR, or the raised object (or no-error) unchanged."
+  (let ((c (catch-syntax-error (lambda () (read-piece-string str)))))
+    (if (notasi-syntax-error? c)
+        (list (notasi-syntax-error-kind c) (notasi-syntax-error-line c)
+              (notasi-syntax-error-part c) (notasi-syntax-error-time c)
+              (notasi-syntax-error-uses c))
+        c)))
+
+;;; ------------------------------------------------------------------
+;;; Reading patterns
+
+(test-group "[patterns] the pattern records"
+  (let ((pc (read-pat+ "(part reyong :name p 1 2)")))
+    (test-assert "reads" (piece? pc))
+    (test-equal "piece-patterns, in file order"
+      '(two named short-only outer hold checked top g a1)
+      (and pc (map pattern-name (piece-patterns pc))))
+    (test-assert "pattern records"
+      (and pc (every pattern? (piece-patterns pc))))
+    (test-eq "the instrument is the piece's instrument record"
+      (and pc (instrument-named pc 'reyong))
+      (and pc (pattern-instrument (pattern-named pc 'two))))
+    (test-eq "another instrument" (and pc (instrument-named pc 'gong))
+      (and pc (pattern-instrument (pattern-named pc 'g))))
+    (test-equal "no :short or :long: the name, as a string" '("two" "two")
+      (and pc (let ((p (pattern-named pc 'two)))
+                (list (pattern-short p) (pattern-long p)))))
+    (test-equal ":short and :long" '("1" "Norot on 1")
+      (and pc (let ((p (pattern-named pc 'named)))
+                (list (pattern-short p) (pattern-long p)))))
+    (test-equal ":short only: :long is the short name" '("S" "S")
+      (and pc (let ((p (pattern-named pc 'short-only)))
+                (list (pattern-short p) (pattern-long p)))))
+    (test-equal "location: file #f from a string, the form's line" '(#f 10)
+      (and pc (pattern-file+line (pattern-named pc 'two))))
+    (test-equal "location of a later pattern" '(#f 17)
+      (and pc (pattern-file+line (pattern-named pc 'g))))
+    (test-equal "a part without patterns has no spans" '()
+      (and pc (part-spans (part-named pc 'p))))
+    (test-equal "the generated kempli has no spans" '()
+      (and pc (part-spans (part-named pc 'kempli)))))
+  (let ((pc (try-read-string (defs+ "(part reyong 1)"))))
+    (test-equal "a piece without patterns: piece-patterns is '()" '()
+      (and pc (piece-patterns pc))))
+  (let* ((path (write-temp-file "patterns.nts"
+                                (pat+ "(part reyong :name p 1)")))
+         (pc (read-file path)))
+    (test-equal "read from a file: the file and line" (list (canon path) 11)
+      (and pc (pattern-file+line (pattern-named pc 'named))))))
+
+(test-group "[patterns] using patterns in a part"
+  (let ((pc (read-pat+
+             "(part reyong :name p 1 @two (@ named :step 1 :short \"x\" :long \"y\") 2)")))
+    (test-assert "reads" (piece? pc))
+    (test-equal "events"
+      '((0 1 (0)) (1 1 (2)) (2 1 (3)) (3 1 (3)) (4 1 (4)) (5 1 (1)))
+      (and pc (part-triples pc 'p)))
+    (test-equal "length" 6 (and pc (piece-length pc)))
+    (test-equal "spans: names in force at each use"
+      '((two "two" "two" 1 3 0) (named "x" "y" 3 5 0))
+      (and pc (part-span-rows pc 'p)))
+    (test-eq "a span's pattern is the record in piece-patterns"
+      (and pc (pattern-named pc 'two))
+      (and pc (pattern-span-pattern (car (part-spans (part-named pc 'p)))))))
+  (for-each
+   (match-lambda
+     ((name part-form events spans)
+      (let ((pc (read-pat+ part-form)))
+        (test-equal (string-append name ": events") events
+          (and pc (part-triples pc 'p)))
+        (test-equal (string-append name ": spans") spans
+          (and pc (part-span-rows pc 'p))))))
+   (list
+    (list "a pattern's names" "(part reyong :name p @named)"
+          '((0 1 (2)) (1 1 (3))) '((named "1" "Norot on 1" 0 2 0)))
+    (list "nested: the inner span at depth 1" "(part reyong :name p 1 @outer)"
+          '((0 1 (0)) (1 1/2 (0)) (3/2 1 (2)) (5/2 1 (3)) (7/2 1/2 (1)))
+          '((outer "outer" "outer" 1 4 0) (two "two" "two" 3/2 7/2 1)))
+    (list "the pattern starts at 1 pulse; the part's duration comes back"
+          "(part reyong :name p 1:1/4 @two 2)"
+          '((0 1/4 (0)) (1/4 1 (2)) (5/4 1 (3)) (9/4 1/4 (1)))
+          '((two "two" "two" 1/4 9/4 0)))
+    (list "a leading _ holds the note before"
+          "(part reyong :name p 1 @hold 2)"
+          '((0 2 (0)) (2 1 (2)) (3 1 (1)))
+          '((hold "hold" "hold" 1 3 0)))
+    (list "a rep: one span per repetition" "(part reyong :name p (rep 2 @two))"
+          '((0 1 (2)) (1 1 (3)) (2 1 (2)) (3 1 (3)))
+          '((two "two" "two" 0 2 0) (two "two" "two" 2 4 0)))
+    (list "| in a pattern, on the pulse where it is used"
+          "(part reyong :name p @checked 2)"
+          '((0 1 (0)) (1 1 (1)))
+          '((checked "checked" "checked" 0 1 0)))
+    (list ":step by name" "(part reyong :name p (@ top :step -1))"
+          '((0 1 (6))) '((top "top" "top" 0 1 0)))))
+  (let ((pc (read-pat+ "(part ugal a1 @a1)")))
+    (test-equal "a pattern named like a note: a1 is the note, @a1 the pattern"
+      '((0 1 (3)) (1 1 (1)))
+      (and pc (part-triples pc 'ugal))))
+  (let ((pc (try-read-string (defs+ "(part reyong :name p @late)"          ; 10
+                                    "(pattern late :instrument reyong 1)")))) ; 11
+    (test-equal "a pattern defined after the part that uses it"
+      '((0 1 (0)))
+      (and pc (part-triples pc 'p)))
+    (test-equal "its span" '((late "late" "late" 0 1 0))
+      (and pc (part-span-rows pc 'p))))
+  (let ((pc (try-read-string (defs+ "(pattern reyong :instrument reyong 1)"
+                                    "(part reyong @reyong)"))))
+    (test-equal "patterns have their own names: a pattern called reyong"
+      '((0 1 (0)))
+      (and pc (part-triples pc 'reyong)))))
+
+;;; ------------------------------------------------------------------
+;;; Errors where a pattern is defined (step 8, check 11)
+
+(test-group "bad-form of a pattern"
+  (for-each
+   (match-lambda
+     ((name form)
+      (test-equal name '(bad-form 10) (string-error (defs+ form)))))
+   (list (list "nothing" "(pattern)")
+         (list "no name: a key first" "(pattern :instrument reyong 1)")
+         (list "a string as the name" "(pattern \"a\" :instrument reyong 1)")
+         (list "a number as the name" "(pattern 3 :instrument reyong 1)")
+         (list "a list as the name" "(pattern (a) :instrument reyong 1)")
+         (list "a name starting with @" "(pattern @a :instrument reyong 1)")
+         (list "no tokens" "(pattern a :instrument reyong)")
+         (list "no tokens, no options" "(pattern a)")))
+  (test-equal "a multi-line pattern: the form's line" '(bad-form 10)
+    (string-error (defs+ "(pattern a" "  :instrument reyong)"))))
+
+(test-group "missing-option: a pattern without :instrument"
+  (for-each
+   (match-lambda
+     ((name form)
+      (test-equal name '(missing-option 10) (string-error (defs+ form)))))
+   (list (list "no options" "(pattern a 1 2)")
+         (list "other options" "(pattern a :short \"x\" :long \"y\" 1)"))))
+
+(test-group "undefined-instrument in a pattern"
+  (for-each
+   (match-lambda
+     ((name form)
+      (test-equal name '(undefined-instrument 10) (string-error (defs+ form)))))
+   (list (list "nothing by that name" "(pattern a :instrument nowhere 1)")
+         (list "a scale's name" "(pattern a :instrument selisir 1)")
+         (list "a pattern's name" "(pattern a :instrument two 1)"))))
+
+(test-group "pattern options"
+  (for-each
+   (match-lambda
+     ((name expected . forms)
+      (test-equal name expected (string-error (apply defs+ forms)))))
+   (list (list ":instrument not a symbol" '(bad-option 10)
+               "(pattern a :instrument 3 1)")
+         (list ":short not a string" '(bad-option 10)
+               "(pattern a :instrument reyong :short 3 1)")
+         (list ":long not a string" '(bad-option 10)
+               "(pattern a :instrument reyong :long x 1)")
+         (list "an unknown key" '(unknown-option 10)
+               "(pattern a :instrument reyong :name b 1)")
+         (list "an operator is not a pattern's option" '(unknown-option 10)
+               "(pattern a :instrument reyong :step 1 1)")
+         (list "a key twice" '(duplicate-option 10)
+               "(pattern a :instrument reyong :short \"x\" :short \"y\" 1)")
+         (list "a key after the first token" '(option-after-body 10)
+               "(pattern a :instrument reyong 1 :short \"x\")")
+         (list "multi-line: the form's line" '(bad-option 10)
+               "(pattern a" "  :instrument reyong :short 3" "  1)"))))
+
+(test-group "duplicate-definition of a pattern"
+  (for-each
+   (match-lambda
+     ((name expected . forms)
+      (test-equal name expected (string-error (apply defs+ forms)))))
+   (list (list "two patterns with one name: the second" '(duplicate-definition 11)
+               "(pattern a :instrument reyong 1)" "(pattern a :instrument reyong 2)")
+         (list "on different instruments" '(duplicate-definition 12)
+               "(pattern a :instrument reyong 1)" "(part reyong 1)"
+               "(pattern a :instrument gong G)")))
+  (test-assert "a pattern may share a name with an instrument and a part"
+    (piece? (try-read-string (defs+ "(pattern gong :instrument gong G)"
+                                    "(part gong G)")))))
+
+(test-group "[patterns] token errors where a pattern is defined"
+  ;; part #f, time within the pattern, at the pattern's line
+  (for-each
+   (match-lambda
+     ((name expected . forms)
+      (test-equal name expected (error-fields (apply defs+ forms)))))
+   (list (list "a key out of range" '(note-out-of-range 10 #f 1)
+               "(pattern a :instrument reyong 1 9)")
+         (list "an unknown note, after a fraction" '(unknown-note 10 #f 1/2)
+               "(pattern a :instrument reyong 1:1/2 foo1)")
+         (list "a pitched note on a stroke instrument" '(unknown-note 10 #f 1)
+               "(pattern a :instrument gong G ding2)")
+         (list "a bad duration" '(bad-duration 10 #f 1)
+               "(pattern a :instrument reyong 1 2:0)")
+         (list "a bad chord" '(bad-chord 10 #f 0)
+               "(pattern a :instrument reyong (1))")
+         (list "an unknown token" '(unknown-token 10 #f 1)
+               "(pattern a :instrument reyong 1 \"x\")")
+         (list "_ after a rest" '(hold-without-note 10 #f 2)
+               "(pattern a :instrument reyong 1 - _)")
+         (list "a multi-line pattern: the form's line" '(note-out-of-range 10 #f 1)
+               "(pattern a :instrument reyong 1" "  9)")
+         (list "bad-rep: the rep's line" '(bad-rep 11 #f 1)
+               "(pattern a :instrument reyong 1" "  (rep 0 2))")
+         (list "a pattern for another instrument used inside it"
+               '(wrong-instrument 11 #f 1)
+               "(pattern g :instrument gong G)" "(pattern a :instrument reyong 1 @g)")
+         (list "an unused pattern is checked" '(note-out-of-range 10 #f 0)
+               "(pattern a :instrument reyong 9)" "(part reyong 1)")))
+  (let* ((path (write-temp-file "pattern-error.nts"
+                                (defs+ "(pattern a :instrument reyong 1 9)")))
+         (c (catch-syntax-error (lambda () (read-piece-file path)))))
+    (test-equal "from a file: kind, line, part, time" '(note-out-of-range 10 #f 1)
+      (and (notasi-syntax-error? c)
+           (list (notasi-syntax-error-kind c) (notasi-syntax-error-line c)
+                 (notasi-syntax-error-part c) (notasi-syntax-error-time c))))
+    (test-equal "from a file: the file" path
+      (and (notasi-syntax-error? c) (notasi-syntax-error-file c)))))
+
+(test-group "[patterns] not errors where a pattern is defined"
+  (for-each
+   (match-lambda
+     ((name form)
+      (test-assert name (piece? (try-read-string (defs+ form "(part reyong 1)"))))))
+   (list (list "| off the pulse: checked where used" "(pattern a :instrument reyong 1:1/2 |)")
+         (list "a leading _" "(pattern a :instrument reyong _ 1)")
+         (list "a pattern for the same instrument inside it"
+               "(pattern a :instrument reyong 1 @two)\n(pattern two :instrument reyong 1)"))))
+
+;;; ------------------------------------------------------------------
+;;; Errors where a pattern is used: the part's line, the part, the time
+;;; in the piece, and the uses, innermost first, each with the line of
+;;; its pattern form.
+
+(test-group "[patterns] errors at a use"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (use-error (apply pat+ more)))))
+   (list
+    (list "misplaced-pulse-check: | checked where used"
+          '(misplaced-pulse-check 19 p 3/2 ((checked . 15)))
+          "(part reyong :name p 1:1/2 @checked 2:1/2)")
+    (list "hold-without-note: a pattern starting with _ first in the part"
+          '(hold-without-note 19 p 0 ((hold . 14)))
+          "(part reyong :name p @hold)")
+    (list "hold-without-note: after a rest"
+          '(hold-without-note 19 p 1 ((hold . 14)))
+          "(part reyong :name p - @hold)")
+    (list "moved-note-out-of-range: a name moved off the top"
+          '(moved-note-out-of-range 19 p 1 ((top . 16)))
+          "(part reyong :name p 1 (@ top :step 1))")
+    (list "moved-note-out-of-range: keys in a nested pattern"
+          '(moved-note-out-of-range 19 p 1/2 ((two . 10) (outer . 13)))
+          "(part reyong :name p (@ outer :step 7))")
+    (list "moved-note-out-of-range: a multi-line part, the part's line"
+          '(moved-note-out-of-range 19 p 1 ((top . 16)))
+          "(part reyong :name p 1" "  (@ top :step 1))")
+    (list "undefined-pattern" '(undefined-pattern 19 p 1 ())
+          "(part reyong :name p 1 @nope)")
+    (list "undefined-pattern in the list form" '(undefined-pattern 19 p 0 ())
+          "(part reyong :name p (@ nope :step 1))")
+    (list "wrong-instrument: a gong pattern on the reyong"
+          '(wrong-instrument 19 p 1 ())
+          "(part reyong :name p 1 @g)")
+    (list "wrong-instrument: a reyong pattern on the gong"
+          '(wrong-instrument 19 p 1 ())
+          "(part gong :name p G @two)")
+    (list "without :name: the part is the instrument's name"
+          '(undefined-pattern 19 reyong 0 ())
+          "(part reyong @nope)")))
+  (for-each
+   (match-lambda
+     ((name expected . forms)
+      (test-equal name expected (use-error (apply defs+ forms)))))
+   (list
+    (list "pattern-cycle: a pattern that uses itself"
+          '(pattern-cycle 11 p 1 ((self . 10)))
+          "(pattern self :instrument reyong 1 @self)"           ; 10
+          "(part reyong :name p @self)")                        ; 11
+    (list "pattern-cycle: through another pattern"
+          '(pattern-cycle 12 p 3 ((pong . 11) (ping . 10)))
+          "(pattern ping :instrument reyong 1 @pong)"           ; 10
+          "(pattern pong :instrument reyong 2 @ping)"           ; 11
+          "(part reyong :name p 1 @ping)")                      ; 12
+    (list "undefined-pattern inside a pattern: that pattern's use"
+          '(undefined-pattern 11 p 1 ((a . 10)))
+          "(pattern a :instrument reyong 1 @nope)"              ; 10
+          "(part reyong :name p @a)"))))                        ; 11
+
+(test-group "[patterns] bad-pattern-use, at its own line"
+  (for-each
+   (match-lambda
+     ((name use time)
+      (test-equal name (list 'bad-pattern-use 20 'p time '())
+        (use-error (pat+ "(part reyong :name p 1"              ; 19
+                         (string-append "  " use ")"))))))      ; 20
+   (list (list "no name" "(@)" 1)
+         (list "a number as the name" "(@ 3)" 1)
+         (list "a string as the name" "(@ \"two\")" 1)
+         (list "a key where the name goes" "(@ :step 1)" 1)
+         (list "a token after the name" "(@ two 1)" 1)
+         (list "at its time" "2:1/2 (@)" 3/2)))
+  (test-equal "on the part's line when written there" '(bad-pattern-use 19 p 1 ())
+    (use-error (pat+ "(part reyong :name p 1 (@))"))))
+
+(test-group "[patterns] operators: option kinds at the (@ ...) line"
+  (for-each
+   (match-lambda
+     ((name kind use)
+      (test-equal name (list kind 20 'p 1 '())
+        (use-error (pat+ "(part reyong :name p 1"               ; 19
+                         (string-append "  " use ")"))))))       ; 20
+   (list (list ":step a fraction" 'bad-option "(@ two :step 1/2)")
+         (list ":step inexact" 'bad-option "(@ two :step 1.0)")
+         (list ":step a symbol" 'bad-option "(@ two :step x)")
+         (list ":short not a string" 'bad-option "(@ two :short 3)")
+         (list ":long not a string" 'bad-option "(@ two :long x)")
+         (list "a key with no value" 'bad-option "(@ two :step)")
+         (list "a key twice" 'duplicate-option "(@ two :short \"a\" :short \"b\")")
+         (list ":octave is not built yet" 'unknown-option "(@ two :octave 1)")
+         (list ":drop-first is not built yet" 'unknown-option "(@ two :drop-first 1)")
+         (list ":drop-last is not built yet" 'unknown-option "(@ two :drop-last 1)")
+         (list ":instrument is not an operator" 'unknown-option "(@ two :instrument reyong)"))))
+
+;;; || inside a pattern is checked where it is used, against the piece's
+;;; colotomy (colo fixtures: parts from line 12).
+(test-group "[patterns] || in a pattern"
+  (let ((pc (read-colo+ ":colotomy gilak"
+                        "(pattern cyc :instrument ugal 1:8 ||)"  ; 12
+                        "(part ugal :name p @cyc)")))            ; 13
+    (test-assert "on a cycle boundary where used: reads" (piece? pc))
+    (test-equal "events" '((0 8 (0))) (and pc (part-triples pc 'p))))
+  (test-equal "off the boundary where used"
+    '(misplaced-cycle-check 13 p 9 ((cyc . 12)))
+    (use-error (colo+ ":colotomy gilak"
+                      "(pattern cyc :instrument ugal 1:8 ||)"     ; 12
+                      "(part ugal :name p 1 @cyc 2:7)"))))       ; 13
+
+;;; ------------------------------------------------------------------
+;;; Patterns in templates (03, step 3)
+
+(test-group "[patterns] patterns in a template"
+  (let* ((dir (fresh-dir))
+         (tpl (put-file dir "pat.nts"
+                        "(scale s a b c)"                              ; 1
+                        "(instrument u s a1 b1 c1)"                    ; 2
+                        "(pattern up :instrument u :short \"U\" 1 2)")) ; 3
+         (pc (read-in dir
+                      "(piece \"P\")"                                  ; 1
+                      "(use \"pat.nts\")"                              ; 2
+                      "(pattern mine :instrument u 3)"                 ; 3
+                      "(part u @up (@ up :step 1) @mine)")))           ; 4
+    (test-assert "reads" (piece? pc))
+    (test-equal "merged order: the template's patterns, then the piece's"
+      '(up mine)
+      (and pc (map pattern-name (piece-patterns pc))))
+    (test-equal "the template's pattern: its file and line" (list (canon tpl) 3)
+      (and pc (pattern-file+line (pattern-named pc 'up))))
+    (test-equal "the piece's pattern: file #f" '(#f 3)
+      (and pc (pattern-file+line (pattern-named pc 'mine))))
+    (test-eq "the template's pattern plays the piece's instrument record"
+      (and pc (instrument-named pc 'u))
+      (and pc (pattern-instrument (pattern-named pc 'up))))
+    (test-equal "events" '((0 1 (0)) (1 1 (1)) (2 1 (1)) (3 1 (2)) (4 1 (2)))
+      (and pc (part-triples pc 'u)))
+    (test-equal "spans"
+      '((up "U" "U" 0 2 0) (up "U" "U" 2 4 0) (mine "mine" "mine" 4 5 0))
+      (and pc (part-span-rows pc 'u))))
+
+  (let* ((dir (fresh-dir))
+         (tpl (put-file dir "pat.nts"
+                        "(scale s a b c)"
+                        "(instrument u s a1 b1 c1)"
+                        "(pattern up :instrument u 1 2)"))             ; 3
+         (pc (read-in dir
+                      "(piece \"P\")"
+                      "(use \"pat.nts\")"
+                      "(pattern up :instrument u 3)"                   ; 3
+                      "(part u @up)")))
+    (test-equal "the piece's pattern replaces the template's" '((0 1 (2)))
+      (and pc (part-triples pc 'u)))
+    (test-equal "the replacement's location" '(#f 3)
+      (and pc (pattern-file+line (pattern-named pc 'up))))
+    (test-equal "only the replacement is kept" '(up)
+      (and pc (map pattern-name (piece-patterns pc)))))
+
+  (let* ((dir (fresh-dir))
+         (tpl (put-file dir "pat.nts"
+                        "(scale s a b c)"
+                        "(instrument u s a1 b1 c1)"
+                        "(pattern up :instrument u 1 2)"))             ; 3
+         (c (catch-syntax-error
+             (string-in dir
+                        "(piece \"P\")"
+                        "(use \"pat.nts\")"
+                        "(part u 1 (@ up :step 2))"))))                ; 3
+    (test-equal "an error at a use of a template's pattern: the piece's part line, the template's pattern line in uses"
+      '(moved-note-out-of-range #f 3 u 2 ((up . 3)))
+      (and (notasi-syntax-error? c)
+           (list (notasi-syntax-error-kind c) (notasi-syntax-error-file c)
+                 (notasi-syntax-error-line c) (notasi-syntax-error-part c)
+                 (notasi-syntax-error-time c) (notasi-syntax-error-uses c)))))
+
+  (let* ((dir (fresh-dir))
+         (bad (put-file dir "bad.nts"
+                        "(scale s a)"
+                        "(instrument u s a1)"
+                        "(pattern p :instrument u 1 2)"))              ; 3
+         (good (put-file dir "good.nts"
+                         "(scale s a b)"
+                         "(instrument u s a1 b1)"
+                         "(pattern p :instrument u 1 2)"))             ; 3
+         (a (put-file dir "a.nts" "(scale s a)" "(instrument u s a1)"
+                      "(pattern x :instrument u 1)"))
+         (b (put-file dir "b.nts" "(pattern x :instrument u 1)")))
+    (error-tests
+     (list (list "an error in a template's pattern: the template's file and line"
+                 (at 'note-out-of-range bad 3)
+                 (string-in dir "(piece \"P\")" "(use \"bad.nts\")"))
+           (list "a template's pattern is checked against the piece's replacement instrument"
+                 (at 'note-out-of-range good 3)
+                 (string-in dir "(piece \"P\")" "(use \"good.nts\")"
+                            "(instrument u s a1)"))
+           (list "the same pattern name from two templates: template-conflict"
+                 (at 'template-conflict b 1)
+                 (string-in dir "(piece \"P\")" "(use \"a.nts\")" "(use \"b.nts\")"))
+           (list "a bad-form pattern in a template"
+                 (let ((t (put-file dir "bf.nts" "(pattern)")))
+                   (at 'bad-form t 1))
+                 (string-in dir "(piece \"P\")" "(use \"bf.nts\")"))))))
+
+;;; ------------------------------------------------------------------
+;;; Check order (03, "Error reporting", items 6, 7, 9 to 14)
+
+(test-group "[patterns] check order"
+  (for-each
+   (match-lambda
+     ((name expected text)
+      (test-equal name expected (string-error text))))
+   (list
+    (list "6 before 11: a later pattern's shape before an earlier's tokens"
+          '(bad-form 11)
+          (defs+ "(pattern a :instrument reyong 9)" "(pattern b :instrument reyong)"))
+    (list "6 before 11: a later pattern's option before an earlier's tokens"
+          '(bad-option 11)
+          (defs+ "(pattern a :instrument reyong 9)" "(pattern b :instrument reyong :short 3 1)"))
+    (list "7 before 11: duplicate patterns before a pattern's tokens"
+          '(duplicate-definition 12)
+          (defs+ "(pattern a :instrument reyong 9)" "(pattern b :instrument reyong 1)"
+                 "(pattern b :instrument reyong 1)"))
+    (list "9 before 11: an instrument before a pattern" '(unknown-note 11)
+          (defs+ "(pattern a :instrument reyong 9)" "(instrument bad selisir x1)"))
+    (list "10 before 11: a colotomy before a pattern" '(colotomy-part-length 13)
+          (colo+ "" "(pattern a :instrument ugal 99)" "(colotomy c 8 (gong gong G:3))"))
+    (list "11: missing-option before the tokens" '(missing-option 10)
+          (defs+ "(pattern a 9)"))
+    (list "11: undefined-instrument before the tokens" '(undefined-instrument 10)
+          (defs+ "(pattern a :instrument nowhere \"x\")"))
+    (list "11: patterns in file order" '(note-out-of-range 10)
+          (defs+ "(pattern a :instrument reyong 9)" "(pattern b :instrument nowhere 1)"))
+    (list "11: patterns in file order, the other way" '(undefined-instrument 10)
+          (defs+ "(pattern b :instrument nowhere 1)" "(pattern a :instrument reyong 9)"))
+    (list "11: an earlier pattern's tokens before a later one's missing :instrument"
+          '(note-out-of-range 10)
+          (defs+ "(pattern a :instrument reyong 9)" "(pattern b 1)"))
+    (list "11: tokens left to right" '(unknown-note 10)
+          (defs+ "(pattern a :instrument reyong 1 foo1 9)"))
+    (list "11 before 12: a pattern before the piece's colotomy" '(note-out-of-range 12)
+          (colo+ ":colotomy nowhere" "(pattern a :instrument ugal 99)"))
+    (list "11 before 13: a pattern after a part is checked first" '(note-out-of-range 11)
+          (defs+ "(part reyong :name p 9)" "(pattern a :instrument reyong 99)"))
+    (list "13: tokens and uses left to right: a note first" '(note-out-of-range 10)
+          (defs+ "(part reyong :name p 9 @nope)"))
+    (list "13: tokens and uses left to right: a use first" '(undefined-pattern 10)
+          (defs+ "(part reyong :name p @nope 9)"))
+    (list "13: parts in file order" '(note-out-of-range 10)
+          (defs+ "(part reyong :name a 9 1)" "(part reyong :name b @nope 1)"))
+    (list "13 before 14: a use before unequal-length" '(undefined-pattern 11)
+          (defs+ "(part reyong :name a 1 2)" "(part reyong :name b @nope)")))))
 
 (define runner (test-runner-current))
 (test-end "reader")

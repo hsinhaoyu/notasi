@@ -8,7 +8,9 @@
 ;;;
 ;;; Iteration 2, slice 2 (feat/music-durations): notes, key numbers,
 ;;; chords, durations, `_', `-', `/' and `|'.  Slice 3 (feat/music-rep):
-;;; `rep', built on fragments (03, step 9).
+;;; `rep', built on fragments (03, step 9).  Slice 5
+;;; (feat/music-patterns): pattern uses, `:step', spans and the chain
+;;; of uses in errors.
 
 (define-module (notasi expand)
   #:use-module (notasi piece)
@@ -18,6 +20,8 @@
   #:use-module (srfi srfi-9)
   #:use-module (srfi srfi-11)
   #:export (expand-tokens
+            expand-part
+            check-pattern
 
             &expansion-error
             expansion-error?
@@ -56,12 +60,16 @@
 FMT and ARGS and no location: the reader adds that."
   (apply expansion-error-at kind time #f fmt args))
 
+;;; The pattern uses the music being expanded lies inside, innermost
+;;; first, as (PATTERN-NAME . LINE-OF-ITS-DEFINITION).
+(define current-uses (make-parameter '()))
+
 (define (expansion-error-at kind time line fmt . args)
   "Like `expansion-error', for a mistake in a list with its own LINE
 (1-based, or #f), which the reader reports instead of the part's."
   (raise-exception
    (make-exception
-    (make-expansion-error kind time '() line)
+    (make-expansion-error kind time (current-uses) line)
     (make-exception-with-message (apply format #f fmt args)))))
 
 ;;; ------------------------------------------------------------------
@@ -112,24 +120,6 @@ octave (ding2, i2); for a stroke, each name and alias."
 (define (structural-token? token)
   "A token that marks time or layout rather than naming a note."
   (or (memq token '(_ - /)) (eq? token pulse-check) (eq? token cycle-check)))
-
-;;; The piece's meter, for `||': its cycle length in pulses and its
-;;; pickup, or #f for a piece without a colotomy.
-(define (check! kind time meter)
-  "Check a `|' (KIND pulse) or `||' (KIND cycle) at TIME in the piece."
-  (match kind
-    ('pulse
-     (unless (integer? time)
-       (expansion-error 'misplaced-pulse-check time
-                        "`|' is not at the start of a pulse")))
-    ('cycle
-     (match meter
-       (#f (expansion-error 'no-colotomy time
-                            "`||' marks the end of a gong cycle, but the piece has no :colotomy"))
-       ((cycle . pickup)
-        (unless (integer? (/ (- time pickup) cycle))
-          (expansion-error 'misplaced-cycle-check time
-                           "`||' is not at the end of a gong cycle")))))))
 
 (define (resolve-note token instrument table fail)
   "The 0-based index of the note TOKEN (a key number or a name) on
@@ -210,19 +200,39 @@ FAIL is called for a bad duration."
 
 ;;; A fragment: music timed from 0, to be placed in a part (or another
 ;;; fragment) at some time.  EVENTS are (START DURATION NOTES), newest
-;;; first; CHECKS are the times of its `|', newest first; LENGTH is its
-;;; length; DURATION the current duration at its end; LEAD the length of
-;;; a leading `_', which holds the note before the fragment; LAST what
-;;; ends it: note, rest, lead (only a lead hold) or none (no time).
+;;; first; CHECKS are (TIME . KIND) for its `|' and `||'; SPANS are
+;;; (START END DEPTH PATTERN SHORT LONG) for its pattern uses; LENGTH is
+;;; its length; DURATION the current duration at its end; LEAD the
+;;; length of a leading `_', which holds the note before the fragment;
+;;; LAST what ends it: note, rest, lead (only a lead hold) or none; USES
+;;; the pattern uses it was expanded in, for an error about its lead.
 (define-record-type <fragment>
-  (make-fragment events checks length duration lead last)
+  (make-fragment events checks spans length duration lead last uses)
   fragment?
   (events   fragment-events)
   (checks   fragment-checks)
+  (spans    fragment-spans)
   (length   fragment-length)
   (duration fragment-duration)
   (lead     fragment-lead)
-  (last     fragment-last))
+  (last     fragment-last)
+  (uses     fragment-uses))          ; the uses its lead hold lies in
+
+;;; What expansion knows besides the tokens: the instrument and its note
+;;; table, the meter for `||' (or #f), the patterns (an alist from name
+;;; to (PATTERN . TOKENS)), the :step in force, the depth of pattern
+;;; uses, and whether a pattern is being checked where it is defined
+;;; (then nested patterns are not expanded and `|' is not checked).
+(define-record-type <context>
+  (make-context instrument table meter patterns step depth checking?)
+  context?
+  (instrument context-instrument)
+  (table      context-table)
+  (meter      context-meter)
+  (patterns   context-patterns)
+  (step       context-step)
+  (depth      context-depth)
+  (checking?  context-checking?))
 
 (define (list-line datum)
   "The 1-based line Guile read DATUM, a list, from, or #f."
@@ -233,31 +243,243 @@ FAIL is called for a bad duration."
 (define (rep-form? token)
   (and (pair? token) (eq? (car token) 'rep)))
 
-(define (expand-fragment tokens duration offset top? instrument table meter)
+(define (pattern-use-form? token)
+  (and (pair? token) (eq? (car token) '@)))
+
+(define (pattern-token? token)
+  "Is TOKEN `@NAME'?"
+  (and (symbol? token)
+       (let ((s (symbol->string token)))
+         (and (> (string-length s) 1) (char=? (string-ref s 0) #\@)))))
+
+(define (key? x)
+  (and (symbol? x)
+       (let ((s (symbol->string x)))
+         (and (> (string-length s) 1)
+              (char=? (string-ref s 0) #\:)
+              (char-alphabetic? (string-ref s 1))))))
+
+;;; ------------------------------------------------------------------
+;;; Moving notes (`:step')
+
+(define (move-note index named? context fail)
+  "Move the note at INDEX by the context's step: a note written by name
+on a pitched instrument moves along the scale, any other note moves
+keys."
+  (let* ((step (context-step context))
+         (instrument (context-instrument context))
+         (notes (instrument-notes instrument))
+         (size (vector-length notes)))
+    (define (off)
+      (fail 'moved-note-out-of-range
+            "moved by ~a, note `~a' leaves instrument `~a'"
+            step (note-name (vector-ref notes index))
+            (instrument-name instrument)))
+    (cond
+     ((zero? step) index)
+     ((and named? (scale-pitched? (instrument-scale instrument)))
+      (let ((target (+ step (note-pitch-index instrument
+                                              (vector-ref notes index)))))
+        (or (list-index (lambda (n) (= (note-pitch-index instrument n) target))
+                        (vector->list notes))
+            (off))))
+     (else
+      (let ((target (+ index step)))
+        (if (and (<= 0 target) (< target size)) target (off)))))))
+
+(define (strike-notes token context fail)
+  "The sorted note indices TOKEN (a note, key number or chord) strikes,
+moved by the context's step."
+  (let* ((instrument (context-instrument context))
+         (table (context-table context))
+         (named (lambda (t) (symbol? t)))
+         (resolve (lambda (t)
+                    (move-note (resolve-note t instrument table fail)
+                               (named t) context fail))))
+    (if (pair? token)
+        (begin
+          (resolve-chord token instrument table fail)  ; checks the chord
+          (sort (map resolve token) <))
+        (list (resolve token)))))
+
+;;; ------------------------------------------------------------------
+;;; Pattern uses
+
+(define (use-options items line time)
+  "The operators of a pattern use, `:key value' pairs, as an alist."
+  (define (bad kind fmt . args)
+    (apply expansion-error-at kind time line fmt args))
+  (let loop ((items items) (seen '()))
+    (match items
+      (() (reverse seen))
+      (((? key? key))
+       (bad 'bad-option "option `~a' needs a value" key))
+      (((? key? key) (? key? next) . _)
+       (bad 'bad-option "option `~a' needs a value, but `~a' follows it" key next))
+      (((? key? key) value . rest)
+       (let ((name (string->symbol (substring (symbol->string key) 1))))
+         (unless (memq name '(step short long))
+           (bad 'unknown-option "a pattern use has no option `~a'" key))
+         (when (assq name seen)
+           (bad 'duplicate-option "option `~a' given twice" key))
+         (unless (match name
+                   ('step (exact-integer? value))
+                   (_ (string? value)))
+           (bad 'bad-option "`~a' must be ~a, not ~s" key
+                (if (eq? name 'step) "a whole number" "a string") value))
+         (loop rest (acons name value seen))))
+      ((item . _)
+       (bad 'bad-pattern-use
+            "a pattern use is (@ NAME :step N :short \"S\" :long \"L\"), not ~s"
+            item)))))
+
+(define (pattern-use token time)
+  "TOKEN, `@NAME' or (@ NAME :key value ...), as (NAME . OPTIONS)."
+  (match token
+    ((? pattern-token?)
+     (cons (string->symbol (substring (symbol->string token) 1)) '()))
+    (('@ (? symbol? name) . items)
+     (=> bad)
+     (if (and (list? items) (not (key? name)))
+         (cons name (use-options items (list-line token) time))
+         (bad)))
+    (_ (expansion-error-at
+        'bad-pattern-use time (list-line token)
+        "a pattern use is (@ NAME :step N :short \"S\" :long \"L\"), not ~s"
+        token))))
+
+(define (lookup-pattern name time context)
+  "The (PATTERN . TOKENS) called NAME, checked for this use."
+  (let ((entry (or (assq-ref (context-patterns context) name)
+                   (expansion-error 'undefined-pattern time
+                                    "there is no pattern called `~a'" name))))
+    (when (assq name (current-uses))
+      (expansion-error 'pattern-cycle time
+                       "pattern `~a' uses itself" name))
+    (unless (eq? (instrument-name (pattern-instrument (car entry)))
+                 (instrument-name (context-instrument context)))
+      (expansion-error 'wrong-instrument time
+                       "pattern `~a' is written for `~a', not `~a'"
+                       name
+                       (instrument-name (pattern-instrument (car entry)))
+                       (instrument-name (context-instrument context))))
+    entry))
+
+(define (pattern-line pattern)
+  (match (pattern-location pattern)
+    (#f #f)
+    (loc (source-location-line loc))))
+
+(define (expand-use token time offset context)
+  "Expand the pattern use TOKEN at local TIME into a fragment with its
+own span, or #f when only checking a definition."
+  (match (pattern-use token (+ offset time))
+    ((name . options)
+     (if (context-checking? context)
+         (begin
+           ;; Where a pattern is defined, a nested use is checked only for
+           ;; its instrument; unknown patterns and cycles are found where
+           ;; the pattern is used.
+           (match (assq-ref (context-patterns context) name)
+             (#f #f)
+             ((pattern . tokens)
+              (unless (eq? (instrument-name (pattern-instrument pattern))
+                           (instrument-name (context-instrument context)))
+                (expansion-error 'wrong-instrument (+ offset time)
+                                 "pattern `~a' is written for `~a', not `~a'"
+                                 name
+                                 (instrument-name (pattern-instrument pattern))
+                                 (instrument-name (context-instrument context))))
+              ;; Its length places what follows; a cycle is left to the use.
+              (and (not (assq name (current-uses)))
+                   (let ((fragment
+                          (parameterize ((current-uses
+                                          (cons (cons name (pattern-line pattern))
+                                                (current-uses))))
+                            (guard (e ((expansion-error? e) #f))
+                              (expand-fragment tokens 1 (+ offset time) #f
+                                               context)))))
+                     (and fragment
+                          (make-fragment '() '() '()
+                                         (fragment-length fragment) #f 0
+                                         'none '())))))))
+         (match (lookup-pattern name (+ offset time) context)
+           ((pattern . tokens)
+            (let* ((short (or (assq-ref options 'short) (pattern-short pattern)))
+                   (long (or (assq-ref options 'long) (pattern-long pattern)))
+                   (fragment
+                    (parameterize ((current-uses
+                                    (cons (cons name (pattern-line pattern))
+                                          (current-uses))))
+                      (expand-fragment
+                       tokens 1 (+ offset time) #f
+                       (make-context (context-instrument context)
+                                     (context-table context)
+                                     (context-meter context)
+                                     (context-patterns context)
+                                     (+ (context-step context)
+                                        (or (assq-ref options 'step) 0))
+                                     (1+ (context-depth context))
+                                     #f)))))
+              (make-fragment (fragment-events fragment)
+                             (fragment-checks fragment)
+                             (cons (list 0 (fragment-length fragment)
+                                         (context-depth context)
+                                         pattern short long)
+                                   (fragment-spans fragment))
+                             (fragment-length fragment)
+                             #f          ; the part's duration is kept
+                             (fragment-lead fragment)
+                             (fragment-last fragment)
+                             (fragment-uses fragment)))))))))
+
+;;; ------------------------------------------------------------------
+;;; Expanding
+
+(define (check! kind time context)
+  "Check a `|' (KIND pulse) or `||' (KIND cycle) at TIME in the piece."
+  (unless (context-checking? context)
+    (match kind
+      ('pulse
+       (unless (integer? time)
+         (expansion-error 'misplaced-pulse-check time
+                          "`|' is not at the start of a pulse")))
+      ('cycle
+       (match (context-meter context)
+         (#f (expansion-error 'no-colotomy time
+                              "`||' marks the end of a gong cycle, but the piece has no :colotomy"))
+         ((cycle . pickup)
+          (unless (integer? (/ (- time pickup) cycle))
+            (expansion-error 'misplaced-cycle-check time
+                             "`||' is not at the end of a gong cycle"))))))))
+
+(define (expand-fragment tokens duration offset top? context)
   "Expand TOKENS into a fragment, starting with DURATION.  OFFSET is the
 fragment's time in the piece where it is first placed, so errors give
 times there.  At the top of a part (TOP?), a leading `_' has nothing to
-hold; inside a `rep' it becomes the fragment's lead."
+hold; inside a `rep' or a pattern it becomes the fragment's lead."
   (let loop ((tokens tokens)
              (time 0)
              (duration duration)
              (previous 'start)     ; start, note or rest
              (events '())
              (checks '())
+             (spans '())
              (lead 0))
     (define (fail kind fmt . args)
       (apply expansion-error kind (+ offset time) fmt args))
     (define (strike notes rest duration)
       (loop rest (+ time duration) duration 'note
-            (cons (list time duration notes) events) checks lead))
+            (cons (list time duration notes) events) checks spans lead))
     (define (place fragment times rest)
       ;; Place FRAGMENT TIMES times from TIME, then go on with REST.
       (let place-loop ((i 0) (time time) (previous previous)
-                       (events events) (checks checks) (lead lead))
+                       (events events) (checks checks) (spans spans)
+                       (lead lead))
         (define (at t) (+ offset time t))
         (if (= i times)
-            (loop rest time (fragment-duration fragment) previous
-                  events checks lead)
+            (loop rest time (or (fragment-duration fragment) duration)
+                  previous events checks spans lead)
             (let*-values
                 (((events lead)
                   (let ((hold (fragment-lead fragment)))
@@ -271,17 +493,15 @@ hold; inside a `rep' it becomes the fragment's lead."
                      ((and (eq? previous 'start) (not top?))
                       (values events (+ lead hold)))
                      (else
-                      (expansion-error
+                      (parameterize ((current-uses (fragment-uses fragment)))
+                       (expansion-error
                        'hold-without-note (at 0)
                        (if (eq? previous 'start)
                            "a part cannot start with `_' (hold): there is no note to hold"
-                           "`_' (hold) after a rest: there is no note to hold"))))))
-                 ((placed-checks)
-                  (map (match-lambda ((t . kind) (cons (+ time t) kind)))
-                       (fragment-checks fragment))))
+                           "`_' (hold) after a rest: there is no note to hold"))))))))
               (when (> i 0)
                 (for-each (match-lambda
-                            ((t . kind) (check! kind (at t) meter)))
+                            ((t . kind) (check! kind (at t) context)))
                           (reverse (fragment-checks fragment))))
               (place-loop (1+ i)
                           (+ time (fragment-length fragment))
@@ -293,79 +513,127 @@ hold; inside a `rep' it becomes the fragment's lead."
                                           (list (+ time start) held notes)))
                                        (fragment-events fragment))
                                   events)
-                          (append placed-checks checks)
+                          (append (map (match-lambda
+                                         ((t . kind) (cons (+ time t) kind)))
+                                       (fragment-checks fragment))
+                                  checks)
+                          (append (map (match-lambda
+                                         ((start end . rest)
+                                          (cons* (+ time start) (+ time end)
+                                                 rest)))
+                                       (fragment-spans fragment))
+                                  spans)
                           lead)))))
     (match tokens
       (()
-       (make-fragment events checks time duration lead
+       (make-fragment events checks spans time duration lead
                       (match previous
                         ('start (if (zero? lead) 'none 'lead))
-                        (other other))))
+                        (other other))
+                      (current-uses)))
       (((? rep-form? token) . rest)
        (match token
          (('rep (? exact-integer? times) _ ..1)
           (=> bad)
           (if (and (positive? times) (list? token))
               (place (expand-fragment (cddr token) duration (+ offset time)
-                                      #f instrument table meter)
+                                      #f context)
                      times rest)
               (bad)))
          (_ (expansion-error-at
              'bad-rep (+ offset time) (list-line token)
              "a repeat is (rep N TOKEN ...), with N a whole number above zero: ~s"
              token))))
+      (((and token (or (? pattern-use-form?) (? pattern-token?))) . rest)
+       (match (expand-use token time offset context)
+         (#f (loop rest time duration previous events checks spans lead))
+         (fragment (place fragment 1 rest))))
       ((token . rest)
        (match (split-duration token fail)
-         (('/ . #f) (loop rest time duration previous events checks lead))
+         (('/ . #f) (loop rest time duration previous events checks spans lead))
          (((and check (or (? (lambda (t) (eq? t pulse-check)))
                           (? (lambda (t) (eq? t cycle-check))))) . #f)
           (let ((kind (if (eq? check pulse-check) 'pulse 'cycle)))
-            (check! kind (+ offset time) meter)
+            (check! kind (+ offset time) context)
             (loop rest time duration previous events
-                  (cons (cons time kind) checks) lead)))
+                  (cons (cons time kind) checks) spans lead)))
          (('- . d)
           (let ((duration (or d duration)))
-            (loop rest (+ time duration) duration 'rest events checks lead)))
+            (loop rest (+ time duration) duration 'rest events checks spans
+                  lead)))
          (('_ . #f)
           (match (cons previous events)
             (('note (start held notes) . earlier)
              (loop rest (+ time duration) duration 'note
                    (cons (list start (+ held duration) notes) earlier)
-                   checks lead))
+                   checks spans lead))
             (_ (cond
                 ((and (eq? previous 'start) (not top?))
                  (loop rest (+ time duration) duration 'start
-                       events checks (+ lead duration)))
+                       events checks spans (+ lead duration)))
                 (else
                  (fail 'hold-without-note
                        (if (eq? previous 'start)
                            "a part cannot start with `_' (hold): there is no note to hold"
                            "`_' (hold) after a rest: there is no note to hold")))))))
          (((and base (or (? exact-integer?) (? symbol?))) . d)
-          (strike (list (resolve-note base instrument table fail))
-                  rest (or d duration)))
+          (strike (strike-notes base context fail) rest (or d duration)))
          (((or (? pair?) ()) . #f)      ; a chord, perhaps an empty one
-          (strike (resolve-chord token instrument table fail)
+          (strike (if (pair? token)
+                      (strike-notes token context fail)
+                      (resolve-chord token (context-instrument context)
+                                     (context-table context) fail))
                   rest duration))
          (_ (fail 'unknown-token
-                  "~s is not a note, a chord, a repeat, `_', `-', `/', `|' or `||'"
+                  "~s is not a note, a chord, a repeat, a pattern, `_', `-', `/', `|' or `||'"
                   token)))))))
 
-(define* (expand-tokens tokens instrument #:key cycle (pickup 0))
+(define (top-context instrument cycle pickup patterns checking?)
+  (make-context instrument (note-name-table instrument)
+                (and cycle (cons cycle pickup)) patterns 0 0 checking?))
+
+(define* (expand-part tokens instrument #:key cycle (pickup 0) (patterns '()))
   "Turn TOKENS, a part's music on INSTRUMENT, into timed events.  Return
-(EVENTS . LENGTH): event records with exact rational starts and
-durations in pulses, sorted by start, and the written length in pulses
-(trailing rests included).  CYCLE and PICKUP are the piece's colotomy
-length and pickup, for `||' checks; without CYCLE, `||' is an error.
-Raise an &expansion-error on a mistake."
-  (let ((fragment (expand-fragment tokens 1 0 #t instrument
-                                   (note-name-table instrument)
-                                   (and cycle (cons cycle pickup)))))
-    (cons (reverse-map (match-lambda
-                         ((start duration notes)
-                          (make-event start duration notes)))
-                       (fragment-events fragment))
-          (fragment-length fragment))))
+(values EVENTS LENGTH SPANS): event records with exact rational starts
+and durations in pulses, sorted by start; the written length in pulses
+(trailing rests included); and a pattern-span for each pattern use,
+sorted by start.  CYCLE and PICKUP are the piece's colotomy length and
+pickup, for `||' checks; without CYCLE, `||' is an error.  PATTERNS is
+an alist from a pattern's name to (PATTERN . TOKENS).  Raise an
+&expansion-error on a mistake."
+  (let ((fragment (parameterize ((current-uses '()))
+                    (expand-fragment tokens 1 0 #t
+                                     (top-context instrument cycle pickup
+                                                  patterns #f)))))
+    (values (reverse-map (match-lambda
+                           ((start duration notes)
+                            (make-event start duration notes)))
+                         (fragment-events fragment))
+            (fragment-length fragment)
+            (sort (reverse-map (match-lambda
+                                 ((start end depth pattern short long)
+                                  (make-pattern-span pattern short long
+                                                     start end depth)))
+                               (fragment-spans fragment))
+                  (lambda (a b)
+                    (< (pattern-span-start a) (pattern-span-start b)))))))
+
+(define* (expand-tokens tokens instrument #:key cycle (pickup 0) (patterns '()))
+  "Like `expand-part', returning (EVENTS . LENGTH)."
+  (call-with-values
+      (lambda () (expand-part tokens instrument #:cycle cycle #:pickup pickup
+                              #:patterns patterns))
+    (lambda (events length spans) (cons events length))))
+
+(define* (check-pattern tokens instrument #:key (patterns '()))
+  "Check a pattern's body TOKENS where it is defined, against its
+INSTRUMENT: its notes, its chords, its holds and repeats, and the
+instrument of each pattern it uses.  Errors give times within the
+pattern.  Unknown patterns and cycles are found where it is used."
+  (parameterize ((current-uses '()))
+    (expand-fragment tokens 1 0 #f
+                     (top-context instrument #f 0 patterns #t)))
+  #t)
 
 (define (reverse-map f lst)
   (fold (lambda (x acc) (cons (f x) acc)) '() lst))

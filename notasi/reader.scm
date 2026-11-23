@@ -169,7 +169,7 @@ relative to some %load-path entry."
   '(piece use scale strokes instrument colotomy pattern part score))
 
 ;;; Known forms that later slices of iteration 2 build.
-(define not-yet-heads '(pattern score))
+(define not-yet-heads '(score))
 
 (define (check-form form)
   "Raise an error unless FORM, a (DATUM . LINE) pair, is a proper list
@@ -326,7 +326,7 @@ in file order."
 ;;; Item 6: the shape and options of scale, strokes, instrument and part
 ;;; forms
 
-(define definition-heads '(scale strokes instrument colotomy part))
+(define definition-heads '(scale strokes instrument colotomy pattern part))
 
 (define (note-name? x)
   (and (symbol? x) (not (key? x))))
@@ -391,9 +391,41 @@ its parts, (PART INSTRUMENT TOKEN ...)."
   (syntax-error 'bad-form line
                 "a colotomy needs a name, its length in pulses and its parts: (colotomy NAME LENGTH (PART INSTRUMENT TOKEN ...) ...)"))
 
+(define pattern-options
+  `((instrument ,(lambda (v) (and (symbol? v) (not (key? v)))) . "an instrument's name")
+    (short ,string? . "a string")
+    (long ,string? . "a string")))
+
+(define (pattern-name? x)
+  (and (symbol? x)
+       (let ((s (symbol->string x)))
+         (not (or (string-prefix? ":" s) (string-prefix? "@" s))))))
+
+(define (split-pattern form)
+  "The (NAME OPTIONS . TOKENS) of a well-formed `pattern' FORM."
+  (match form
+    ((('pattern name . items) . line)
+     (match (split-options items line)
+       ((options . tokens)
+        (cons* name (check-options options pattern-options "a pattern" line)
+               tokens))))))
+
+(define (check-pattern-shape form)
+  (match form
+    ((('pattern (? pattern-name?) . items) . line)
+     (match (split-pattern form)
+       ((_ _ . ())
+        (syntax-error 'bad-form line
+                      "a pattern needs its music: (pattern NAME :instrument INSTRUMENT TOKEN ...)"))
+       ((_ _ . tokens) (reject-keys tokens line))))
+    ((_ . line)
+     (syntax-error 'bad-form line
+                   "a pattern needs a name (not starting with : or @) and its music: (pattern NAME :instrument INSTRUMENT TOKEN ...)"))))
+
 (define (check-definition-shape form)
   (match form
     ((('colotomy . _) . _) (check-colotomy-shape form))
+    ((('pattern . _) . _) (check-pattern-shape form))
     ((((or 'scale 'strokes) . _) . _) (check-set-shape form))
     ((('instrument (? note-name?) (? note-name?) (? note-name?) ..1) . _) #t)
     ((('part (? note-name?) . items) . line)
@@ -462,7 +494,7 @@ item 13."
 ;;; it came from (#f for a string or port) and its (DATUM . LINE).
 
 (define template-heads '(scale strokes instrument colotomy pattern use))
-(define merged-heads '(scale strokes instrument colotomy))
+(define merged-heads '(scale strokes instrument colotomy pattern))
 
 (define (definition-key form)
   (match form
@@ -792,6 +824,8 @@ scale record."
                     (exception-message e)))))
     (thunk)))
 
+(define current-patterns (make-parameter '()))
+
 (define (build-part form instruments check-name)
   "Build a part record from FORM.  INSTRUMENTS is an alist from name to
 instrument record; CHECK-NAME checks the part's name against the parts
@@ -808,17 +842,78 @@ before it, after its instrument and before its tokens.  Return
                 (part-error 'undefined-instrument line name #f
                             "no instrument called `~a'" instrument-name))))
        (check-name)
-       (match (call-with-expansion
-               (lambda ()
-                 (match (current-meter)
-                   (#f (expand-tokens tokens instrument))
-                   ((cycle . pickup)
-                    (expand-tokens tokens instrument
-                                   #:cycle cycle #:pickup pickup))))
-               line name)
-         ((events . written)
-          (cons (make-part name instrument events 'written (location line))
-                written)))))))
+       (call-with-values
+           (lambda ()
+             (call-with-expansion
+              (lambda ()
+                (match (current-meter)
+                  (#f (expand-part tokens instrument
+                                   #:patterns (current-patterns)))
+                  ((cycle . pickup)
+                   (expand-part tokens instrument
+                                #:cycle cycle #:pickup pickup
+                                #:patterns (current-patterns)))))
+              line name))
+         (lambda (events written spans)
+           (cons (make-part name instrument events 'written spans
+                            (location line))
+                 written)))))))
+
+;;; ------------------------------------------------------------------
+;;; Item 11: patterns, checked where they are defined
+
+(define (build-pattern form instruments patterns)
+  "Build (PATTERN . TOKENS) from FORM, checking its body against its
+instrument.  PATTERNS is an alist of every pattern, from name to
+(PATTERN . TOKENS), for the instruments of the patterns it uses."
+  (match (split-pattern form)
+    ((name options . tokens)
+     (let* ((line (cdr form))
+            (instrument-name
+             (or (assq-ref options 'instrument)
+                 (syntax-error 'missing-option line
+                               "pattern `~a' needs :instrument, the instrument it is written for"
+                               name)))
+            (instrument
+             (or (assq-ref instruments instrument-name)
+                 (syntax-error 'undefined-instrument line
+                               "pattern `~a': no instrument called `~a'"
+                               name instrument-name)))
+            (short (or (assq-ref options 'short) (symbol->string name))))
+       (guard (e ((expansion-error? e)
+                  (raise-syntax-error
+                   (expansion-error-kind e)
+                   (or (expansion-error-line e) line) #f
+                   (expansion-error-time e) (expansion-error-uses e)
+                   "pattern `~a'~@[, at ~a~]: ~a"
+                   (list name
+                         (and (expansion-error-time e)
+                              (mixed-number (expansion-error-time e)))
+                         (exception-message e)))))
+         (check-pattern tokens instrument #:patterns patterns))
+       (cons (make-pattern name instrument short
+                           (or (assq-ref options 'long) short)
+                           (location line))
+             tokens)))))
+
+(define (pattern-shadows definitions instruments)
+  "For checking patterns where they are defined: an alist from each
+pattern's name to (PATTERN . TOKENS), for those whose instrument is
+known, so a pattern used inside another can be checked for its
+instrument and measured."
+  (filter-map (match-lambda
+                ((file . form)
+                 (match (split-pattern form)
+                   ((name options . tokens)
+                    (let ((instrument (assq-ref instruments
+                                                (assq-ref options 'instrument))))
+                      (and instrument
+                           (cons name
+                                 (cons (make-pattern name instrument "" ""
+                                                     (make-source-location
+                                                      file (cdr form)))
+                                       tokens))))))))
+              definitions))
 
 ;;; ------------------------------------------------------------------
 ;;; Item 10: colotomies
@@ -857,7 +952,7 @@ cycle.  INSTRUMENTS is an alist from name to instrument record."
                                  length name cycle))
                    (make-part part-name instrument
                               (repeat-events events length (/ cycle length))
-                              'colotomy (location line)))))))
+                              'colotomy '() (location line)))))))
            parts)
       (location line)))))
 
@@ -949,7 +1044,7 @@ cycle's last pulse: from PICKUP - CYCLE, cycle after cycle."
   (let loop ((from (- pickup cycle)) (events '()))
     (if (>= from length)
         (make-part (part-name part) (part-instrument part) events
-                   'colotomy (part-location part))
+                   'colotomy '() (part-location part))
         (loop (+ from cycle)
               (append events (clip-events (part-events part) from length))))))
 
@@ -960,7 +1055,7 @@ cut at the piece's end, on the piece's kempli or a built-in one."
              (or (assq-ref instruments 'kempli) built-in-kempli)
              (map (lambda (t) (make-event t (min 1 (- length t)) '(0)))
                   (iota (ceiling length)))
-             'timekeeper
+             'timekeeper '()
              (and colotomy (colotomy-location colotomy))))
 
 (define (generated-parts instruments colotomy pickup length)
@@ -1031,6 +1126,16 @@ so a file with several problems always reports the same one."
                           (build-colotomy form (named instruments
                                                       instrument-name)))
                         (with-heads '(colotomy) definitions)))
+           (pattern-definitions (with-heads '(pattern) definitions))
+           (patterns+tokens
+            (let ((shadows (pattern-shadows pattern-definitions
+                                            (named instruments
+                                                   instrument-name))))
+              (build-each
+               (lambda (form)
+                 (build-pattern form (named instruments instrument-name)
+                                shadows))
+               pattern-definitions)))
            (meter (piece-meter piece (named colotomies colotomy-name)
                                (cdr piece-form)))
            (colotomy (car meter))
@@ -1039,7 +1144,11 @@ so a file with several problems always reports the same one."
            (parts+lengths
             (parameterize ((current-meter
                             (and colotomy
-                                 (cons (colotomy-length colotomy) pickup))))
+                                 (cons (colotomy-length colotomy) pickup)))
+                           (current-patterns
+                            (map (lambda (entry)
+                                   (cons (pattern-name (car entry)) entry))
+                                 patterns+tokens)))
               (let loop ((todo part-forms) (done '()) (built '()))
                 (match todo
                   (() (reverse built))
@@ -1057,7 +1166,8 @@ so a file with several problems always reports the same one."
            (parts (append written generated)))
       (make-piece (car piece) length pickup
                   (if colotomy (list (cons 0 colotomy)) '())
-                  scales instruments parts (default-groups parts)))))
+                  scales instruments (map car patterns+tokens)
+                  parts (default-groups parts)))))
 
 (define (read-port port dir chain)
   (read-piece (read-forms port) dir chain))

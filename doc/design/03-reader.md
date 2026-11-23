@@ -543,7 +543,26 @@ error cases tagged with its feature, and the steps above that they need.
      the last stroke cut at the piece's end.
 5. `feat/music-patterns` **[patterns]**: `pattern` forms, checked where
    they are defined (step 8), `@NAME` and `(@ NAME :step :short :long)`,
-   spans, and errors that name the chain of uses.
+   spans, and errors that name the chain of uses. Decided for this slice:
+   - Records as in 02: `(make-piece title length pickup colotomies
+     scales instruments patterns parts groups)`; `(make-part name
+     instrument events origin spans location)`; `(make-pattern name
+     instrument short long location)`; `(make-pattern-span pattern short
+     long start end depth)`.
+   - `(notasi expand)`: `expand-tokens` keeps its interface and result,
+     and gains `#:patterns`, an alist from a pattern's name to
+     `(PATTERN . TOKENS)`. `(expand-part tokens instrument #:key cycle
+     pickup patterns)` returns `(values EVENTS LENGTH SPANS)`;
+     `expand-tokens` is it without the spans. `(check-pattern tokens
+     instrument #:key patterns)` checks a pattern's body where it is
+     defined (step 8), its errors at times within the pattern.
+   - An error's `uses` lists `(PATTERN-NAME . LINE)` pairs, innermost
+     first, LINE the line of that pattern's `pattern` form; the error's
+     own line stays the part's (or the `(@ ...)` list's, for
+     `bad-pattern-use`).
+   - `:step N` moves a note written by name N degrees along the scale,
+     which must land on a key of the instrument; a key number or a
+     stroke moves N keys.
 
 The **[scores]** cases are built in milestone 2 (04, "Slices").
 

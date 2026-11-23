@@ -47,6 +47,31 @@
 ;;;   skipped), but `- _` is hold-without-note, as anywhere else.
 ;;; - The shape of a rep is checked before its body: `(rep 0 9)` is
 ;;;   bad-rep.
+;;;
+;;; Slice feat/music-patterns (slice 5): `(expand-part tokens instrument
+;;; #:key cycle pickup patterns)` → (values EVENTS LENGTH SPANS),
+;;; `expand-tokens` gaining `#:patterns` (an alist from a pattern's name
+;;; to (PATTERN . TOKENS)), and `(check-pattern tokens instrument #:key
+;;; patterns)`. Written from 01-notation.md ("pattern"), 02-piece.md
+;;; (`pattern`, `pattern-span`) and 03-reader.md (step 9, "Error
+;;; reporting", the [patterns] cases and slice 5's decided bullets).
+;;; Choices made where the docs are not explicit:
+;;; - `uses` lists (NAME . LINE) for the patterns the offending token lies
+;;;   inside, innermost first, LINE from the pattern record's location.
+;;;   For undefined-pattern, wrong-instrument and pattern-cycle the
+;;;   offending token is the use, so the pattern it names is not listed.
+;;; - A leading `_` in a pattern extends the note before by the pattern's
+;;;   duration, 1 pulse (the body starts at 1 pulse); the span starts at
+;;;   the `_`.
+;;; - After a `rep` whose body ends with a pattern, the duration is the
+;;;   one before the pattern (the body's last duration).
+;;; - `:step` composes through nesting, and moves chords note by note.
+;;; - Option errors in a `(@ ...)` use carry `expansion-error-line`, the
+;;;   `(@ ...)` list's line, as bad-pattern-use does.
+;;; - Spans that start together are compared after sorting by depth.
+;;; - check-pattern's return value is not tested, only that it returns;
+;;;   its errors are tested for kind and time only.
+;;; - `||` and `#:cycle`/`#:pickup` are tested through the reader.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -705,6 +730,509 @@ the raised object."
     (err "(rep 2 1 foo1) 9" reyong))
   (test-equal "an error after the rep, at its time" '(note-out-of-range 4 ())
     (err "(rep 2 1 2) 9" reyong)))
+
+;;; ------------------------------------------------------------------
+;;; Patterns (slice 5, feat/music-patterns)
+
+;;; jarang: a pitched instrument with a gap (no dung1), so that moving
+;;; by degree and moving by key differ.
+;;; 1 deng1  2 dang1  3 ding2  4 dong2  5 deng2  (0-based indices 0 to 4)
+(define jarang
+  (make-instrument
+   'jarang selisir
+   (list->vector
+    (map (match-lambda ((name octave) (pitched-note name octave)))
+         '((deng 1) (dang 1) (ding 2) (dong 2) (deng 2))))
+   loc))
+
+(define* (pat name instrument line #:key short long)
+  "A pattern record defined at LINE of test.nts, with the reader's
+defaults: SHORT the name, LONG the short name."
+  (let ((short (or short (symbol->string name))))
+    (make-pattern name instrument short (or long short)
+                  (make-source-location "test.nts" line))))
+
+;;; Every pattern the tests use, as (NAME INSTRUMENT LINE BODY [SHORT LONG]).
+;;; The LINE is the pattern form's line, which the uses report.
+(define pattern-specs
+  `((two        ,reyong 20 "3 4")
+    (fast       ,reyong 21 "3:1/2 4")
+    (rest       ,reyong 22 "3 -")
+    (hold       ,reyong 23 "_ 3")
+    (outer      ,reyong 24 "1:1/2 @two 2")
+    (deep       ,reyong 25 "@outer @two")
+    (checked    ,reyong 26 "1 |")
+    (half-check ,reyong 27 "1:1/2 |")
+    (bad        ,reyong 28 "1 9")
+    (bad-inner  ,reyong 29 "2 @bad")
+    (self       ,reyong 30 "1 @self")
+    (ping       ,reyong 31 "1 @pong")
+    (pong       ,reyong 32 "2 @ping")
+    (degrees    ,reyong 33 "i2 o2")
+    (keys       ,reyong 34 "4 5")
+    (top        ,reyong 35 "a2")
+    (top-key    ,reyong 36 "8")
+    (bottom-key ,reyong 37 "1")
+    (chord      ,reyong 38 "(i2 e2)")
+    (stepped    ,reyong 39 "(@ degrees :step 1)")
+    (named      ,reyong 40 "(@ two :short \"S\" :long \"L\")")
+    (in-rep     ,reyong 41 "(rep 2 @two)")
+    (uses-gong  ,reyong 42 "@g")
+    (undefined-inner ,reyong 43 "1 @nope")
+    (with-names ,reyong 44 "3 4" "1" "Norot on 1")
+    (a2         ,reyong 45 "1")
+    (g          ,gong   50 "G P")
+    (gG         ,gong   51 "G")
+    (jname      ,jarang 60 "a1 i2")
+    (jgap       ,jarang 61 "e1")
+    (jkey       ,jarang 62 "1")))
+
+(define all-patterns
+  (map (match-lambda
+         ((name instrument line body)
+          (cons name (cons (pat name instrument line) (toks body))))
+         ((name instrument line body short long)
+          (cons name (cons (pat name instrument line #:short short #:long long)
+                           (toks body)))))
+       pattern-specs))
+
+(define (pattern-record name)
+  (car (assq-ref all-patterns name)))
+
+(define (span-fields s)
+  "(NAME SHORT LONG START END DEPTH) of the pattern-span S."
+  (list (pattern-name (pattern-span-pattern s))
+        (pattern-span-short s) (pattern-span-long s)
+        (pattern-span-start s) (pattern-span-end s)
+        (pattern-span-depth s)))
+
+(define (by-start-then-depth spans)
+  "The span fields sorted by start, then depth: for comparing spans that
+start together, whose order the docs leave open."
+  (sort spans
+        (lambda (a b)
+          (or (< (list-ref a 3) (list-ref b 3))
+              (and (= (list-ref a 3) (list-ref b 3))
+                   (< (list-ref a 5) (list-ref b 5)))))))
+
+(define (xpart str instrument)
+  "(TRIPLES LENGTH SPANS) from expand-part with every test pattern, the
+spans as span-fields in the order returned; or the raised object."
+  (guard (c (#t c))
+    (call-with-values
+        (lambda () (expand-part (toks str) instrument #:patterns all-patterns))
+      (lambda (events length spans)
+        (list (map (lambda (e)
+                     (list (event-start e) (event-duration e) (event-notes e)))
+                   events)
+              length
+              (map span-fields spans))))))
+
+(define (p-triples str instrument)
+  (match (xpart str instrument)
+    ((triples _ _) triples)
+    (other other)))
+
+(define (p-length str instrument)
+  (match (xpart str instrument)
+    ((_ length _) length)
+    (other other)))
+
+(define (p-spans str instrument)
+  (match (xpart str instrument)
+    ((_ _ spans) spans)
+    (other other)))
+
+(define (p-err str instrument)
+  "(KIND TIME USES) of the &expansion-error expand-part raises for STR."
+  (let ((c (xpart str instrument)))
+    (if (expansion-error? c)
+        (list (expansion-error-kind c) (expansion-error-time c)
+              (expansion-error-uses c))
+        c)))
+
+(define (p-err-line str instrument)
+  "(KIND TIME LINE USES) of the &expansion-error raised for STR."
+  (let ((c (xpart str instrument)))
+    (if (expansion-error? c)
+        (list (expansion-error-kind c) (expansion-error-time c)
+              (expansion-error-line c) (expansion-error-uses c))
+        c)))
+
+(define (check str instrument)
+  "Run check-pattern on STR's tokens with every test pattern: ok when it
+returns, else (KIND TIME) of the &expansion-error, or the raised object."
+  (let ((c (guard (c (#t c))
+             (check-pattern (toks str) instrument #:patterns all-patterns)
+             'ok)))
+    (if (expansion-error? c)
+        (list (expansion-error-kind c) (expansion-error-time c))
+        c)))
+
+(define (pattern-event-tests cases)
+  "CASES is a list of (NAME INSTRUMENT TOKENS TRIPLES)."
+  (for-each
+   (match-lambda
+     ((name instrument tokens expected)
+      (test-equal name expected (p-triples tokens instrument))))
+   cases))
+
+(define (pattern-error-tests kind cases)
+  "CASES is a list of (NAME INSTRUMENT TOKENS TIME USES)."
+  (for-each
+   (match-lambda
+     ((name instrument tokens time uses)
+      (test-equal name (list kind time uses) (p-err tokens instrument))))
+   cases))
+
+;;; The interface
+
+(test-group "patterns: expand-part returns events, a length and spans"
+  (let ((result (xpart "1 @two 2" reyong)))
+    (test-assert "three values" (and (list? result) (= 3 (length result))))
+    (test-equal "the events"
+      '((0 1 (0)) (1 1 (2)) (2 1 (3)) (3 1 (1)))
+      (p-triples "1 @two 2" reyong))
+    (test-equal "the length" 4 (p-length "1 @two 2" reyong))
+    (test-equal "one span" '((two "two" "two" 1 3 0))
+      (p-spans "1 @two 2" reyong)))
+  (let ((spans (guard (c (#t c))
+                 (call-with-values
+                     (lambda () (expand-part (toks "1 @two") reyong
+                                             #:patterns all-patterns))
+                   (lambda (events length spans) spans)))))
+    (test-assert "spans are pattern-span records"
+      (and (list? spans) (pair? spans) (every pattern-span? spans)))
+    (test-eq "a span holds the pattern record"
+      (pattern-record 'two)
+      (and (list? spans) (pair? spans) (pattern-span-pattern (car spans)))))
+  (test-equal "no patterns: no spans" '() (p-spans "1 2 (rep 2 3)" reyong))
+  (test-equal "expand-part without #:patterns" '(((0 1 (0)) (1 1 (1))) 2 ())
+    (guard (c (#t c))
+      (call-with-values (lambda () (expand-part (toks "1 2") reyong))
+        (lambda (events length spans)
+          (list (map (lambda (e)
+                       (list (event-start e) (event-duration e) (event-notes e)))
+                     events)
+                length spans)))))
+  (test-equal "expand-tokens with #:patterns: (EVENTS . LENGTH), without spans"
+    '(((0 1 (0)) (1 1 (2)) (2 1 (3)) (3 1 (1))) . 4)
+    (guard (c (#t c))
+      (match (expand-tokens (toks "1 @two 2") reyong #:patterns all-patterns)
+        ((events . length)
+         (cons (map (lambda (e)
+                      (list (event-start e) (event-duration e) (event-notes e)))
+                    events)
+               length))))))
+
+;;; Playing a pattern
+
+(test-group "patterns: events"
+  (pattern-event-tests
+   (list
+    (list "@NAME plays the body" reyong "@two" '((0 1 (2)) (1 1 (3))))
+    (list "(@ NAME) with no operators is the same" reyong "(@ two)"
+          '((0 1 (2)) (1 1 (3))))
+    (list "between notes" reyong "1 @two 2"
+          '((0 1 (0)) (1 1 (2)) (2 1 (3)) (3 1 (1))))
+    (list "twice in a row" reyong "@two @two"
+          '((0 1 (2)) (1 1 (3)) (2 1 (2)) (3 1 (3))))
+    (list "a trailing rest in the body takes time" reyong "@rest 2"
+          '((0 1 (2)) (2 1 (1))))
+    (list "strokes" gong "P @g" '((0 1 (1)) (1 1 (0)) (2 1 (1))))
+    (list "a pattern named like a note: @a2 is the pattern, a2 the note"
+          reyong "a2 @a2" '((0 1 (7)) (1 1 (0))))
+    (list "in a rep" reyong "(rep 2 @two)"
+          '((0 1 (2)) (1 1 (3)) (2 1 (2)) (3 1 (3))))))
+  (test-equal "the length counts a trailing rest in the body" 3
+    (p-length "@rest 2" reyong)))
+
+(test-group "patterns: durations"
+  (pattern-event-tests
+   (list
+    (list "the body starts at 1 pulse, whatever the part's duration"
+          reyong "1:1/4 @two 2"
+          '((0 1/4 (0)) (1/4 1 (2)) (5/4 1 (3)) (9/4 1/4 (1))))
+    (list "the body's own suffix; the part's duration after it is what it was"
+          reyong "1:1/4 @fast 2"
+          '((0 1/4 (0)) (1/4 1/2 (2)) (3/4 1/2 (3)) (5/4 1/4 (1))))
+    (list "a pattern first in the part, then the part's 1 pulse"
+          reyong "@fast 2"
+          '((0 1/2 (2)) (1/2 1/2 (3)) (1 1 (1))))
+    (list "nested: the inner pattern starts at 1 pulse, and the outer's duration comes back"
+          reyong "@outer"
+          '((0 1/2 (0)) (1/2 1 (2)) (3/2 1 (3)) (5/2 1/2 (1))))
+    (list "in a rep: the body still starts at 1 pulse"
+          reyong "1:1/2 (rep 2 @two) 2"
+          '((0 1/2 (0)) (1/2 1 (2)) (3/2 1 (3)) (5/2 1 (2)) (7/2 1 (3))
+            (9/2 1/2 (1))))))
+  (test-equal "the length with a fraction around a pattern" 5/2
+    (p-length "1:1/4 @two 2" reyong))
+  (test-equal "the length of a nested pattern" 3 (p-length "@outer" reyong)))
+
+(test-group "patterns: a leading _ holds the note before the use"
+  (pattern-event-tests
+   (list
+    (list "holds the part's note" reyong "1 @hold 2"
+          '((0 2 (0)) (2 1 (2)) (3 1 (1))))
+    (list "by the pattern's duration (1 pulse), not the part's"
+          reyong "1:1/2 @hold"
+          '((0 3/2 (0)) (3/2 1 (2))))
+    (list "holds a chord" reyong "(1 3) @hold" '((0 2 (0 2)) (2 1 (2))))
+    (list "holds the last note of the pattern before it" reyong "@two @hold"
+          '((0 1 (2)) (1 2 (3)) (3 1 (2))))))
+  (test-equal "the length with a lead hold" 4 (p-length "1 @hold 2" reyong)))
+
+(test-group "patterns: :step"
+  (pattern-event-tests
+   (list
+    (list "a name moves one degree up" reyong "(@ degrees :step 1)"
+          '((0 1 (4)) (1 1 (5))))
+    (list "and one down, across the octave" reyong "(@ degrees :step -1)"
+          '((0 1 (2)) (1 1 (3))))
+    (list "two down" reyong "(@ degrees :step -2)"
+          '((0 1 (1)) (1 1 (2))))
+    (list "three up" reyong "(@ degrees :step 3)"
+          '((0 1 (6)) (1 1 (7))))
+    (list ":step 0 changes nothing" reyong "(@ degrees :step 0)"
+          '((0 1 (3)) (1 1 (4))))
+    (list "key numbers move by keys" reyong "(@ keys :step 2)"
+          '((0 1 (5)) (1 1 (6))))
+    (list "a chord moves every note" reyong "(@ chord :step 1)"
+          '((0 1 (4 6))))
+    (list "a step inside a pattern" reyong "@stepped" '((0 1 (4)) (1 1 (5))))
+    (list "steps add up through nesting" reyong "(@ stepped :step 1)"
+          '((0 1 (5)) (1 1 (6))))
+    (list "a step moves the notes of nested patterns" reyong "(@ outer :step 1)"
+          '((0 1/2 (1)) (1/2 1 (3)) (3/2 1 (4)) (5/2 1/2 (2))))
+    (list "by degree on an instrument with a gap: a1 i2 → i2 o2"
+          jarang "(@ jname :step 1)" '((0 1 (2)) (1 1 (3))))
+    (list "by key on an instrument with a gap: key 1 → key 2 (a1)"
+          jarang "(@ jkey :step 1)" '((0 1 (1))))
+    (list "by key to the last key" jarang "(@ jkey :step 4)" '((0 1 (4))))
+    (list "a stroke moves one key" gong "(@ gG :step 1)" '((0 1 (1))))
+    (list "the step keeps the durations" reyong "1:1/4 (@ fast :step 1) 2"
+          '((0 1/4 (0)) (1/4 1/2 (3)) (3/4 1/2 (4)) (5/4 1/4 (1)))))))
+
+;;; Spans
+
+(test-group "patterns: spans"
+  (for-each
+   (match-lambda
+     ((name instrument tokens expected)
+      (test-equal name expected (p-spans tokens instrument))))
+   (list
+    (list "one use" reyong "1 @two 2" '((two "two" "two" 1 3 0)))
+    (list "the end includes a trailing rest" reyong "@rest 2"
+          '((rest "rest" "rest" 0 2 0)))
+    (list "a lead hold: the span starts where the pattern does"
+          reyong "1 @hold 2" '((hold "hold" "hold" 1 3 0)))
+    (list "at fractional times" reyong "1:1/4 @fast 2"
+          '((fast "fast" "fast" 1/4 5/4 0)))
+    (list "two uses, sorted by start" reyong "@two 1 @two"
+          '((two "two" "two" 0 2 0) (two "two" "two" 3 5 0)))
+    (list "the pattern's names" reyong "@with-names"
+          '((with-names "1" "Norot on 1" 0 2 0)))
+    (list "names given at the use replace the pattern's" reyong
+          "(@ with-names :short \"6\" :long \"Norot on 6\")"
+          '((with-names "6" "Norot on 6" 0 2 0)))
+    (list "names at a use with :step" reyong
+          "(@ degrees :step -1 :short \"a\" :long \"Moved\")"
+          '((degrees "a" "Moved" 0 2 0)))
+    (list "a moved use keeps the pattern's names" reyong "(@ degrees :step 1)"
+          '((degrees "degrees" "degrees" 0 2 0)))
+    (list "a rep gives one span per repetition" reyong "1 (rep 2 @two)"
+          '((two "two" "two" 1 3 0) (two "two" "two" 3 5 0)))
+    (list "nested: the inner use at depth 1" reyong "1 @outer"
+          '((outer "outer" "outer" 1 4 0) (two "two" "two" 3/2 7/2 1)))))
+  (test-equal "names given inside a pattern, at depth 1"
+    '((named "named" "named" 0 2 0) (two "S" "L" 0 2 1))
+    (by-start-then-depth (p-spans "@named" reyong)))
+  (test-equal "three levels"
+    '((deep "deep" "deep" 1 6 0) (outer "outer" "outer" 1 4 1)
+      (two "two" "two" 3/2 7/2 2) (two "two" "two" 4 6 1))
+    (by-start-then-depth (p-spans "1 @deep" reyong)))
+  (test-equal "a rep inside a pattern: one span per repetition, at depth 1"
+    '((in-rep "in-rep" "in-rep" 0 4 0) (two "two" "two" 0 2 1)
+      (two "two" "two" 2 4 1))
+    (by-start-then-depth (p-spans "@in-rep" reyong)))
+  (test-assert "spans are sorted by start"
+    (let ((starts (map (lambda (s) (list-ref s 3))
+                       (p-spans "@two (rep 2 @deep) @in-rep" reyong))))
+      (and (pair? starts)
+           (every <= starts (append (cdr starts) (list (last starts)))))))
+  (test-assert "span times are exact"
+    (every (lambda (s) (and (exact? (list-ref s 3)) (exact? (list-ref s 4))))
+           (p-spans "1:1/3 @fast @outer" reyong))))
+
+;;; | inside a pattern is checked where it is used
+
+(test-group "patterns: | is checked where the pattern is used"
+  (pattern-event-tests
+   (list (list "on the pulse" reyong "@checked 2" '((0 1 (0)) (1 1 (1))))))
+  (pattern-error-tests 'misplaced-pulse-check
+   (list
+    (list "off the pulse where it is used" reyong "1:1/2 @checked" 3/2
+          '((checked . 26)))
+    (list "off the pulse in the body" reyong "@half-check" 1/2
+          '((half-check . 27))))))
+
+;;; Errors at a use
+
+(test-group "patterns: errors carry the chain of uses, innermost first"
+  (pattern-error-tests 'note-out-of-range
+   (list
+    (list "in the body" reyong "2 @bad" 2 '((bad . 28)))
+    (list "in a nested body" reyong "1 @bad-inner" 3
+          '((bad . 28) (bad-inner . 29)))
+    (list "in a rep: the first repetition" reyong "(rep 2 @bad)" 1
+          '((bad . 28)))))
+  (pattern-error-tests 'hold-without-note
+   (list
+    (list "a pattern starting with _ first in the part" reyong "@hold" 0
+          '((hold . 23)))
+    (list "after a rest" reyong "1 - @hold" 2 '((hold . 23))))))
+
+(test-group "undefined-pattern"
+  (pattern-error-tests 'undefined-pattern
+   (list
+    (list "@NAME" reyong "1 @nope" 1 '())
+    (list "(@ NAME)" reyong "1:1/2 (@ nope :step 1)" 1/2 '())
+    (list "inside a pattern: that pattern's use" reyong "@undefined-inner" 1
+          '((undefined-inner . 43)))
+    (list "in a rep" reyong "(rep 2 1 @nope)" 1 '())))
+  (test-equal "without #:patterns"
+    '(undefined-pattern 0 ())
+    (let ((c (guard (c (#t c)) (expand-tokens (toks "@two") reyong))))
+      (if (expansion-error? c)
+          (list (expansion-error-kind c) (expansion-error-time c)
+                (expansion-error-uses c))
+          c))))
+
+(test-group "pattern-cycle"
+  (pattern-error-tests 'pattern-cycle
+   (list
+    (list "a pattern that uses itself" reyong "@self" 1 '((self . 30)))
+    (list "through another" reyong "1 @ping" 3 '((pong . 32) (ping . 31)))))
+  (pattern-event-tests
+   (list
+    (list "the same pattern twice in one body is not a cycle" reyong "@deep"
+          '((0 1/2 (0)) (1/2 1 (2)) (3/2 1 (3)) (5/2 1/2 (1))
+            (3 1 (2)) (4 1 (3)))))))
+
+(test-group "wrong-instrument"
+  (pattern-error-tests 'wrong-instrument
+   (list
+    (list "a gong pattern on the reyong" reyong "1 @g" 1 '())
+    (list "a reyong pattern on the gong" gong "G @two" 1 '())
+    (list "with operators" reyong "(@ g :step 1)" 0 '())
+    (list "inside a pattern" reyong "1 @uses-gong" 1 '((uses-gong . 42))))))
+
+(test-group "moved-note-out-of-range"
+  (pattern-error-tests 'moved-note-out-of-range
+   (list
+    (list "a name moved above the top key" reyong "1 (@ top :step 1)" 1
+          '((top . 35)))
+    (list "a key moved above the last" reyong "(@ top-key :step 1)" 0
+          '((top-key . 36)))
+    (list "a key moved below the first" reyong "(@ bottom-key :step -1)" 0
+          '((bottom-key . 37)))
+    (list "the first note moved off" reyong "(@ degrees :step 5)" 0
+          '((degrees . 33)))
+    (list "the second note moved off: its time" reyong "(@ degrees :step 4)" 1
+          '((degrees . 33)))
+    (list "a degree that is not a key of the instrument" jarang
+          "(@ jgap :step 1)" 0 '((jgap . 61)))
+    (list "a stroke moved off" gong "(@ gG :step 2)" 0 '((gG . 51)))
+    (list "a chord member moved off" reyong "1:1/2 (@ chord :step 3)" 1/2
+          '((chord . 38)))
+    (list "steps that add up through nesting" reyong "1 (@ stepped :step 4)" 1
+          '((degrees . 33) (stepped . 39))))))
+
+(test-group "bad-pattern-use, at the line of the (@ ...) list"
+  (for-each
+   (match-lambda
+     ((name tokens time line)
+      (test-equal name (list 'bad-pattern-use time line '())
+        (p-err-line tokens reyong))))
+   (list
+    (list "no name" "(@)" 0 1)
+    (list "a number as the name" "(@ 3)" 0 1)
+    (list "a string as the name" "(@ \"two\")" 0 1)
+    (list "a key where the name goes" "(@ :step 1)" 0 1)
+    (list "a token after the name" "(@ two 1)" 0 1)
+    (list "an improper list" "(@ two . x)" 0 1)
+    (list "at its time and line" "1\n2:1/2 (@)" 3/2 2)))
+  (test-equal "inside a pattern's rep, at its own line"
+    '(bad-pattern-use 1 2 ())
+    (p-err-line "(rep 2 1\n (@ 3))" reyong)))
+
+(test-group "operator kinds, at the line of the (@ ...) list"
+  (for-each
+   (match-lambda
+     ((name kind tokens)
+      (test-equal name (list kind 1 2 '())
+        (p-err-line (string-append "1\n" tokens) reyong))))
+   (list
+    (list ":step a fraction" 'bad-option "(@ two :step 1/2)")
+    (list ":step inexact" 'bad-option "(@ two :step 1.0)")
+    (list ":step a symbol" 'bad-option "(@ two :step x)")
+    (list ":step a string" 'bad-option "(@ two :step \"1\")")
+    (list ":step with no value" 'bad-option "(@ two :step)")
+    (list ":short not a string" 'bad-option "(@ two :short 3)")
+    (list ":long not a string" 'bad-option "(@ two :long x)")
+    (list ":step twice" 'duplicate-option "(@ two :step 1 :step 2)")
+    (list ":octave is not built" 'unknown-option "(@ two :octave 1)")
+    (list ":drop-first is not built" 'unknown-option "(@ two :drop-first 1)")
+    (list ":drop-last is not built" 'unknown-option "(@ two :drop-last 1)")
+    (list "an unknown key" 'unknown-option "(@ two :foo 1)"))))
+
+(test-group "patterns: errors left to right"
+  (test-equal "a note before an undefined pattern" '(note-out-of-range 0 ())
+    (p-err "9 @nope" reyong))
+  (test-equal "an undefined pattern before a note" '(undefined-pattern 0 ())
+    (p-err "@nope 9" reyong))
+  (test-equal "a bad note in a body before a later undefined pattern"
+    '(note-out-of-range 2 ((bad . 28)))
+    (p-err "2 @bad @nope" reyong))
+  (test-equal "uses are '() after a pattern has ended"
+    '(note-out-of-range 2 ())
+    (p-err "@two 9" reyong)))
+
+;;; check-pattern: a pattern's body where it is defined (step 8)
+
+(test-group "check-pattern"
+  (for-each
+   (match-lambda
+     ((name instrument tokens)
+      (test-equal name 'ok (check tokens instrument))))
+   (list
+    (list "ordinary tokens" reyong "1:1/4 i2 _ - (1 3) / 2")
+    (list "a rep" reyong "(rep 2 1 2)")
+    (list "a leading _ is allowed" reyong "_ 3")
+    (list "| need not be on a pulse" reyong "1:1/2 |")
+    (list "|| is not checked here" reyong "1 ||")
+    (list "another pattern for the instrument" reyong "1 @two (@ two :step 1)")
+    (list "strokes" gong "G @g")))
+  (for-each
+   (match-lambda
+     ((name instrument tokens expected)
+      (test-equal name expected (check tokens instrument))))
+   (list
+    (list "a key out of range" reyong "1 9" '(note-out-of-range 1))
+    (list "an unknown note, at a time within the pattern" reyong "1:1/2 2 foo1"
+          '(unknown-note 1))
+    (list "a bad duration" reyong "1 2:0" '(bad-duration 1))
+    (list "a bad chord" reyong "(1)" '(bad-chord 0))
+    (list "an unknown token" reyong "1:1/4 \"x\"" '(unknown-token 1/4))
+    (list "a bad rep" reyong "1 (rep 0 1)" '(bad-rep 1))
+    (list "_ after a rest" reyong "1 - _" '(hold-without-note 2))
+    (list "a pattern for another instrument" reyong "1 @g"
+          '(wrong-instrument 1))
+    (list "a time after a nested pattern" reyong "@two 9"
+          '(note-out-of-range 2))
+    (list "times start at 0 with 1 pulse" gong "G G:1/2 3"
+          '(note-out-of-range 3/2)))))
 
 (define runner (test-runner-current))
 (test-end "expand")
