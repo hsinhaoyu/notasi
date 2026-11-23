@@ -45,6 +45,11 @@
 ;;; - A key in a scale's or stroke set's degrees is `option-after-body`;
 ;;;   a key before the degrees is `unknown-option` (they take none).
 ;;; - `(part :name p 1 2)` has no instrument: `bad-form`.
+;;;
+;;; Slice feat/music-rep (slice 3, [rep]): parts with `(rep N TOKEN ...)`;
+;;; `bad-rep` at the rep's own line (03, "Error reporting" and slice 3's
+;;; decided bullets), other errors inside a rep at the part's line. As in
+;;; tests/expand.scm, bad-rep's time is where the rep starts.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -2070,6 +2075,112 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
          (list "hold-without-note" '(hold-without-note 10 p 3/2) "1 -:1/2 _")
          (list "note-out-of-range" '(note-out-of-range 10 p 5/2) "1:1/2 2 3 4 5 9")
          (list "unknown-note" '(unknown-note 10 p 1/3) "1:1/3 foo1"))))
+
+;;; ------------------------------------------------------------------
+;;; rep through the reader (slice 3, [rep]). (notasi expand) is tested
+;;; on its own in tests/expand.scm; these check that parts read `rep`,
+;;; and that bad-rep reports the rep's own line while other errors in a
+;;; rep keep the part's line.
+
+(test-group "rep in parts"
+  (for-each
+   (match-lambda
+     ((name instrument tokens expected)
+      (test-equal name expected (part-p-events instrument tokens))))
+   (list
+    (list "a rep" "reyong" "(rep 2 1 2)"
+          '((0 1 (0)) (1 1 (1)) (2 1 (0)) (3 1 (1))))
+    (list "notes around a rep" "reyong" "1 (rep 2 i2) 3"
+          '((0 1 (0)) (1 1 (3)) (2 1 (3)) (3 1 (2))))
+    (list "the body takes the duration before it" "reyong" "1:1/2 (rep 2 2) 3"
+          '((0 1/2 (0)) (1/2 1/2 (1)) (1 1/2 (1)) (3/2 1/2 (2))))
+    (list "after it, the body's last duration" "reyong" "(rep 2 1:2 2:1/2) 3"
+          '((0 2 (0)) (2 1/2 (1)) (5/2 2 (0)) (9/2 1/2 (1)) (5 1/2 (2))))
+    (list "a lead hold" "reyong" "1 (rep 2 _ 2)"
+          '((0 2 (0)) (2 2 (1)) (4 1 (1))))
+    (list "nested" "gong" "(rep 2 G (rep 2 P))"
+          '((0 1 (0)) (1 1 (1)) (2 1 (1)) (3 1 (0)) (4 1 (1)) (5 1 (1))))
+    (list "a chord in the body" "reyong" "(rep 2 (1 3) -)"
+          '((0 1 (0 2)) (2 1 (0 2))))
+    (list "| checks that hold every time" "reyong" "(rep 2 1:1/2 2 |)"
+          '((0 1/2 (0)) (1/2 1/2 (1)) (1 1/2 (0)) (3/2 1/2 (1))))
+    (list "a rep over several lines" "reyong" "(rep 2\n  1\n  2)"
+          '((0 1 (0)) (1 1 (1)) (2 1 (0)) (3 1 (1))))))
+  (for-each
+   (match-lambda
+     ((name expected . forms)
+      (test-equal name expected (piece-length (apply read-defs+ forms)))))
+   (list (list "the length of a rep" 6 "(part reyong (rep 3 1 -))")
+         (list "parts of equal length, one with a rep" 4
+               "(part reyong :name a (rep 4 1))" "(part reyong :name b 1 2 3 4)")))
+  (test-equal "a rep makes a part longer than its partner: unequal-length"
+    '(unequal-length 11 b #f)
+    (error-fields (defs+ "(part reyong :name a 1 2 3)"
+                         "(part reyong :name b (rep 2 1 2))"))))
+
+(test-group "bad-rep"
+  (for-each
+   (match-lambda
+     ((name tokens time)
+      (test-equal name (list 'bad-rep 10 'p time)
+        (error-fields (defs+ (part-p-form "reyong" tokens))))))
+   (list (list "(rep)" "(rep)" 0)
+         (list "(rep 2)" "(rep 2)" 0)
+         (list "(rep 0 a)" "(rep 0 a1)" 0)
+         (list "(rep -1 a)" "(rep -1 a1)" 0)
+         (list "(rep 1.5 a)" "(rep 1.5 a1)" 0)
+         (list "(rep x a)" "(rep x a1)" 0)
+         (list "(rep \"2\" a)" "(rep \"2\" a1)" 0)
+         (list "after other tokens: where the rep starts" "1 2:1/2 (rep 0 3)" 3/2)
+         (list "nested" "(rep 2 1 (rep 0 2))" 1)))
+  (test-equal "a rep on its own line in a multi-line part: that line"
+    '(bad-rep 12 p 2)
+    (error-fields (defs+ "(part reyong :name p"
+                         "  1 2"
+                         "  (rep 0 3))")))
+  (test-equal "a nested rep on its own line: the inner rep's line"
+    '(bad-rep 12 p 2)
+    (error-fields (defs+ "(part reyong :name p (rep 2 1"
+                         "  2"
+                         "  (rep x 3)))")))
+  (test-equal "a later part: its own name"
+    '(bad-rep 11 q 0)
+    (error-fields (defs+ "(part reyong :name p 1)" "(part reyong :name q (rep 2))")))
+  (let ((c (catch-syntax-error
+            (lambda () (read-piece-string (defs+ "(part reyong :name p" "  (rep 0 1))"))))))
+    (test-assert "a &notasi-syntax-error" (notasi-syntax-error? c))
+    (test-equal "file #f" #f (and (notasi-syntax-error? c) (notasi-syntax-error-file c)))
+    (test-equal "uses '()" '() (and (notasi-syntax-error? c) (notasi-syntax-error-uses c))))
+  (let* ((path (write-temp-file "rep.nts"
+                                (defs+ "(part reyong :name p 1"
+                                       "  (rep 0 1))")))
+         (c (catch-syntax-error (lambda () (read-piece-file path)))))
+    (test-equal "from a file: kind and line" '(bad-rep 11)
+      (and (notasi-syntax-error? c)
+           (list (notasi-syntax-error-kind c) (notasi-syntax-error-line c))))
+    (test-equal "from a file: the file" path
+      (and (notasi-syntax-error? c) (notasi-syntax-error-file c)))))
+
+(test-group "errors inside a rep: the part's line"
+  (token-tests 'note-out-of-range
+   (list (list "in the body" "reyong" "1 (rep 3 2 9)" 2)
+         (list "in a nested body" "reyong" "(rep 2 1 (rep 2 2 9))" 2)))
+  (token-tests 'hold-without-note
+   (list (list "a part starting with (rep 2 _ a)" "reyong" "(rep 2 _ a1)" 0)
+         (list "the body ends in a rest: the second time" "reyong" "1 (rep 2 _ 2 -)" 4)))
+  (token-tests 'misplaced-pulse-check
+   (list (list "a body of 3/4 pulse: the second time" "reyong" "(rep 2 | 1:1/4 2 3)" 3/4)))
+  (token-tests 'bad-duration
+   (list (list "a suffix in the body" "reyong" "1 (rep 2 2:0)" 1)))
+  (test-equal "a rep on its own line: still the part's line"
+    '(note-out-of-range 10 p 2)
+    (error-fields (defs+ "(part reyong :name p 1"
+                         "  (rep 2 2 9))")))
+  (test-equal "a | on a later line of a rep: the part's line"
+    '(misplaced-pulse-check 10 p 3/4)
+    (error-fields (defs+ "(part reyong :name p"
+                         "  (rep 2"
+                         "    | 1:1/4 2 3))"))))
 
 ;;; ------------------------------------------------------------------
 ;;; Other part errors

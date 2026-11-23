@@ -1,17 +1,18 @@
 # 03 — Reader and validation
 
-Status: partly implemented (iteration 2): milestone 1, slices 1–2 of 5
-(`feat/music-syntax`, `feat/music-durations`, see "Slices (iteration
-2)"); the rest is planned.
+Status: partly implemented (iteration 2): milestone 1, slices 1–3 of 5
+(`feat/music-syntax`, `feat/music-durations`, `feat/music-rep`, see
+"Slices (iteration 2)"); the rest is planned.
 "What the reader reads today" says what `(notasi reader)` does in the
 meantime. Tests in `tests/reader.scm`.
 
 Everything in this document is **Planned** unless it says otherwise.
 **Implemented** since slices 1 and 2: steps 1, 2 (with `colotomy`,
 `pattern` and `score` raising `not-implemented`), 3 to 7, step 9 for
-tokens (durations, `_`, `-`, `/` and `|`, without `rep`, patterns or
-spans) in `(notasi expand)`, step 10 without colotomies, the condition's
-`time` and `uses`, and every **[syntax]** and **[durations]** case.
+tokens and `rep` (durations, `_`, `-`, `/`, `|`, fragments with lead
+holds, without patterns or spans) in `(notasi expand)`, step 10 without
+colotomies, the condition's `time` and `uses`, and every **[syntax]**,
+**[durations]** and **[rep]** case.
 
 ## Responsibility
 
@@ -498,7 +499,18 @@ error cases tagged with its feature, and the steps above that they need.
      a fraction as a mixed number: time 3/2 is "pulse 2 1/2", e.g.
      "part `ugal', pulse 2 1/2: …". A `time` of `#f` prints no
      position.
-3. `feat/music-rep` **[rep]**: `rep`.
+3. **Implemented.** `feat/music-rep` **[rep]**: `rep`. Decided for this slice:
+   - `&expansion-error` gains a field `line`, accessor
+     `expansion-error-line`: the 1-based line of the list to blame
+     (Guile's source line of a `rep`), or `#f`. The reader reports
+     that line when it is set, else the part's line. `bad-rep` sets it.
+   - A `rep` body may start with `_`: it holds the note before the
+     `rep` the first time, and the body's last note each time after
+     (a lead hold, as for patterns); with no note there it is
+     `hold-without-note` at that time.
+   - `rep` may be nested. A `|` in the body is checked at every
+     repetition; any other mistake in the body is reported at its time
+     in the first repetition.
 4. `feat/music-colotomy` **[colotomy]**: `colotomy` forms, `:colotomy`
    and `:pickup`, generated parts (step 11), `||` checks, lengths
    (step 10), positions as `cycle C, pulse P`, `time->position` and
@@ -519,7 +531,7 @@ iteration 2. It differs from the above as follows, and this section
 goes when iteration 2 is built:
 
 - `piece` takes no options yet (no `:colotomy` or `:pickup`).
-- There are no `rep`, `||` checks, patterns, colotomies or scores.
+- There are no `||` checks, patterns, colotomies or scores.
   Steps 8, 11 and 12 are not built; `uses` is always `'()`.
 - Every part is in its own default group (`piece-groups`).
 
