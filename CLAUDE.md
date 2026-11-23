@@ -36,7 +36,8 @@ scripts/            the notasi command: notasi render (typst, update, watch plan
                     preview.scm, used by make preview
 examples/           real pieces (.nts), used as test fixtures
 templates/          shared definitions (.nts) loaded with (use NAME)
-tests/              SRFI-64 test files, one per module
+tests/              SRFI-64 test files: one per module, plus golden, syntax,
+                    targets, manual, iterations, decisions, readme
 tests/golden/       expected JSON figures, one per score of each example (make golden)
 doc/prototypes/     hand-made mockup of the target output (score.typ, piece.json)
 doc/manual/         user manual for musicians (mdBook; style in STYLE.md)
