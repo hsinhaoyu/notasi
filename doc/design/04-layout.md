@@ -127,12 +127,12 @@ Layout works out every header number and every line, for every column:
 - A group's label in each system is the long or short label, as its
   `labels` says: `first-long` gives the long label in the first system
   and the short one after.
-- **`rows` `notes`** (**Implemented** for v1 groups): `lanes` is the
-  group's lane labels, top first, from `group-lanes`, the same in every
-  system. An event's `lane` is the 0-based index of its note in that
-  list. Lanes are the notes the group actually uses, highest pitch at
-  the top; stroke instruments give one lane per stroke, in instrument
-  order. A group's parts are all pitched on one instrument or all on
+- **`rows` `notes`**: `lanes` is the group's lane labels, top first,
+  the same in every system. An event's `lane` is the 0-based index of
+  its note in that list. Lanes are the notes the group actually plays
+  in the score's range (`from` to `to`), in `group-lanes` order: highest
+  pitch at the top; stroke instruments give one lane per stroke, in
+  instrument order, so an excerpt shows only the keys it uses. A group's parts are all pitched on one instrument or all on
   stroke instruments (02-piece.md, invariant 6), so its lanes never mix
   ranges or pitches with strokes.
 - **`rows` `parts`**: one row per member, labelled with its row label;
@@ -408,6 +408,8 @@ examples, golden files and manual pages it affects.
      nothing.
    - With `:labels first-long` the label column is as wide as the
      longest label printed in any system.
+   - A `notes` group's lanes are the notes it plays in the range, not
+     in the whole piece.
    - `examples/gilak.nts` has two scores, so its golden files are
      `gilak.full.json` and `gilak.second-cycle.json`.
 
