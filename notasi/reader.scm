@@ -1217,6 +1217,7 @@ cut at the piece's end, on the piece's kempli or a built-in one."
     (cycle-numbers ,yes-no? . "yes or no")
     (pulse-numbers ,yes-no? . "yes or no")
     (numbering ,(lambda (v) (memq v '(gong-last gong-first))) . "gong-last or gong-first")
+    (cycle-label ,string? . "a string")
     (pulse-label ,string? . "a string")
     (font-size ,length-string? . "a length such as \"8pt\"")
     (system-length ,positive-whole-number? . "a whole number of pulses")
@@ -1523,16 +1524,25 @@ print."
                         (v (eq? v 'yes)))
                       (not (eq? (assq-ref opts 'pulse-numbers) 'no))
                       (or (assq-ref opts 'numbering) 'gong-last)
-                      (assq-ref opts 'pulse-label)
+                      (header-label opts 'cycle-label "Cycle")
+                      (header-label opts 'pulse-label "Pulse")
                       (assq-ref opts 'font-size)
                       (or (assq-ref opts 'cell-width) "2em")
                       (or (assq-ref opts 'cell-height) "2em")
                       (map car built) (location line))))))))
 
+(define (header-label opts key default)
+  "A header row's label (ADR 0039): as written, DEFAULT when not, #f for
+\"\"."
+  (match (assq-ref opts key)
+    (#f default)
+    ("" #f)
+    (label label)))
+
 (define (default-score parts title length colotomy)
   "A file with no score gets this one: every part in its own group."
   (make-score 'default title #f #f 0 length #f '() (and colotomy #t) #t
-              'gong-last #f #f "2em" "2em"
+              'gong-last "Cycle" "Pulse" #f "2em" "2em"
               (map (lambda (part)
                      (let ((name (symbol->string (part-name part))))
                        (make-group name name #f 'first-long 'notes

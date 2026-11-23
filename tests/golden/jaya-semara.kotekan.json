@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "title": "Norot kotekan against the pokok",
   "subtitle": null,
   "steps_per_pulse": 4,
@@ -15,7 +15,8 @@
       "start": 4,
       "steps": 32,
       "header": {
-        "label": null,
+        "cycle_label": null,
+        "pulse_label": "Pulse",
         "cycles": null,
         "pulses": ["1", null, null, null, "2", null, null, null, "3", null, null, null, "4", null, null, null, "5", null, null, null, "6", null, null, null, "7", null, null, null, "8", null, null, null]
       },

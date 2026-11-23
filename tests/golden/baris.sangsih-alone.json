@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "title": "Baris",
   "subtitle": null,
   "steps_per_pulse": 4,
@@ -15,8 +15,13 @@
       "start": 0,
       "steps": 8,
       "header": {
-        "label": "Beats (Clap)",
+        "cycle_label": "Cycle",
+        "pulse_label": "Beats (Clap)",
         "cycles": [
+          {
+            "column": 0,
+            "text": "0"
+          },
           {
             "column": 4,
             "text": "1"
@@ -117,7 +122,8 @@
       "start": 8,
       "steps": 28,
       "header": {
-        "label": "Beats (Clap)",
+        "cycle_label": "Cycle",
+        "pulse_label": "Beats (Clap)",
         "cycles": [],
         "pulses": ["3", null, null, null, "4", null, null, null, "5", null, null, null, "6", null, null, null, "7", null, null, null, "8", null, null, null, "1", null, null, null]
       },

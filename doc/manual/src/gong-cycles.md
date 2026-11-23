@@ -59,7 +59,9 @@ and a pulse: "cycle 1, pulse 3". The pickup is cycle 0.
 
 In the drawing, the pulses are numbered within each cycle, the pickup
 as the last pulse of cycle 0. Each cycle's number is above its first
-pulse, and a heavier line marks where it begins, just after the gong.
+pulse, the pickup's `0` above it, and a heavier line marks where a
+cycle begins, just after the gong. The two rows are labelled "Cycle"
+and "Pulse".
 A score can number the gong as pulse 1 instead (`:numbering
 gong-first`; see [Scores](scores.md)).
 

@@ -41,7 +41,7 @@
 // transparent foreground layer for labels, header rows and notes, drawn
 // on top. A single grid can't do both: a note spanning several columns
 // would cover the lines under it. The template does no counting: every
-// number and line comes from the figure (ADR 0036).
+// number and line comes from the figure (ADRs 0036, 0043).
 #let _system(data, sys) = {
   let sizes = data.sizes
   let first = 2                     // column 0: group label, 1: lane label
@@ -50,23 +50,32 @@
   let cells = ()
   let overlays = ()
   let row = 0
+  // A number is centred over its pulse: it spans steps_per_pulse
+  // columns from its column, or what is left of the system (ADR 0044).
+  let k = data.steps_per_pulse
+  let span(column) = calc.min(k, sys.steps - column)
   if header.cycles != none {
+    if header.cycle_label != none {
+      cells.push(grid.cell(x: 0, y: row, colspan: 2,
+        align: left + horizon, text(weight: "bold", header.cycle_label)))
+    }
     for m in header.cycles {
       cells.push(grid.cell(x: first + m.column, y: row,
-        align: left + horizon, inset: (left: 2pt),
+        colspan: span(m.column), align: center + horizon,
         text(weight: "bold", m.text)))
     }
     row += 1
   }
   if header.pulses != none {
-    if header.label != none {
+    if header.pulse_label != none {
       cells.push(grid.cell(x: 0, y: row, colspan: 2,
-        align: left + horizon, text(weight: "bold", header.label)))
+        align: left + horizon, text(weight: "bold", header.pulse_label)))
     }
     for (i, p) in header.pulses.enumerate() {
-      cells.push(grid.cell(x: first + i, y: row, align: center + horizon,
-        if p != none { text(weight: "bold", p) }
-        else { text(fill: luma(150), "·") }))
+      if p != none {
+        cells.push(grid.cell(x: first + i, y: row, colspan: span(i),
+          align: center + horizon, text(weight: "bold", p)))
+      }
     }
     row += 1
   }

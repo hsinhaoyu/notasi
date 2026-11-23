@@ -3,11 +3,12 @@
 Status: implemented (iteration 2): milestone 2, all five slices
 (`feat/scores-form`, `feat/scores-contract`, `feat/scores-rows`,
 `feat/scores-overlays`, `feat/scores-range`, see "Slices (iteration
-2)"). `layout-score` lays out a score as contract version 2. "Note
+2)"). `layout-score` lays out a score as contract version 3. "Note
 style" is built from a score's options. Modules: `(notasi style)`, `(notasi layout)`; tests
 in `tests/style.scm`, `tests/layout.scm` and `tests/golden.scm`.
-Planned for iteration 3: contract version 3 (ADR 0043) with the header
-labels, the pickup's cycle mark and each group's lines; strokes one
+Contract version 3 (ADR 0043) with the header labels and the pickup's
+cycle mark since `feat/drawing-header`. Planned for iteration 3: each
+group's lines; strokes one
 column wide (ADR 0042); a lighter stroke grey (ADR 0041); `:keys`,
 `:octave-numbers` and `:display`; key numbers and row labels left out
 (ADR 0047); golden files named `NAME_SCORE` (ADR 0040).
@@ -43,10 +44,10 @@ in this order:
 
 | Object | Keys |
 |---|---|
-| figure | `version` (2; **Planned**: 3, ADR 0043), `title`, `subtitle`, `steps_per_pulse`, `sizes`, `systems`, `caption` |
+| figure | `version` (3, ADR 0043), `title`, `subtitle`, `steps_per_pulse`, `sizes`, `systems`, `caption` |
 | sizes | `font_size`, `label_width`, `lane_width`, `cell_width`, `cell_height` (**Planned**, version 3: `key_width` after `label_width`) |
 | system | `start`, `steps`, `header`, `lines`, `groups` |
-| header | `label`, `cycles`, `pulses` (**Planned**, version 3: `cycle_label`, `pulse_label`, `cycles`, `pulses`, `pulse_lines`) |
+| header | `cycle_label`, `pulse_label`, `cycles`, `pulses` (**Planned**: then `pulse_lines`, `feat/drawing-lines`) |
 | cycle mark | `column`, `text` |
 | group | `label`, `subtitle`, `lanes`, `voices`, `overlays` (**Planned**, version 3: `key_numbers` after `lanes`, then `pulse_lines`, `row_lines` at the end) |
 | voice | `name`, `events` |
@@ -117,13 +118,13 @@ Layout works out every header number and every line, for every column:
   `pulse-numbers?` is false.
 - `header.cycles`: a list of `{column, text}`, the cycle number at the
   first column of each cycle in the system, once per cycle. `null` when
-  `cycle-numbers?` is false. **Planned** (ADR 0043): the pickup is cycle
-  0, so a system that starts in the pickup, or with it, also has a mark
-  `0` at the pickup's first column it shows.
-- `header.label`: the score's `pulse-label`, or `null`. **Planned** (ADRs
-  0039, 0043): replaced by `header.cycle_label` and `header.pulse_label`,
-  the score's labels ("Cycle" and "Pulse" by default), each `null` when
-  it is `""` or its row is not shown.
+  `cycle-numbers?` is false. The pickup is cycle 0 (ADR 0043), so a
+  system that starts in the pickup, or with it, also has a mark `0` at
+  the pickup's first column it shows, first in the list.
+- `header.cycle_label` and `header.pulse_label` (ADRs 0039, 0043; they
+  replace version 2's `header.label`): the score's labels ("Cycle" and
+  "Pulse" by default), each `null` when it is `""` or its row is not
+  shown.
 - **Planned** (ADR 0043): `header.pulse_lines`, from the score's
   `background`: whether pulse lines run through the header rows.
 - `lines`: one entry per column, for the line at its left edge: `cycle`
@@ -350,6 +351,8 @@ text. `dark2` gives strong colours with mostly white text.
     it) + 1.5em. A group of one row prints its subtitle after its label
     (05), so there the subtitle counts as the longer of its labels, two
     spaces and the subtitle (decided in `feat/targets`, for Baris).
+    The header labels printed (`cycle_label`, `pulse_label`) count too,
+    since they sit in the same column (`feat/drawing-header`).
   - `lane_width` (lane and row labels): 0.52em × the longest label +
     1em. **Planned** (ADR 0047): `"0.0em"` when no group shows row labels.
   - **Planned** (ADR 0047): `key_width` (key numbers): 0.52em × the
@@ -474,10 +477,15 @@ changes the reader's checks (03, **[score-options]**), the records
 (02), layout, and the template and commands (05) as far as it needs,
 with the examples, golden files and manual pages it affects.
 
-1. `feat/drawing-header`: contract version 3 (ADR 0043);
+1. **Implemented.** `feat/drawing-header`: contract version 3 (ADR 0043);
    `:cycle-label` and the `"Pulse"` default (ADR 0039); the pickup's
    cycle mark `0`; header numbers centred over their pulse, without the
-   `·` (ADR 0044).
+   `·` (ADR 0044). Decided for this slice: `version` becomes 3 and
+   `header.label` becomes `cycle_label` and `pulse_label`; each later
+   slice adds its own version 3 fields (`pulse_lines`, `row_lines` with
+   `feat/drawing-lines`; `key_numbers`, `key_width` with
+   `feat/drawing-rows`), since version 3 isn't released until the
+   iteration ends.
 2. `feat/drawing-lines`: `:background` (row lines, pulse lines by
    group, ADR 0041); the frame line (ADR 0044); grey note borders and
    the lighter stroke grey (ADR 0041).

@@ -34,7 +34,8 @@ own instead.
 | `:cycle-numbers yes` / `no` | score | Number each gong cycle above its first pulse. On by default when the piece has a [colotomy](gong-cycles.md). |
 | `:pulse-numbers yes` / `no` | score | The row of pulse numbers. On by default. |
 | `:numbering gong-last` / `gong-first` | score | Count the pulses of a cycle with the gong last (1 to 8, the gong on 8; the default) or first (the gong on 1). |
-| `:pulse-label "…"` | score | A label at the left of the pulse numbers, such as `"Beats"`. |
+| `:cycle-label "…"` | score | The label at the left of the cycle numbers: `"Cycle"` unless you say. `""` leaves it out. |
+| `:pulse-label "…"` | score | The label at the left of the pulse numbers, such as `"Beats"`: `"Pulse"` unless you say. `""` leaves it out. |
 | `:font-size "8pt"` | score | The size of the text (8pt unless you say). |
 | `:system-length N` | score | N pulses on each line of the score. Without it (or [breaks](#excerpts-and-lines)), the whole piece, or the whole excerpt, is one line. |
 | `:short "…"` | group | A short label, such as `"U."` for `"Ugal"`. |

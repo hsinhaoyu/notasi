@@ -35,6 +35,17 @@
 ;;;   test only checks that it compiles without a warning; how it looks
 ;;;   is checked by eye.
 ;;;
+;;; - Slice feat/drawing-header (iteration 3; 05, "JSON contract
+;;;   (version 3)" and the template's Planned version 3 bullets; ADRs
+;;;   0039, 0043, 0044): three hand-written version 3 figures, with
+;;;   `header.cycle_label` and `header.pulse_label` in place of `label`
+;;;   (strings or null), the pickup's cycle mark "0", and quarter pulses
+;;;   (steps_per_pulse 4), so a pulse number spans 4 columns and a
+;;;   cycle number the first pulse of its cycle.  Only compiling without
+;;;   a warning is tested; the centring and the missing `·` are checked
+;;;   by eye (make preview).  Their groups keep version 2's keys: the
+;;;   other version 3 fields are later slices.
+
 ;;; Run from the repo root: guile -L . tests/template.scm
 
 (use-modules (srfi srfi-1)
@@ -134,7 +145,7 @@ prints no warning.  Typst's output is shown when either fails."
 
 (define no-systems
   "{
-  \"version\": 2,
+  \"version\": 3,
   \"title\": \"Nothing\",
   \"subtitle\": null,
   \"steps_per_pulse\": 4,
@@ -155,7 +166,7 @@ prints no warning.  Typst's output is shown when either fails."
 ;; group with no events.  No colotomy: no cycle row, pulse lines only.
 (define off-pulse
   "{
-  \"version\": 2,
+  \"version\": 3,
   \"title\": \"Off pulse\",
   \"subtitle\": null,
   \"steps_per_pulse\": 4,
@@ -171,7 +182,8 @@ prints no warning.  Typst's output is shown when either fails."
       \"start\": 2,
       \"steps\": 6,
       \"header\": {
-        \"label\": null,
+        \"cycle_label\": null,
+        \"pulse_label\": null,
         \"cycles\": null,
         \"pulses\": [null, null, \"2\", null, null, null]
       },
@@ -233,7 +245,7 @@ prints no warning.  Typst's output is shown when either fails."
 ;; cycle mark at column 2, numbered gong-first.
 (define header-rows
   "{
-  \"version\": 2,
+  \"version\": 3,
   \"title\": \"Header rows\",
   \"subtitle\": \"pangecet\",
   \"steps_per_pulse\": 2,
@@ -249,7 +261,8 @@ prints no warning.  Typst's output is shown when either fails."
       \"start\": 0,
       \"steps\": 6,
       \"header\": {
-        \"label\": \"Beats\",
+        \"cycle_label\": null,
+        \"pulse_label\": \"Beats\",
         \"cycles\": [{ \"column\": 2, \"text\": \"1\" }],
         \"pulses\": [\"1\", null, \"2\", null, \"3\", null]
       },
@@ -292,7 +305,8 @@ prints no warning.  Typst's output is shown when either fails."
       \"start\": 6,
       \"steps\": 6,
       \"header\": {
-        \"label\": \"Beats\",
+        \"cycle_label\": null,
+        \"pulse_label\": \"Beats\",
         \"cycles\": [{ \"column\": 4, \"text\": \"2\" }],
         \"pulses\": [\"4\", null, \"1\", null, \"2\", null]
       },
@@ -326,7 +340,8 @@ prints no warning.  Typst's output is shown when either fails."
       \"start\": 12,
       \"steps\": 2,
       \"header\": {
-        \"label\": \"Beats\",
+        \"cycle_label\": null,
+        \"pulse_label\": \"Beats\",
         \"cycles\": [],
         \"pulses\": [\"3\", null]
       },
@@ -355,7 +370,7 @@ prints no warning.  Typst's output is shown when either fails."
 ;; pulse label and a cycle line.
 (define no-header-rows
   "{
-  \"version\": 2,
+  \"version\": 3,
   \"title\": \"\",
   \"subtitle\": null,
   \"steps_per_pulse\": 1,
@@ -371,7 +386,8 @@ prints no warning.  Typst's output is shown when either fails."
       \"start\": 0,
       \"steps\": 4,
       \"header\": {
-        \"label\": \"Beats\",
+        \"cycle_label\": null,
+        \"pulse_label\": \"Beats\",
         \"cycles\": null,
         \"pulses\": null
       },
@@ -412,7 +428,7 @@ prints no warning.  Typst's output is shown when either fails."
 ;; of them starting the second system; a held note cut into it.
 (define rows
   "{
-  \"version\": 2,
+  \"version\": 3,
   \"title\": \"Rows\",
   \"subtitle\": null,
   \"steps_per_pulse\": 1,
@@ -428,7 +444,8 @@ prints no warning.  Typst's output is shown when either fails."
       \"start\": 0,
       \"steps\": 4,
       \"header\": {
-        \"label\": null,
+        \"cycle_label\": null,
+        \"pulse_label\": null,
         \"cycles\": null,
         \"pulses\": [\"1\", \"2\", \"3\", \"4\"]
       },
@@ -489,7 +506,8 @@ prints no warning.  Typst's output is shown when either fails."
       \"start\": 4,
       \"steps\": 2,
       \"header\": {
-        \"label\": null,
+        \"cycle_label\": null,
+        \"pulse_label\": null,
         \"cycles\": null,
         \"pulses\": [\"5\", \"6\"]
       },
@@ -544,7 +562,7 @@ prints no warning.  Typst's output is shown when either fails."
 ;; has none.
 (define overlays
   "{
-  \"version\": 2,
+  \"version\": 3,
   \"title\": \"Overlays\",
   \"subtitle\": null,
   \"steps_per_pulse\": 1,
@@ -560,7 +578,8 @@ prints no warning.  Typst's output is shown when either fails."
       \"start\": 0,
       \"steps\": 4,
       \"header\": {
-        \"label\": null,
+        \"cycle_label\": null,
+        \"pulse_label\": null,
         \"cycles\": null,
         \"pulses\": [\"1\", \"2\", \"3\", \"4\"]
       },
@@ -654,7 +673,8 @@ prints no warning.  Typst's output is shown when either fails."
       \"start\": 4,
       \"steps\": 2,
       \"header\": {
-        \"label\": null,
+        \"cycle_label\": null,
+        \"pulse_label\": null,
         \"cycles\": null,
         \"pulses\": [\"5\", \"6\"]
       },
@@ -712,6 +732,470 @@ prints no warning.  Typst's output is shown when either fails."
 }
 ")
 
+;; Contract version 3 (slice feat/drawing-header): quarter pulses, a
+;; pickup of 1 with its cycle mark "0" at column 0 and cycle 1 at column
+;; 4; both header labels; a second system with longer labels and a cycle
+;; mark on its last pulse; a third with no cycle mark and its cycle label
+;; null.
+(define v3-header
+  "{
+  \"version\": 3,
+  \"title\": \"Version 3 header\",
+  \"subtitle\": null,
+  \"steps_per_pulse\": 4,
+  \"sizes\": {
+    \"font_size\": null,
+    \"label_width\": \"4.5em\",
+    \"lane_width\": \"2.0em\",
+    \"cell_width\": \"1em\",
+    \"cell_height\": \"2em\"
+  },
+  \"systems\": [
+    {
+      \"start\": 0,
+      \"steps\": 16,
+      \"header\": {
+        \"cycle_label\": \"Cycle\",
+        \"pulse_label\": \"Pulse\",
+        \"cycles\": [
+          {
+            \"column\": 0,
+            \"text\": \"0\"
+          },
+          {
+            \"column\": 4,
+            \"text\": \"1\"
+          }
+        ],
+        \"pulses\": [
+          \"4\",
+          null,
+          null,
+          null,
+          \"1\",
+          null,
+          null,
+          null,
+          \"2\",
+          null,
+          null,
+          null,
+          \"3\",
+          null,
+          null,
+          null
+        ]
+      },
+      \"lines\": [
+        \"none\",
+        \"none\",
+        \"none\",
+        \"none\",
+        \"cycle\",
+        \"none\",
+        \"none\",
+        \"none\",
+        \"pulse\",
+        \"none\",
+        \"none\",
+        \"none\",
+        \"pulse\",
+        \"none\",
+        \"none\",
+        \"none\"
+      ],
+      \"groups\": [
+        {
+          \"label\": \"Ugal\",
+          \"subtitle\": null,
+          \"lanes\": [
+            \"i2\",
+            \"a1\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"ugal\",
+              \"events\": [
+                {
+                  \"start\": 0,
+                  \"dur\": 4,
+                  \"lane\": 1,
+                  \"text\": null,
+                  \"fill\": \"#fed9a6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                },
+                {
+                  \"start\": 4,
+                  \"dur\": 2,
+                  \"lane\": 0,
+                  \"text\": \"i\",
+                  \"fill\": \"#fbb4ae\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                },
+                {
+                  \"start\": 6,
+                  \"dur\": 10,
+                  \"lane\": 1,
+                  \"text\": null,
+                  \"fill\": \"#fed9a6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                }
+              ]
+            }
+          ],
+          \"overlays\": []
+        }
+      ]
+    },
+    {
+      \"start\": 16,
+      \"steps\": 8,
+      \"header\": {
+        \"cycle_label\": \"Gong · é\",
+        \"pulse_label\": \"Ketukan\",
+        \"cycles\": [
+          {
+            \"column\": 4,
+            \"text\": \"2\"
+          }
+        ],
+        \"pulses\": [
+          \"4\",
+          null,
+          null,
+          null,
+          \"1\",
+          null,
+          null,
+          null
+        ]
+      },
+      \"lines\": [
+        \"none\",
+        \"none\",
+        \"none\",
+        \"none\",
+        \"cycle\",
+        \"none\",
+        \"none\",
+        \"none\"
+      ],
+      \"groups\": [
+        {
+          \"label\": \"Ugal\",
+          \"subtitle\": null,
+          \"lanes\": [
+            \"i2\",
+            \"a1\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"ugal\",
+              \"events\": [
+                {
+                  \"start\": 0,
+                  \"dur\": 8,
+                  \"lane\": 1,
+                  \"text\": null,
+                  \"fill\": \"#fed9a6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": true
+                }
+              ]
+            }
+          ],
+          \"overlays\": []
+        }
+      ]
+    },
+    {
+      \"start\": 24,
+      \"steps\": 8,
+      \"header\": {
+        \"cycle_label\": null,
+        \"pulse_label\": \"Pulse\",
+        \"cycles\": [],
+        \"pulses\": [
+          \"2\",
+          null,
+          null,
+          null,
+          \"3\",
+          null,
+          null,
+          null
+        ]
+      },
+      \"lines\": [
+        \"none\",
+        \"none\",
+        \"none\",
+        \"none\",
+        \"pulse\",
+        \"none\",
+        \"none\",
+        \"none\"
+      ],
+      \"groups\": [
+        {
+          \"label\": \"Ugal\",
+          \"subtitle\": null,
+          \"lanes\": [
+            \"i2\",
+            \"a1\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"ugal\",
+              \"events\": []
+            }
+          ],
+          \"overlays\": []
+        }
+      ]
+    }
+  ],
+  \"caption\": null
+}
+")
+
+;; Version 3: a one-pulse pickup on a system of its own (quarter pulses,
+;; 4 columns), its cycle mark "0" at column 0, centred over the pulse.
+(define v3-pickup-alone
+  "{
+  \"version\": 3,
+  \"title\": \"Pickup alone\",
+  \"subtitle\": null,
+  \"steps_per_pulse\": 4,
+  \"sizes\": {
+    \"font_size\": \"8pt\",
+    \"label_width\": \"4.5em\",
+    \"lane_width\": \"2.0em\",
+    \"cell_width\": \"1em\",
+    \"cell_height\": \"2em\"
+  },
+  \"systems\": [
+    {
+      \"start\": 0,
+      \"steps\": 4,
+      \"header\": {
+        \"cycle_label\": \"Cycle\",
+        \"pulse_label\": \"Pulse\",
+        \"cycles\": [
+          {
+            \"column\": 0,
+            \"text\": \"0\"
+          }
+        ],
+        \"pulses\": [
+          \"8\",
+          null,
+          null,
+          null
+        ]
+      },
+      \"lines\": [
+        \"none\",
+        \"none\",
+        \"none\",
+        \"none\"
+      ],
+      \"groups\": [
+        {
+          \"label\": \"Ugal\",
+          \"subtitle\": null,
+          \"lanes\": [
+            \"i2\",
+            \"a1\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"ugal\",
+              \"events\": [
+                {
+                  \"start\": 0,
+                  \"dur\": 4,
+                  \"lane\": 1,
+                  \"text\": null,
+                  \"fill\": \"#fed9a6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                }
+              ]
+            }
+          ],
+          \"overlays\": []
+        }
+      ]
+    }
+  ],
+  \"caption\": null
+}
+")
+
+;; Version 3 with labels null: the cycle row only (the pickup's "0"
+;; and cycle 1), then the pulse row only, then both rows off.
+(define v3-labels-off
+  "{
+  \"version\": 3,
+  \"title\": \"\",
+  \"subtitle\": null,
+  \"steps_per_pulse\": 4,
+  \"sizes\": {
+    \"font_size\": null,
+    \"label_width\": \"3.9em\",
+    \"lane_width\": \"2.0em\",
+    \"cell_width\": \"2em\",
+    \"cell_height\": \"2em\"
+  },
+  \"systems\": [
+    {
+      \"start\": 0,
+      \"steps\": 8,
+      \"header\": {
+        \"cycle_label\": \"Cycle\",
+        \"pulse_label\": null,
+        \"cycles\": [
+          {
+            \"column\": 0,
+            \"text\": \"0\"
+          },
+          {
+            \"column\": 4,
+            \"text\": \"1\"
+          }
+        ],
+        \"pulses\": null
+      },
+      \"lines\": [
+        \"none\",
+        \"none\",
+        \"none\",
+        \"none\",
+        \"cycle\",
+        \"none\",
+        \"none\",
+        \"none\"
+      ],
+      \"groups\": [
+        {
+          \"label\": \"Ugal\",
+          \"subtitle\": null,
+          \"lanes\": [
+            \"i2\",
+            \"a1\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"ugal\",
+              \"events\": [
+                {
+                  \"start\": 0,
+                  \"dur\": 8,
+                  \"lane\": 0,
+                  \"text\": null,
+                  \"fill\": \"#fbb4ae\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                }
+              ]
+            }
+          ],
+          \"overlays\": []
+        }
+      ]
+    },
+    {
+      \"start\": 8,
+      \"steps\": 8,
+      \"header\": {
+        \"cycle_label\": null,
+        \"pulse_label\": \"Pulse\",
+        \"cycles\": null,
+        \"pulses\": [
+          \"2\",
+          null,
+          null,
+          null,
+          \"3\",
+          null,
+          null,
+          null
+        ]
+      },
+      \"lines\": [
+        \"none\",
+        \"none\",
+        \"none\",
+        \"none\",
+        \"pulse\",
+        \"none\",
+        \"none\",
+        \"none\"
+      ],
+      \"groups\": [
+        {
+          \"label\": \"Ugal\",
+          \"subtitle\": null,
+          \"lanes\": [
+            \"i2\",
+            \"a1\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"ugal\",
+              \"events\": []
+            }
+          ],
+          \"overlays\": []
+        }
+      ]
+    },
+    {
+      \"start\": 16,
+      \"steps\": 8,
+      \"header\": {
+        \"cycle_label\": null,
+        \"pulse_label\": null,
+        \"cycles\": null,
+        \"pulses\": null
+      },
+      \"lines\": [
+        \"none\",
+        \"none\",
+        \"none\",
+        \"none\",
+        \"cycle\",
+        \"none\",
+        \"none\",
+        \"none\"
+      ],
+      \"groups\": [
+        {
+          \"label\": \"Ugal\",
+          \"subtitle\": null,
+          \"lanes\": [
+            \"i2\",
+            \"a1\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"ugal\",
+              \"events\": []
+            }
+          ],
+          \"overlays\": []
+        }
+      ]
+    }
+  ],
+  \"caption\": null
+}
+")
+
 ;;; The tests.
 
 (test-begin "template")
@@ -739,7 +1223,13 @@ prints no warning.  Typst's output is shown when either fails."
       (check-figure "parts and single rows, fill null, dashes" "rows.json"
                     rows)
       (check-figure "overlays, one continued and one over several rows"
-                    "overlays.json" overlays))
+                    "overlays.json" overlays)
+      (check-figure "version 3: header labels, the pickup's \"0\", quarter pulses"
+                    "v3-header.json" v3-header)
+      (check-figure "version 3: the pickup alone on a system"
+                    "v3-pickup-alone.json" v3-pickup-alone)
+      (check-figure "version 3: labels null, rows on and off"
+                    "v3-labels-off.json" v3-labels-off))
     (test-assert "typst is installed (CI installs 0.15.1)" #f))
 
 (define runner (test-runner-current))

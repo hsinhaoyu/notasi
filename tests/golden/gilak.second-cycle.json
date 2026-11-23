@@ -1,11 +1,11 @@
 {
-  "version": 2,
+  "version": 3,
   "title": "Gilak",
   "subtitle": null,
   "steps_per_pulse": 1,
   "sizes": {
     "font_size": null,
-    "label_width": "2.7em",
+    "label_width": "4.5em",
     "lane_width": "2.0em",
     "cell_width": "2em",
     "cell_height": "2em"
@@ -15,7 +15,8 @@
       "start": 9,
       "steps": 8,
       "header": {
-        "label": null,
+        "cycle_label": "Cycle",
+        "pulse_label": "Pulse",
         "cycles": [
           {
             "column": 0,

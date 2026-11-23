@@ -58,7 +58,7 @@ make-source-location source-location?
             make-score score?
             score-name score-title score-subtitle score-caption score-from
             score-to score-system-length score-breaks score-cycle-numbers?
-            score-pulse-numbers? score-numbering score-pulse-label
+            score-pulse-numbers? score-numbering score-cycle-label score-pulse-label
             score-font-size score-cell-width score-cell-height score-groups
             score-location
 
@@ -191,7 +191,7 @@ make-source-location source-location?
 ;;; options.  LOCATION is #f for the default score.
 (define-record-type <score>
   (make-score name title subtitle caption from to system-length breaks
-              cycle-numbers? pulse-numbers? numbering pulse-label
+              cycle-numbers? pulse-numbers? numbering cycle-label pulse-label
               font-size cell-width cell-height groups location)
   score?
   (name           score-name)
@@ -205,6 +205,7 @@ make-source-location source-location?
   (cycle-numbers? score-cycle-numbers?)
   (pulse-numbers? score-pulse-numbers?)
   (numbering      score-numbering)
+  (cycle-label    score-cycle-label)
   (pulse-label    score-pulse-label)
   (font-size      score-font-size)
   (cell-width     score-cell-width)
