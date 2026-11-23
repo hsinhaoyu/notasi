@@ -70,3 +70,6 @@ Neither target needs them; the design leaves room for them.
 - **Strokes drawn at their durations**, as an option against ADR 0042's
   one column: not until someone needs it
   ([stroke width](03-refining-the-examples/design_ideas/2026-11-23-stroke-width.md)).
+- **Choosing the font** of a standalone figure (`:font` on a score, or
+  `notasi render --font`), beyond ADR 0045's list: later, if asked for
+  ([sans-serif](03-refining-the-examples/design_ideas/2026-11-23-sans-serif.md)).

@@ -69,7 +69,7 @@ In dependency order (ADR 0023): `01-notation.md`; then `02-piece.md`
 and `03-reader.md`; then `04-layout.md` and `05-typst-backend.md`; then
 `06-documents.md` and the build order.
 
-Promoted so far: `01-notation.md` (ADRs 0038–0041), `02-piece.md`, `03-reader.md`, `04-layout.md` (ADRs 0042–0043).
+Promoted so far: `01-notation.md` (ADRs 0038–0041), `02-piece.md`, `03-reader.md`, `04-layout.md` (ADRs 0042–0043), `05-typst-backend.md` (ADRs 0044–0045).
 
 ## Milestones
 
