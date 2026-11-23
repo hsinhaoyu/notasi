@@ -48,6 +48,15 @@ and ask.
    git switch -c <branch>
    ```
 
+   Then make sure the milestone has its **GitHub milestone**, named
+   `Iteration N · <milestone branch>` (e.g. `Iteration 2 · feat/music`,
+   for every slice of `feat/music`). List them with
+   `gh api repos/{owner}/{repo}/milestones --jq '.[].title'`; if it is
+   missing, create it with
+   `gh api repos/{owner}/{repo}/milestones -f title='…' -f description='…'`,
+   the description naming the iteration and milestone and pointing to
+   the iteration's README. `/ship` puts the PR in it.
+
 2. **Read the spec.** Read the design doc(s) for the milestone (the
    table in `doc/design/README.md` maps modules to docs), the accepted ADRs
    in `doc/decisions/`, and the existing code the work builds on,

@@ -92,6 +92,7 @@ Deferred work is in `doc/iterations/backlog.md`.
 - Commit when the user asks; push and open a PR only when the user asks. Use `/ship` to open a PR.
 - Every PR targets `dev` and needs green CI before merging.
 - After a PR is merged, `/cleanup-branches` deletes its branch.
+- Each milestone of an iteration has a GitHub milestone, `Iteration N · <milestone branch>` (e.g. `Iteration 2 · feat/music`): `/start-milestone` creates it, `/ship` puts every slice, fix and `/doc-audit` sync PR of that milestone in it, and `/release` closes it. Promotion, governance and housekeeping PRs get none.
 
 ## Working on a milestone
 

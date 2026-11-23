@@ -94,6 +94,9 @@ If a new test reads a dev-only path, add it here.
      fixes>" <commit>`, and `git push origin <tag>`;
    - delete the `release/<tag>` branch locally (GitHub deletes its copy
      on merge);
+   - for an iteration release, close the iteration's GitHub milestones
+     (`Iteration N · …`) whose PRs are all merged:
+     `gh api -X PATCH repos/{owner}/{repo}/milestones/<number> -f state=closed`;
    - for an iteration release, remind the user to set the iteration's
      `Status:` to `done` on `dev` (a `doc/…` PR), and to move the
      build order in `doc/design/README.md` on.
