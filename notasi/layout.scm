@@ -335,30 +335,43 @@ pattern names the score prints."
      (and (>= t pickup) (zero? (modulo (- t pickup) cycle))))))
 
 (define (header score meter k start end)
-  `((label . ,(null-if-false (score-pulse-label score)))
-    (cycles
-     . ,(if (and meter (score-cycle-numbers? score))
-            (list->vector
-             (filter-map
-              (lambda (c)
-                (let ((t (/ c k)))
-                  (and (integer? t) (cycle-start? t meter)
-                       `((column . ,(- c start))
-                         (text . ,(number->string
-                                   (+ (/ (- t (cdr meter)) (car meter))
-                                      1)))))))
-              (iota (- end start) start)))
-            'null))
-    (pulses
-     . ,(if (score-pulse-numbers? score)
-            (list->vector
-             (map (lambda (c)
-                    (let ((t (/ c k)))
-                      (if (integer? t)
-                          (pulse-text t meter (score-numbering score))
-                          'null)))
-                  (iota (- end start) start)))
-            'null))))
+  (let ((cycles
+         (if (and meter (score-cycle-numbers? score))
+             (list->vector
+              (append
+               ;; The pickup is cycle 0: a system that starts in it, or
+               ;; with it, shows 0 at its first column (ADR 0043).
+               (if (< (/ start k) (cdr meter))
+                   (list `((column . 0) (text . "0")))
+                   '())
+               (filter-map
+                (lambda (c)
+                  (let ((t (/ c k)))
+                    (and (integer? t) (cycle-start? t meter)
+                         `((column . ,(- c start))
+                           (text . ,(number->string
+                                     (+ (/ (- t (cdr meter)) (car meter))
+                                        1)))))))
+                (iota (- end start) start))))
+             'null))
+        (pulses
+         (if (score-pulse-numbers? score)
+             (list->vector
+              (map (lambda (c)
+                     (let ((t (/ c k)))
+                       (if (integer? t)
+                           (pulse-text t meter (score-numbering score))
+                           'null)))
+                   (iota (- end start) start)))
+             'null)))
+    `((cycle_label . ,(if (eq? cycles 'null)
+                          'null
+                          (null-if-false (score-cycle-label score))))
+      (pulse_label . ,(if (eq? pulses 'null)
+                          'null
+                          (null-if-false (score-pulse-label score))))
+      (cycles . ,cycles)
+      (pulses . ,pulses))))
 
 (define (lines meter k start end)
   (list->vector
@@ -425,6 +438,13 @@ and every system length from its start, in order."
                                (map (lambda (g) (assq-ref g 'label))
                                     (vector->list (assq-ref system 'groups))))
                              (vector->list systems))
+                 ;; The header labels sit in the same column.
+                 (append-map (lambda (system)
+                               (let ((h (assq-ref system 'header)))
+                                 (filter string?
+                                         (list (assq-ref h 'cycle_label)
+                                               (assq-ref h 'pulse_label)))))
+                             (vector->list systems))
                  ;; A subtitle is under its label, or after it on a
                  ;; group of one row (05, "Groups"), which then needs
                  ;; room for both: the longest label it prints, a space
@@ -463,7 +483,7 @@ carry their effective settings (ADR 0033)."
                                          (score-to score)))
                         (score-groups score)))
          (systems (systems prepared score (piece-meter piece) k)))
-    `((version . 2)
+    `((version . 3)
       (title . ,(score-title score))
       (subtitle . ,(null-if-false (score-subtitle score)))
       (steps_per_pulse . ,k)

@@ -175,7 +175,7 @@ setting at its default unless given."
 
 (define* (mk-score name groups #:key (title "T") (to 0) (location #f))
   "A score called NAME holding GROUPS, every other setting at its default."
-  (make-score name title #f #f 0 to #f '() #f #t 'gong-last #f #f
+  (make-score name title #f #f 0 to #f '() #f #t 'gong-last #f #f #f
               "2em" "2em" groups location))
 
 (define (mk-piece title length scales instruments parts groups)
@@ -325,7 +325,7 @@ one score holding GROUPS."
   (let* ((p (mk-part 'polos reyong))
          (g (mk-group "Reyong" p))
          (sc (make-score 'full "Full score" "pangecet" "A caption"
-                         1/2 15/2 4 '(2 6) #t #f 'gong-first "Beats"
+                         1/2 15/2 4 '(2 6) #t #f 'gong-first "Cycle" "Beats"
                          "8pt" "3em" "1.5em" (list g) loc))
          (d (mk-score 'default (list g) #:title "Piece" #:to 8)))
     (test-assert "predicate" (score? sc))
@@ -340,6 +340,7 @@ one score holding GROUPS."
     (test-eq "cycle-numbers?" #t (score-cycle-numbers? sc))
     (test-eq "pulse-numbers?" #f (score-pulse-numbers? sc))
     (test-eq "numbering" 'gong-first (score-numbering sc))
+    (test-equal "cycle-label" "Cycle" (score-cycle-label sc))
     (test-equal "pulse-label" "Beats" (score-pulse-label sc))
     (test-equal "font-size" "8pt" (score-font-size sc))
     (test-equal "cell-width" "3em" (score-cell-width sc))
@@ -349,13 +350,14 @@ one score holding GROUPS."
     (test-assert "times stay exact"
       (and (exact? (score-from sc)) (exact? (score-to sc))))
     (test-equal "a default score: its settings"
-      (list 'default "Piece" #f #f 0 8 #f '() #f #t 'gong-last #f #f
+      (list 'default "Piece" #f #f 0 8 #f '() #f #t 'gong-last #f #f #f
             "2em" "2em" (list g) #f)
       (list (score-name d) (score-title d) (score-subtitle d)
             (score-caption d) (score-from d) (score-to d)
             (score-system-length d) (score-breaks d)
             (score-cycle-numbers? d) (score-pulse-numbers? d)
-            (score-numbering d) (score-pulse-label d) (score-font-size d)
+            (score-numbering d) (score-cycle-label d) (score-pulse-label d)
+            (score-font-size d)
             (score-cell-width d) (score-cell-height d) (score-groups d)
             (score-location d)))
     (test-assert "a score is not a group, a group not a score"

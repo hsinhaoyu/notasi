@@ -5043,7 +5043,8 @@ STR, or the raised object (or no-error) unchanged."
   (list (score-title sc) (score-subtitle sc) (score-caption sc)
         (score-from sc) (score-to sc) (score-system-length sc)
         (score-breaks sc) (score-cycle-numbers? sc) (score-pulse-numbers? sc)
-        (score-numbering sc) (score-pulse-label sc) (score-font-size sc)
+        (score-numbering sc) (score-cycle-label sc) (score-pulse-label sc)
+        (score-font-size sc)
         (score-cell-width sc) (score-cell-height sc)))
 
 (define (score-group-labels sc) (map group-label (score-groups sc)))
@@ -5091,10 +5092,10 @@ STR, or the raised object (or no-error) unchanged."
     (test-eq "piece-score: an unknown name is #f" #f (piece-score pc 'nope))
 
     (test-equal "full: the score's settings, the unbuilt ones at their defaults"
-      (list "Full" #f #f 0 4 2 '() #f #t 'gong-last #f #f "3em" "1.5em")
+      (list "Full" #f #f 0 4 2 '() #f #t 'gong-last "Cycle" "Pulse" #f "3em" "1.5em")
       (score-settings (score-named pc 'full)))
     (test-equal "parts: every setting at its default; the title is the piece's"
-      (list "Parts" #f #f 0 4 #f '() #f #t 'gong-last #f #f "2em" "2em")
+      (list "Parts" #f #f 0 4 #f '() #f #t 'gong-last "Cycle" "Pulse" #f "2em" "2em")
       (score-settings (score-named pc 'parts)))
     (test-assert ":system-length stays exact"
       (exact? (score-system-length (score-named pc 'full))))
@@ -5255,7 +5256,7 @@ STR, or the raised object (or no-error) unchanged."
       (piece-score pc 'default))
     (test-equal "its location is #f" #f (score-location (score-named pc 'default)))
     (test-equal "every setting at its default, the title the piece's"
-      (list "Parts" #f #f 0 4 #f '() #f #t 'gong-last #f #f "2em" "2em")
+      (list "Parts" #f #f 0 4 #f '() #f #t 'gong-last "Cycle" "Pulse" #f "2em" "2em")
       (score-settings (score-named pc 'default)))
     (test-equal "one group per part, in part order, labelled with its name"
       '("ugal" "polos" "sangsih" "gong" "kempli")
@@ -5702,7 +5703,7 @@ colotomy, 4 pulses."
              "  (group \"U\" ugal))")))
     (test-equal "every option read, in 02's order"
       (list "Parts" "pangecet" "From Tenzer" 0 4 #f '() #f #f 'gong-first
-            "Beats" "10pt" "2em" "2em")
+            "Cycle" "Beats" "10pt" "2em" "2em")
       (and pc (score-settings (score-named pc 'full)))))
   (let ((pc (read-scores+ "(score s :pulse-numbers yes :numbering gong-last"
                           "  (group \"U\" ugal))")))
@@ -5722,7 +5723,8 @@ colotomy, 4 pulses."
     (piece? (read-scores+ "(score s :cycle-numbers yes (group \"U\" ugal))")))
   (let ((pc (read-scores+ "(score s :subtitle \"\" :caption \"\" :pulse-label \"\""
                           "  (group \"U\" ugal))")))
-    (test-equal "empty strings are kept as written" '("" "" "")
+    ;; except :pulse-label, where "" means no label: #f (ADR 0039)
+    (test-equal "empty strings are kept as written" '("" "" #f)
       (and pc (let ((sc (score-named pc 's)))
                 (list (score-subtitle sc) (score-caption sc)
                       (score-pulse-label sc))))))
@@ -6612,6 +6614,111 @@ colotomy, 4 pulses."
     '(undefined-colotomy 1)
     (string-error (lines "(piece \"P\" :colotomy pangecet-16 :pickup 1)"
                          "(use gong-kebyar)" "(part :instrument ugal 1:17)"))))
+
+;;; ==================================================================
+;;; [score-options] The header labels (iteration 3, milestone 2, slice
+;;; feat/drawing-header)
+;;; ==================================================================
+;;;
+;;; 04, "Slices (iteration 3)" slice 1; 01, `:cycle-label`,
+;;; `:pulse-label`; 02, the score's `cycle-label` and `pulse-label`; 03,
+;;; [score-options]; ADR 0039. The reader reads `:cycle-label STRING`
+;;; on a score; a score's `cycle-label` is "Cycle" unless it is given,
+;;; its `pulse-label` "Pulse" unless it is given, and "" is stored as
+;;; #f. Either label not a string is `bad-option`; on a group it is
+;;; `option-wrong-level`, like the other score-only options.
+;;; Choices made where the docs are not explicit:
+;;; - The defaults hold with or without a colotomy (02 gives them
+;;;   unconditionally; layout leaves out a label whose row isn't shown).
+;;; - A label is stored as written, spaces and all; only "" becomes #f.
+;;; - `duplicate-option` for `:cycle-label` is at the score's line, as
+;;;   for `:caption`.
+
+(test-group "[score-options] :cycle-label and :pulse-label: reading"
+  (let ((pc (read-scores+ "(score s :cycle-label \"Gong\" :pulse-label \"Beats\""   ; 14
+                          "  (group \"U\" ugal))")))
+    (test-equal "both as written" '("Gong" "Beats")
+      (and pc (let ((sc (score-named pc 's)))
+                (list (score-cycle-label sc) (score-pulse-label sc))))))
+  (let ((pc (read-scores+ "(score s (group \"U\" ugal))")))
+    (test-equal "a score without them: \"Cycle\" and \"Pulse\"" '("Cycle" "Pulse")
+      (and pc (let ((sc (score-named pc 's)))
+                (list (score-cycle-label sc) (score-pulse-label sc))))))
+  (let ((pc (read-scores+)))
+    (test-equal "the default score: \"Cycle\" and \"Pulse\"" '("Cycle" "Pulse")
+      (and pc (let ((sc (score-named pc 'default)))
+                (list (score-cycle-label sc) (score-pulse-label sc))))))
+  (let ((pc (read-colo+ ":colotomy gilak" "(part :instrument ugal 1:16)"           ; 12
+                        "(score s (group \"U\" ugal))")))
+    (test-equal "with a colotomy: the same defaults" '("Cycle" "Pulse")
+      (and pc (let ((sc (score-named pc 's)))
+                (list (score-cycle-label sc) (score-pulse-label sc))))))
+  (let ((pc (read-colo+ ":colotomy gilak" "(part :instrument ugal 1:16)")))
+    (test-equal "the default score with a colotomy" '("Cycle" "Pulse")
+      (and pc (let ((sc (score-named pc 'default)))
+                (list (score-cycle-label sc) (score-pulse-label sc))))))
+  (let ((pc (read-scores+ "(score s :cycle-label \"\" :pulse-label \"\""
+                          "  (group \"U\" ugal))")))
+    (test-equal "\"\" is stored as #f, for both" '(#f #f)
+      (and pc (let ((sc (score-named pc 's)))
+                (list (score-cycle-label sc) (score-pulse-label sc))))))
+  (let ((pc (read-scores+ "(score s :cycle-label \"\" (group \"U\" ugal))")))
+    (test-equal ":cycle-label \"\" alone: the pulse label keeps its default"
+      '(#f "Pulse")
+      (and pc (let ((sc (score-named pc 's)))
+                (list (score-cycle-label sc) (score-pulse-label sc))))))
+  (let ((pc (read-scores+ "(score s :pulse-label \"\" (group \"U\" ugal))")))
+    (test-equal ":pulse-label \"\" alone: the cycle label keeps its default"
+      '("Cycle" #f)
+      (and pc (let ((sc (score-named pc 's)))
+                (list (score-cycle-label sc) (score-pulse-label sc))))))
+  (let ((pc (read-scores+ "(score s :cycle-label \"Gong · é\" :pulse-label \" Beats \""
+                          "  (group \"U\" ugal))")))
+    (test-equal "kept as written: non-ASCII and spaces" '("Gong · é" " Beats ")
+      (and pc (let ((sc (score-named pc 's)))
+                (list (score-cycle-label sc) (score-pulse-label sc))))))
+  (let ((pc (read-scores+ "(score one :cycle-label \"Gong\" (group \"U\" ugal))"
+                          "(score two (group \"U\" ugal))")))
+    (test-equal "each score its own: a label on one isn't the other's"
+      '("Gong" "Cycle")
+      (and pc (list (score-cycle-label (score-named pc 'one))
+                    (score-cycle-label (score-named pc 'two))))))
+  (let ((pc (read-scores+ "(score s :cycle-numbers no :cycle-label \"Gong\""
+                          "  (group \"U\" ugal))")))
+    (test-equal "with :cycle-numbers no, the label is still read" "Gong"
+      (and pc (score-cycle-label (score-named pc 's)))))
+  (test-assert "without a colotomy, :cycle-label reads"
+    (piece? (read-scores+ "(score s :cycle-label \"Gong\" (group \"U\" ugal))"))))
+
+(test-group "[score-options] :cycle-label and :pulse-label: errors"
+  (for-each
+   (match-lambda
+     ((name options)
+      (test-equal name '(bad-option 14)
+        (score-error (string-append "(score s " options " (group \"U\" ugal))")))))
+   (list
+    (list ":cycle-label a symbol" ":cycle-label gong")
+    (list ":cycle-label a number" ":cycle-label 1")
+    (list ":cycle-label a list" ":cycle-label (\"Gong\")")
+    (list ":cycle-label yes" ":cycle-label yes")
+    (list "a key with no value: :cycle-label" ":cycle-label :pulse-label \"B\"")
+    (list ":pulse-label a symbol" ":pulse-label Pulse")
+    (list ":pulse-label a list" ":pulse-label (\"Beats\")")))
+  (test-equal ":cycle-label not a string: no part, no time"
+    '(bad-option 14 #f #f)
+    (error-fields (scores+ "(score s :cycle-label gong (group \"U\" ugal))")))
+  (test-equal "duplicate-option: :cycle-label" '(duplicate-option 14)
+    (score-error "(score s :cycle-label \"a\" :cycle-label \"b\" (group \"U\" ugal))"))
+  (for-each
+   (lambda (option)
+     (test-equal (string-append "score-only, on a group: " option)
+       '(option-wrong-level 15)
+       (string-error (one-group (string-append "(group \"U\" " option " ugal)")))))
+   '(":cycle-label \"Gong\"" ":cycle-label \"\"" ":pulse-label \"\""))
+  (test-equal ":cycle-label on a later group, at that group's line"
+    '(option-wrong-level 16)
+    (score-error "(score s" "  (group \"U\" ugal)"
+                 "  (group \"G\" :cycle-label \"Gong\" gong))")))
 
 (define runner (test-runner-current))
 (test-end "reader")

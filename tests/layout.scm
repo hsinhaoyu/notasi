@@ -294,20 +294,20 @@ default unless given."
                      #:key (title (piece-title piece)) (subtitle #f)
                      (caption #f) (system-length #f) (cycle-numbers? #f)
                      (pulse-numbers? #t) (numbering 'gong-last)
-                     (pulse-label #f) (font-size #f)
+                     (cycle-label #f) (pulse-label #f) (font-size #f)
                      (cell-width "2em") (cell-height "2em")
                      (from 0) (to (piece-length piece)) (breaks '()))
   "A score record built by hand, over the whole of PIECE unless FROM and
 TO (times) say otherwise."
   (make-score 'hand title subtitle caption from to
               system-length breaks cycle-numbers? pulse-numbers? numbering
-              pulse-label font-size cell-width cell-height groups #f))
+              cycle-label pulse-label font-size cell-width cell-height groups #f))
 
 (define figure-keys
   '(version title subtitle steps_per_pulse sizes systems caption))
 (define sizes-keys '(font_size label_width lane_width cell_width cell_height))
 (define system-keys '(start steps header lines groups))
-(define header-keys '(label cycles pulses))
+(define header-keys '(cycle_label pulse_label cycles pulses))
 (define mark-keys '(column text))
 (define group-keys '(label subtitle lanes voices overlays))
 (define voice-keys '(name events))
@@ -337,7 +337,8 @@ per column?"
          (string? (field m 'text))))
   (define (header-ok? h steps)
     (and (equal? (keys h) header-keys)
-         (string-or-null? (field h 'label))
+         (string-or-null? (field h 'cycle_label))
+         (string-or-null? (field h 'pulse_label))
          (let ((cycles (field h 'cycles)))
            (or (eq? cycles 'null) (every-in cycles mark-ok?)))
          (let ((pulses (field h 'pulses)))
@@ -413,8 +414,10 @@ at its default: font_size null, cells \"2em\"."
   `((start . ,start) (steps . ,steps) (header . ,header) (lines . ,lines)
     (groups . ,(list->vector groups))))
 
-(define (hdr label cycles pulses)
-  `((label . ,label) (cycles . ,cycles) (pulses . ,pulses)))
+(define* (hdr label cycles pulses #:optional (cycle-label 'null))
+  "A version 3 header: LABEL is the pulse row's label (ADR 0043)."
+  `((cycle_label . ,cycle-label) (pulse_label . ,label)
+    (cycles . ,cycles) (pulses . ,pulses)))
 
 (define (mark column text)
   "A cycle mark."
@@ -432,7 +435,7 @@ at its default: font_size null, cells \"2em\"."
 ;; No group has note names: text is null for pitched notes and strokes.
 ;; Lanes of "gong": G P (0 1). The built-in kempli is in no group.
 (define tiny-expected
-  `((version . 2)
+  `((version . 3)
     (title . "Tiny")
     (subtitle . null)
     (steps_per_pulse . 2)
@@ -446,7 +449,7 @@ at its default: font_size null, cells \"2em\"."
          ;; No colotomy: pulses numbered within the piece, no cycle row,
          ;; no cycle lines; a pulse line where pulses 2 and 3 start.
          (sys 0 5
-              (hdr 'null 'null #("1" null "2" null "3"))
+              (hdr "Pulse" 'null #("1" null "2" null "3"))
               #("none" "none" "pulse" "none" "pulse")
               (grp "Ugal" "polos + sangsih" #("i2" "e1" "o1" "i1")
                    (voice "polos"
@@ -465,7 +468,7 @@ at its default: font_size null, cells \"2em\"."
 ;; The same, as score `split` cuts it: systems of 2 pulses (4 columns),
 ;; the second 1 column long. polos's dong1 (columns 2 to 5) is cut at 4.
 (define split-expected
-  `((version . 2)
+  `((version . 3)
     (title . "Tiny")
     (subtitle . null)
     (steps_per_pulse . 2)
@@ -477,7 +480,7 @@ at its default: font_size null, cells \"2em\"."
     (systems
      . ,(vector
          (sys 0 4
-              (hdr 'null 'null #("1" null "2" null))
+              (hdr "Pulse" 'null #("1" null "2" null))
               #("none" "none" "pulse" "none")
               (grp "Ugal" "polos + sangsih" #("i2" "e1" "o1" "i1")
                    (voice "polos"
@@ -493,7 +496,7 @@ at its default: font_size null, cells \"2em\"."
                           (ev 3 1 0 'null grey dark #f))))
          ;; Absolute numbering: column 4 is pulse 3.
          (sys 4 1
-              (hdr 'null 'null #("3"))
+              (hdr "Pulse" 'null #("3"))
               #("none")
               (grp "Ugal" "polos + sangsih" #("i2" "e1" "o1" "i1")
                    (voice "polos"
@@ -569,7 +572,7 @@ at its default: font_size null, cells \"2em\"."
   (test-equal "keys in the documented order"
     figure-keys
     (keys (layout tiny)))
-  (test-equal "version 2" 2 (field (layout tiny) 'version))
+  (test-equal "version 3" 3 (field (layout tiny) 'version))
   (test-equal "title: the score's, by default the piece's title"
     "Tiny" (field (layout tiny) 'title))
   (test-equal "steps_per_pulse derived: half pulses give 2"
@@ -671,8 +674,8 @@ at its default: font_size null, cells \"2em\"."
     (v2-sizes "1.5em" "1.0em")
     (sizes-of "(piece \"Empty\")"))
 
-  (test-equal "one-letter label and stroke: 2.1em, 1.5em"
-    (v2-sizes "2.1em" "1.5em")
+  (test-equal "one-letter label and stroke: \"Pulse\" sets 4.5em, 1.5em"
+    (v2-sizes "4.5em" "1.5em") ; the default "Pulse" label (5 chars) is the widest (ADR 0039)
     (sizes-of "(piece \"P\")"
               "(strokes k-strokes K)"
               "(instrument kajar k-strokes K)"
@@ -752,7 +755,7 @@ at its default: font_size null, cells \"2em\"."
            'label_width))
 
   (test-equal "a group of rests adds no lane label"
-    (v2-sizes "2.7em" "1.0em")
+    (v2-sizes "4.5em" "1.0em") ; the default "Pulse" label (5 chars) is the widest (ADR 0039)
     (sizes-of "(piece \"P\")"
               "(scale s a)"
               "(instrument u s a1)"
@@ -765,14 +768,14 @@ at its default: font_size null, cells \"2em\"."
                      "(instrument u s a1)"
                      "(part :instrument u :name ab 1)"
                      "(part :instrument u :name a-much-longer-name 1)"
-                     "(score s (group \"ab\" ab))")
+                     "(score s :pulse-label \"\" (group \"ab\" ab))")
            'label_width))
 
   (test-equal "an empty label: 1.5em"
     "1.5em"
     (field (sizes-of "(piece \"P\")" "(scale s a)" "(instrument u s a1)"
                      "(part :instrument u :name ab 1)"
-                     "(score s (group \"\" ab))")
+                     "(score s :pulse-label \"\" (group \"\" ab))")
            'label_width))
 
   (test-equal "tenzer1: \"kempli\" → 5.1em, \"e2\" → 2.0em"
@@ -802,7 +805,8 @@ at its default: font_size null, cells \"2em\"."
       (list (field s 'cell_width) (field s 'cell_height))))
   (test-equal "the label widths do not change with the cell"
     '("2.7em" "2.0em")
-    (let ((s (tiny-sizes ":cell-width \"5em\"" ":cell-height \"5em\"")))
+    (let ((s (tiny-sizes ":cell-width \"5em\"" ":cell-height \"5em\""
+                         ":pulse-label \"\"")))
       (list (field s 'label_width) (field s 'lane_width))))
   (test-equal "a score built by hand: its cell sizes"
     '("1em" "3em")
@@ -1558,7 +1562,7 @@ at its default: font_size null, cells \"2em\"."
 (define (header-of fig s) (field (system-ref fig s) 'header))
 (define (pulses-of fig s) (field (header-of fig s) 'pulses))
 (define (cycles-of fig s) (field (header-of fig s) 'cycles))
-(define (label-of fig s) (field (header-of fig s) 'label))
+(define (label-of fig s) (field (header-of fig s) 'pulse_label))
 (define (lines-of fig s) (field (system-ref fig s) 'lines))
 
 (define (lines-after-first fig s)
@@ -1609,7 +1613,7 @@ column's line is tested on its own, in \"lines: the first column\")."
     (field (tiny-sizes ":font-size \"3.5mm\"") 'font_size))
   (test-equal "the other sizes do not change with it"
     (v2-sizes "2.7em" "2.0em")
-    (let ((s (tiny-sizes ":font-size \"12pt\"")))
+    (let ((s (tiny-sizes ":font-size \"12pt\"" ":pulse-label \"\"")))
       (cons '(font_size . null) (cdr s))))
   (test-equal "font_size comes first in sizes"
     sizes-keys
@@ -1708,14 +1712,14 @@ column's line is tested on its own, in \"lines: the first column\")."
   (test-equal "no pickup: cycle 1 on the first column, cycle 2 on the fifth"
     (marks '(0 "1") '(4 "2"))
     (cycles-of (layout (colo-piece (notes 8))) 0))
-  (test-equal "a pickup of 1: the pickup has no mark; cycle 1 after it"
-    (marks '(1 "1") '(5 "2"))
+  (test-equal "a pickup of 1: the pickup is cycle 0; cycle 1 after it"
+    (marks '(0 "0") '(1 "1") '(5 "2"))
     (cycles-of (layout (colo-piece (notes 9) #:pickup 1)) 0))
   (test-equal "quarter pulses: the mark is at the cycle's first column"
-    (marks '(4 "1"))
+    (marks '(0 "0") '(4 "1"))
     (cycles-of (layout (colo-piece "1:1/4 2 1 2 1:1 2 1 2" #:pickup 1)) 0))
   (test-equal "the default score with a colotomy shows them"
-    (marks '(1 "1"))
+    (marks '(0 "0") '(1 "1"))
     (cycles-of (layout (colo-piece (notes 5) #:pickup 1 #:score? #f)) 0))
   (test-equal "cycle numbers past 9: ten 2-pulse cycles"
     (list->vector (map (lambda (c) (mark (* 2 c) (number->string (+ c 1))))
@@ -1792,7 +1796,7 @@ column's line is tested on its own, in \"lines: the first column\")."
                                               (list (part-named tenzer 'ugal))))
                             #:pulse-numbers? #f))
                0))
-  (test-eq "no :pulse-label: null" 'null (label-of (layout (ten-steps)) 0))
+  (test-equal "no :pulse-label: \"Pulse\" (ADR 0039)" "Pulse" (label-of (layout (ten-steps)) 0))
   (test-equal ":pulse-label is the header's label" "Beats"
     (label-of (layout (ten-score ":pulse-label \"Beats\"")) 0))
   (test-equal ":pulse-label in every system"
@@ -1861,7 +1865,7 @@ column's line is tested on its own, in \"lines: the first column\")."
       '(#("4" "1" "2") #("3" "4" "1") #("2" "3" "4"))
       (map (lambda (s) (pulses-of fig s)) '(0 1 2)))
     (test-equal "cycle marks: in the system where the cycle starts, at its column"
-      (list (marks '(1 "1")) (marks '(2 "2")) #())
+      (list (marks '(0 "0") '(1 "1")) (marks '(2 "2")) #())
       (map (lambda (s) (cycles-of fig s)) '(0 1 2)))
     (test-equal "lines, from the second column"
       '(("cycle" "pulse") ("pulse" "cycle") ("pulse" "pulse"))
@@ -2165,7 +2169,7 @@ give."
 (test-group "rows: a complete system"
   (test-equal "parts rows with :fill none, written out"
     (sys 0 5
-         (hdr 'null 'null #("1" "2" "3" "4" "5"))
+         (hdr "Pulse" 'null #("1" "2" "3" "4" "5"))
          #("none" "pulse" "pulse" "pulse" "pulse")
          (grp "Sung" 'null #("polos" "s")
               (voice "p"
@@ -2620,13 +2624,13 @@ give."
 (test-group "sizes: label_width from the labels printed"
   ;; 0.6em per character of the longest label printed, + 1.5em.
   (test-equal ":labels short: the short label (4 chars)" "3.9em"
-    (label-width (layout (ten-steps "(score s :labels short"
+    (label-width (layout (ten-steps "(score s :labels short :pulse-label \"\""
                                     "  (group \"Gangsa pemade\" :short \"Pem.\" melody))"))))
   (test-equal ":labels long: the long label (13 chars)" "9.3em"
     (label-width (layout (ten-steps "(score s :labels long :system-length 4"
                                     "  (group \"Gangsa pemade\" :short \"Pem.\" melody))"))))
   (test-equal "first-long, one system: only the long label is printed" "2.1em"
-    (label-width (layout (ten-steps "(score s"
+    (label-width (layout (ten-steps "(score s :pulse-label \"\""
                                     "  (group \"U\" :short \"Ugal-ugal\" melody))"))))
   (test-equal "first-long, several systems: the longest in any system (9 chars)"
     "6.9em"
@@ -2644,10 +2648,10 @@ give."
     (test-equal "full: long labels on the first system, short after"
       '(("Ugal" "Gong") ("U." "G.") ("U." "G.") ("U." "G."))
       (and fig (labels-by-system fig)))
-    (test-equal "full: the pickup is pulse 8, with no cycle mark"
-      (list #("8") #())
+    (test-equal "full: the pickup is pulse 8, with cycle mark 0 (ADR 0043)"
+      (list #("8") (marks '(0 "0")))
       (and fig (list (pulses-of fig 0) (cycles-of fig 0))))
-    (test-equal "full: label_width from \"Ugal\"" "3.9em"
+    (test-equal "full: label_width from \"Cycle\" and \"Pulse\", wider than \"Ugal\"" "4.5em"
       (and fig (label-width fig)))
     (test-assert "full: well-formed" (and fig (well-formed? fig))))
   (let ((fig (layout-or-false (layout-named gilak 'second-cycle))))
@@ -2659,7 +2663,7 @@ give."
       (and fig (cycles-of fig 0)))
     (test-equal "second-cycle: short labels" '(("U." "G."))
       (and fig (labels-by-system fig)))
-    (test-equal "second-cycle: label_width from \"U.\"" "2.7em"
+    (test-equal "second-cycle: label_width from \"Cycle\" and \"Pulse\"" "4.5em"
       (and fig (label-width fig)))
     (test-assert "second-cycle: well-formed" (and fig (well-formed? fig)))))
 
@@ -2715,7 +2719,357 @@ give."
       (width "(score s (group \"Ugal\" :subtitle \"main\" p))"))
     (test-equal "two rows: the longest of \"Ugal\" and \"main\""
       "3.9em"
-      (width "(score s (group \"Ugal\" :subtitle \"main\" q))"))))
+      (width "(score s :pulse-label \"\" (group \"Ugal\" :subtitle \"main\" q))"))))
+
+;;; ------------------------------------------------------------------
+;;; Contract version 3, the header (iteration 3, milestone 2, slice
+;;; feat/drawing-header; 04, "Slices (iteration 3)" slice 1 and its
+;;; decided bullet, "Header and lines", the keys table; 05, "JSON
+;;; contract (version 3)"; 01, `:cycle-numbers`, `:cycle-label`,
+;;; `:pulse-label`; ADRs 0039, 0043): `version` is 3; the header's keys
+;;; are `cycle_label`, `pulse_label`, `cycles`, `pulses`, in that order
+;;; (no `label`; `pulse_lines` is a later slice). Each label is the
+;;; score's ("Cycle" and "Pulse" by default), null when it is "" or
+;;; its row is not shown (`cycles` or `pulses` null). The pickup is
+;;; cycle 0: a system that starts in the pickup, or with it, has a mark
+;;; "0" at the first pickup column it shows.
+;;; Choices made where the docs are not explicit:
+;;; - "Starts in the pickup" is read literally: with a pickup of 2 cut
+;;;   into systems of one pulse, both systems have the mark "0" at
+;;;   column 0.
+;;; - The "0" mark comes before cycle 1's in `cycles` (sorted by
+;;;   column, like the other marks).
+;;; - With `:cycle-numbers no` the pickup has no mark either: `cycles`
+;;;   stays null.
+;;; - Whether the header labels count towards `label_width` is not
+;;;   tested (04's "Sizes" names only group labels and subtitles).
+;;; - Fixtures are read from text, not built with `hand-score`, since
+;;;   the score record's constructor gains `cycle-label` at a place 02
+;;;   lists but this slice's tests don't need to pin.
+
+(define v3-header-keys '(cycle_label pulse_label cycles pulses))
+
+(define (cycle-label-of fig s) (field (header-of fig s) 'cycle_label))
+(define (pulse-label-of fig s) (field (header-of fig s) 'pulse_label))
+
+(define (labels-of fig s)
+  "System S's (cycle_label pulse_label)."
+  (list (cycle-label-of fig s) (pulse-label-of fig s)))
+
+(define (v3-header-ok? fig)
+  "Does every system of FIG have a version 3 header: the keys in order,
+each label a string or null, `cycles` null or a vector of marks, and
+`pulses` null or one string-or-null per column? A label is null when
+its row is."
+  (every (lambda (s)
+           (let ((h (field s 'header)))
+             (and (equal? (keys h) v3-header-keys)
+                  (string-or-null? (field h 'cycle_label))
+                  (string-or-null? (field h 'pulse_label))
+                  (let ((cycles (field h 'cycles)))
+                    (or (eq? cycles 'null)
+                        (and (vector? cycles)
+                             (every (lambda (m) (equal? (keys m) mark-keys))
+                                    (vector->list cycles)))))
+                  (let ((pulses (field h 'pulses)))
+                    (or (eq? pulses 'null)
+                        (and (vector? pulses)
+                             (= (field s 'steps) (vector-length pulses)))))
+                  (or (not (eq? (field h 'cycles) 'null))
+                      (eq? (field h 'cycle_label) 'null))
+                  (or (not (eq? (field h 'pulses) 'null))
+                      (eq? (field h 'pulse_label) 'null)))))
+         (systems fig)))
+
+(test-group "contract version 3: the figure and the header's keys"
+  (test-equal "version 3" 3 (field (layout tiny) 'version))
+  (test-equal "version 3 with a colotomy" 3
+    (field (layout (colo-piece (notes 9) #:pickup 1)) 'version))
+  (test-equal "the header's keys in order: no label"
+    v3-header-keys
+    (keys (header-of (layout (colo-piece (notes 8))) 0)))
+  (test-equal "the header's keys without a colotomy" v3-header-keys
+    (keys (header-of (layout (ten-steps)) 0)))
+  (test-equal "the header's keys with both rows off" v3-header-keys
+    (keys (header-of (layout (colo-piece (notes 8)
+                                         #:options ":cycle-numbers no :pulse-numbers no"))
+                     0)))
+  (test-equal "the other keys stay as in version 2"
+    (list figure-keys sizes-keys system-keys)
+    (let ((fig (layout (colo-piece (notes 8)))))
+      (list (keys fig) (keys (field fig 'sizes)) (keys (system-ref fig 0)))))
+  (test-assert "every system's header, across systems"
+    (v3-header-ok? (layout (colo-piece (notes 9) #:pickup 1
+                                       #:options ":system-length 2"))))
+  (test-assert "every system's header, with labels and rows off"
+    (v3-header-ok? (layout (colo-piece (notes 9) #:pickup 1
+                                       #:options (string-append
+                                                  ":cycle-label \"Gong\""
+                                                  " :pulse-numbers no"
+                                                  " :system-length 3")))))
+  (test-assert "json-string accepts a version 3 figure"
+    (string? (json-string (layout (colo-piece (notes 9) #:pickup 1
+                                              #:options ":cycle-label \"G\""))))))
+
+(test-group "header: cycle_label and pulse_label"
+  (test-equal "with a colotomy, by default: \"Cycle\" and \"Pulse\""
+    '("Cycle" "Pulse")
+    (labels-of (layout (colo-piece (notes 8))) 0))
+  (test-equal "the default score with a colotomy: the same"
+    '("Cycle" "Pulse")
+    (labels-of (layout (colo-piece (notes 5) #:pickup 1 #:score? #f)) 0))
+  (test-equal "without a colotomy: no cycle row, so no cycle label"
+    '(null "Pulse")
+    (labels-of (layout (ten-steps)) 0))
+  (test-equal "without a colotomy, :cycle-numbers yes: still no cycle label"
+    '(null "Pulse")
+    (labels-of (layout (ten-score ":cycle-numbers yes")) 0))
+  (test-equal "without a colotomy, :cycle-label written: still null"
+    '(null "Pulse")
+    (labels-of (layout (ten-score ":cycle-label \"Gong\"")) 0))
+  (test-equal "tiny (no colotomy): the pulse label" '(null "Pulse")
+    (labels-of (layout tiny) 0))
+  (test-equal ":cycle-label and :pulse-label as written"
+    '("Gong" "Beats")
+    (labels-of (layout (colo-piece (notes 8)
+                                   #:options ":cycle-label \"Gong\" :pulse-label \"Beats\""))
+               0))
+  (test-equal "labels kept as written: spaces and non-ASCII"
+    '("Gong · é" "Ketukan ke-")
+    (labels-of (layout (colo-piece (notes 8)
+                                   #:options ":cycle-label \"Gong · é\" :pulse-label \"Ketukan ke-\""))
+               0))
+  (test-equal ":cycle-label \"\": null, the pulse label stays"
+    '(null "Pulse")
+    (labels-of (layout (colo-piece (notes 8) #:options ":cycle-label \"\"")) 0))
+  (test-equal ":pulse-label \"\": null, the cycle label stays"
+    '("Cycle" null)
+    (labels-of (layout (colo-piece (notes 8) #:options ":pulse-label \"\"")) 0))
+  (test-equal "both \"\": both null, the rows stay"
+    (list 'null 'null (marks '(0 "1") '(4 "2")) #t)
+    (let ((fig (layout (colo-piece (notes 8)
+                                   #:options ":cycle-label \"\" :pulse-label \"\""))))
+      (list (cycle-label-of fig 0) (pulse-label-of fig 0) (cycles-of fig 0)
+            (vector? (pulses-of fig 0)))))
+  (test-equal ":cycle-label \"\" does not change the rest of the figure"
+    (let ((fig (layout (colo-piece (notes 9) #:pickup 1))))
+      (list (cycles-of fig 0) (pulses-of fig 0) (lines-of fig 0)))
+    (let ((fig (layout (colo-piece (notes 9) #:pickup 1
+                                   #:options ":cycle-label \"\" :pulse-label \"\""))))
+      (list (cycles-of fig 0) (pulses-of fig 0) (lines-of fig 0))))
+  (test-equal ":cycle-numbers no: no cycle label, the pulse label stays"
+    '(null "Pulse")
+    (labels-of (layout (colo-piece (notes 8) #:options ":cycle-numbers no")) 0))
+  (test-equal ":cycle-numbers no with :cycle-label written: null"
+    '(null "Beats")
+    (labels-of (layout (colo-piece (notes 8)
+                                   #:options ":cycle-numbers no :cycle-label \"Gong\" :pulse-label \"Beats\""))
+               0))
+  (test-equal ":pulse-numbers no: no pulse label, the cycle label stays"
+    '("Cycle" null)
+    (labels-of (layout (colo-piece (notes 8) #:options ":pulse-numbers no")) 0))
+  (test-equal ":pulse-numbers no with :pulse-label written: null"
+    '("Gong" null)
+    (labels-of (layout (colo-piece (notes 8)
+                                   #:options ":pulse-numbers no :cycle-label \"Gong\" :pulse-label \"Beats\""))
+               0))
+  (test-equal "without a colotomy, :pulse-numbers no: both null"
+    '(null null)
+    (labels-of (layout (ten-score ":pulse-numbers no :pulse-label \"Beats\"")) 0))
+  (test-equal "both rows off: labels, cycles and pulses all null"
+    '(null null null null)
+    (let ((fig (layout (colo-piece (notes 8)
+                                   #:options ":cycle-numbers no :pulse-numbers no"))))
+      (list (cycle-label-of fig 0) (pulse-label-of fig 0)
+            (cycles-of fig 0) (pulses-of fig 0))))
+  (test-equal "the labels in every system, also one with no cycle mark"
+    '(("Gong" "Beats") ("Gong" "Beats") ("Gong" "Beats"))
+    ;; Pickup of 1, systems of 3 pulses: the third has cycles #().
+    (let ((fig (layout (colo-piece (notes 9) #:pickup 1
+                                   #:options ":cycle-label \"Gong\" :pulse-label \"Beats\" :system-length 3"))))
+      (map (lambda (s) (labels-of fig s)) '(0 1 2))))
+  (test-equal "the default labels in every system, without a colotomy"
+    '((null "Pulse") (null "Pulse") (null "Pulse"))
+    (let ((fig (layout (ten-score ":system-length 4"))))
+      (map (lambda (s) (labels-of fig s)) '(0 1 2))))
+  (test-equal "an excerpt: the labels as for the whole piece"
+    '("Cycle" "Pulse")
+    (labels-of (layout (colo-piece (notes 9) #:pickup 1
+                                   #:options ":from (1 3) :to (2 2)"))
+               0))
+  (test-equal "the second score of a file: its own labels"
+    '(("Cycle" "Pulse") ("Gong" null))
+    (let ((pc (piece-of "(piece \"C\" :colotomy c)"
+                        "(scale s a b)"
+                        "(strokes gong-strokes G)"
+                        "(instrument u s a1 b1)"
+                        "(instrument gong gong-strokes G)"
+                        "(colotomy c 4 (part :instrument gong -:3 G:1))"
+                        "(part :instrument u :name m 1 2 1 2)"
+                        "(score one (group \"m\" m))"
+                        "(score two :cycle-label \"Gong\" :pulse-label \"\" (group \"m\" m))")))
+      (list (labels-of (layout-named pc 'one) 0)
+            (labels-of (layout-named pc 'two) 0)))))
+
+(test-group "header: the pickup's cycle mark 0"
+  (test-equal "a pickup of 1: \"0\" at column 0, cycle 1 after it"
+    (marks '(0 "0") '(1 "1") '(5 "2"))
+    (cycles-of (layout (colo-piece (notes 9) #:pickup 1)) 0))
+  (test-equal "a pickup of 2: one mark \"0\", at its first column"
+    (marks '(0 "0") '(2 "1"))
+    (cycles-of (layout (colo-piece (notes 6) #:pickup 2)) 0))
+  (test-equal "an 8-pulse cycle with a pickup of 1"
+    (marks '(0 "0") '(1 "1"))
+    (cycles-of (layout (colo-piece (notes 9) #:cycle 8 #:pickup 1)) 0))
+  (test-equal "quarter pulses: \"0\" at column 0, cycle 1 at column 4"
+    (marks '(0 "0") '(4 "1"))
+    (cycles-of (layout (colo-piece "1:1/4 2 1 2 1:1 2 1 2" #:pickup 1)) 0))
+  (test-equal "the default score of a piece with a pickup"
+    (marks '(0 "0") '(1 "1"))
+    (cycles-of (layout (colo-piece (notes 5) #:pickup 1 #:score? #f)) 0))
+  (test-equal "no pickup: no \"0\""
+    (marks '(0 "1") '(4 "2"))
+    (cycles-of (layout (colo-piece (notes 8))) 0))
+  (test-equal "gong-first: the pickup's text is still \"0\""
+    (marks '(0 "0") '(1 "1") '(5 "2"))
+    (cycles-of (layout (colo-piece (notes 9) #:pickup 1
+                                   #:options ":numbering gong-first"))
+               0))
+  (test-equal "gong-first, a pickup of 2"
+    (marks '(0 "0") '(2 "1"))
+    (cycles-of (layout (colo-piece (notes 6) #:pickup 2
+                                   #:options ":numbering gong-first"))
+               0))
+  (test-eq ":cycle-numbers no: no mark, cycles null" 'null
+    (cycles-of (layout (colo-piece (notes 9) #:pickup 1
+                                   #:options ":cycle-numbers no"))
+               0))
+  (test-equal ":cycle-label \"\": the marks stay"
+    (marks '(0 "0") '(1 "1") '(5 "2"))
+    (cycles-of (layout (colo-piece (notes 9) #:pickup 1
+                                   #:options ":cycle-label \"\""))
+               0))
+  (test-equal "the pickup's pulse numbers and lines do not change"
+    (list #("4" "1" "2" "3" "4" "1" "2" "3" "4")
+          '("cycle" "pulse" "pulse" "pulse" "cycle" "pulse" "pulse" "pulse"))
+    (let ((fig (layout (colo-piece (notes 9) #:pickup 1))))
+      (list (pulses-of fig 0) (lines-after-first fig 0)))))
+
+(test-group "header: the pickup's mark across systems"
+  ;; A pickup of 1, two 4-pulse cycles.
+  (let ((fig (layout-or-false (layout (colo-piece (notes 9) #:pickup 1
+                                                  #:options ":system-length 3")))))
+    ;; Systems of 3 pulses: 0-2, 3-5, 6-8.
+    (test-equal "systems of 3: \"0\" only in the first system"
+      (list (marks '(0 "0") '(1 "1")) (marks '(2 "2")) #())
+      (and fig (map (lambda (s) (cycles-of fig s)) '(0 1 2)))))
+  (let ((fig (layout-or-false (layout (colo-piece (notes 9) #:pickup 1
+                                                  #:options ":breaks ((1 1))")))))
+    (test-equal "the pickup on a system of its own" '((0 1) (1 8))
+      (and fig (starts+steps fig)))
+    (test-equal "a one-pulse pickup alone: column 0, \"0\"; cycle 1 at column 0 after"
+      (list (marks '(0 "0")) (marks '(0 "1") '(4 "2")))
+      (and fig (map (lambda (s) (cycles-of fig s)) '(0 1)))))
+  (let ((fig (layout-or-false (layout (colo-piece "1:1/4 2 1 2 1:1 2 1 2"
+                                                  #:pickup 1
+                                                  #:options ":breaks ((1 1))")))))
+    (test-equal "quarter pulses, the pickup alone: \"0\" at column 0"
+      (list (marks '(0 "0")) (marks '(0 "1")))
+      (and fig (map (lambda (s) (cycles-of fig s)) '(0 1)))))
+  (let ((fig (layout-or-false (layout (colo-piece (notes 6) #:pickup 2
+                                                  #:options ":system-length 1")))))
+    ;; A pickup of 2 in systems of one pulse: the second system starts
+    ;; in the pickup.
+    (test-equal "a system starting in the pickup also has \"0\""
+      (list (marks '(0 "0")) (marks '(0 "0")) (marks '(0 "1")) #() #() #())
+      (and fig (map (lambda (s) (cycles-of fig s)) '(0 1 2 3 4 5)))))
+  (let ((fig (layout-or-false (layout (colo-piece (notes 6) #:pickup 2
+                                                  #:options ":breaks ((0 4))")))))
+    ;; A pickup of 2 (printed 3 4), a break at its second pulse.
+    (test-equal "a break inside the pickup: both systems show \"0\""
+      (list (marks '(0 "0")) (marks '(0 "0") '(1 "1")))
+      (and fig (map (lambda (s) (cycles-of fig s)) '(0 1)))))
+  (let ((fig (layout-or-false (layout (colo-piece (notes 9) #:pickup 1
+                                                  #:options ":system-length 2 :numbering gong-first")))))
+    ;; Systems of 2: 0-1, 2-3, 4-5, 6-7, 8.
+    (test-equal "gong-first across systems: \"0\" in the first only"
+      (list (marks '(0 "0") '(1 "1")) #() (marks '(1 "2")) #() #())
+      (and fig (map (lambda (s) (cycles-of fig s)) '(0 1 2 3 4))))))
+
+(test-group "header: the pickup's mark in an excerpt"
+  ;; A pickup of 1 (printed 4) and two 4-pulse cycles.
+  (let ((fig (layout-or-false (layout (colo-piece (notes 9) #:pickup 1
+                                                  #:options ":from (0 4) :to (1 4)")))))
+    (test-equal ":from (0 4): the excerpt starts with the pickup, \"0\" at column 0"
+      (marks '(0 "0") '(1 "1"))
+      (and fig (cycles-of fig 0))))
+  (let ((fig (layout-or-false (layout (colo-piece (notes 9) #:pickup 1
+                                                  #:options ":from (0 4) :to (0 4)")))))
+    (test-equal "the pickup alone: one system of one column" '((0 1))
+      (and fig (starts+steps fig)))
+    (test-equal "the pickup alone: \"0\" at column 0" (marks '(0 "0"))
+      (and fig (cycles-of fig 0)))
+    (test-equal "the pickup alone: its labels" '("Cycle" "Pulse")
+      (and fig (labels-of fig 0))))
+  (let ((fig (layout-or-false (layout (colo-piece (notes 6) #:pickup 2
+                                                  #:options ":from (0 4)")))))
+    ;; A pickup of 2 printed 3 4: the excerpt starts at its second pulse.
+    (test-equal ":from (0 4) with a pickup of 2: starts in the pickup, \"0\" at column 0"
+      (marks '(0 "0") '(1 "1"))
+      (and fig (cycles-of fig 0))))
+  (let ((fig (layout-or-false (layout (colo-piece (notes 9) #:pickup 1
+                                                  #:options ":numbering gong-first :from (0 1) :to (1 1)")))))
+    ;; gong-first: the one-pulse pickup is printed 1, so it is (0 1).
+    (test-equal "gong-first, :from (0 1): \"0\", then cycle 1"
+      '((0 5))
+      (and fig (starts+steps fig)))
+    (test-equal "gong-first, :from (0 1): the marks"
+      (marks '(0 "0") '(1 "1"))
+      (and fig (cycles-of fig 0))))
+  (let ((fig (layout-or-false (layout (colo-piece (notes 9) #:pickup 1
+                                                  #:options ":from (1 1)")))))
+    (test-equal "an excerpt from cycle 1: no \"0\""
+      (marks '(0 "1") '(4 "2"))
+      (and fig (cycles-of fig 0))))
+  (let ((fig (layout-or-false (layout (colo-piece (notes 9) #:pickup 1
+                                                  #:options ":from (1 3) :to (2 2)")))))
+    (test-equal "an excerpt inside the cycles: no \"0\"" (marks '(2 "2"))
+      (and fig (cycles-of fig 0)))))
+
+(test-group "examples/gilak.nts: version 3 header"
+  (let ((fig (layout-or-false (layout-named gilak 'full))))
+    (test-equal "full: version 3" 3 (and fig (field fig 'version)))
+    (test-equal "full: the pickup alone, pulse 8, with the mark \"0\""
+      (list #("8") (marks '(0 "0")))
+      (and fig (list (pulses-of fig 0) (cycles-of fig 0))))
+    (test-equal "full: cycle 1 on the next system, at column 0" (marks '(0 "1"))
+      (and fig (cycles-of fig 1)))
+    (test-assert "full: every header is version 3"
+      (and fig (v3-header-ok? fig))))
+  (let ((fig (layout-or-false (layout-named gilak 'second-cycle))))
+    (test-equal "second-cycle (gong-first, cycle 2 alone): no \"0\""
+      (marks '(0 "2"))
+      (and fig (cycles-of fig 0)))
+    (test-assert "second-cycle: every header is version 3"
+      (and fig (v3-header-ok? fig)))))
+
+;;; The header labels sit in the label column, so they count towards
+;;; label_width (04, "Sizes"; decided for feat/drawing-header).
+(test-group "label_width: the header labels count"
+  (let ((width (lambda score-lines
+                 (let ((fig (layout-or-false
+                             (layout (apply piece-of
+                                            "(piece \"P\" :colotomy gilak :pickup 1)"
+                                            "(use gong-kebyar)"
+                                            "(part :instrument ugal a1 || o2 i2 e2 o2 | a1 o2 i2 a1 ||)"
+                                            score-lines)))))
+                   (and fig (field (field fig 'sizes) 'label_width))))))
+    (test-equal "\"Cycle\", 5 characters, is wider than \"U\": 4.5em" "4.5em"
+      (width "(score s (group \"U\" ugal))"))
+    (test-equal "with both labels removed, \"U\" alone: 2.1em" "2.1em"
+      (width "(score s :cycle-label \"\" :pulse-label \"\" (group \"U\" ugal))"))
+    (test-equal "a label whose row isn't shown doesn't count" "2.1em"
+      (width "(score s :cycle-numbers no :pulse-numbers no (group \"U\" ugal))"))))
 
 (test-end "layout")
 

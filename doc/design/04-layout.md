@@ -350,6 +350,9 @@ text. `dark2` gives strong colours with mostly white text.
     it) + 1.5em. A group of one row prints its subtitle after its label
     (05), so there the subtitle counts as the longer of its labels, two
     spaces and the subtitle (decided in `feat/targets`, for Baris).
+    **Planned** (`feat/drawing-header`): the header labels printed
+    (`cycle_label`, `pulse_label`) count too, since they sit in the same
+    column.
   - `lane_width` (lane and row labels): 0.52em × the longest label +
     1em. **Planned** (ADR 0047): `"0.0em"` when no group shows row labels.
   - **Planned** (ADR 0047): `key_width` (key numbers): 0.52em × the
@@ -477,7 +480,12 @@ with the examples, golden files and manual pages it affects.
 1. `feat/drawing-header`: contract version 3 (ADR 0043);
    `:cycle-label` and the `"Pulse"` default (ADR 0039); the pickup's
    cycle mark `0`; header numbers centred over their pulse, without the
-   `·` (ADR 0044).
+   `·` (ADR 0044). Decided for this slice: `version` becomes 3 and
+   `header.label` becomes `cycle_label` and `pulse_label`; each later
+   slice adds its own version 3 fields (`pulse_lines`, `row_lines` with
+   `feat/drawing-lines`; `key_numbers`, `key_width` with
+   `feat/drawing-rows`), since version 3 isn't released until the
+   iteration ends.
 2. `feat/drawing-lines`: `:background` (row lines, pulse lines by
    group, ADR 0041); the frame line (ADR 0044); grey note borders and
    the lighter stroke grey (ADR 0041).
