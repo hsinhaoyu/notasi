@@ -1144,14 +1144,6 @@ cut at the piece's end, on the piece's kempli or a built-in one."
 ;;; ------------------------------------------------------------------
 ;;; Item 16 (step 12): scores (ADRs 0031, 0033, 0034)
 
-;;; Options a later slice of milestone 2 builds: `not-implemented' until
-;;; then.
-(define score-options-not-yet
-  '(labels short from to breaks))
-
-(define group-options-not-yet
-  '(labels short from to breaks))
-
 (define (colour? x)
   (and (string? x)
        (= (string-length x) 7)
@@ -1184,7 +1176,8 @@ cut at the piece's end, on the piece's kempli or a built-in one."
     (fill ,(lambda (v) (memq v '(colour none))) . "colour or none")
     (holds ,(lambda (v) (memq v '(none dash))) . "none or dash")
     (pattern-names ,(lambda (v) (memq v '(none short long))) . "none, short or long")
-    (pattern-level ,(lambda (v) (and (exact-integer? v) (>= v 0))) . "a whole number from 0")))
+    (pattern-level ,(lambda (v) (and (exact-integer? v) (>= v 0))) . "a whole number from 0")
+    (labels ,(lambda (v) (memq v '(long short first-long))) . "long, short or first-long")))
 
 (define score-only-options
   `((title ,string? . "a string")
@@ -1197,26 +1190,28 @@ cut at the piece's end, on the piece's kempli or a built-in one."
     (font-size ,length-string? . "a length such as \"8pt\"")
     (system-length ,positive-whole-number? . "a whole number of pulses")
     (cell-width ,length-string? . "a length such as \"2em\"")
-    (cell-height ,length-string? . "a length such as \"2em\"")))
+    (cell-height ,length-string? . "a length such as \"2em\"")
+    ;; Positions are checked against the piece by `position->time'.
+    (from ,(const #t) . "a position")
+    (to ,(const #t) . "a position")
+    (breaks ,list? . "a list of positions")))
 
 (define group-only-options
-  `((subtitle ,string? . "a string")))
-
-(define (check-not-yet options not-yet line)
-  (for-each (match-lambda
-              ((key . _)
-               (when (memq (key-name key) not-yet)
-                 (syntax-error 'not-implemented line
-                               "the option `~a' is not supported yet" key))))
-            options))
+  `((subtitle ,string? . "a string")
+    (short ,string? . "a string")))
 
 (define (score-settings options line)
-  (check-not-yet options score-options-not-yet line)
+  (for-each (match-lambda
+              ((key . _)
+               (when (and (assq (key-name key) group-only-options)
+                          (not (assq (key-name key) score-only-options)))
+                 (syntax-error 'option-wrong-level line
+                               "`~a' is set on a group, not on the score" key))))
+            options)
   (check-options options (append score-only-options style-options)
                  "a score" line))
 
 (define (group-settings options line)
-  (check-not-yet options group-options-not-yet line)
   (for-each (match-lambda
               ((key . _)
                (when (and (assq (key-name key) score-only-options)
@@ -1236,7 +1231,8 @@ DEFAULT (ADR 0033)."
 
 (define (make-score-group label subtitle members own score-opts location)
   (let ((colors (setting 'colors own score-opts '())))
-    (make-group label label subtitle 'first-long
+    (make-group label (or (assq-ref own 'short) label) subtitle
+                (setting 'labels own score-opts 'first-long)
                 (setting 'rows own score-opts 'notes)
                 members
                 (eq? (setting 'note-names own score-opts 'no) 'yes)
@@ -1366,7 +1362,52 @@ the same name over the same stretch, which is written once."
                                  found)))))
            (loop rest (append spans earlier) found)))))))
 
-(define (build-score form parts title length colotomy)
+(define (position->time pos colotomy pickup length numbering line)
+  "The time at which the pulse POS starts, as the score prints it: with a
+colotomy (CYCLE PULSE), the column under cycle CYCLE marked PULSE in
+NUMBERING, the pickup being cycle 0; without one, a pulse number from
+1."
+  (define (bad)
+    (syntax-error 'bad-position line
+                  (if colotomy
+                      "~s is not a position in this piece: write (CYCLE PULSE), a pulse from 1 to ~a"
+                      "~s is not a position in this piece: write a pulse number from 1 to ~a")
+                  pos
+                  (if colotomy (colotomy-length colotomy) length)))
+  (let ((time
+         (match (cons colotomy pos)
+           ((#f . (? positive-whole-number? n)) (- n 1))
+           (((? colotomy? c) (? exact-integer? cycle) (? positive-whole-number? p))
+            (let ((n (colotomy-length c)))
+              (unless (and (<= p n) (>= cycle 0)) (bad))
+              (let ((q (if (eq? numbering 'gong-first)
+                           (if (= p 1) n (- p 1))
+                           p)))
+                (+ pickup (* (- cycle 1) n) (- q 1)))))
+           (_ (bad)))))
+    (if (and (>= time 0) (< time length))
+        time
+        (bad))))
+
+(define (score-range opts colotomy pickup length line)
+  "The score's FROM, TO and BREAKS, as times: TO is the end of its pulse;
+breaks outside the range are dropped."
+  (let* ((numbering (or (assq-ref opts 'numbering) 'gong-last))
+         (time (lambda (pos)
+                 (position->time pos colotomy pickup length numbering line)))
+         (from (match (assq 'from opts) (#f 0) ((_ . pos) (time pos))))
+         (to (match (assq 'to opts) (#f length) ((_ . pos) (+ (time pos) 1))))
+         (breaks (map time (or (assq-ref opts 'breaks) '()))))
+    (unless (or (< from to)
+                (not (or (assq 'from opts) (assq 'to opts))))
+      (syntax-error 'bad-range line
+                    "the excerpt must start before it ends: :from comes after :to"))
+    (list from to
+          (sort (delete-duplicates
+                 (filter (lambda (b) (< from b to)) breaks))
+                <))))
+
+(define (build-score form parts title length colotomy pickup)
   "Build a score record from FORM.  PARTS are the parts a score may
 print."
   (match form
@@ -1374,6 +1415,7 @@ print."
      (match (split-options items line)
        ((options . groups)
         (let* ((opts (score-settings options line))
+               (range (score-range opts colotomy pickup length line))
                (used '())
                (built
                 (map (lambda (group)
@@ -1420,8 +1462,8 @@ print."
                     built)
           (make-score name (or (assq-ref opts 'title) title)
                       (assq-ref opts 'subtitle) (assq-ref opts 'caption)
-                      0 length
-                      (assq-ref opts 'system-length) '()
+                      (car range) (cadr range)
+                      (assq-ref opts 'system-length) (caddr range)
                       (match (assq-ref opts 'cycle-numbers)
                         (#f (and colotomy #t))
                         (v (eq? v 'yes)))
@@ -1532,7 +1574,7 @@ so a file with several problems always reports the same one."
                                              colotomy))
                         (map (lambda (form)
                                (build-score form printable (car piece)
-                                            length colotomy))
+                                            length colotomy pickup))
                              forms)))))))
 
 (define (read-port port dir chain)
