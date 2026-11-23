@@ -1147,10 +1147,10 @@ cut at the piece's end, on the piece's kempli or a built-in one."
 ;;; Options a later slice of milestone 2 builds: `not-implemented' until
 ;;; then.
 (define score-options-not-yet
-  '(pattern-names pattern-level labels short from to breaks))
+  '(labels short from to breaks))
 
 (define group-options-not-yet
-  '(pattern-names pattern-level labels short from to breaks))
+  '(labels short from to breaks))
 
 (define (colour? x)
   (and (string? x)
@@ -1182,7 +1182,9 @@ cut at the piece's end, on the piece's kempli or a built-in one."
     (colors ,colors? . "a list of (DEGREE \"#rrggbb\")")
     (rows ,(lambda (v) (memq v '(notes parts single))) . "notes, parts or single")
     (fill ,(lambda (v) (memq v '(colour none))) . "colour or none")
-    (holds ,(lambda (v) (memq v '(none dash))) . "none or dash")))
+    (holds ,(lambda (v) (memq v '(none dash))) . "none or dash")
+    (pattern-names ,(lambda (v) (memq v '(none short long))) . "none, short or long")
+    (pattern-level ,(lambda (v) (and (exact-integer? v) (>= v 0))) . "a whole number from 0")))
 
 (define score-only-options
   `((title ,string? . "a string")
@@ -1240,7 +1242,8 @@ DEFAULT (ADR 0033)."
                 (eq? (setting 'note-names own score-opts 'no) 'yes)
                 (setting 'fill own score-opts 'colour)
                 (setting 'holds own score-opts 'none)
-                'none 0
+                (setting 'pattern-names own score-opts 'none)
+                (setting 'pattern-level own score-opts 0)
                 (setting 'scheme own score-opts 'by-degree)
                 (setting 'palette own score-opts 'pastel1)
                 (map (match-lambda ((degree colour) (cons degree colour)))
@@ -1321,6 +1324,48 @@ shared column is reported, against the later of the two parts."
                                  found)))))
            (loop rest (append spans earlier) found)))))))
 
+(define (named-spans group part)
+  "PART's spans at GROUP's pattern level, as (START END TEXT)."
+  (filter-map (lambda (span)
+                (and (= (pattern-span-depth span) (group-pattern-level group))
+                     (list (pattern-span-start span) (pattern-span-end span)
+                           (if (eq? (group-pattern-names group) 'long)
+                               (pattern-span-long span)
+                               (pattern-span-short span)))))
+              (part-spans part)))
+
+(define (check-pattern-names group line)
+  "Pattern names written over a group must not overlap unless they are
+the same name over the same stretch, which is written once."
+  (unless (eq? (group-pattern-names group) 'none)
+    (let loop ((parts (group-parts group)) (earlier '()) (found #f))
+      (match parts
+        (()
+         (match found
+           (#f #t)
+           ((time . part)
+            (part-error 'pattern-names-overlap line (part-name part) time
+                        "pattern names overlap in this group; they would be written over each other"))))
+        ((part . rest)
+         (let* ((spans (named-spans group part))
+                (times (append-map
+                        (match-lambda
+                          ((and a (s1 e1 _))
+                           (filter-map (match-lambda
+                                         ((and b (s2 e2 _))
+                                          (and (< (max s1 s2) (min e1 e2))
+                                               (not (equal? a b))
+                                               (max s1 s2))))
+                                       earlier)))
+                        spans))
+                (found (if (null? times)
+                           found
+                           (let ((t (apply min times)))
+                             (if (or (not found) (< t (car found)))
+                                 (cons t part)
+                                 found)))))
+           (loop rest (append spans earlier) found)))))))
+
 (define (build-score form parts title length colotomy)
   "Build a score record from FORM.  PARTS are the parts a score may
 print."
@@ -1368,7 +1413,10 @@ print."
                                    (check-group-names group gline)
                                    (cons group gline)))))))))
                      groups)))
-          (for-each (match-lambda ((group . gline) (check-single-row group gline)))
+          (for-each (match-lambda
+                      ((group . gline)
+                       (check-single-row group gline)
+                       (check-pattern-names group gline)))
                     built)
           (make-score name (or (assq-ref opts 'title) title)
                       (assq-ref opts 'subtitle) (assq-ref opts 'caption)

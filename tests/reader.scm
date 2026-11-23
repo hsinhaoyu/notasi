@@ -213,6 +213,34 @@
 ;;;   group's member errors come before an earlier group's collision
 ;;;   (03, check 16: "then the checks that need the music"); a score's
 ;;;   collision comes before a later score's errors.
+;;;
+;;; Slice feat/scores-overlays (04, "Slices (iteration 2)", slice 4 and
+;;; its decided bullets; 04, "Pattern names (overlays)"; 01,
+;;; `:pattern-names`, `:pattern-level` and "Rules"; 02, `pattern-span`
+;;; and the group's `pattern-names` and `pattern-level`; 03, [scores]):
+;;; the reader now reads `:pattern-names none|short|long` and
+;;; `:pattern-level N` on a score and on a group; they leave the
+;;; `not-implemented` lists. New case: `pattern-names-overlap`.
+;;; Choices made where the docs are not explicit:
+;;; - `:pattern-level` takes an exact integer from 0: -1, 1.5, 1.0,
+;;;   1/2, a string, a symbol and #t are `bad-option`. A level deeper
+;;;   than any nesting reads (it names nothing).
+;;; - `pattern-names-overlap` is at the group's line, wherever
+;;;   `:pattern-names` was set; `part` is the later of the two parts in
+;;;   the group's member order, `time` the start of the time the two
+;;;   spans share. With three parts, the earliest shared time decides,
+;;;   and the later part of the pair sharing it is named.
+;;; - "Identical" compares the start, the end and the chosen text only:
+;;;   with `:pattern-names short`, two spans with the same short name
+;;;   and different long names are merged, not an error. Spans that
+;;;   only touch (one ends where the other starts) share no time.
+;;; - Only spans at the chosen depth count: different spans nested in
+;;;   identical ones are fine at level 0, and depth-0 spans are not
+;;;   checked at level 1.
+;;; - Like `notes-collide`, `pattern-names-overlap` comes after the
+;;;   group's options (`bad-option`, `needs-note-names`) and after every
+;;;   group's members, and before a later score's errors. Its order
+;;;   against `notes-collide` in the same group is not tested.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -5382,14 +5410,14 @@ STR, or the raised object (or no-error) unchanged."
   (test-equal "fields: part and time #f" '(option-wrong-level 15 #f #f)
     (error-fields (one-group "(group \"U\" :title \"T\" ugal)"))))
 
-;;; The options later slices build (04, slice 1's decided bullets).
+;;; The options later slices build (04, slice 1's decided bullets);
+;;; `:pattern-names` and `:pattern-level` left with slice
+;;; feat/scores-overlays.
 (define later-score-options
-  '(":pattern-names long" ":pattern-level 1" ":labels short" ":from 1"
-    ":to 4" ":breaks (3)"))
+  '(":labels short" ":from 1" ":to 4" ":breaks (3)"))
 
 (define later-group-options
-  '(":pattern-names short" ":pattern-level 1" ":labels long"
-    ":short \"U.\""))
+  '(":labels long" ":short \"U.\""))
 
 (test-group "[scores] not-implemented: options of later slices"
   (for-each
@@ -5883,6 +5911,302 @@ STR, or the raised object (or no-error) unchanged."
           "(score a :note-names yes"
           "  (group \"R\" :rows single polos sangsih))"
           "(score b (group \"U\" nope))"))))
+
+;;; ==================================================================
+;;; [scores] Pattern names (slice feat/scores-overlays)
+;;; ==================================================================
+
+(define (pattern-settings g)
+  "G's pattern-names and pattern-level."
+  (list (group-pattern-names g) (group-pattern-level g)))
+
+(define (groups-pattern-settings pc name)
+  (map pattern-settings (score-groups (score-named pc name))))
+
+(test-group "[scores] reading :pattern-names and :pattern-level"
+  (let ((pc (read-scores+ "(score s :pattern-names short :pattern-level 1"
+                          "  (group \"U\" ugal)"
+                          "  (group \"R\" polos sangsih))")))
+    (test-equal "on a score: every group takes them"
+      '((short 1) (short 1))
+      (and pc (groups-pattern-settings pc 's))))
+  (let ((pc (read-scores+ "(score s :pattern-names short :pattern-level 1"
+                          "  (group \"U\" :pattern-names long :pattern-level 0 ugal)"
+                          "  (group \"R\" :pattern-names none polos sangsih)"
+                          "  (group \"G\" :pattern-level 2 gong))")))
+    (test-equal "a group's own values override the score's"
+      '((long 0) (none 1) (short 2))
+      (and pc (groups-pattern-settings pc 's))))
+  (let ((pc (read-scores+ "(score s"
+                          "  (group \"U\" :pattern-names long ugal)"
+                          "  (group \"R\" :pattern-level 3 polos sangsih))")))
+    (test-equal "on groups only: the others keep the defaults"
+      '((long 0) (none 3))
+      (and pc (groups-pattern-settings pc 's))))
+  (let ((pc (read-scores+ "(score s :pattern-names none :pattern-level 0"
+                          "  (group \"U\" ugal))")))
+    (test-equal "the defaults written out" '((none 0))
+      (and pc (groups-pattern-settings pc 's))))
+  (let ((pc (read-scores+ "(score s (group \"U\" ugal))")))
+    (test-equal "not written: none, 0" '((none 0))
+      (and pc (groups-pattern-settings pc 's))))
+  (let ((pc (read-scores+ "(score s :pattern-names long :pattern-level 2"
+                          "  (group \"R\" polos sangsih))")))
+    (test-equal "every other setting as before"
+      (list (list "R" "R" #f 'first-long 'notes #f 'colour 'none 'long 2
+                  'by-degree 'pastel1 '()))
+      (and pc (map group-settings (score-groups (score-named pc 's))))))
+  (let ((pc (read-scores+ "(score s :pattern-names short"
+                          "  (group \"G\" gong kempli))")))
+    (test-equal "stroke parts, without patterns" '((short 0))
+      (and pc (groups-pattern-settings pc 's))))
+  (test-assert "a level deeper than any nesting reads"
+    (piece? (read-scores+ "(score s :pattern-names short :pattern-level 5"
+                          "  (group \"R\" polos sangsih))")))
+  (test-assert ":pattern-names needs no note names"
+    (piece? (read-scores+ "(score s (group \"U\" :pattern-names long ugal))"))))
+
+(test-group "[scores] :pattern-names and :pattern-level: bad-option"
+  (for-each
+   (match-lambda
+     ((name options)
+      (test-equal (string-append "on a score: " name) '(bad-option 14)
+        (score-error (string-append "(score s " options " (group \"U\" ugal))")))
+      (test-equal (string-append "on a group: " name) '(bad-option 15)
+        (string-error
+         (one-group (string-append "(group \"U\" " options " ugal)"))))))
+   (list
+    (list ":pattern-names not a choice" ":pattern-names both")
+    (list ":pattern-names yes" ":pattern-names yes")
+    (list ":pattern-names a string" ":pattern-names \"short\"")
+    (list ":pattern-names a number" ":pattern-names 1")
+    (list ":pattern-names with no value" ":pattern-names :note-names yes")
+    (list ":pattern-level negative" ":pattern-level -1")
+    (list ":pattern-level a decimal" ":pattern-level 1.5")
+    (list ":pattern-level an inexact whole number" ":pattern-level 1.0")
+    (list ":pattern-level a fraction" ":pattern-level 1/2")
+    (list ":pattern-level a string" ":pattern-level \"1\"")
+    (list ":pattern-level a symbol" ":pattern-level one")
+    (list ":pattern-level #t" ":pattern-level #t")
+    (list ":pattern-level with no value" ":pattern-level :pattern-names short")))
+  (test-equal "duplicate-option: :pattern-names" '(duplicate-option 14)
+    (score-error "(score s :pattern-names short :pattern-names long (group \"U\" ugal))"))
+  (test-equal "duplicate-option on a group: :pattern-level" '(duplicate-option 15)
+    (string-error (one-group "(group \"U\" :pattern-level 1 :pattern-level 1 ugal)")))
+  (test-equal "fields: part and time #f" '(bad-option 15 #f #f)
+    (error-fields (one-group "(group \"U\" :pattern-level -1 ugal)"))))
+
+;;; Patterns for pattern-names-overlap, on lines 14 to 19, all on reyong
+;;; (so a group of their parts is one pitched instrument). alpha and
+;;; other share the short name "A"; outer and outer-a are both "O" at
+;;; depth 0, with different patterns inside (one, one / alpha). Parts
+;;; follow from line 20, each 4 pulses long like polos and sangsih.
+(define overlap-patterns
+  (list "(pattern alpha :instrument reyong :short \"A\" :long \"Alpha\" 1 2)"  ; 14
+        "(pattern beta :instrument reyong :short \"B\" :long \"Beta\" 3 4)"    ; 15
+        "(pattern other :instrument reyong :short \"A\" :long \"Other\" 2 1)"  ; 16
+        "(pattern one :instrument reyong :short \"C\" 1)"                     ; 17
+        "(pattern outer :instrument reyong :short \"O\" @one @one)"           ; 18
+        "(pattern outer-a :instrument reyong :short \"O\" @alpha)"))          ; 19
+
+(define (overlap+ . more)
+  "scores+ with overlap-patterns on lines 14 to 19, then MORE from 20."
+  (apply scores+ (append overlap-patterns more)))
+
+(define (overlap-fields . more)
+  "(KIND LINE PART TIME) for reading overlap+ with the lines MORE."
+  (error-fields (apply overlap+ more)))
+
+(define (overlap-reads . more)
+  (try-read-string (apply overlap+ more)))
+
+(test-group "[scores] pattern-names-overlap"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (apply overlap-fields more))))
+   (list
+    (list "two patterns at the same time: the later part, the first shared time"
+          '(pattern-names-overlap 23 b 0)
+          "(part reyong :name a @alpha @beta)"                     ; 20
+          "(part reyong :name b @beta @alpha)"                     ; 21
+          "(score s :pattern-names short"                          ; 22
+          "  (group \"R\" a b))")                                  ; 23
+    (list "the same name, shifted: not identical"
+          '(pattern-names-overlap 23 b 1)
+          "(part reyong :name a @alpha 1 2)"
+          "(part reyong :name b 1 @alpha 2)"
+          "(score s :pattern-names short" "  (group \"R\" a b))")
+    (list "the same pattern and time, renamed at a use"
+          '(pattern-names-overlap 23 b 0)
+          "(part reyong :name a @alpha 1 2)"
+          "(part reyong :name b (@ alpha :short \"Z\") 1 2)"
+          "(score s :pattern-names short" "  (group \"R\" a b))")
+    (list ":pattern-names long: one short name, two long ones"
+          '(pattern-names-overlap 23 b 0)
+          "(part reyong :name a @alpha 1 2)"
+          "(part reyong :name b @other 1 2)"
+          "(score s :pattern-names long" "  (group \"R\" a b))")
+    (list "half pulses: the time where they start to share"
+          '(pattern-names-overlap 23 b 1/2)
+          "(part reyong :name a 1:1/2 @alpha 1 2 3)"
+          "(part reyong :name b @beta 1 2)"
+          "(score s :pattern-names short" "  (group \"R\" a b))")
+    (list "the later part in member order, not file order"
+          '(pattern-names-overlap 23 a 0)
+          "(part reyong :name a @alpha @beta)"
+          "(part reyong :name b @beta @alpha)"
+          "(score s :pattern-names short" "  (group \"R\" b a))")
+    (list "three parts: the earliest shared time decides"
+          '(pattern-names-overlap 24 c 1)
+          "(part reyong :name a 1 2 @alpha)"                       ; 20: A 2-4
+          "(part reyong :name b 1 @beta 2)"                        ; 21: B 1-3
+          "(part reyong :name c 1 @one 2 3)"                       ; 22: C 1-2
+          "(score s :pattern-names short" "  (group \"R\" a b c))") ; 23, 24
+    (list ":pattern-level 1: the spans inside"
+          '(pattern-names-overlap 23 b 0)
+          "(part reyong :name a @outer 1 2)"
+          "(part reyong :name b @outer-a 1 2)"
+          "(score s :pattern-names short :pattern-level 1" "  (group \"R\" a b))")
+    (list "the score's :pattern-names: at the group's line"
+          '(pattern-names-overlap 24 b 0)
+          "(part reyong :name a @alpha @beta)"
+          "(part reyong :name b @beta @alpha)"
+          "(score s :pattern-names short"                          ; 22
+          "  (group \"U\" ugal)"                                   ; 23
+          "  (group \"R\" a b))")                                  ; 24
+    (list "a group's own :pattern-names"
+          '(pattern-names-overlap 23 b 0)
+          "(part reyong :name a @alpha @beta)"
+          "(part reyong :name b @beta @alpha)"
+          "(score s" "  (group \"R\" :pattern-names long a b))")
+    (list "a group's :pattern-level over the score's"
+          '(pattern-names-overlap 23 b 0)
+          "(part reyong :name a @outer 1 2)"
+          "(part reyong :name b @outer-a 1 2)"
+          "(score s :pattern-names short :pattern-level 0"
+          "  (group \"R\" :pattern-level 1 a b))")
+    (list "the second group's line, the first group's own spans fine"
+          '(pattern-names-overlap 25 c 0)
+          "(part reyong :name a @alpha @beta)"                     ; 20
+          "(part reyong :name b @beta @alpha)"                     ; 21
+          "(part reyong :name c @alpha @alpha)"                    ; 22
+          "(score s :pattern-names short"                          ; 23
+          "  (group \"A\" a)"                                    ; 24
+          "  (group \"R\" b c))")))                              ; 25
+  (for-each
+   (match-lambda
+     ((name . more)
+      (test-assert name (piece? (apply overlap-reads more)))))
+   (list
+    (list "identical spans from two parts are merged"
+          "(part reyong :name a @alpha @beta)"
+          "(part reyong :name b @alpha @beta)"
+          "(score s :pattern-names short" "  (group \"R\" a b))")
+    (list ":pattern-names short: the same short name, different long names"
+          "(part reyong :name a @alpha 1 2)"
+          "(part reyong :name b @other 1 2)"
+          "(score s :pattern-names short" "  (group \"R\" a b))")
+    (list "a name given at a use, identical to the other part's"
+          "(part reyong :name a @alpha 1 2)"
+          "(part reyong :name b (@ beta :short \"A\") 1 2)"
+          "(score s :pattern-names short" "  (group \"R\" a b))")
+    (list "spans that only touch share no time"
+          "(part reyong :name a @alpha 1 2)"
+          "(part reyong :name b 1 2 @beta)"
+          "(score s :pattern-names short" "  (group \"R\" a b))")
+    (list ":pattern-names none: overlapping spans are not checked"
+          "(part reyong :name a @alpha @beta)"
+          "(part reyong :name b @beta @alpha)"
+          "(score s" "  (group \"R\" a b))")
+    (list "a group's :pattern-names none over the score's short"
+          "(part reyong :name a @alpha @beta)"
+          "(part reyong :name b @beta @alpha)"
+          "(score s :pattern-names short" "  (group \"R\" :pattern-names none a b))")
+    (list "level 0: different spans inside identical ones"
+          "(part reyong :name a @outer 1 2)"
+          "(part reyong :name b @outer-a 1 2)"
+          "(score s :pattern-names short" "  (group \"R\" a b))")
+    (list "level 1: different spans at depth 0 are not checked"
+          "(part reyong :name a @alpha 1 2)"
+          "(part reyong :name b @beta 1 2)"
+          "(score s :pattern-names short :pattern-level 1" "  (group \"R\" a b))")
+    (list "the parts in different groups"
+          "(part reyong :name a @alpha @beta)"
+          "(part reyong :name b @beta @alpha)"
+          "(score s :pattern-names short" "  (group \"R\" a) (group \"S\" b))")
+    (list "a part without patterns beside one with them"
+          "(part reyong :name a @alpha @beta)"
+          "(score s :pattern-names short" "  (group \"R\" polos a))")
+    (list "one part: its own spans follow one another"
+          "(part reyong :name a @alpha @beta)"
+          "(score s :pattern-names long" "  (group \"R\" a))")))
+  (test-assert "pattern-names-overlap is a &notasi-syntax-error with file #f"
+    (let ((c (catch-syntax-error
+              (lambda ()
+                (read-piece-string
+                 (overlap+ "(part reyong :name a @alpha @beta)"
+                           "(part reyong :name b @beta @alpha)"
+                           "(score s :pattern-names short" "  (group \"R\" a b))"))))))
+      (and (notasi-syntax-error? c)
+           (eq? 'pattern-names-overlap (notasi-syntax-error-kind c))
+           (not (notasi-syntax-error-file c))
+           (null? (notasi-syntax-error-uses c)))))
+  (let ((t (let ((c (catch-syntax-error
+                     (lambda ()
+                       (read-piece-string
+                        (overlap+ "(part reyong :name a 1:1/2 @alpha 1 2 3)"
+                                  "(part reyong :name b @beta 1 2)"
+                                  "(score s :pattern-names short"
+                                  "  (group \"R\" a b))"))))))
+             (and (notasi-syntax-error? c) (notasi-syntax-error-time c)))))
+    (test-assert "the time is an exact rational"
+      (and (rational? t) (exact? t))))
+  (let* ((path (write-temp-file "overlap.nts"
+                                (overlap+ "(part reyong :name a @alpha @beta)"
+                                          "(part reyong :name b @beta @alpha)"
+                                          "(score s :pattern-names short"
+                                          "  (group \"R\" a b))")))
+         (c (catch-syntax-error (lambda () (read-piece-file path)))))
+    (test-equal "from a file: kind, file, line, part and time"
+      (list 'pattern-names-overlap path 23 'b 0)
+      (and (notasi-syntax-error? c)
+           (list (notasi-syntax-error-kind c) (notasi-syntax-error-file c)
+                 (notasi-syntax-error-line c) (notasi-syntax-error-part c)
+                 (notasi-syntax-error-time c))))))
+
+(test-group "[scores] check order: pattern names"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (string-error (apply overlap+ more)))))
+   (list
+    (list "a bad :pattern-level before the overlap, in one group"
+          '(bad-option 23)
+          "(part reyong :name a @alpha @beta)"
+          "(part reyong :name b @beta @alpha)"
+          "(score s :pattern-names short"
+          "  (group \"R\" :pattern-level -1 a b))")
+    (list "needs-note-names before the overlap, in one group"
+          '(needs-note-names 23)
+          "(part reyong :name a @alpha @beta)"
+          "(part reyong :name b @beta @alpha)"
+          "(score s :pattern-names short"
+          "  (group \"R\" :rows parts a b))")
+    (list "a later group's member before an earlier overlap"
+          '(undefined-part 24)
+          "(part reyong :name a @alpha @beta)"
+          "(part reyong :name b @beta @alpha)"
+          "(score s :pattern-names short"
+          "  (group \"R\" a b)"
+          "  (group \"U\" nope))")
+    (list "a score's overlap before a later score's errors"
+          '(pattern-names-overlap 23)
+          "(part reyong :name a @alpha @beta)"
+          "(part reyong :name b @beta @alpha)"
+          "(score x :pattern-names short"
+          "  (group \"R\" a b))"
+          "(score y (group \"U\" nope))"))))
 
 (define runner (test-runner-current))
 (test-end "reader")

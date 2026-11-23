@@ -48,6 +48,7 @@
   let header = sys.header
 
   let cells = ()
+  let overlays = ()
   let row = 0
   if header.cycles != none {
     for m in header.cycles {
@@ -92,6 +93,14 @@
             colspan: e.dur, inset: 0pt, _note(e)))
         }
       }
+      // Pattern names, written over the notes (ADR 0036); a continued
+      // piece shows its name again.
+      for o in g.overlays {
+        overlays.push(grid.cell(x: first + o.start, y: row + o.row,
+          colspan: o.dur, rowspan: o.rows, align: center + horizon,
+          box(fill: white.transparentize(20%), inset: (x: 3pt, y: 2pt),
+            radius: 0pt, text(fill: rgb("#222222"), o.text))))
+      }
     }
     row += lanes.len()
   }
@@ -107,10 +116,13 @@
     ..range(cols.len() * rows-count).map(_ => []))
 
   let foreground = grid(columns: cols, rows: rows, ..cells)
+  // A layer of its own: its cells would overlap the notes' in one grid.
+  let names = grid(columns: cols, rows: rows, ..overlays)
 
   box({
     place(top + left, background)
-    foreground
+    place(top + left, foreground)
+    names
   })
 }
 
