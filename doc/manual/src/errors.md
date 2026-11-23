@@ -201,6 +201,19 @@ Every part lasts the same number of pulses. Count the notes, `_` and
 `-` in each at their lengths (not `/` or `|`), and add rests to the
 shorter part.
 
+### A repeat without its number
+
+```scheme
+{{#include mistakes/bad-rep.nts}}
+```
+
+```text
+{{#include mistakes/bad-rep.txt}}
+```
+
+A `rep` needs the number of times first, then the notes:
+`(rep 2 dang1 ding2)`. The line is the line of the `rep` itself.
+
 ### A pulse check out of place
 
 ```scheme

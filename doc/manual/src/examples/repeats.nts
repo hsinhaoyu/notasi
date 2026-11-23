@@ -1,0 +1,8 @@
+(piece "Repeats")
+
+(use gong-kebyar)
+
+;; Eight pulses each: a two-pulse figure four times, and a four-pulse
+;; figure in quarter pulses twice.
+(part ugal    (rep 4  a1 o2))
+(part reyong  (rep 2  i2:1/4 _  i2 o2 | _  i2 o2 _  | o2 i2 _  o2 | i2 o2 _  i2 |))

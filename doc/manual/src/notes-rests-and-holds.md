@@ -41,12 +41,30 @@ So in the example, `a1` sounds for pulses 1 to 3, pulse 4 is silent,
 Use `/` to mark the pulses or the halves of a phrase, so you can check
 the line by eye. A note can be held across a `/`.
 
+## Repeats
+
+To play the same notes several times, put them in `(rep N …)`, where N
+is how many times:
+
+```scheme
+{{#include examples/repeats.nts}}
+```
+
+- `(rep 4 a1 o2)` plays `a1 o2` four times: eight pulses.
+- Every time is the same. The notes inside start with the length that
+  was in force before the `rep`, so the reyong's figure is in quarter
+  pulses both times.
+- A length set inside a `rep` carries on after it, as anywhere else.
+- A `rep` can hold other `rep`s, and `|` inside it is checked every
+  time round.
+
 ## The rules
 
 - `_` must follow a note (or another `_`). A part can't start with `_`,
   and a rest can't be held.
 - **Every part lasts the same number of pulses.** Count notes, `_` and
-  `-` at their lengths; `/` and `|` take no time. If the gong only plays at the start, fill the
+  `-` at their lengths, and a `rep` as many times as it repeats; `/`
+  and `|` take no time. If the gong only plays at the start, fill the
   rest of its line with `-`.
 - A full stop `.` can't be used for a rest; write `-`.
 
