@@ -8,6 +8,8 @@ Status: partly implemented (iteration 2). `degree` (with `damped`) and
 `time->position` and `position->time` since `feat/music-colotomy`;
 `patterns`, `part-spans`, the `pattern` and `pattern-span` records since
 `feat/music-patterns`.
+`scores` in place of `groups`, the `score` and `group` records and
+`piece-score` since `feat/scores-form`.
 The other records are agreed and not yet built:
 `(notasi piece)` still implements their v1 form, summarised under "What
 the code implements today". Tests in `tests/piece.scm`.
@@ -246,18 +248,12 @@ construction, since events are built from the tokens.
 records. It differs as follows, and this section goes when iteration 2
 is built:
 
-- `piece` is `(make-piece title length pickup colotomies scales
-  instruments patterns parts groups)`: `groups` (every part in exactly
-  one group, except a timekeeper on the built-in kempli) instead of
-  `scores`.
-- There is no `score` record; `group` is v1's.
+- (`piece`, `score`, `group` and `piece-score` are as above since
+  milestone 2, slice 1.)
 - (`degree` has `damped` and `instrument` has no `show-names?` since
   iteration 2, slice 1: those two records are **Implemented** as
   above.)
-- `group` is `label`, `subtitle`, `parts`, `location`.
-- `note-display` has no `damped?`; there is no `piece-score`.
-- Invariant 4 is "every part belongs to exactly one group": the reader
-  makes one default group per part.
+- `note-display` has no `damped?`.
 
 ## Open questions
 

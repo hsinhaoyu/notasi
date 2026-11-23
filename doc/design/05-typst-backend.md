@@ -136,7 +136,7 @@ tests in `tests/typst.scm`:
 (write-figure figure path)
 ```
 
-writes FIGURE (from `layout-piece`; planned: `layout-score`) to the file PATH as pretty JSON
+writes FIGURE (from `layout-score`) to the file PATH as pretty JSON
 (`write-json`), in UTF-8, ending with a newline, replacing any file
 already there. The JSON is built before the file is opened, so a figure
 that can't be written raises the writer's `&error` and leaves no file
@@ -344,9 +344,10 @@ come from the score (ADR 0032). A SCORE the piece doesn't have is an
 `&error` whose message names the score and the file. Otherwise as
 below.
 
-**Implemented**: `(render-piece nts-path out-path #:key (style (default-style)) keep-in)`
-goes from a `.nts` file to a picture in one step: read the piece
-(reader errors pass through unchanged), lay it out with STYLE, write
+**Implemented**: `(render-piece nts-path out-path #:key keep-in)` goes
+from a `.nts` file to a picture in one step: read the piece (reader
+errors pass through unchanged), lay out its first score (its default
+score if it has none) with `layout-score`, write
 `piece.json` (`write-figure`), copy the template, write `piece.typ`,
 and compile to OUT-PATH. The three files go in a fresh temporary
 folder under `$TMPDIR` (or `/tmp` when it isn't set) that is deleted
