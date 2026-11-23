@@ -1,12 +1,11 @@
 # 01 — Notation language
 
-Status: partly implemented (iteration 2). The music below is read since
+Status: implemented (iteration 2). The music below is read since
 milestone 1 (`feat/music`): options, `part`, degrees, strokes and
-instruments, durations, `rep`, colotomies and patterns. Scores (`score`,
-groups and printing options) are planned for milestone 2; "What the
-reader reads today" says what is drawn in the meantime.
+instruments, durations, `rep`, colotomies and patterns; scores, groups
+and every printing option since milestone 2 (`feat/scores`).
 
-Everything in this document is **Planned** unless it says otherwise.
+Everything in this document is **Implemented** unless it says otherwise.
 
 ## Goals
 
@@ -532,28 +531,6 @@ with every option at its default.
 Two traps: bare numbers are keys, not cipher degrees (`3` is the
 instrument's third key, not ndeng); and Gold's dot is a hold, not a
 rest.
-
-## What the reader reads today
-
-**Implemented**: the reader reads this notation's `:key value` options,
-`(part INSTRUMENT :name NAME ...)`, degrees and strokes with `:alias`,
-`:display` and `:damped`, and instruments without options (iteration 2,
-milestone 1, slice 1). It differs from the rest as follows, and this
-section goes when iteration 2 is built:
-
-- All of the music is read (milestone 1): durations, `_`, `-`, `/`,
-  `|`, `rep`, colotomies with `:colotomy`, `:pickup` and `||`, and
-  patterns. A figure is one system for the whole piece.
-- Scores are read with the options of milestone 2's first two slices
-  (`:title`, `:subtitle`, `:caption`, `:system-length`,
-  `:cycle-numbers`, `:pulse-numbers`, `:numbering`, `:pulse-label`,
-  `:font-size`, `:note-names`, `:scheme`, `:palette`, `:colors`,
-  `:cell-width`, `:cell-height`, `:rows`, `:fill`, `:holds`,
-  `:pattern-names`, `:pattern-level`); `:labels`, `:short`, `:from`,
-  `:to` and `:breaks` raise `not-implemented`. `notasi render` draws
-  the first score.
-
-The manual describes this notation until then.
 
 ## Not covered
 

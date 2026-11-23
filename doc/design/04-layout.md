@@ -1,19 +1,13 @@
 # 04 — Layout
 
-Status: partly implemented (iteration 2): milestone 2, slices 1–4 of 5
+Status: implemented (iteration 2): milestone 2, all five slices
 (`feat/scores-form`, `feat/scores-contract`, `feat/scores-rows`,
-`feat/scores-overlays`, see "Slices (iteration 2)"). `layout-score`
-lays out a score as contract version 2, with `notes`, `parts` and
-`single` rows, note names with their damped forms, `:fill`, `:holds`,
-pattern-name overlays, one style per group, the sizes,
-`:system-length`, and the header rows and lines; the range, `:breaks`
-and `:labels` are planned.
-"What layout does today" lists what differs.
-"Note style" is **Implemented** and stays, with the style now built from
-a score's options. Modules: `(notasi style)`, `(notasi layout)`; tests
+`feat/scores-overlays`, `feat/scores-range`, see "Slices (iteration
+2)"). `layout-score` lays out a score as contract version 2. "Note
+style" is built from a score's options. Modules: `(notasi style)`, `(notasi layout)`; tests
 in `tests/style.scm`, `tests/layout.scm` and `tests/golden.scm`.
 
-Everything in this document is **Planned** unless it says otherwise.
+Everything in this document is **Implemented** unless it says otherwise.
 
 ## Responsibility
 
@@ -73,7 +67,7 @@ in this order:
 
 **Implemented** for the whole piece (`step-columns`, from every event's
 start and end and the piece's length); per score, with its range and
-pattern spans, **Planned**.
+pattern spans, **Implemented** (`feat/scores-range`).
 
 The piece's times are rationals in pulses (ADR 0025); the figure counts
 in columns. For each score, layout takes the **step**: the largest
@@ -194,7 +188,7 @@ row labels.
 `(notasi style)`, which depends only on `(notasi piece)`; tests in
 `tests/style.scm`.
 
-**Planned**: layout builds one style per group, from the group's
+**Implemented** (`feat/scores-form`): layout builds one style per group, from the group's
 `scheme`, `palette` and `colors` (ADR 0032), with
 `(make-style #:scheme #:palette #:degree-colors)`. The reader has
 checked the names and colours, so `make-style` does not fail here.
@@ -319,7 +313,7 @@ text. `dark2` gives strong colours with mostly white text.
 
 ## Slices (iteration 2)
 
-**Planned.** Milestone 2 of iteration 2 (`feat/scores`) is built in five
+**Implemented.** Milestone 2 of iteration 2 (`feat/scores`) is built in five
 slices, each its own branch and PR into `dev`, started with
 `/start-milestone <branch>`, after milestone 1 (03, "Slices"). Each
 changes the reader's score checks (03, **[scores]**), the records (02),
@@ -400,32 +394,29 @@ examples, golden files and manual pages it affects.
      (a grid can't overlap its cells): a white box at 80% opacity with
      near-black text, centred over the overlay's columns and rows; a
      continued overlay shows its text again.
-5. `feat/scores-range`: `:from` and `:to`, `:breaks`, `:labels`;
+5. **Implemented.** `feat/scores-range`: `:from` and `:to`, `:breaks`, `:labels`;
    `render-piece #:score` and `notasi render --score`; golden files,
-   previews and manual figures per score.
+   previews and manual figures per score. Decided for this slice:
+   - A position `(CYCLE PULSE)` names the pulse as this score prints
+     it: the column under cycle CYCLE's number marked PULSE, in the
+     score's `numbering`. With `gong-first`, cycle 2's stretch is
+     printed 2, …, N, 1, so the whole cycle is `:from (2 2) :to (2 1)`.
+   - The pickup is cycle 0, its pulses numbered as printed (the last
+     pulses of a cycle): a one-pulse pickup in eight is `(0 8)`.
+   - A break outside the score's range but inside the piece is ignored;
+     outside the piece it is `bad-position`. A break at `from` changes
+     nothing.
+   - With `:labels first-long` the label column is as wide as the
+     longest label printed in any system.
+   - `examples/gilak.nts` has two scores, so its golden files are
+     `gilak.full.json` and `gilak.second-cycle.json`.
 
-## What layout does today
-
-**Implemented**: `(layout-score piece score)` (milestone 2, slice 1).
-It differs from the above as follows, and this section goes when
-iteration 2 is built:
-
-- Every group's `overlays` is empty: pattern names come in
-  `feat/scores-overlays`.
-- The step is worked out from the piece's length, the system length and
-  the events of the score's parts; there is no range (`:from`, `:to`)
-  or `:breaks`, and systems start every `:system-length` pulses from
-  the start of the piece.
-- A group's label is always its long label.
-- Golden tests: each `examples/NAME.nts` has the figure of its first
-  score in `tests/golden/NAME.json`.
-
-### Golden tests
+## Golden tests
 
 Each example has one saved figure per score, in `tests/golden/`: a file
 with only the default score keeps its plain name (`NAME.json`); a file
 with scores has `NAME.SCORE.json` for each. `make golden` rewrites them
-(**Implemented** for one figure per example), and `make check` fails on
+(**Implemented**), and `make check` fails on
 any difference, on a figure with no saved copy, and on a saved copy with
 no figure.
 

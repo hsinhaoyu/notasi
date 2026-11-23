@@ -1,0 +1,1 @@
+bad-range.nts:5: the excerpt must start before it ends: :from comes after :to

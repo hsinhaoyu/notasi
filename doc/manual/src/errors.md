@@ -79,19 +79,6 @@ so notasi reaches the end of the file still looking for the `)`. The
 line number points to where it gave up, at the end of the file. The
 missing bracket is somewhere before that.
 
-## Not supported yet
-
-```scheme
-{{#include mistakes/not-yet.nts}}
-```
-
-```text
-{{#include mistakes/not-yet.txt}}
-```
-
-A few settings in the notation reference, such as a score's
-`:labels`, aren't ready yet. Everything in this manual works.
-
 ## Mistakes in scales and instruments
 
 ### No scale with that name
@@ -265,6 +252,32 @@ In one score, each part can be in only one group (see
 ```
 
 Check the spelling of the part's name in the group.
+
+### A position that isn't in the piece
+
+```scheme
+{{#include mistakes/bad-position.nts}}
+```
+
+```text
+{{#include mistakes/bad-position.txt}}
+```
+
+This cycle has 8 pulses, so there is no pulse 9. A position is
+`(CYCLE PULSE)` with a colotomy, or a pulse number without one (see
+[Scores](scores.md#excerpts-and-lines)).
+
+### An excerpt that ends before it starts
+
+```scheme
+{{#include mistakes/bad-range.nts}}
+```
+
+```text
+{{#include mistakes/bad-range.txt}}
+```
+
+`:from` must come before `:to`. Here they are the wrong way round.
 
 ### A group of names without names
 

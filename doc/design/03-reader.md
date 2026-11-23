@@ -1,14 +1,12 @@
 # 03 — Reader and validation
 
-Status: partly implemented (iteration 2): milestone 1 (`feat/music`) is
-complete, all five slices (see "Slices (iteration 2)"); the **[scores]**
-cases are planned for milestone 2.
-"What the reader reads today" says what `(notasi reader)` does in the
-meantime. Tests in `tests/reader.scm`.
+Status: implemented (iteration 2): milestone 1 (`feat/music`), all
+five slices (see "Slices (iteration 2)"), and the **[scores]** cases
+and step 12 with milestone 2 (`feat/scores`, 04 "Slices (iteration
+2)"). No form or option raises `not-implemented` any more; the kind is
+kept for later iterations. Tests in `tests/reader.scm`.
 
-Everything in this document is **Planned** unless it says otherwise.
-**Implemented** since slices 1 and 2: steps 1, 2 (with `colotomy`,
-`pattern` and `score` raising `not-implemented`), 3 to 7, step 9 for
+Everything in this document is **Implemented**. Since slices 1 and 2: steps 1, 2, 3 to 7, step 9 for
 tokens, `rep` and patterns (durations, `_`, `-`, `/`, `|`, `||`,
 fragments with lead holds, pattern uses with `:step`, spans) in
 `(notasi expand)`; step 8 (`check-pattern`: a pattern's notes, and the
@@ -450,7 +448,7 @@ All errors at a use carry the part, the time and the chain of uses.
 
 ## Slices (iteration 2)
 
-**Planned.** Milestone 1 of iteration 2 (`feat/music`) is built in five
+**Implemented.** Milestone 1 of iteration 2 (`feat/music`) is built in five
 slices, each its own branch and PR into `dev`, started with
 `/start-milestone <branch>`. Each slice changes the records (02), the
 reader, and every layer it touches, and updates the examples, golden
@@ -567,19 +565,6 @@ error cases tagged with its feature, and the steps above that they need.
      stroke moves N keys.
 
 The **[scores]** cases are built in milestone 2 (04, "Slices").
-
-## What the reader reads today
-
-**Implemented**: the v1 reader (four slices, merged as
-`feat/reader-forms`, `feat/reader-scales`, `feat/reader-parts` and
-`feat/reader-templates`), moved to the new syntax by slice 1 of
-iteration 2. It differs from the above as follows, and this section
-goes when iteration 2 is built:
-
-- Step 12 reads scores with the options of milestone 2's slices 1–4;
-  the last slice's options (`:labels`, `:short`, `:from`, `:to`,
-  `:breaks`) raise `not-implemented`, and `bad-position` and
-  `bad-range` are not built.
 
 ## Open questions
 

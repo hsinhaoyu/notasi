@@ -11,8 +11,9 @@ choose:
 
 ![The kotekan above, drawn from its score](figures/scores.svg)
 
-- `(score full …)` names the score. A file can have more than one; notasi
-  draws the first.
+- `(score full …)` names the score. A file can have more than one;
+  notasi draws the first, or the one you choose (see
+  [Several scores](#several-scores)).
 - Each `(group "Reyong" … polos sangsih)` is one block of rows, with its
   label on the left. Here polos and sangsih share the reyong's rows, so
   you see how they interlock. `:subtitle` adds a line under the label.
@@ -35,6 +36,8 @@ own instead.
 | `:pulse-label "…"` | score | A label at the left of the pulse numbers, such as `"Beats"`. |
 | `:font-size "8pt"` | score | The size of the text (8pt unless you say). |
 | `:system-length N` | score | N pulses on each line of the score. Without it, the whole piece is one line. |
+| `:short "…"` | group | A short label, such as `"U."` for `"Ugal"`. |
+| `:labels first-long` / `long` / `short` | score or group | Which label to print: the long one on the first line and the short one after (the default), always the long one, or always the short one. |
 | `:note-names yes` | score or group | Write each note's name in its square. The gongs above show `G`, `P` and `K`. |
 | `:palette NAME` | score or group | The colours of the notes: `pastel1` (the default), `set2`, `dark2` and others, or a list of colours such as `("#e41a1c" "#377eb8")`. |
 | `:colors ((ding "#000000"))` | score or group | A colour for one degree, in every octave. |
@@ -66,12 +69,60 @@ has one (`:damped "na'"`; see [Scales and stroke sets](scales-and-strokes.md));
 a longer note shows its usual name. In the drawing above, `nang` rings
 and `na'` is cut short.
 
+## Excerpts and lines
+
+A score can print part of a piece, and choose where its lines break:
+
+```scheme
+{{#include examples/scores-excerpt.nts}}
+```
+
+The first score, `whole`, starts a new line at each cycle:
+
+![The whole piece, a cycle on each line](figures/scores-excerpt.whole.svg)
+
+The second, `second`, prints one cycle, counted with the gong on 1:
+
+![The second cycle alone](figures/scores-excerpt.second.svg)
+
+| Setting | Where | What it does |
+|---|---|---|
+| `:from POS`, `:to POS` | score | Print from the pulse at `:from` to the end of the pulse at `:to`. |
+| `:breaks (POS …)` | score | Start a new line at each of these pulses. With `:system-length` too, both apply. |
+
+A position POS is written the way the score numbers its pulses:
+
+- With a [colotomy](gong-cycles.md), it is `(CYCLE PULSE)`: the pulse
+  numbered PULSE under the cycle numbered CYCLE. A pickup is cycle 0, so
+  a one-pulse pickup in a cycle of 8 is `(0 8)`.
+- With `:numbering gong-first`, the gong is numbered 1, at the end of
+  each cycle. So the second cycle runs from `(2 2)` to `(2 1)`, as in
+  the score above.
+- Without a colotomy, a position is just the pulse's number, from 1.
+
+A note that began before `:from` is drawn from there, without its name,
+as at the start of a line. A break outside the excerpt is skipped.
+
+## Several scores
+
+A file can have several scores, such as the whole piece and an excerpt.
+notasi draws the first unless you name another with `--score`:
+
+```text
+scripts/notasi render gilak.nts --score second
+```
+
+This writes `gilak.second.pdf`, so the pictures of different scores
+don't overwrite each other.
+
 ## The rules
 
 - A group holds parts on one pitched instrument, or gongs and drums, not
   both. To compare the ugal and the reyong, give each a group.
 - A part can be in only one group of a score.
 - Every part a group names must exist.
+- `:from` must come before `:to`, and every position must be in the
+  piece.
 
 The full rules are in the
 [notation reference](https://github.com/hsinhaoyu/notasi/blob/dev/doc/design/01-notation.md).

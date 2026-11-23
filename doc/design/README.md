@@ -52,9 +52,9 @@ See [its README](../iterations/01-first-drawings/README.md).
 
 See [its README](../iterations/02-gold-and-tenzer/README.md).
 
-1. `feat/music`: the music; five slices, see
+1. **Implemented.** `feat/music`: the music; five slices, see
    [03-reader.md](03-reader.md#slices-iteration-2)
-2. `feat/scores`: scores; five slices, see
+2. **Implemented.** `feat/scores`: scores; five slices, see
    [04-layout.md](04-layout.md#slices-iteration-2)
 3. `feat/targets`: the acceptance test: Jaya Semara and Baris as
    examples
