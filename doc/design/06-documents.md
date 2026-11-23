@@ -1,8 +1,9 @@
 # 06 — Scores in Typst documents
 
 Status: planned, not implemented yet, and deferred: not part of
-iteration 1 or 2 (see the [backlog](../iterations/backlog.md)). Written
-for the iteration 2 notation (01) and contract version 2 (05). Command:
+iteration 1, 2 or 3 (see the [backlog](../iterations/backlog.md)).
+Written for the iteration 3 notation (01: parts with `:instrument`) and
+contract version 3 (05, ADR 0043). Command:
 `notasi typst`, `notasi watch` (`scripts/notasi`); Typst package:
 `typst/` (published as `notasi`). Decision: ADR 0016 (proposed).
 
@@ -51,8 +52,8 @@ The reyong interlocks like this:
 
 #notasi.figure(caption: [Kotekan: polos and sangsih])[
   ```nts
-  (part reyong :name polos    i3:1/4 _ i3 o3 | _ i3 o3 _)
-  (part reyong :name sangsih  e3:1/4 u3 e3 _ | u3 e3 _ u3)
+  (part :instrument reyong :name polos    i3:1/4 _ i3 o3 | _ i3 o3 _)
+  (part :instrument reyong :name sangsih  e3:1/4 u3 e3 _ | u3 e3 _ u3)
   (score kotekan  (group "Reyong" polos sangsih))
   ```
 ] <fig:kotekan>
@@ -105,11 +106,11 @@ numbers in error messages are shifted back by one.
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "setup": { "use": ["gong-kebyar"] },
   "snippets": {
-    "(part reyong :name polos i3:1/4 ...)\n...": { "figure": { ...05 contract... } },
-    "(part ugal a1 o9 ...)":                     { "error": "book.typ, nts block 2, line 1: part `ugal', pulse 2: note `o9' is not on instrument `ugal'" }
+    "(part :instrument reyong :name polos i3:1/4 ...)\n...": { "figure": { ...05 contract... } },
+    "(part :instrument ugal a1 o9 ...)":                     { "error": "book.typ, nts block 2, line 1: part `ugal', pulse 2: note `o9' is not on instrument `ugal'" }
   },
   "files": {
     "examples/jaya-semara.nts": { "scores": { "kotekan": { "figure": { ... } } } }
@@ -134,7 +135,7 @@ numbers in error messages are shifted back by one.
   compares this with its own options and, if they differ, treats every
   snippet as not rendered yet rather than drawing figures made for
   other options.
-- The manifest has its own `version`, 2, to go with contract version 2.
+- The manifest has its own `version`, 3, to go with contract version 3.
   A change to the figure contract increments both.
 
 ## What the template draws

@@ -48,7 +48,7 @@ See [its README](../iterations/01-first-drawings/README.md).
 4. `feat/typst-backend`: three slices, see
    [05-typst-backend.md](05-typst-backend.md#slices)
 
-### Iteration 2: Gold's Jaya Semara and Tenzer's Baris (building)
+### Iteration 2: Gold's Jaya Semara and Tenzer's Baris (done, tagged v0.2.0-dev)
 
 See [its README](../iterations/02-gold-and-tenzer/README.md).
 
@@ -58,6 +58,17 @@ See [its README](../iterations/02-gold-and-tenzer/README.md).
    [04-layout.md](04-layout.md#slices-iteration-2)
 3. **Implemented.** `feat/targets`: the acceptance test: Jaya Semara and Baris as
    examples
+
+### Iteration 3: refining the examples (building)
+
+See [its README](../iterations/03-refining-the-examples/README.md).
+
+1. `feat/syntax`: parts with `:instrument`, colotomy parts as `part`
+   forms, `gilak` and `bapang` in the template
+2. `feat/drawing`: the drawing; four slices, see
+   [04-layout.md](04-layout.md#slices-iteration-3)
+3. `feat/examples`: the acceptance test: Jaya Semara and Baris refined,
+   and Baris's colour score
 
 ### Deferred
 

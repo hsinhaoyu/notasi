@@ -1,6 +1,6 @@
 # Iteration 3: refining the examples
 
-Status: deciding
+Status: building
 
 ## Goal
 
@@ -73,8 +73,28 @@ In dependency order (ADR 0023): `01-notation.md`; then `02-piece.md`
 and `03-reader.md`; then `04-layout.md` and `05-typst-backend.md`; then
 `06-documents.md` and the build order.
 
-Promoted so far: `01-notation.md` (ADRs 0038–0041; again with key numbers and template colotomies, ADR 0046), `02-piece.md` (again with key numbers), `03-reader.md` (again with key numbers), `04-layout.md` (ADRs 0042–0043; again with key numbers, ADR 0047), `05-typst-backend.md` (ADRs 0044–0045; again with key numbers).
+Promoted so far: `01-notation.md` (ADRs 0038–0041; again with key numbers and template colotomies, ADR 0046), `02-piece.md` (again with key numbers), `03-reader.md` (again with key numbers), `04-layout.md` (ADRs 0042–0043; again with key numbers, ADR 0047), `05-typst-backend.md` (ADRs 0044–0045; again with key numbers), `06-documents.md` and the build order. Promotion is complete.
 
 ## Milestones
 
-None yet: no milestone starts while the iteration is `deciding`.
+Each milestone, or each slice of one, is its own branch and PR into
+`dev`, started with `/start-milestone <branch>`. After each one,
+`make check` passes and the manual describes what the code does.
+
+1. **`feat/syntax`** (01, 02, 03), with no slices:
+   - parts written `(part :instrument I :name N ...)`, and colotomy
+     parts as `part` forms (ADR 0038); the old forms are errors whose
+     messages show the new one;
+   - `gilak` and `bapang` in the `gong-kebyar` template (ADR 0046);
+   - every `.nts` rewritten: examples, the manual's examples and
+     mistakes, test fixtures.
+2. **`feat/drawing`** (01–05), in four slices, see
+   [04-layout.md](../../design/04-layout.md#slices-iteration-3):
+   1. `feat/drawing-header`
+   2. `feat/drawing-lines`
+   3. `feat/drawing-rows`
+   4. `feat/drawing-output`
+3. **`feat/examples`**, the acceptance test, with no slices: Jaya
+   Semara and Baris refined in the new notation, Baris's `colour` score
+   (two kendang groups, `:display` for Tenzer's gongs), golden files,
+   and the drawings checked by eye.
