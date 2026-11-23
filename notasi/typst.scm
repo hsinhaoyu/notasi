@@ -135,15 +135,27 @@ missing or fails; the message then includes Typst's own output."
 (define (temporary-folder)
   (mkdtemp (string-append (or (getenv "TMPDIR") "/tmp") "/notasi-XXXXXX")))
 
-(define* (render-piece nts-path out-path #:key keep-in)
-  "Draw the first score of the piece in NTS-PATH (its default score if
-it has none) to OUT-PATH (.pdf, .png or .svg), and return OUT-PATH.  The
-figure, template and entry file are made in a temporary folder that is
-deleted afterwards, or in KEEP-IN, which is kept.  Reader errors pass
-through unchanged."
+(define* (render-piece nts-path out-path #:key score keep-in)
+  "Draw the score SCORE (a symbol) of the piece in NTS-PATH, or its first
+score (its default score if it has none) without SCORE, to OUT-PATH
+(.pdf, .png or .svg), and return OUT-PATH.  The figure, template and
+entry file are made in a temporary folder that is deleted afterwards, or
+in KEEP-IN, which is kept.  Reader errors pass through unchanged; a
+score the piece doesn't have is an &error."
   (output-format out-path)              ; a bad extension fails first
   (let* ((piece (read-piece-file nts-path))
-         (figure (layout-score piece (car (piece-scores piece))))
+         (chosen (if score
+                     (or (piece-score piece score)
+                         (raise-exception
+                          (make-exception
+                           (make-error)
+                           (make-exception-with-message
+                            (format #f "~a has no score called `~a'"
+                                    nts-path score))
+                           (make-exception-with-irritants
+                            (list score nts-path)))))
+                     (car (piece-scores piece))))
+         (figure (layout-score piece chosen))
          (template (find-template))
          (dir (or keep-in (temporary-folder))))
     (dynamic-wind
