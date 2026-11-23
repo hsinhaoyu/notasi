@@ -40,6 +40,12 @@ eight pulses of the cycle.
 When notasi tells you about a mistake, it says where it is as a cycle
 and a pulse: "cycle 1, pulse 3". The pickup is cycle 0.
 
+In the drawing, the pulses are numbered within each cycle, the pickup
+as the last pulse of cycle 0. Each cycle's number is above its first
+pulse, and a heavier line marks where it begins, just after the gong.
+A score can number the gong as pulse 1 instead (`:numbering
+gong-first`; see [Scores](scores.md)).
+
 ## The rules
 
 - A colotomy's length is a whole number of pulses. Each of its parts

@@ -1,10 +1,11 @@
 # 04 — Layout
 
-Status: partly implemented (iteration 2): milestone 2, slice 1 of 5
-(`feat/scores-form`, see "Slices (iteration 2)"). `layout-score` lays
-out a score with `notes` rows, `:note-names`, one style per group, the
-cell sizes and `:system-length`, still as contract version 1; the rest
-is planned. "What layout does today" lists what differs.
+Status: partly implemented (iteration 2): milestone 2, slices 1–2 of 5
+(`feat/scores-form`, `feat/scores-contract`, see "Slices (iteration
+2)"). `layout-score` lays out a score as contract version 2, with
+`notes` rows, `:note-names`, one style per group, the sizes,
+`:system-length`, and the header rows and lines; the rest is planned.
+"What layout does today" lists what differs.
 "Note style" is **Implemented** and stays, with the style now built from
 a score's options. Modules: `(notasi style)`, `(notasi layout)`; tests
 in `tests/style.scm`, `tests/layout.scm` and `tests/golden.scm`.
@@ -344,7 +345,7 @@ examples, golden files and manual pages it affects.
    - The figure stays contract version 1: `:cell-width` and
      `:cell-height` go into `step_width` and `row_height` as written
      (default `"2em"`).
-2. `feat/scores-contract`: contract version 2 (ADR 0036): header rows,
+2. **Implemented.** `feat/scores-contract`: contract version 2 (ADR 0036): header rows,
    `:cycle-numbers`, `:pulse-numbers`, `:numbering`, `:pulse-label`,
    `lines` with heavier cycle lines (ADR 0037), `subtitle`, `caption`,
    `sizes`; the template and the entry file to match. Decided for this slice:
@@ -381,11 +382,8 @@ examples, golden files and manual pages it affects.
 It differs from the above as follows, and this section goes when
 iteration 2 is built:
 
-- The figure is contract version 1 (05): `sizes` has `label_width`,
-  `lane_width`, and the score's cell sizes as `step_width` and
-  `row_height`; there is no `subtitle`, `font_size`, `header`, `lines`
-  or `overlays`; the template counts pulse numbers itself; `caption` is
-  always `null`.
+- Every group's `overlays` is empty: pattern names come in
+  `feat/scores-overlays`.
 - The step is worked out from the piece's length, the system length and
   the events of the score's parts; there is no range (`:from`, `:to`)
   or `:breaks`, and systems start every `:system-length` pulses from
