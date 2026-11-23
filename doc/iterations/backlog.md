@@ -64,3 +64,9 @@ Neither target needs them; the design leaves room for them.
   side by side
 - A level above groups (brackets)
 - More colour schemes (by part, by octave)
+
+## Later, from iteration 3
+
+- **Strokes drawn at their durations**, as an option against ADR 0042's
+  one column: not until someone needs it
+  ([stroke width](03-refining-the-examples/design_ideas/2026-11-23-stroke-width.md)).

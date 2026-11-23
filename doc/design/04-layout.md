@@ -6,6 +6,11 @@ Status: implemented (iteration 2): milestone 2, all five slices
 2)"). `layout-score` lays out a score as contract version 2. "Note
 style" is built from a score's options. Modules: `(notasi style)`, `(notasi layout)`; tests
 in `tests/style.scm`, `tests/layout.scm` and `tests/golden.scm`.
+Planned for iteration 3: contract version 3 (ADR 0043) with the header
+labels, the pickup's cycle mark and each group's lines; strokes one
+column wide (ADR 0042); a lighter stroke grey (ADR 0041); `:keys`,
+`:octave-numbers` and `:display`; golden files named `NAME_SCORE`
+(ADR 0040).
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -38,12 +43,12 @@ in this order:
 
 | Object | Keys |
 |---|---|
-| figure | `version` (2), `title`, `subtitle`, `steps_per_pulse`, `sizes`, `systems`, `caption` |
+| figure | `version` (2; **Planned**: 3, ADR 0043), `title`, `subtitle`, `steps_per_pulse`, `sizes`, `systems`, `caption` |
 | sizes | `font_size`, `label_width`, `lane_width`, `cell_width`, `cell_height` |
 | system | `start`, `steps`, `header`, `lines`, `groups` |
-| header | `label`, `cycles`, `pulses` |
+| header | `label`, `cycles`, `pulses` (**Planned**, version 3: `cycle_label`, `pulse_label`, `cycles`, `pulses`, `pulse_lines`) |
 | cycle mark | `column`, `text` |
-| group | `label`, `subtitle`, `lanes`, `voices`, `overlays` |
+| group | `label`, `subtitle`, `lanes`, `voices`, `overlays` (**Planned**, version 3: then `pulse_lines`, `row_lines`) |
 | voice | `name`, `events` |
 | event | `start`, `dur`, `lane`, `text`, `fill`, `text_color`, `continued` |
 | overlay | `start`, `dur`, `row`, `rows`, `text`, `continued` |
@@ -112,12 +117,20 @@ Layout works out every header number and every line, for every column:
   `pulse-numbers?` is false.
 - `header.cycles`: a list of `{column, text}`, the cycle number at the
   first column of each cycle in the system, once per cycle. `null` when
-  `cycle-numbers?` is false.
-- `header.label`: the score's `pulse-label`, or `null`.
+  `cycle-numbers?` is false. **Planned** (ADR 0043): the pickup is cycle
+  0, so a system that starts in the pickup, or with it, also has a mark
+  `0` at the pickup's first column it shows.
+- `header.label`: the score's `pulse-label`, or `null`. **Planned** (ADRs
+  0039, 0043): replaced by `header.cycle_label` and `header.pulse_label`,
+  the score's labels ("Cycle" and "Pulse" by default), each `null` when
+  it is `""` or its row is not shown.
+- **Planned** (ADR 0043): `header.pulse_lines`, from the score's
+  `background`: whether pulse lines run through the header rows.
 - `lines`: one entry per column, for the line at its left edge: `cycle`
   where a cycle starts (just after the gong), `pulse` where another
   pulse starts, `none` elsewhere. Without a colotomy there are no
-  `cycle` lines.
+  `cycle` lines. Cycle lines are always drawn; whether a group draws
+  its pulse lines is the group's `pulse_lines` (**Planned**, below).
 
 ### Groups and rows
 
@@ -132,7 +145,13 @@ Layout works out every header number and every line, for every column:
   its note in that list. Lanes are the notes the group actually plays
   in the score's range (`from` to `to`), in `group-lanes` order: highest
   pitch at the top; stroke instruments give one lane per stroke, in
-  instrument order, so an excerpt shows only the keys it uses. A group's parts are all pitched on one instrument or all on
+  instrument order, so an excerpt shows only the keys it uses.
+  **Planned** (iteration 3), by the group's `keys`: `used` is the rule
+  above; `all` is every key of the instrument (every stroke of each
+  stroke instrument, in instrument order, as blocks in the order their
+  first part appears); a range is the instrument's keys from LOW to
+  HIGH, both included, highest at the top. The reader has checked that
+  every note played is among them. A group's parts are all pitched on one instrument or all on
   stroke instruments (02-piece.md, invariant 6), so its lanes never mix
   ranges or pitches with strokes.
 - **`rows` `parts`**: one row per member, labelled with its row label;
@@ -163,7 +182,18 @@ Layout works out every header number and every line, for every column:
   alone.
 - With `holds` `dash`, every column a note is held after its first gets
   an event of one column with text `"-"`, `fill` `null`, in the note's
-  row, so a sung line reads `nang - - ni'`.
+  row, so a sung line reads `nang - - ni'`. **Planned** (ADR 0042): only
+  pitched notes are held; a stroke gets no dashes.
+- **Planned** (ADR 0042): an event of a stroke instrument is one column
+  wide (`dur` 1), starting where the stroke starts, whatever its
+  written duration; its text is still chosen by the written duration
+  (`du` or `du'`). Pitched notes keep their widths.
+- **Planned** (iteration 3): a stroke in a group's `display` shows that
+  form instead of its own, as text and in its lane label.
+- **Planned** (ADRs 0041, 0043): each group carries `pulse_lines` and
+  `row_lines` from its `background`: `grid` both, `vertical` pulse
+  lines only, `horizontal` row lines only, `empty` neither. Row lines
+  are drawn between the rows of every kind of group.
 
 ### Pattern names (overlays)
 
@@ -185,7 +215,10 @@ the group's `pattern-level`:
 Lane labels show the display form followed by the octave number
 (`i2`) in small grey text; a stroke's label is its display form
 (**Implemented**, `note-label`). With `parts` rows the labels are the
-row labels.
+row labels. **Planned** (iteration 3): with `octave-numbers?` false, a
+pitched lane is labelled with its display form alone (`i`), even when
+two lanes then read alike; a stroke in the group's `display` is
+labelled with that form.
 
 ### Note style
 
@@ -237,7 +270,9 @@ picks colours (ADR 0005).
   ((c + 0.055)/1.055)^2.4; L = 0.2126 R + 0.7152 G + 0.0722 B; and the
   ratio of two luminances is (L1 + 0.05)/(L2 + 0.05), lighter over
   darker. So strong colours get white text and light ones dark text.
-- **Strokes are grey boxes** (`fill` `#cccccc`, ADRs 0019 and 0021),
+- **Strokes are grey boxes** (`fill` `#cccccc`, ADRs 0019 and 0021;
+  **Planned**, ADR 0041: a lighter grey, so the note border shows
+  against it, chosen by eye, clearly grey and no palette's colour),
   with the stroke's display form (or its name) as text, in the colour
   `text-color-for` gives (near-black on this grey). The text is shown
   when the group has `note-names?` (ADR 0031).
@@ -369,7 +404,8 @@ examples, golden files and manual pages it affects.
      is the edge of the grid.
    - A cycle mark's `column` is counted from its system's start, like an
      event's `start`; a system in which no cycle starts has an empty
-     `cycles` list, and the pickup has no mark. Hiding one header row
+     `cycles` list, and the pickup has no mark (reversed by ADR 0043:
+     the pickup's mark is `0`). Hiding one header row
      leaves the other and the lines.
 3. **Implemented.** `feat/scores-rows`: `:rows parts` and `single`, row labels, `:fill
    none`, `:holds dash`, the damped and open names, and
@@ -424,7 +460,8 @@ examples, golden files and manual pages it affects.
 
 Each example has one saved figure per score, in `tests/golden/`: a file
 with only the default score keeps its plain name (`NAME.json`); a file
-with scores has `NAME.SCORE.json` for each. `make golden` rewrites them
+with scores has `NAME.SCORE.json` for each (**Planned**, ADR 0040:
+`NAME_SCORE.json`). `make golden` rewrites them
 (**Implemented**), and `make check` fails on
 any difference, on a figure with no saved copy, and on a saved copy with
 no figure.
