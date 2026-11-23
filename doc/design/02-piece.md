@@ -9,7 +9,10 @@ time, since `feat/music-durations`; `pickup`, `colotomies`,
 the `pattern` and `pattern-span` records since `feat/music-patterns`;
 `scores`, the `score` and `group` records and `piece-score` since
 `feat/scores-form`, and `note-display #:damped?` since
-`feat/scores-rows`. Tests in `tests/piece.scm`.
+`feat/scores-rows`. Tests in `tests/piece.scm`. Planned for iteration
+3: the score's `cycle-label`; the group's `keys`, `octave-numbers?`,
+`display` and `background`; `note-label`'s `#:octave?`; invariants 9 and
+10.
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -143,7 +146,10 @@ score
   cycle-numbers? : boolean
   pulse-numbers? : boolean
   numbering      : symbol              gong-last | gong-first
-  pulse-label    : string | #f
+  cycle-label    : string | #f         **Planned**: "Cycle" unless
+                                       `:cycle-label`; #f for ""
+  pulse-label    : string | #f         **Planned**: "Pulse" unless
+                                       `:pulse-label` (today #f); #f for ""
   font-size      : string | #f         a Typst length; #f: the document's
   cell-width     : string              a Typst length
   cell-height    : string
@@ -164,6 +170,17 @@ group                                  every setting filled in (ADR 0033)
   holds         : symbol               none | dash
   pattern-names : symbol               none | short | long
   pattern-level : integer
+  keys          : symbol | (note . note)   **Planned**: used | all, or the
+                                       lowest and highest note shown
+                                       (`:keys (LOW HIGH)`); `used`
+                                       for `parts` and `single` rows
+  octave-numbers? : boolean            **Planned**: octave numbers on
+                                       row labels
+  display       : list of (symbol . string)   **Planned**: stroke name
+                                       and the form shown for it in this
+                                       score (`:display`); '() for none
+  background    : symbol               **Planned**: grid | vertical |
+                                       horizontal | empty
   scheme        : symbol               e.g. by-degree
   palette       : symbol | list of string   a palette name or "#rrggbb"s
   colors        : list of (symbol . string) degree name and "#rrggbb"
@@ -195,10 +212,14 @@ group                                  every setting filled in (ADR 0033)
   or the display form if it has none. Used for the text in note cells.
 - `(note-label instrument note)` (**Implemented**): the display form plus
   the octave, e.g. `"i2"`; for a stroke, just its display form. Used for
-  row labels.
+  row labels. **Planned**: `#:octave?` (default `#t`); with `#f`, the
+  display form alone (`"i"`), for `:octave-numbers no`. A group's
+  `display` is applied by layout, which looks a stroke up there first.
 - `(group-lanes group)` (**Implemented**): the notes actually used by the
   group's member parts, as a list of note records, each once. Determines
-  the rows of a group with `rows` `notes`. Pitched notes come from one
+  the rows of a group with `rows` `notes` and `keys` `used`; with `all`
+  or a range, layout takes the instrument's keys instead (04,
+  **Planned**). Pitched notes come from one
   instrument (invariant 6) and are sorted highest first. Strokes follow
   the instrument's order. With several stroke instruments, each
   instrument's lanes come as a block, in the order its first part
@@ -241,6 +262,12 @@ construction, since events are built from the tokens.
    `note-names?` true.
 8. Part names are unique in the piece, generated parts included, and
    score names are unique.
+9. **Planned**: score names contain no `_` (ADR 0040).
+10. **Planned**: in a group whose `keys` is a range, every note its parts
+    play in the score's range is within it; the range's notes are keys
+    of the group's instrument, the lower first. A group whose `keys` is
+    a range is pitched, with `rows` `notes`. Every stroke in a group's
+    `display` is a stroke of an instrument in the group.
 
 ## Decided
 
