@@ -1,20 +1,22 @@
 # 03 — Reader and validation
 
-Status: partly implemented (iteration 2): milestone 1, slices 1–4 of 5
-(`feat/music-syntax`, `feat/music-durations`, `feat/music-rep`,
-`feat/music-colotomy`, see "Slices (iteration 2)"); the rest is
-planned.
+Status: partly implemented (iteration 2): milestone 1 (`feat/music`) is
+complete, all five slices (see "Slices (iteration 2)"); the **[scores]**
+cases are planned for milestone 2.
 "What the reader reads today" says what `(notasi reader)` does in the
 meantime. Tests in `tests/reader.scm`.
 
 Everything in this document is **Planned** unless it says otherwise.
 **Implemented** since slices 1 and 2: steps 1, 2 (with `colotomy`,
 `pattern` and `score` raising `not-implemented`), 3 to 7, step 9 for
-tokens and `rep` (durations, `_`, `-`, `/`, `|`, `||`, fragments with
-lead holds, without patterns or spans) in `(notasi expand)`, which takes
-`#:cycle` and `#:pickup` for `||`; steps 10 and 11; the condition's
-`time` and `uses`; and every **[syntax]**, **[durations]**, **[rep]**
-and **[colotomy]** case.
+tokens, `rep` and patterns (durations, `_`, `-`, `/`, `|`, `||`,
+fragments with lead holds, pattern uses with `:step`, spans) in
+`(notasi expand)`; step 8 (`check-pattern`: a pattern's notes, and the
+instrument of each known pattern it uses, which is expanded only to
+measure it; unknown patterns and cycles are found where it is used);
+steps 10 and 11; the condition's `time` and `uses`; and every
+**[syntax]**, **[durations]**, **[rep]**, **[colotomy]** and
+**[patterns]** case.
 
 ## Responsibility
 
@@ -541,7 +543,7 @@ error cases tagged with its feature, and the steps above that they need.
      through cycle 0, and a stroke starting before time 0 is cut at 0.
      The timekeeper strikes `K` at every whole pulse, one pulse long,
      the last stroke cut at the piece's end.
-5. `feat/music-patterns` **[patterns]**: `pattern` forms, checked where
+5. **Implemented.** `feat/music-patterns` **[patterns]**: `pattern` forms, checked where
    they are defined (step 8), `@NAME` and `(@ NAME :step :short :long)`,
    spans, and errors that name the chain of uses. Decided for this slice:
    - Records as in 02: `(make-piece title length pickup colotomies
@@ -574,8 +576,8 @@ The **[scores]** cases are built in milestone 2 (04, "Slices").
 iteration 2. It differs from the above as follows, and this section
 goes when iteration 2 is built:
 
-- There are no patterns or scores. Steps 8 and 12 are not built;
-  `uses` is always `'()`.
+- There are no scores: step 12 is not built, and `score` raises
+  `not-implemented`.
 - Every part is in its own default group (`piece-groups`).
 
 ## Open questions

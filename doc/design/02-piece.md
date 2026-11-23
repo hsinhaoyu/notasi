@@ -5,7 +5,9 @@ Status: partly implemented (iteration 2). `degree` (with `damped`) and
 `feat/music-syntax`; times are exact rationals in pulses, with
 `part-end` and `events-at` taking a time, since `feat/music-durations`;
 `pickup`, `colotomies`, `part-origin`, the `colotomy` record,
-`time->position` and `position->time` since `feat/music-colotomy`.
+`time->position` and `position->time` since `feat/music-colotomy`;
+`patterns`, `part-spans`, the `pattern` and `pattern-span` records since
+`feat/music-patterns`.
 The other records are agreed and not yet built:
 `(notasi piece)` still implements their v1 form, summarised under "What
 the code implements today". Tests in `tests/piece.scm`.
@@ -245,10 +247,10 @@ records. It differs as follows, and this section goes when iteration 2
 is built:
 
 - `piece` is `(make-piece title length pickup colotomies scales
-  instruments parts groups)`: `groups` (every part in exactly one group,
-  except a timekeeper on the built-in kempli) instead of `scores`, and
-  no `patterns` field yet. `part` has no `spans` yet.
-- There are no `pattern`, `pattern-span` or `score` records.
+  instruments patterns parts groups)`: `groups` (every part in exactly
+  one group, except a timekeeper on the built-in kempli) instead of
+  `scores`.
+- There is no `score` record; `group` is v1's.
 - (`degree` has `damped` and `instrument` has no `show-names?` since
   iteration 2, slice 1: those two records are **Implemented** as
   above.)
