@@ -65,9 +65,11 @@ and 05-typst-backend), so promotion adds new ADRs.
 
 ## Promotion
 
-Not started. In dependency order (ADR 0023): `01-notation.md`; then
-`02-piece.md` and `03-reader.md`; then `04-layout.md` and
-`05-typst-backend.md`; then `06-documents.md` and the build order.
+In dependency order (ADR 0023): `01-notation.md`; then `02-piece.md`
+and `03-reader.md`; then `04-layout.md` and `05-typst-backend.md`; then
+`06-documents.md` and the build order.
+
+Promoted so far: `01-notation.md` (ADRs 0038–0041).
 
 ## Milestones
 
