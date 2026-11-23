@@ -75,14 +75,28 @@ pattern USES, with a message built from FMT and ARGS."
   "Raise a &notasi-syntax-error of KIND at LINE, not tied to a part."
   (raise-syntax-error kind line #f #f '() fmt args))
 
-(define (time->text time)
-  "The pulse at TIME, as a musician counts it (TIME 0 is pulse 1), with
-a fraction as a mixed number: 3/2 is \"pulse 2 1/2\"."
-  (let* ((pulse (+ time 1))
-         (whole (floor pulse))
-         (rest (- pulse whole)))
-    (string-append "pulse " (number->string whole)
+(define (mixed-number x)
+  "X as a musician writes it: 3/2 is \"1 1/2\"."
+  (let* ((whole (floor x))
+         (rest (- x whole)))
+    (string-append (number->string whole)
                    (if (zero? rest) "" (string-append " " (number->string rest))))))
+
+;;; The piece's meter while its parts are read: (CYCLE . PICKUP), or #f
+;;; without a colotomy.  Positions in messages are written with it.
+(define current-meter (make-parameter #f))
+
+(define (time->text time)
+  "TIME as a position: \"cycle C, pulse P\" with a colotomy (the pickup
+is cycle 0), else \"pulse P\" (TIME 0 is pulse 1), fractions as mixed
+numbers: \"pulse 2 1/2\"."
+  (match (current-meter)
+    (#f (string-append "pulse " (mixed-number (+ time 1))))
+    ((cycle . pickup)
+     (let* ((t (- time pickup))
+            (c (floor (/ t cycle))))
+       (string-append "cycle " (number->string (+ c 1))
+                      ", pulse " (mixed-number (+ (- t (* c cycle)) 1)))))))
 
 (define (part-error kind line part time fmt . args)
   "Raise a &notasi-syntax-error of KIND about PART at TIME (pulses, or
@@ -155,7 +169,7 @@ relative to some %load-path entry."
   '(piece use scale strokes instrument colotomy pattern part score))
 
 ;;; Known forms that later slices of iteration 2 build.
-(define not-yet-heads '(colotomy pattern score))
+(define not-yet-heads '(pattern score))
 
 (define (check-form form)
   "Raise an error unless FORM, a (DATUM . LINE) pair, is a proper list
@@ -262,21 +276,22 @@ BAD, when given, is called instead of `bad-option' for a wrong value."
 (define (positive-whole-number? x)
   (and (exact-integer? x) (positive? x)))
 
-;;; The options a form accepts: (NAME VALID? . WHAT-IT-MUST-BE).  The
-;;; piece takes none until colotomies (iteration 2, slice 4).
-(define piece-options '())
+;;; The options a form accepts: (NAME VALID? . WHAT-IT-MUST-BE).
+(define piece-options
+  `((colotomy ,(lambda (v) (and (symbol? v) (not (key? v)))) . "a colotomy's name")
+    (pickup ,(lambda (v) (and (number? v) (exact? v))) . "a whole number of pulses")))
 
 (define part-options
   `((name ,(lambda (v) (and (symbol? v) (not (key? v)))) . "a name")))
 
 (define (parse-piece-form form)
-  "Build a piece with no parts from the `piece' form FORM, a (DATUM . LINE)."
+  "The title and options of the `piece' form FORM, a (DATUM . LINE), as
+(TITLE . OPTIONS), OPTIONS an alist."
   (match form
     ((('piece (? string? title) . items) . line)
      (match (split-options items line)
        ((options . ())
-        (let ((opts (check-options options piece-options "a piece" line)))
-          (make-piece title 0 '() '() '() '())))
+        (cons title (check-options options piece-options "a piece" line)))
        ((_ . (item . _))
         (syntax-error 'bad-option line
                       "after the title, a piece takes only options, not ~s"
@@ -311,7 +326,7 @@ in file order."
 ;;; Item 6: the shape and options of scale, strokes, instrument and part
 ;;; forms
 
-(define definition-heads '(scale strokes instrument part))
+(define definition-heads '(scale strokes instrument colotomy part))
 
 (define (note-name? x)
   (and (symbol? x) (not (key? x))))
@@ -353,8 +368,32 @@ in file order."
   (match (split-part form)
     ((_ options . _) (and (assq 'name options) #t))))
 
+(define (colotomy-part-form? x)
+  (match x
+    (((? note-name?) (? note-name?) _ ..1) #t)
+    (_ #f)))
+
+(define (check-colotomy-shape form)
+  "A `colotomy' FORM: a name, a cycle length in pulses, no options, then
+its parts, (PART INSTRUMENT TOKEN ...)."
+  (match form
+    ((('colotomy (? note-name?) (? positive-whole-number?) . items) . line)
+     (match (split-options items line)
+       ((() . (? pair? parts))
+        (reject-keys parts line)
+        (unless (every colotomy-part-form? parts)
+          (bad-colotomy-form line)))
+       ((() . ()) (bad-colotomy-form line))
+       ((options . _) (check-options options '() "a colotomy" line))))
+    ((_ . line) (bad-colotomy-form line))))
+
+(define (bad-colotomy-form line)
+  (syntax-error 'bad-form line
+                "a colotomy needs a name, its length in pulses and its parts: (colotomy NAME LENGTH (PART INSTRUMENT TOKEN ...) ...)"))
+
 (define (check-definition-shape form)
   (match form
+    ((('colotomy . _) . _) (check-colotomy-shape form))
     ((((or 'scale 'strokes) . _) . _) (check-set-shape form))
     ((('instrument (? note-name?) (? note-name?) (? note-name?) ..1) . _) #t)
     ((('part (? note-name?) . items) . line)
@@ -423,7 +462,7 @@ item 13."
 ;;; it came from (#f for a string or port) and its (DATUM . LINE).
 
 (define template-heads '(scale strokes instrument colotomy pattern use))
-(define merged-heads '(scale strokes instrument))
+(define merged-heads '(scale strokes instrument colotomy))
 
 (define (definition-key form)
   (match form
@@ -738,6 +777,21 @@ scale record."
 ;;; ------------------------------------------------------------------
 ;;; Item 10: parts
 
+(define (call-with-expansion thunk line name)
+  "Call THUNK, which expands the music of part NAME at LINE, turning an
+&expansion-error into a &notasi-syntax-error."
+  (guard (e ((expansion-error? e)
+             (raise-syntax-error
+              (expansion-error-kind e)
+              (or (expansion-error-line e) line) name
+              (expansion-error-time e) (expansion-error-uses e)
+              (string-append "part `~a'~@[, ~a~]: ~a")
+              (list name
+                    (and (expansion-error-time e)
+                         (time->text (expansion-error-time e)))
+                    (exception-message e)))))
+    (thunk)))
+
 (define (build-part form instruments check-name)
   "Build a part record from FORM.  INSTRUMENTS is an alist from name to
 instrument record; CHECK-NAME checks the part's name against the parts
@@ -754,23 +808,94 @@ before it, after its instrument and before its tokens.  Return
                 (part-error 'undefined-instrument line name #f
                             "no instrument called `~a'" instrument-name))))
        (check-name)
-       (match (guard (e ((expansion-error? e)
-                         (raise-syntax-error
-                          (expansion-error-kind e)
-                          (or (expansion-error-line e) line) name
-                          (expansion-error-time e) (expansion-error-uses e)
-                          (string-append "part `~a'~@[, ~a~]: ~a")
-                          (list name
-                                (and (expansion-error-time e)
-                                     (time->text (expansion-error-time e)))
-                                (exception-message e)))))
-                (expand-tokens tokens instrument))
+       (match (call-with-expansion
+               (lambda ()
+                 (match (current-meter)
+                   (#f (expand-tokens tokens instrument))
+                   ((cycle . pickup)
+                    (expand-tokens tokens instrument
+                                   #:cycle cycle #:pickup pickup))))
+               line name)
          ((events . written)
-          (cons (make-part name instrument events (location line))
+          (cons (make-part name instrument events 'written (location line))
                 written)))))))
 
 ;;; ------------------------------------------------------------------
+;;; Item 10: colotomies
+
+(define (repeat-events events length times)
+  "EVENTS, LENGTH pulses of music, played TIMES times in a row."
+  (append-map (lambda (i)
+                (map (lambda (e)
+                       (make-event (+ (event-start e) (* i length))
+                                   (event-duration e) (event-notes e)))
+                     events))
+              (iota times)))
+
+(define (build-colotomy form instruments)
+  "Build a colotomy record from FORM, each part written out over one
+cycle.  INSTRUMENTS is an alist from name to instrument record."
+  (match form
+    ((('colotomy name cycle . parts) . line)
+     (make-colotomy
+      name cycle 'kempli
+      (map (match-lambda
+             ((part-name instrument-name . tokens)
+              (let ((instrument
+                     (or (assq-ref instruments instrument-name)
+                         (part-error 'undefined-instrument line part-name #f
+                                     "no instrument called `~a'"
+                                     instrument-name))))
+                (match (call-with-expansion
+                        (lambda () (expand-tokens tokens instrument))
+                        line part-name)
+                  ((events . length)
+                   (unless (and (positive? length)
+                                (integer? (/ cycle length)))
+                     (part-error 'colotomy-part-length line part-name #f
+                                 "lasts ~a pulses, which doesn't divide colotomy `~a''s cycle of ~a"
+                                 length name cycle))
+                   (make-part part-name instrument
+                              (repeat-events events length (/ cycle length))
+                              'colotomy (location line)))))))
+           parts)
+      (location line)))))
+
+(define (piece-meter title+options colotomies line)
+  "Item 12: the piece's colotomy and pickup, as (COLOTOMY . PICKUP),
+COLOTOMY #f without one."
+  (let* ((options (cdr title+options))
+         (name (assq-ref options 'colotomy))
+         (pickup (assq-ref options 'pickup))
+         (colotomy (and name
+                        (or (assq-ref colotomies name)
+                            (syntax-error 'undefined-colotomy line
+                                          "no colotomy called `~a'" name)))))
+    (when (and pickup (not colotomy))
+      (syntax-error 'no-colotomy line
+                    ":pickup counts pulses before a gong cycle, but the piece has no :colotomy"))
+    (when (and pickup
+               (not (and (exact-integer? pickup)
+                         (<= 0 pickup (colotomy-length colotomy)))))
+      (syntax-error 'bad-pickup line
+                    ":pickup must be a whole number of pulses from 0 to ~a (one cycle), not ~a"
+                    (colotomy-length colotomy) pickup))
+    (cons colotomy (or pickup 0))))
+
+;;; ------------------------------------------------------------------
 ;;; Item 11: parts have equal length
+
+(define (check-whole-cycles parts length colotomy pickup)
+  "With a colotomy, the piece is its pickup plus whole cycles."
+  (when (and colotomy (pair? parts)
+             (not (integer? (/ (- length pickup)
+                               (colotomy-length colotomy)))))
+    (let ((first (car parts)))
+      (part-error 'incomplete-cycle
+                  (source-location-line (part-location first))
+                  (part-name first) #f
+                  "the piece lasts ~a pulses, which is not the pickup (~a) plus whole cycles of ~a"
+                  length pickup (colotomy-length colotomy)))))
 
 (define (check-equal-lengths parts+lengths)
   "PARTS+STEPS is a list of (PART . STEPS) in file order.  Return the
@@ -791,13 +916,77 @@ piece length: the common step count, or 0 with no parts."
      length)))
 
 ;;; ------------------------------------------------------------------
+;;; Item 15 (step 11): generated parts
+
+;;; The kempli a piece gets when it defines none.  Its timekeeper is in
+;;; the music but never printed.
+(define built-in-kempli
+  (make-instrument
+   'kempli
+   (make-scale 'kempli-strokes (list (make-degree 'K '() "K" #f #f)) #f #f)
+   (vector (make-note 'K 0 #f))
+   #f))
+
+(define (clip-events events from length)
+  "EVENTS shifted to start at FROM, cut to the piece's [0, LENGTH)."
+  (filter-map (lambda (e)
+                (let ((start (max 0 (+ from (event-start e))))
+                      (end (min length (+ from (event-start e)
+                                          (event-duration e)))))
+                  (and (< start end)
+                       (make-event start (- end start) (event-notes e)))))
+              events))
+
+(define (lay-colotomy-part part cycle pickup length)
+  "PART, one cycle long, laid over the piece so every cycle ends on the
+cycle's last pulse: from PICKUP - CYCLE, cycle after cycle."
+  (let loop ((from (- pickup cycle)) (events '()))
+    (if (>= from length)
+        (make-part (part-name part) (part-instrument part) events
+                   'colotomy (part-location part))
+        (loop (+ from cycle)
+              (append events (clip-events (part-events part) from length))))))
+
+(define (timekeeper instruments length colotomy)
+  "The part `kempli': one stroke per pulse, each a pulse long, the last
+cut at the piece's end, on the piece's kempli or a built-in one."
+  (make-part 'kempli
+             (or (assq-ref instruments 'kempli) built-in-kempli)
+             (map (lambda (t) (make-event t (min 1 (- length t)) '(0)))
+                  (iota (ceiling length)))
+             'timekeeper
+             (and colotomy (colotomy-location colotomy))))
+
+(define (generated-parts instruments colotomy pickup length)
+  (append
+   (if colotomy
+       (map (lambda (part)
+              (lay-colotomy-part part (colotomy-length colotomy) pickup length))
+            (colotomy-parts colotomy))
+       '())
+   (list (timekeeper instruments length colotomy))))
+
+(define (check-generated-names written generated)
+  "A written part can't take a generated part's name."
+  (for-each (lambda (part)
+              (when (memq (part-name part) (map part-name generated))
+                (part-error 'duplicate-definition
+                            (source-location-line (part-location part))
+                            (part-name part) #f
+                            "is a part notasi makes for you (the timekeeper or a colotomy's part); give yours another name, or leave it out")))
+            written))
+
+;;; ------------------------------------------------------------------
 ;;; Groups.  Until scores (iteration 2, milestone 2) every part is drawn
-;;; in its own default group.
+;;; in its own default group, except a timekeeper on the built-in
+;;; kempli, which is never printed.
 
 (define (default-groups parts)
-  (map (lambda (part)
-         (make-group (symbol->string (part-name part)) #f (list part) #f))
-       parts))
+  (filter-map (lambda (part)
+                (and (not (eq? (part-instrument part) built-in-kempli))
+                     (make-group (symbol->string (part-name part)) #f
+                                 (list part) #f)))
+              parts))
 
 ;;; ------------------------------------------------------------------
 ;;; Entry points
@@ -821,7 +1010,8 @@ so a file with several problems always reports the same one."
     (filter (lambda (definition) (memq (form-head (cdr definition)) heads))
             definitions))
   (for-each check-form forms)
-  (let* ((piece (parse-piece-form (find-piece-form forms)))
+  (let* ((piece-form (find-piece-form forms))
+         (piece (parse-piece-form piece-form))
          (_ (check-not-implemented forms))
          (definitions (file-definitions forms dir chain (make-hash-table))))
     (let* ((scales (build-each build-scale
@@ -830,21 +1020,38 @@ so a file with several problems always reports the same one."
                          (lambda (form)
                            (build-instrument form (named scales scale-name)))
                          (with-heads '(instrument) definitions)))
+           (colotomies (build-each
+                        (lambda (form)
+                          (build-colotomy form (named instruments
+                                                      instrument-name)))
+                        (with-heads '(colotomy) definitions)))
+           (meter (piece-meter piece (named colotomies colotomy-name)
+                               (cdr piece-form)))
+           (colotomy (car meter))
+           (pickup (cdr meter))
            (part-forms (forms-with-heads forms '(part)))
            (parts+lengths
-            (let loop ((todo part-forms) (done '()) (built '()))
-              (match todo
-                (() (reverse built))
-                ((form . rest)
-                 (let ((part+length
-                        (build-part form (named instruments instrument-name)
-                                    (lambda () (check-part-names form done)))))
-                   (loop rest (cons form done) (cons part+length built)))))))
+            (parameterize ((current-meter
+                            (and colotomy
+                                 (cons (colotomy-length colotomy) pickup))))
+              (let loop ((todo part-forms) (done '()) (built '()))
+                (match todo
+                  (() (reverse built))
+                  ((form . rest)
+                   (let ((part+length
+                          (build-part form (named instruments instrument-name)
+                                      (lambda () (check-part-names form done)))))
+                     (loop rest (cons form done) (cons part+length built))))))))
            (length (check-equal-lengths parts+lengths))
-           (parts (map car parts+lengths))
-           (groups (default-groups parts)))
-      (make-piece (piece-title piece)
-                  length scales instruments parts groups))))
+           (written (map car parts+lengths))
+           (_ (check-whole-cycles written length colotomy pickup))
+           (generated (generated-parts (named instruments instrument-name)
+                                       colotomy pickup length))
+           (_ (check-generated-names written generated))
+           (parts (append written generated)))
+      (make-piece (car piece) length pickup
+                  (if colotomy (list (cons 0 colotomy)) '())
+                  scales instruments parts (default-groups parts)))))
 
 (define (read-port port dir chain)
   (read-piece (read-forms port) dir chain))

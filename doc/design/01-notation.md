@@ -250,7 +250,9 @@ parts that mark it.
 - A piece with `:colotomy NAME` gets each of its parts, generated for
   the whole piece and named as the colotomy names them (`gong`).
 - The timekeeper is implied, with or without a colotomy: a part
-  `kempli`, on the instrument `kempli`, with one stroke per pulse.
+  `kempli`, with one stroke per pulse, on the piece's instrument
+  `kempli`. A piece without one gets a built-in kempli, and then the
+  timekeeper is in the music but never printed.
 - Generated parts are parts like any other: scores print them by name,
   and part names stay unique, so a written part cannot take a generated
   part's name.

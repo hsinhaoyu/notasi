@@ -49,6 +49,16 @@
 ;;; Test pieces keep their length a multiple of the step, so it does not
 ;;; matter whether the piece's end also counts towards the step (04 says
 ;;; `to` does).
+;;;
+;;; Slice feat/music-colotomy (03, slice 4): `make-piece` takes the
+;;; pickup and colotomies after the length, and the reader always
+;;; generates the timekeeper `kempli` (on the piece's `kempli`
+;;; instrument, with a default group, or on a built-in one that has
+;;; none), so a written part may not be called `kempli`. Fixtures that
+;;; wrote a kempli part either use the generated one (groups-piece:
+;;; the same strokes) or play an instrument called `kajar` instead
+;;; (ten-steps, the one-letter sizes test). examples/tenzer1.nts loses
+;;; its written kempli part, so its generated kempli group comes last.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -112,6 +122,8 @@ in that order: the groups v1 files wrote, which the notation no longer
 has (ADR 0031)."
   (make-piece (piece-title piece)
               (piece-length piece)
+              (piece-pickup piece)
+              (piece-colotomies piece)
               (piece-scales piece)
               (piece-instruments piece)
               (piece-parts piece)
@@ -257,10 +269,10 @@ and every array a vector?"
                 "(scale s a b)"
                 "(strokes k-strokes K)"
                 "(instrument u s a1 b1)"
-                "(instrument kempli k-strokes K)"
+                "(instrument kajar k-strokes K)"
                 "(part u :name melody  1 2 1 2 1 2 1 2 1 2)"
                 "(part u :name rests   1 - - - - - - - - -)"
-                "(part kempli          K - K - K - K - K -)"))))
+                "(part kajar           K - K - K - K - K -)"))))
 
 ;; Groups of one part and of several, pitched and stroke: the groups v1
 ;; wrote ("Reyong-ish", "Colotomic") and its default groups, in v1's
@@ -278,7 +290,7 @@ and every array a vector?"
             "(instrument kempli kempli-strokes K)"
             "(instrument gong gong-strokes G P)"
             "(part ugal :name melody   a1 o2 i2 e2)"
-            "(part kempli              K  K  K  K)"
+            ;; kempli: the generated timekeeper, K on every pulse
             "(part ugal :name polos    i2 -  e2 -)"
             "(part ugal :name sangsih  -  u1 -  o2)"
             "(part gong                P  -  G  -)"
@@ -364,8 +376,8 @@ and every array a vector?"
       (step_width . "2.0em") (row_height . "2.0em"))
     (sizes-of "(piece \"P\")"
               "(strokes k-strokes K)"
-              "(instrument kempli k-strokes K)"
-              "(part kempli :name x K -)"))
+              "(instrument kajar k-strokes K)"
+              "(part kajar :name x K -)"))
 
   (test-equal "lane label of 4 chars: 3.08 rounds up to 3.1em"
     "3.1em"
@@ -498,7 +510,7 @@ and every array a vector?"
            'systems))
 
   (test-equal "every group in the system, in piece order"
-    '("melody" "rests" "kempli")
+    '("melody" "rests" "kajar")
     (map (lambda (g) (field g 'label))
          (vector->list (field (system-ref (layout-piece (ten-steps)) 0)
                               'groups))))
@@ -780,15 +792,15 @@ and every array a vector?"
                     0 0 0)))
 
   (test-equal "tenzer1: one default group per part, in part order"
-    '("ugal" "kempli" "gong")
+    '("ugal" "gong" "kempli")
     (group-labels (layout-piece tenzer) 0))
   (test-equal "tenzer1: lanes of the three groups"
-    (list #("e2" "o2" "i2" "a1") #("K") #("G" "P"))
+    (list #("e2" "o2" "i2" "a1") #("G" "P") #("K"))
     (map (lambda (g) (lanes-of (layout-piece tenzer) 0 g)) '(0 1 2)))
   (test-equal "tenzer1: labels, subtitles and voice names"
     '(("ugal" null ("ugal"))
-      ("kempli" null ("kempli"))
-      ("gong" null ("gong")))
+      ("gong" null ("gong"))
+      ("kempli" null ("kempli")))
     (map (lambda (g)
            (let ((group (group-ref (layout-piece tenzer) 0 g)))
              (list (field group 'label) (field group 'subtitle)
@@ -805,16 +817,16 @@ and every array a vector?"
           (ev 7 1 2 'null ding-fill dark #f)
           (ev 8 1 3 'null dang-fill dark #f))
     (events-of (layout-piece tenzer) 0 0 0))
-  (test-equal "tenzer1: kempli on every step"
+  (test-equal "tenzer1: the generated kempli on every step"
     (map (lambda (i) (ev i 1 0 'null grey dark #f)) (iota 9))
-    (events-of (layout-piece tenzer) 0 1 0))
+    (events-of (layout-piece tenzer) 0 2 0))
   (test-equal "tenzer1: gong and kempur"
     (list (ev 0 1 0 'null grey dark #f)
           (ev 4 1 0 'null grey dark #f)
           (ev 5 1 1 'null grey dark #f)
           (ev 7 1 1 'null grey dark #f)
           (ev 8 1 0 'null grey dark #f))
-    (events-of (layout-piece tenzer) 0 2 0)))
+    (events-of (layout-piece tenzer) 0 1 0)))
 
 ;;; ------------------------------------------------------------------
 ;;; A complete figure
