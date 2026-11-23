@@ -177,7 +177,8 @@ Finding templates (**Implemented**):
     `:breaks` into times. A file with no score gets the default score:
     every part in its own group, in part order, labelled with its name,
     location `#f`. **Planned** (iteration 3): the settings `keys`,
-    `octave-numbers?`, `display`, `background`, `cycle-label` and the
+    `octave-numbers?`, `key-numbers?`, `row-labels?`, `display`,
+    `background`, `cycle-label` and the
     `"Pulse"` default (02), checked as they are filled in; then, with
     the music, every note against a group's `keys` range, like
     `notes-collide`.
@@ -472,7 +473,7 @@ All errors at a use carry the part, the time and the chain of uses.
 - [scores] Different pattern names overlapping in one group at the
   chosen level: `pattern-names-overlap` (`part` and `time` set).
 - [score-options] `:cycle-label`, `:pulse-label` not a string;
-  `:octave-numbers` not `yes` or `no`; `:background` not one of `grid`,
+  `:octave-numbers`, `:key-numbers` or `:row-labels` not `yes` or `no`; `:background` not one of `grid`,
   `vertical`, `horizontal`, `empty`: `bad-option`.
 - [score-options] `:keys` not `used`, `all` or `(LOW HIGH)`; a LOW or
   HIGH that is not a key of the group's instrument, or LOW above HIGH;
@@ -480,6 +481,9 @@ All errors at a use carry the part, the time and the chain of uses.
   written (on the score, checked against each group it applies to).
   `:keys` written on a `:rows parts` or `single` group: `bad-option`;
   inherited from the score, it is ignored there.
+- [score-options] `:key-numbers yes` written on a group of strokes, or
+  on a `:rows parts` or `single` group: `bad-option`; inherited from the
+  score, it is ignored there (the group's `key-numbers?` is `#f`).
 - [score-options] A note outside a group's `:keys` range:
   `outside-keys` (the group's line, `part` and `time` set). The message
   names the note and the range: "part `ugal`, cycle 2, pulse 3: `a2` is
