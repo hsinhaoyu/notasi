@@ -1,18 +1,20 @@
 # 03 — Reader and validation
 
-Status: partly implemented (iteration 2): milestone 1, slices 1–3 of 5
-(`feat/music-syntax`, `feat/music-durations`, `feat/music-rep`, see
-"Slices (iteration 2)"); the rest is planned.
+Status: partly implemented (iteration 2): milestone 1, slices 1–4 of 5
+(`feat/music-syntax`, `feat/music-durations`, `feat/music-rep`,
+`feat/music-colotomy`, see "Slices (iteration 2)"); the rest is
+planned.
 "What the reader reads today" says what `(notasi reader)` does in the
 meantime. Tests in `tests/reader.scm`.
 
 Everything in this document is **Planned** unless it says otherwise.
 **Implemented** since slices 1 and 2: steps 1, 2 (with `colotomy`,
 `pattern` and `score` raising `not-implemented`), 3 to 7, step 9 for
-tokens and `rep` (durations, `_`, `-`, `/`, `|`, fragments with lead
-holds, without patterns or spans) in `(notasi expand)`, step 10 without
-colotomies, the condition's `time` and `uses`, and every **[syntax]**,
-**[durations]** and **[rep]** case.
+tokens and `rep` (durations, `_`, `-`, `/`, `|`, `||`, fragments with
+lead holds, without patterns or spans) in `(notasi expand)`, which takes
+`#:cycle` and `#:pickup` for `||`; steps 10 and 11; the condition's
+`time` and `uses`; and every **[syntax]**, **[durations]**, **[rep]**
+and **[colotomy]** case.
 
 ## Responsibility
 
@@ -382,7 +384,8 @@ All at the part's line, with `part` and `time` set.
 - [colotomy] `:colotomy` naming a colotomy that isn't defined:
   `undefined-colotomy`, at the `piece` form.
 - [colotomy] `:pickup` that is not a whole number of pulses from 0 to
-  one cycle: `bad-pickup`; `:pickup` without `:colotomy`: `no-colotomy`.
+  one cycle (`-1`, `1/2`, `3/2`, more than a cycle): `bad-pickup` (a
+  decimal such as `1.5` is not exact, so it is `bad-option`); `:pickup` without `:colotomy`: `no-colotomy`.
   Both at the `piece` form.
 - [colotomy] A written part with the name of a generated part
   (`kempli`, or a colotomy part's): `duplicate-definition`, at the
@@ -511,7 +514,7 @@ error cases tagged with its feature, and the steps above that they need.
    - `rep` may be nested. A `|` in the body is checked at every
      repetition; any other mistake in the body is reported at its time
      in the first repetition.
-4. `feat/music-colotomy` **[colotomy]**: `colotomy` forms, `:colotomy`
+4. **Implemented.** `feat/music-colotomy` **[colotomy]**: `colotomy` forms, `:colotomy`
    and `:pickup`, generated parts (step 11), `||` checks, lengths
    (step 10), positions as `cycle C, pulse P`, `time->position` and
    `position->time`. Decided for this slice:
@@ -552,9 +555,8 @@ The **[scores]** cases are built in milestone 2 (04, "Slices").
 iteration 2. It differs from the above as follows, and this section
 goes when iteration 2 is built:
 
-- `piece` takes no options yet (no `:colotomy` or `:pickup`).
-- There are no `||` checks, patterns, colotomies or scores.
-  Steps 8, 11 and 12 are not built; `uses` is always `'()`.
+- There are no patterns or scores. Steps 8 and 12 are not built;
+  `uses` is always `'()`.
 - Every part is in its own default group (`piece-groups`).
 
 ## Open questions

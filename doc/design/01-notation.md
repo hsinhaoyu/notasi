@@ -540,14 +540,15 @@ rest.
 milestone 1, slice 1). It differs from the rest as follows, and this
 section goes when iteration 2 is built:
 
-- Durations, `_`, `-`, `/`, `|` (slice 2) and `rep` (slice 3) are read.
-  `piece` takes no options yet, and there are no `||`, patterns or
-  colotomies.
+- Durations, `_`, `-`, `/`, `|` (slice 2), `rep` (slice 3), colotomies,
+  `:colotomy`, `:pickup` and `||` (slice 4) are read. There are no
+  patterns yet.
   A figure is one system for the whole piece.
 - `colotomy`, `pattern` and `score` forms raise `not-implemented`.
   There are no scores yet: every part is drawn in its own group, and no
   note shows its name.
-- A template may use only `scale`, `strokes`, `instrument` and `use`.
+- A template may use `scale`, `strokes`, `instrument`, `colotomy` and
+  `use` (`pattern` comes in slice 5).
 
 The manual describes this notation until then.
 
