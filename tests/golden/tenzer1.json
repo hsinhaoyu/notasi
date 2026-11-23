@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "title": "Eight-pulse gong cycle",
   "subtitle": null,
   "steps_per_pulse": 1,
@@ -15,8 +15,13 @@
       "start": 0,
       "steps": 9,
       "header": {
-        "label": null,
+        "cycle_label": "Cycle",
+        "pulse_label": "Pulse",
         "cycles": [
+          {
+            "column": 0,
+            "text": "0"
+          },
           {
             "column": 1,
             "text": "1"
