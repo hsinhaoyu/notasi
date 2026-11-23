@@ -1,12 +1,13 @@
 # 05 — Typst backend and JSON contract
 
-Status: partly implemented (iteration 2). Implemented (v1, all three
+Status: implemented (iteration 2). Implemented (v1, all three
 slices, see "Slices"): the JSON writer, figure files, the entry file,
 running Typst, `render-piece`, the template and the `notasi render`
 command; contract version 2 (ADR 0036) with the template's header rows
 and lines and the entry file's font size, subtitle and caption since
 iteration 2's `feat/scores-contract`, and overlays since
-`feat/scores-overlays`. Planned: choosing a score (`--score`). Modules: `(notasi json)`,
+`feat/scores-overlays`, and choosing a score (`--score`, `render-piece
+#:score`) since `feat/scores-range`. Modules: `(notasi json)`,
 `(notasi typst)`, `(notasi command)` (Guile), `typst/notasi.typ` (Typst
 template), `scripts/notasi` (the command).
 
@@ -340,14 +341,14 @@ plain `&error`s with a readable message:
   musician sees what went wrong, not only a program reading the
   irritants); the irritants include TYP-PATH.
 
-**Planned**: `(render-piece nts-path out-path #:key score keep-in)`
+**Implemented** (`feat/scores-range`): `(render-piece nts-path out-path #:key score keep-in)`
 draws the score named SCORE (a symbol), or the piece's first score
 without it, with `layout-score`; there is no `#:style`, since colours
 come from the score (ADR 0032). A SCORE the piece doesn't have is an
 `&error` whose message names the score and the file. Otherwise as
 below.
 
-**Implemented**: `(render-piece nts-path out-path #:key keep-in)` goes
+**Implemented**: `render-piece` goes
 from a `.nts` file to a picture in one step: read the piece (reader
 errors pass through unchanged), lay out its first score (its default
 score if it has none) with `layout-score`, write
@@ -403,7 +404,7 @@ notasi render --help
 - `--help` prints the usage and a short description to standard output
   and exits with status 0.
 
-**Planned**: `notasi render PIECE.nts [--score NAME] [-o OUT]` (ADR
+**Implemented** (`feat/scores-range`): `notasi render PIECE.nts [--score NAME] [-o OUT]` (ADR
 0031). `--score NAME` chooses the score; without it, the first score in
 the file (or the default score) is drawn. `--score` without a value is a
 usage error (status 2); a score the piece doesn't have prints `notasi: `
@@ -427,7 +428,7 @@ The user manual shows drawn scores: `make manual` first draws each
 `doc/manual/src/examples/NAME.nts` that a page shows as an image
 (`![…](figures/NAME.svg)`) to `doc/manual/src/figures/NAME.svg` with
 `notasi render`, then builds the book. `figures/` is generated, not
-committed, so pictures never go stale. **Planned**: a page can show
+committed, so pictures never go stale. A page can show
 another score of the example as `figures/NAME.SCORE.svg`, drawn with
 `--score SCORE`. The manual's CI job installs
 Guile and Typst 0.15.1 for this; `tests/manual.scm` checks that every
@@ -441,7 +442,7 @@ version is **0.15.1**. CI installs exactly that version, so every PR
 compiles the examples with it; upgrading Typst is a deliberate change
 to the pin, with the golden figures and template checked again.
 
-`make preview` (**Planned** for scores) draws each example's every score
+`make preview` (`scripts/preview.scm`) draws each example's every score
 to `build/preview/NAME.png`, or `NAME.SCORE.png` for a file with scores,
 matching the golden files (04).
 

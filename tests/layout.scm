@@ -155,6 +155,32 @@
 ;;;   do not count towards the step.
 ;;; - Overlays of equal start (impossible after the reader's check) are
 ;;;   not tested for order.
+;;;
+;;; Slice feat/scores-range (04, "Slices (iteration 2)", slice 5 and its
+;;; decided bullets; 04, "The range and systems", "The step", "Groups
+;;; and rows", "Pattern names (overlays)", "Sizes"): a score prints the
+;;; piece from `from` to `to`, notes and overlays cut there with
+;;; `continued`; systems start at every break and every `system-length`
+;;; pulses from `from`; each system keeps its absolute start column and
+;;; the piece's numbering; `from`, `to` and breaks count towards the
+;;; step; each group's label is long or short per system as its
+;;; `labels` says, and `label_width` comes from the labels printed.
+;;; `hand-score` takes `#:from`, `#:to` and `#:breaks` (times), and
+;;; `hand-group` `#:short` and `#:labels`, both defaulting as before.
+;;; Choices made where the docs are not explicit:
+;;; - Breaks and the system length combine as one set of boundaries:
+;;;   every break, and every `system-length` pulses counted from `from`
+;;;   (not restarted at a break), as 04 words it.
+;;; - A break at the piece's start, at `from`, or outside the range
+;;;   changes nothing.
+;;; - A note or span wholly outside the range is not printed; one cut
+;;;   at `to` keeps `continued` false (it is the first piece).
+;;; - Whether a group's lanes come from the range or the whole piece is
+;;;   not tested: the range tests use ranges where both agree, or don't
+;;;   look at lanes and rows.
+;;; - Breaks and ranges at fractional times are tested only with scores
+;;;   built by hand (the reader's positions are whole pulses in every
+;;;   test).
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -255,11 +281,12 @@ NAMES? (the group's note-names?), else null."
 
 (define* (hand-group label parts
                      #:key (subtitle #f) (note-names? #f) (scheme 'by-degree)
-                     (palette 'pastel1) (colors '()))
+                     (palette 'pastel1) (colors '()) (short label)
+                     (labels 'first-long))
   "A group record built by hand, as the reader fills it in (ADR 0033):
 PARTS with their names as row labels, every other setting at its
 default unless given."
-  (make-group label label subtitle 'first-long 'notes
+  (make-group label short subtitle labels 'notes
               (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
               note-names? 'colour 'none 'none 0 scheme palette colors #f))
 
@@ -268,10 +295,12 @@ default unless given."
                      (caption #f) (system-length #f) (cycle-numbers? #f)
                      (pulse-numbers? #t) (numbering 'gong-last)
                      (pulse-label #f) (font-size #f)
-                     (cell-width "2em") (cell-height "2em"))
-  "A score record built by hand over the whole of PIECE."
-  (make-score 'hand title subtitle caption 0 (piece-length piece)
-              system-length '() cycle-numbers? pulse-numbers? numbering
+                     (cell-width "2em") (cell-height "2em")
+                     (from 0) (to (piece-length piece)) (breaks '()))
+  "A score record built by hand, over the whole of PIECE unless FROM and
+TO (times) say otherwise."
+  (make-score 'hand title subtitle caption from to
+              system-length breaks cycle-numbers? pulse-numbers? numbering
               pulse-label font-size cell-width cell-height groups #f))
 
 (define figure-keys
@@ -2360,6 +2389,274 @@ give."
                                         'by-degree 'pastel1 '() #f))))))))
     (test-equal "the overlays" pqd-short
       (and fig (overlays-of fig 0 0)))))
+
+;;; ------------------------------------------------------------------
+;;; The range, breaks and labels (slice feat/scores-range; 04, "The
+;;; range and systems", "The step", "Groups and rows", "Sizes")
+
+(define (labels-by-system fig)
+  "Each system's group labels, as a list of lists."
+  (map (lambda (s) (map (lambda (g) (field g 'label))
+                        (vector->list (field s 'groups))))
+       (systems fig)))
+
+(define (label-width fig) (field (field fig 'sizes) 'label_width))
+
+;;; held-piece's note (3 to 9, 16 pulses) under different ranges.
+(define range-held
+  (piece-of "(piece \"P\")"
+            "(scale s a b)"
+            "(instrument u s a1 b1)"
+            "(part u :name p - - - 1 _ _ _ _ _ - - - - - - -)"
+            "(score inside :from 5 :to 8 (group \"p\" p))"
+            "(score tail :from 1 :to 6 (group \"p\" p))"
+            "(score both :from 5 :to 6 (group \"p\" p))"
+            "(score split :from 5 :to 12 :system-length 2 (group \"p\" p))"
+            "(score before :from 11 (group \"p\" p))"))
+
+(test-group "range: systems and events"
+  (let ((fig (layout-or-false (layout (ten-score ":from 3 :to 6")))))
+    (test-equal "one system, at its absolute start column" '((2 4))
+      (starts+steps fig))
+    (test-equal "pulse numbers keep the piece's numbering" #("3" "4" "5" "6")
+      (and fig (pulses-of fig 0)))
+    (test-equal "lines: none at the first column, pulse after"
+      #("none" "pulse" "pulse" "pulse")
+      (and fig (lines-of fig 0)))
+    (test-equal "events in the range, relative to the system"
+      '((0 1 1 #f) (1 1 0 #f) (2 1 1 #f) (3 1 0 #f))
+      (and fig (timing (events-of fig 0 0 0))))
+    (test-equal "kajar: only its strokes in the range" '((0 1 0 #f) (2 1 0 #f))
+      (and fig (timing (events-of fig 0 2 0))))
+    (test-equal "a part with no event in the range: its voice, no events" '()
+      (and fig (timing (events-of fig 0 1 0))))
+    (test-equal "every group, in the score's order" '(("melody" "rests" "kajar"))
+      (and fig (labels-by-system fig)))
+    (test-assert "well-formed" (and fig (well-formed? fig))))
+  (test-equal "a note that started before :from arrives cut, continued"
+    '((0 4 0 #t))
+    (timing (events-of (layout-named range-held 'inside) 0 0 0)))
+  (test-equal "a note running past :to is cut there"
+    '((3 3 0 #f))
+    (timing (events-of (layout-named range-held 'tail) 0 0 0)))
+  (test-equal "cut at both ends" '((0 2 0 #t))
+    (timing (events-of (layout-named range-held 'both) 0 0 0)))
+  (test-equal "a note ending before :from is not printed" '()
+    (timing (events-of (layout-named range-held 'before) 0 0 0)))
+  (test-equal "range and :system-length: systems from :from"
+    '((4 2) (6 2) (8 2) (10 2))
+    (starts+steps (layout-named range-held 'split)))
+  (test-equal "range and :system-length: the note cut at :from and each boundary"
+    '(((0 2 0 #t)) ((0 2 0 #t)) ((0 1 0 #t)) ())
+    (let ((fig (layout-named range-held 'split)))
+      (map (lambda (s) (timing (events-of fig s 0 0))) '(0 1 2 3))))
+  (test-equal ":system-length counts from :from; the last system shorter"
+    '((2 3) (5 3) (8 2))
+    (starts+steps (layout (ten-score ":from 3 :to 10 :system-length 3"))))
+  (test-equal ":from alone: to the end" '((2 4) (6 4))
+    (starts+steps (layout (ten-score ":from 3 :system-length 4"))))
+  (test-equal "a score built by hand: its from and to (times)" '((2 3))
+    (starts+steps
+     (let ((piece (ten-steps)))
+       (layout-score piece
+                     (hand-score piece
+                                 (list (hand-group "m" (list (part-named piece 'melody))))
+                                 #:from 2 #:to 5))))))
+
+(test-group "breaks"
+  (let ((fig (layout-or-false (layout (ten-score ":breaks (4 7)")))))
+    (test-equal "a system starts at each break" '((0 3) (3 3) (6 4))
+      (starts+steps fig))
+    (test-equal "pulse numbers continue across them"
+      '(#("1" "2" "3") #("4" "5" "6") #("7" "8" "9" "10"))
+      (and fig (map (lambda (s) (pulses-of fig s)) '(0 1 2))))
+    (test-equal "events relative to their system"
+      '(((0 1 0 #f) (2 1 0 #f)) ((1 1 0 #f)) ((0 1 0 #f) (2 1 0 #f)))
+      (and fig (map (lambda (s) (timing (events-of fig s 2 0))) '(0 1 2)))))
+  (test-equal "breaks and :system-length both apply, the length counted from :from"
+    '((0 2) (2 2) (4 4) (8 2))
+    (starts+steps (layout (ten-score ":system-length 4 :breaks (3)"))))
+  (test-equal "a break at the start of the piece changes nothing" '((0 10))
+    (starts+steps (layout (ten-score ":breaks (1)"))))
+  (test-equal "a break at :from changes nothing" '((2 8))
+    (starts+steps (layout (ten-score ":from 3 :breaks (3)"))))
+  (test-equal "breaks outside the range are ignored" '((2 4))
+    (starts+steps (layout (ten-score ":from 3 :to 6 :breaks (2 8)"))))
+  (test-equal "a break inside the range, with breaks outside it" '((2 2) (4 2))
+    (starts+steps (layout (ten-score ":from 3 :to 6 :breaks (2 5 8)"))))
+  (test-equal "a note crossing a break is cut there" '(((3 1 0 #f)) ((0 5 0 #t)))
+    (let ((fig (layout (piece-of "(piece \"P\")" "(scale s a b)"
+                                 "(instrument u s a1 b1)"
+                                 "(part u :name p - - - 1 _ _ _ _ _ - - - - - - -)"
+                                 "(score s :breaks (5) (group \"p\" p))"))))
+      (map (lambda (s) (timing (events-of fig s 0 0))) '(0 1))))
+  (test-equal "a score built by hand: its breaks (times)" '((0 3) (3 7))
+    (starts+steps
+     (let ((piece (ten-steps)))
+       (layout-score piece
+                     (hand-score piece
+                                 (list (hand-group "m" (list (part-named piece 'melody))))
+                                 #:breaks '(3)))))))
+
+(test-group "range and breaks with a colotomy"
+  ;; A pickup of 1 and two 4-pulse cycles: cycle 1 is 1-5, cycle 2 is 5-9.
+  (let ((fig (layout-or-false
+              (layout (colo-piece (notes 9) #:pickup 1
+                                  #:options ":from (1 3) :to (2 2)")))))
+    (test-equal "(1 3) to (2 2): one system" '((3 4)) (starts+steps fig))
+    (test-equal "pulse numbers as in the whole piece" #("3" "4" "1" "2")
+      (and fig (pulses-of fig 0)))
+    (test-equal "cycle 2's mark where it starts" (marks '(2 "2"))
+      (and fig (cycles-of fig 0)))
+    (test-equal "lines from the second column" '("pulse" "cycle" "pulse")
+      (and fig (lines-after-first fig 0)))
+    (test-assert "well-formed" (and fig (well-formed? fig))))
+  (let ((fig (layout-or-false
+              (layout (colo-piece (notes 9) #:pickup 1
+                                  #:options ":numbering gong-first :from (2 2) :to (2 1)")))))
+    (test-equal "gong-first, (2 2) to (2 1): cycle 2" '((5 4)) (starts+steps fig))
+    (test-equal "gong-first: printed 2 3 4 1" #("2" "3" "4" "1")
+      (and fig (pulses-of fig 0)))
+    (test-equal "gong-first: cycle 2's mark at column 0" (marks '(0 "2"))
+      (and fig (cycles-of fig 0))))
+  (let ((fig (layout-or-false
+              (layout (colo-piece (notes 9) #:pickup 1
+                                  #:options ":from (0 4) :to (1 4)")))))
+    (test-equal "the pickup is cycle 0: (0 4) to (1 4)" '((0 5)) (starts+steps fig))
+    (test-equal "the pickup and cycle 1" #("4" "1" "2" "3" "4")
+      (and fig (pulses-of fig 0))))
+  (test-equal "a break at a cycle's start" '((0 5) (5 4))
+    (starts+steps (layout (colo-piece (notes 9) #:pickup 1
+                                      #:options ":breaks ((2 1))")))))
+
+(test-group "range: overlays"
+  (test-equal "cut at :from (continued) and at :to"
+    (vector (ov 0 3 0 3 "P" #t) (ov 3 2 0 3 "U" #f) (ov 5 1 0 3 "D" #f))
+    (let ((fig (overlay-fig "(score s :pattern-names short :from 2 :to 7"
+                            "  (group \"U\" p q))")))
+      (and fig (overlays-of fig 0 0))))
+  (test-equal "a span outside the range is not printed"
+    '((0 2 "U" #f))
+    (let ((fig (overlay-fig "(score s :pattern-names short :from 5 :to 6"
+                            "  (group \"U\" p q))")))
+      (and fig (map (lambda (o) (list (field o 'start) (field o 'dur)
+                                      (field o 'text) (field o 'continued)))
+                    (vector->list (overlays-of fig 0 0)))))))
+
+(test-group "the step: the range"
+  (let ((fig (layout-or-false
+              (layout (piece-of "(piece \"P\")" "(scale s a b)"
+                                "(instrument u s a1 b1)"
+                                "(part u :name p 1:1/2 2:1/2 1 2 1)"
+                                "(score whole (group \"p\" p))"
+                                "(score late :from 2 (group \"p\" p))")))))
+    (test-equal "the whole piece: half pulses, 2" 2
+      (and fig (field fig 'steps_per_pulse))))
+  (let ((fig (layout-or-false
+              (layout-named (piece-of "(piece \"P\")" "(scale s a b)"
+                                      "(instrument u s a1 b1)"
+                                      ;; Durations carry over: 1:1 ends the half pulses.
+                                      "(part u :name p 1:1/2 2:1/2 1:1 2 1)"
+                                      "(score whole (group \"p\" p))"
+                                      "(score late :from 2 (group \"p\" p))")
+                            'late))))
+    (test-equal "an excerpt without the half pulses: 1" 1
+      (and fig (field fig 'steps_per_pulse)))
+    (test-equal "its system, in its own columns" '((1 3)) (starts+steps fig)))
+  (let* ((piece (ten-steps))
+         (group (lambda () (list (hand-group "m" (list (part-named piece 'melody)))))))
+    (test-equal "from counts towards the step" '(2 ((1 19)))
+      (let ((fig (layout-score piece (hand-score piece (group) #:from 1/2))))
+        (list (field fig 'steps_per_pulse) (starts+steps fig))))
+    (test-equal "to counts towards the step" '(2 ((0 19)))
+      (let ((fig (layout-score piece (hand-score piece (group) #:to 19/2))))
+        (list (field fig 'steps_per_pulse) (starts+steps fig))))
+    (test-equal "a break counts towards the step" '(2 ((0 5) (5 15)))
+      (let ((fig (layout-score piece (hand-score piece (group) #:breaks '(5/2)))))
+        (list (field fig 'steps_per_pulse) (starts+steps fig))))))
+
+(test-group "labels"
+  (let ((fig (layout-or-false
+              (layout (ten-steps "(score s :system-length 4"
+                                 "  (group \"melody\" :short \"m.\" melody)"
+                                 "  (group \"kajar\" :short \"k.\" :labels long kajar)"
+                                 "  (group \"rests\" :short \"r.\" :labels short rests))")))))
+    (test-equal "first-long: long on the first system, short after; long; short"
+      '(("melody" "kajar" "r.") ("m." "kajar" "r.") ("m." "kajar" "r."))
+      (and fig (labels-by-system fig))))
+  (test-equal "the score's :labels short for every group"
+    '(("m.") ("m."))
+    (labels-by-system
+     (layout (ten-steps "(score s :labels short :system-length 5"
+                        "  (group \"melody\" :short \"m.\" melody))"))))
+  (test-equal "the score's :labels long for every group"
+    '(("melody") ("melody"))
+    (labels-by-system
+     (layout (ten-steps "(score s :labels long :system-length 5"
+                        "  (group \"melody\" :short \"m.\" melody))"))))
+  (test-equal "first-long with one system: the long label" '(("melody"))
+    (labels-by-system
+     (layout (ten-steps "(score s (group \"melody\" :short \"m.\" melody))"))))
+  (test-equal "without :short, the short label is the long one"
+    '(("melody") ("melody"))
+    (labels-by-system
+     (layout (ten-steps "(score s :system-length 5 (group \"melody\" melody))"))))
+  (test-equal "a group built by hand: its short and labels"
+    '(("melody") ("m.") ("m."))
+    (labels-by-system
+     (let ((piece (ten-steps)))
+       (layout-score piece
+                     (hand-score piece
+                                 (list (hand-group "melody"
+                                                   (list (part-named piece 'melody))
+                                                   #:short "m."))
+                                 #:system-length 4))))))
+
+(test-group "sizes: label_width from the labels printed"
+  ;; 0.6em per character of the longest label printed, + 1.5em.
+  (test-equal ":labels short: the short label (4 chars)" "3.9em"
+    (label-width (layout (ten-steps "(score s :labels short"
+                                    "  (group \"Gangsa pemade\" :short \"Pem.\" melody))"))))
+  (test-equal ":labels long: the long label (13 chars)" "9.3em"
+    (label-width (layout (ten-steps "(score s :labels long :system-length 4"
+                                    "  (group \"Gangsa pemade\" :short \"Pem.\" melody))"))))
+  (test-equal "first-long, one system: only the long label is printed" "2.1em"
+    (label-width (layout (ten-steps "(score s"
+                                    "  (group \"U\" :short \"Ugal-ugal\" melody))"))))
+  (test-equal "first-long, several systems: the longest in any system (9 chars)"
+    "6.9em"
+    (label-width (layout (ten-steps "(score s :system-length 4"
+                                    "  (group \"U\" :short \"Ugal-ugal\" melody))")))))
+
+(define gilak
+  (guard (c (#t #f)) (read-piece-file "examples/gilak.nts")))
+
+(test-group "examples/gilak.nts"
+  (let ((fig (layout-or-false (layout-named gilak 'full))))
+    (test-equal "full: the pickup, then a system per cycle"
+      '((0 1) (1 8) (9 8) (17 8))
+      (starts+steps fig))
+    (test-equal "full: long labels on the first system, short after"
+      '(("Ugal" "Gong") ("U." "G.") ("U." "G.") ("U." "G."))
+      (and fig (labels-by-system fig)))
+    (test-equal "full: the pickup is pulse 8, with no cycle mark"
+      (list #("8") #())
+      (and fig (list (pulses-of fig 0) (cycles-of fig 0))))
+    (test-equal "full: label_width from \"Ugal\"" "3.9em"
+      (and fig (label-width fig)))
+    (test-assert "full: well-formed" (and fig (well-formed? fig))))
+  (let ((fig (layout-or-false (layout-named gilak 'second-cycle))))
+    (test-equal "second-cycle: cycle 2 alone" '((9 8)) (starts+steps fig))
+    (test-equal "second-cycle: gong-first, printed 2 to 8 then 1"
+      #("2" "3" "4" "5" "6" "7" "8" "1")
+      (and fig (pulses-of fig 0)))
+    (test-equal "second-cycle: cycle 2's mark at column 0" (marks '(0 "2"))
+      (and fig (cycles-of fig 0)))
+    (test-equal "second-cycle: short labels" '(("U." "G."))
+      (and fig (labels-by-system fig)))
+    (test-equal "second-cycle: label_width from \"U.\"" "2.7em"
+      (and fig (label-width fig)))
+    (test-assert "second-cycle: well-formed" (and fig (well-formed? fig)))))
 
 ;;; ------------------------------------------------------------------
 ;;; A complete figure

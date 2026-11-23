@@ -1,20 +1,17 @@
 # 02 — Piece
 
-Status: partly implemented (iteration 2). `degree` (with `damped`) and
-`instrument` (without `show-names?`) are as below since
-`feat/music-syntax`; times are exact rationals in pulses, with
-`part-end` and `events-at` taking a time, since `feat/music-durations`;
-`pickup`, `colotomies`, `part-origin`, the `colotomy` record,
-`time->position` and `position->time` since `feat/music-colotomy`;
-`patterns`, `part-spans`, the `pattern` and `pattern-span` records since
-`feat/music-patterns`.
-`scores` in place of `groups`, the `score` and `group` records and
-`piece-score` since `feat/scores-form`.
-The other records are agreed and not yet built:
-`(notasi piece)` still implements their v1 form, summarised under "What
-the code implements today". Tests in `tests/piece.scm`.
+Status: implemented (iteration 2). `degree` (with `damped`) and
+`instrument` (without `show-names?`) since `feat/music-syntax`; times as
+exact rationals in pulses, with `part-end` and `events-at` taking a
+time, since `feat/music-durations`; `pickup`, `colotomies`,
+`part-origin`, the `colotomy` record, `time->position` and
+`position->time` since `feat/music-colotomy`; `patterns`, `part-spans`,
+the `pattern` and `pattern-span` records since `feat/music-patterns`;
+`scores`, the `score` and `group` records and `piece-score` since
+`feat/scores-form`, and `note-display #:damped?` since
+`feat/scores-rows`. Tests in `tests/piece.scm`.
 
-Everything in this document is **Planned** unless it says otherwise.
+Everything in this document is **Implemented** unless it says otherwise.
 
 A `piece` record is the single source of truth after reading. Layout
 consumes it, with one of its scores; nothing downstream looks at the
@@ -242,18 +239,6 @@ construction, since events are built from the tokens.
    `note-names?` true.
 8. Part names are unique in the piece, generated parts included, and
    score names are unique.
-
-## What the code implements today
-
-**Implemented** (v1): `(notasi piece)` builds an earlier form of these
-records. It differs as follows, and this section goes when iteration 2
-is built:
-
-- (`piece`, `score`, `group` and `piece-score` are as above since
-  milestone 2, slice 1.)
-- (`degree` has `damped` and `instrument` has no `show-names?` since
-  iteration 2, slice 1: those two records are **Implemented** as
-  above.)
 
 ## Open questions
 

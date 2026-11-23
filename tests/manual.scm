@@ -5,7 +5,10 @@
 ;;; - Every mistake in doc/manual/src/mistakes/ (NAME.nts) fails to read,
 ;;;   with exactly the message in NAME.txt, and a page includes both.
 ;;; - Every figure a page shows (figures/NAME.svg, drawn by `make manual')
-;;;   has an example, examples/NAME.nts, to draw it from.
+;;;   has an example, examples/NAME.nts, to draw it from.  A figure of
+;;;   another score, figures/NAME.SCORE.svg (drawn with --score SCORE),
+;;;   needs examples/NAME.nts and a score SCORE in it (slice
+;;;   feat/scores-range; 05, "The `notasi' command").
 ;;; - Files in a templates/ folder under examples/ or mistakes/ are
 ;;;   templates, not pieces: they are read through the pieces that use
 ;;;   them, and each must be included by a page.
@@ -84,11 +87,29 @@ the file reads without a notasi error."
   (filter template-file? (append (files-under examples-dir ".nts")
                                  (files-under mistakes-dir ".nts"))))
 (define pages (files-under src ".md"))
+(define figure-pattern "figures/([a-z0-9-]+)(\\.([a-z0-9-]+))?\\.svg")
+
 (define (figures page)
-  "The examples/NAME.nts files PAGE's figures/NAME.svg images need."
+  "The examples/NAME.nts files PAGE's figures/NAME.svg and
+figures/NAME.SCORE.svg images need."
   (map (lambda (m)
          (string-append examples-dir "/" (match:substring m 1) ".nts"))
-       (list-matches "figures/([a-z0-9-]+)\\.svg" (slurp page))))
+       (list-matches figure-pattern (slurp page))))
+
+(define (score-figures page)
+  "(EXAMPLE . SCORE) for each figures/NAME.SCORE.svg image PAGE shows,
+SCORE a symbol."
+  (filter-map (lambda (m)
+                (and (match:substring m 3)
+                     (cons (string-append examples-dir "/"
+                                          (match:substring m 1) ".nts")
+                           (string->symbol (match:substring m 3)))))
+              (list-matches figure-pattern (slurp page))))
+
+(define (has-score? example score)
+  "Does EXAMPLE read, with a score SCORE?"
+  (guard (e (#t #f))
+    (and (piece-score (read-piece-file example) score) #t)))
 
 ;; A page uses a file by {{#include}}, or an example as a drawn figure.
 (define included (append (append-map includes pages) (append-map figures pages)))
@@ -135,6 +156,16 @@ the file reads without a notasi error."
       (test-assert (string-append page " shows a figure drawn from " f)
         (file-exists? f)))
     (figures page)))
+ pages)
+
+(for-each
+ (lambda (page)
+   (for-each
+    (lambda (f)
+      (test-assert (string-append page " shows score " (symbol->string (cdr f))
+                                  " of " (car f) ", which has it")
+        (has-score? (car f) (cdr f))))
+    (score-figures page)))
  pages)
 
 (define runner (test-runner-current))

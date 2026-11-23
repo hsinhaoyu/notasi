@@ -67,6 +67,17 @@ scripts/notasi render gilak.nts -o gilak.svg
 The ending of the name (`.pdf`, `.png` or `.svg`) chooses the kind of
 file.
 
+## Choosing a score
+
+When a file has several [scores](scores.md#several-scores), notasi draws
+the first. To draw another, name it with `--score`:
+
+```text
+scripts/notasi render gilak.nts --score second
+```
+
+This writes `gilak.second.pdf`.
+
 ## When something goes wrong
 
 If the piece has a mistake, notasi prints the same messages as in

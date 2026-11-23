@@ -11,7 +11,7 @@
   #:use-module (ice-9 match)
   #:export (run-notasi))
 
-(define usage "usage: notasi render PIECE.nts [-o OUT]")
+(define usage "usage: notasi render PIECE.nts [--score NAME] [-o OUT]")
 
 (define help
   (string-append usage "
@@ -19,6 +19,8 @@
 Draw a piece of notation as a score.
 
   render PIECE.nts    draw PIECE.nts; by default to PIECE.pdf beside it
+  --score NAME        draw the score NAME instead of the first one; by
+                      default to PIECE.NAME.pdf
   -o, --output OUT    write OUT instead; its extension (.pdf, .png or
                       .svg) chooses the format
   --help              show this help"))
@@ -62,43 +64,51 @@ as the message."
 ;;; ------------------------------------------------------------------
 ;;; notasi render
 
-(define (default-output piece)
-  "PIECE's folder and name with .pdf: songs/gilak.nts → songs/gilak.pdf."
+(define (default-output piece score)
+  "PIECE's folder and name with .pdf, and the score's name when one was
+chosen: songs/gilak.nts → songs/gilak.pdf, or songs/gilak.full.pdf."
   (string-append (if (string-suffix? ".nts" piece)
                      (string-drop-right piece 4)
                      piece)
+                 (if score (string-append "." score) "")
                  ".pdf"))
 
-(define (render piece out)
+(define (render piece score out)
   (guard (e ((notasi-syntax-error? e)
              (say (current-error-port) (exception-message e))
              1)
             ((exception? e)
              (say (current-error-port) (string-append "notasi: " (error-text e)))
              1))
-    (render-piece piece out)
+    (render-piece piece out #:score (and score (string->symbol score)))
     (say (current-output-port) out)
     0))
 
 (define (render-command args)
   "Parse the arguments after `render' and draw the piece."
-  (let loop ((args args) (files '()) (out #f))
+  (let loop ((args args) (files '()) (out #f) (score #f))
     (match args
       (()
        (match files
          (() (usage-error "render needs a PIECE.nts file"))
-         ((piece) (render piece (or out (default-output piece))))
+         ((piece) (render piece score (or out (default-output piece score))))
          (_ (usage-error "render takes one PIECE.nts file"))))
       (("--help" . _) (show-help))
       (((or "-o" "--output") value . rest)
        (if (option? value)
            (usage-error (string-append (car args) " needs a file name"))
-           (loop rest files value)))
+           (loop rest files value score)))
       (((or "-o" "--output"))
        (usage-error (string-append (car args) " needs a file name")))
+      (("--score" value . rest)
+       (if (option? value)
+           (usage-error "--score needs a score's name")
+           (loop rest files out value)))
+      (("--score")
+       (usage-error "--score needs a score's name"))
       (((? option? option) . _)
        (usage-error (string-append "unknown option `" option "'")))
-      ((file . rest) (loop rest (append files (list file)) out)))))
+      ((file . rest) (loop rest (append files (list file)) out score)))))
 
 ;;; ------------------------------------------------------------------
 ;;; Entry point

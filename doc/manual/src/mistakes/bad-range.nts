@@ -1,0 +1,6 @@
+(piece "Gilak" :colotomy gilak)
+(use gong-kebyar)
+(colotomy gilak 8 (gong gong -:3 P:1 - P - G))
+(part ugal o2 i2 e2 o2 a1 o2 i2 a1)
+(score middle :from (1 6) :to (1 3)
+  (group "Ugal" ugal))

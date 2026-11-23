@@ -1,0 +1,498 @@
+{
+  "version": 2,
+  "title": "Gilak",
+  "subtitle": null,
+  "steps_per_pulse": 1,
+  "sizes": {
+    "font_size": null,
+    "label_width": "3.9em",
+    "lane_width": "2.0em",
+    "cell_width": "2em",
+    "cell_height": "2em"
+  },
+  "systems": [
+    {
+      "start": 0,
+      "steps": 1,
+      "header": {
+        "label": null,
+        "cycles": [],
+        "pulses": ["8"]
+      },
+      "lines": ["none"],
+      "groups": [
+        {
+          "label": "Ugal",
+          "subtitle": null,
+          "lanes": ["u2", "e2", "o2", "i2", "a1"],
+          "voices": [
+            {
+              "name": "ugal",
+              "events": [
+                {
+                  "start": 0,
+                  "dur": 1,
+                  "lane": 4,
+                  "text": null,
+                  "fill": "#fed9a6",
+                  "text_color": "#222222",
+                  "continued": false
+                }
+              ]
+            }
+          ],
+          "overlays": []
+        },
+        {
+          "label": "Gong",
+          "subtitle": null,
+          "lanes": ["G", "P"],
+          "voices": [
+            {
+              "name": "gong",
+              "events": [
+                {
+                  "start": 0,
+                  "dur": 1,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                }
+              ]
+            }
+          ],
+          "overlays": []
+        }
+      ]
+    },
+    {
+      "start": 1,
+      "steps": 8,
+      "header": {
+        "label": null,
+        "cycles": [
+          {
+            "column": 0,
+            "text": "1"
+          }
+        ],
+        "pulses": ["1", "2", "3", "4", "5", "6", "7", "8"]
+      },
+      "lines": ["none", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse"],
+      "groups": [
+        {
+          "label": "U.",
+          "subtitle": null,
+          "lanes": ["u2", "e2", "o2", "i2", "a1"],
+          "voices": [
+            {
+              "name": "ugal",
+              "events": [
+                {
+                  "start": 0,
+                  "dur": 1,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 1,
+                  "dur": 1,
+                  "lane": 3,
+                  "text": null,
+                  "fill": "#fbb4ae",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 2,
+                  "dur": 1,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 3,
+                  "dur": 1,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 4,
+                  "dur": 1,
+                  "lane": 4,
+                  "text": null,
+                  "fill": "#fed9a6",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 5,
+                  "dur": 1,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 6,
+                  "dur": 1,
+                  "lane": 3,
+                  "text": null,
+                  "fill": "#fbb4ae",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 7,
+                  "dur": 1,
+                  "lane": 4,
+                  "text": null,
+                  "fill": "#fed9a6",
+                  "text_color": "#222222",
+                  "continued": false
+                }
+              ]
+            }
+          ],
+          "overlays": []
+        },
+        {
+          "label": "G.",
+          "subtitle": null,
+          "lanes": ["G", "P"],
+          "voices": [
+            {
+              "name": "gong",
+              "events": [
+                {
+                  "start": 3,
+                  "dur": 1,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 5,
+                  "dur": 1,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 7,
+                  "dur": 1,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                }
+              ]
+            }
+          ],
+          "overlays": []
+        }
+      ]
+    },
+    {
+      "start": 9,
+      "steps": 8,
+      "header": {
+        "label": null,
+        "cycles": [
+          {
+            "column": 0,
+            "text": "2"
+          }
+        ],
+        "pulses": ["1", "2", "3", "4", "5", "6", "7", "8"]
+      },
+      "lines": ["none", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse"],
+      "groups": [
+        {
+          "label": "U.",
+          "subtitle": null,
+          "lanes": ["u2", "e2", "o2", "i2", "a1"],
+          "voices": [
+            {
+              "name": "ugal",
+              "events": [
+                {
+                  "start": 0,
+                  "dur": 1,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 1,
+                  "dur": 1,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#decbe4",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 2,
+                  "dur": 1,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 3,
+                  "dur": 1,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 4,
+                  "dur": 1,
+                  "lane": 3,
+                  "text": null,
+                  "fill": "#fbb4ae",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 5,
+                  "dur": 1,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 6,
+                  "dur": 1,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 7,
+                  "dur": 1,
+                  "lane": 4,
+                  "text": null,
+                  "fill": "#fed9a6",
+                  "text_color": "#222222",
+                  "continued": false
+                }
+              ]
+            }
+          ],
+          "overlays": []
+        },
+        {
+          "label": "G.",
+          "subtitle": null,
+          "lanes": ["G", "P"],
+          "voices": [
+            {
+              "name": "gong",
+              "events": [
+                {
+                  "start": 3,
+                  "dur": 1,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 5,
+                  "dur": 1,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 7,
+                  "dur": 1,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                }
+              ]
+            }
+          ],
+          "overlays": []
+        }
+      ]
+    },
+    {
+      "start": 17,
+      "steps": 8,
+      "header": {
+        "label": null,
+        "cycles": [
+          {
+            "column": 0,
+            "text": "3"
+          }
+        ],
+        "pulses": ["1", "2", "3", "4", "5", "6", "7", "8"]
+      },
+      "lines": ["none", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse"],
+      "groups": [
+        {
+          "label": "U.",
+          "subtitle": null,
+          "lanes": ["u2", "e2", "o2", "i2", "a1"],
+          "voices": [
+            {
+              "name": "ugal",
+              "events": [
+                {
+                  "start": 0,
+                  "dur": 1,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 1,
+                  "dur": 1,
+                  "lane": 3,
+                  "text": null,
+                  "fill": "#fbb4ae",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 2,
+                  "dur": 1,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 3,
+                  "dur": 1,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 4,
+                  "dur": 1,
+                  "lane": 4,
+                  "text": null,
+                  "fill": "#fed9a6",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 5,
+                  "dur": 1,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 6,
+                  "dur": 1,
+                  "lane": 3,
+                  "text": null,
+                  "fill": "#fbb4ae",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 7,
+                  "dur": 1,
+                  "lane": 4,
+                  "text": null,
+                  "fill": "#fed9a6",
+                  "text_color": "#222222",
+                  "continued": false
+                }
+              ]
+            }
+          ],
+          "overlays": []
+        },
+        {
+          "label": "G.",
+          "subtitle": null,
+          "lanes": ["G", "P"],
+          "voices": [
+            {
+              "name": "gong",
+              "events": [
+                {
+                  "start": 3,
+                  "dur": 1,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 5,
+                  "dur": 1,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 7,
+                  "dur": 1,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                }
+              ]
+            }
+          ],
+          "overlays": []
+        }
+      ]
+    }
+  ],
+  "caption": null
+}

@@ -1,1 +1,0 @@
-not-yet.nts:4: the option `:labels' is not supported yet

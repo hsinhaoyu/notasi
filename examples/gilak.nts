@@ -1,0 +1,26 @@
+;; Gilak: an eight-pulse cycle, kempur on pulses 4 and 6, gong on 8,
+;; with a one-pulse pickup on the gong. A plain ugal melody over three
+;; cycles; two scores, the whole piece and one cycle of it.
+
+(piece "Gilak" :colotomy gilak :pickup 1)
+
+(use gong-kebyar)
+
+(colotomy gilak 8
+  (gong gong  -:3 P:1 -  P  -  G))
+
+(part ugal  a1 || o2 i2 e2 o2 | a1 o2 i2 a1
+             || e2 u2 e2 o2 | i2 o2 e2 a1
+             || o2 i2 e2 o2 | a1 o2 i2 a1 ||)
+
+;; The whole piece, a cycle per system, with the pickup on a system of
+;; its own: long labels on the first system, short ones after.
+(score full :breaks ((1 1) (2 1) (3 1))
+  (group "Ugal" :short "U." ugal)
+  (group "Gong" :short "G." gong))
+
+;; The second cycle alone, Tenzer's way: the gong numbered 1, so the
+;; cycle runs from its pulse 2 to its pulse 1.
+(score second-cycle :from (2 2) :to (2 1) :numbering gong-first :labels short
+  (group "Ugal" :short "U." ugal)
+  (group "Gong" :short "G." gong))

@@ -241,6 +241,40 @@
 ;;;   group's options (`bad-option`, `needs-note-names`) and after every
 ;;;   group's members, and before a later score's errors. Its order
 ;;;   against `notes-collide` in the same group is not tested.
+;;;
+;;; Slice feat/scores-range (04, "Slices (iteration 2)", slice 5 and its
+;;; decided bullets; 01, `:from`, `:to`, `:breaks`, `:labels`, `:short`
+;;; and "Rules"; 02, the score's `from`, `to`, `breaks` and the group's
+;;; `short` and `labels`; 03, step 12 and [scores]): the reader reads
+;;; `:from`, `:to` and `:breaks` on a score, `:labels long|short|
+;;; first-long` on a score and a group, and `:short STRING` on a group,
+;;; turning positions into times. Nothing raises `not-implemented` any
+;;; more: its tests are gone, `score-form` (which stood for "a form not
+;;; built yet") is now a score naming an undefined part, and the check
+;;; order tests that used a not-implemented option use `bad-position`,
+;;; `bad-range`, a bad `:labels` and `option-wrong-level` instead. New
+;;; cases: `bad-position`, `bad-range`.
+;;; Choices made where the docs are not explicit:
+;;; - A position (CYCLE PULSE) is read in the score's `numbering`, also
+;;;   when `:numbering` comes after it. Without a colotomy a position is
+;;;   a pulse number from 1, and a list is `bad-position`; with one, a
+;;;   bare number is `bad-position`. A pulse outside 1..N, a cycle with
+;;;   no pulse in the piece, a pickup pulse before the pickup, or a
+;;;   cycle that is not a whole number are `bad-position`. Fractional
+;;;   pulses are not tested.
+;;; - `bad-position` and `bad-range` are at the score's line, with part
+;;;   and time #f, and come before the score's groups. A `:from` outside
+;;;   the piece is `bad-position` even when it is also after `:to`.
+;;; - `:from` and `:to` naming the same pulse (one pulse printed) is not
+;;;   tested: 01 says `:from` "must come before" `:to`, but in times
+;;;   from (its start) is before to (its end).
+;;; - Breaks are stored in the order written; tests write them in
+;;;   order. A break outside the range but inside the piece reads; what
+;;;   is stored for it is not tested (layout ignores it).
+;;; - `:short ""` reads and is kept; `:short` on a score and `:from`,
+;;;   `:to`, `:breaks` on a group are `option-wrong-level`. `:labels`
+;;;   with a value not among its choices, and `:short` that is not a
+;;;   string, are `bad-option`.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -329,10 +363,11 @@ tests follow their layout instead of hard-coding it."
   (rmdir tmp-dir))
 
 ;;; A pattern on an instrument no fixture defines (ugal is not defined
-;;; where this is used), and a score with an option a later slice
-;;; builds, which is not-implemented at its line.
+;;; where this is used), and a score naming a part no fixture defines,
+;;; which is undefined-part at its line (until slice feat/scores-range
+;;; it used `:labels short`, then not-implemented).
 (define pattern-form "(pattern polos-1 :instrument ugal 1 2)")
-(define score-form "(score full :labels short (group \"Ugal\" ugal))")
+(define score-form "(score full (group \"Ugal\" ugal))")
 
 (define (default-groups pc)
   "The groups of PC's first score: its default score when the file has
@@ -682,7 +717,7 @@ none (what v1 called piece-groups)."
   (test-equal "empty string" '(missing-piece #f) (string-error ""))
   (test-equal "only whitespace and comments" '(missing-piece #f)
     (string-error (lines "  " ";; comment" "#| block |#" "")))
-  (test-equal "only not-yet-implemented forms: missing-piece, not not-implemented"
+  (test-equal "only definitions and a bad score: missing-piece, not the score's error"
     '(missing-piece #f)
     (string-error (lines "(scale selisir ding dong)" score-form))))
 
@@ -693,7 +728,7 @@ none (what v1 called piece-groups)."
     (string-error (lines ";; c" "" "(scale selisir ding)" "(piece \"P\")")))
   (test-equal "piece-not-first comes before bad-title" '(piece-not-first 1)
     (string-error (lines "(scale s a)" "(piece 1)")))
-  (test-equal "piece-not-first comes before not-implemented" '(piece-not-first 1)
+  (test-equal "piece-not-first comes before a score error" '(piece-not-first 1)
     (string-error (lines score-form "(piece \"P\")"))))
 
 (test-group "duplicate-piece"
@@ -707,7 +742,7 @@ none (what v1 called piece-groups)."
     (string-error (lines "(piece 1)" "(piece 2)")))
   (test-equal "duplicate-piece comes before bad-option" '(duplicate-piece 2)
     (string-error (lines "(piece \"A\" 4)" "(piece \"B\")")))
-  (test-equal "duplicate-piece comes before not-implemented" '(duplicate-piece 3)
+  (test-equal "duplicate-piece comes before a score error" '(duplicate-piece 3)
     (string-error (lines "(piece \"A\")" score-form "(piece \"B\")"))))
 
 ;;; ------------------------------------------------------------------
@@ -728,7 +763,7 @@ none (what v1 called piece-groups)."
     (string-error "(piece 1 4)"))
   (test-equal "bad-title comes before unknown-option" '(bad-title 1)
     (string-error "(piece 1 :tempo 60)"))
-  (test-equal "bad-title comes before not-implemented" '(bad-title 1)
+  (test-equal "bad-title comes before a score error" '(bad-title 1)
     (string-error (lines "(piece 1)" score-form))))
 
 (test-group "bad-option"
@@ -748,7 +783,7 @@ none (what v1 called piece-groups)."
     (string-error (lines ";; c" "(piece \"P\" 4)")))
   (test-equal "an option on the next line: the piece form's line" '(bad-option 1)
     (string-error (lines "(piece \"P\"" "  4)")))
-  (test-equal "bad-option comes before not-implemented" '(bad-option 1)
+  (test-equal "bad-option comes before a score error" '(bad-option 1)
     (string-error (lines "(piece \"P\" 4)" score-form))))
 
 (test-group "unknown-option"
@@ -774,7 +809,7 @@ none (what v1 called piece-groups)."
   (test-equal "an unknown key on the next line: the piece form's line"
     '(unknown-option 1)
     (string-error (lines "(piece \"P\"" "  :steps-per-pulse 4)")))
-  (test-equal "unknown-option comes before not-implemented" '(unknown-option 1)
+  (test-equal "unknown-option comes before a score error" '(unknown-option 1)
     (string-error (lines "(piece \"P\" :tempo 60)" score-form))))
 
 ;;; v1's duplicate-option tests of the piece form are gone: the piece
@@ -782,35 +817,9 @@ none (what v1 called piece-groups)."
 ;;; unknown key. `part options` tests duplicate-option.
 
 ;;; ------------------------------------------------------------------
-;;; A score with an option a later slice builds is not-implemented at
-;;; the score's line (04, slice 1); the [scores] section below tests
-;;; every such option.
-
-(test-group "not-implemented"
-  (test-equal "a score option not built yet: not-implemented at the score's line"
-    '(not-implemented 3)
-    (string-error (lines "(piece \"P\")" ";; next" score-form)))
-  (test-equal "a multi-line score: the form's line" '(not-implemented 2)
-    (string-error (lines "(piece \"P\")" "(score full :labels short"
-                         "  (group \"G\" a))")))
-  (test-equal "the first not-implemented score in file order" '(not-implemented 4)
-    (string-error (lines "(piece \"P\")" "" "" score-form
-                         "(score other :breaks (3) (group \"G\" a))")))
-  (let ((c (catch-syntax-error
-            (lambda () (read-piece-string (lines "(piece \"P\")" score-form))))))
-    (test-equal "not-implemented: file #f" #f
-      (and (notasi-syntax-error? c) (notasi-syntax-error-file c)))
-    (test-equal "not-implemented: part field #f" #f
-      (and (notasi-syntax-error? c) (notasi-syntax-error-part c)))
-    (test-equal "not-implemented: time field #f" #f
-      (and (notasi-syntax-error? c) (notasi-syntax-error-time c))))
-  (let* ((path (write-temp-file "score.nts" (lines "(piece \"P\")" score-form)))
-         (c (catch-syntax-error (lambda () (read-piece-file path)))))
-    (test-equal "not-implemented from a file: kind" 'not-implemented (kind-of c))
-    (test-equal "not-implemented from a file: file" path
-      (and (notasi-syntax-error? c) (notasi-syntax-error-file c)))
-    (test-equal "not-implemented from a file: line" 2
-      (and (notasi-syntax-error? c) (notasi-syntax-error-line c)))))
+;;; The "not-implemented" group is gone (slice feat/scores-range): every
+;;; score option now reads, so nothing raises `not-implemented` any
+;;; more. "[scores] every option reads" checks that.
 
 ;;; ==================================================================
 ;;; Scale, strokes and instrument forms
@@ -5410,30 +5419,270 @@ STR, or the raised object (or no-error) unchanged."
   (test-equal "fields: part and time #f" '(option-wrong-level 15 #f #f)
     (error-fields (one-group "(group \"U\" :title \"T\" ugal)"))))
 
-;;; The options later slices build (04, slice 1's decided bullets);
-;;; `:pattern-names` and `:pattern-level` left with slice
-;;; feat/scores-overlays.
-(define later-score-options
-  '(":labels short" ":from 1" ":to 4" ":breaks (3)"))
+;;; ==================================================================
+;;; [scores] The range, breaks and labels (slice feat/scores-range)
+;;; ==================================================================
 
-(define later-group-options
-  '(":labels long" ":short \"U.\""))
+;;; Every score option now reads: nothing is `not-implemented` any more
+;;; (the group of tests for "options of later slices" is gone).
 
-(test-group "[scores] not-implemented: options of later slices"
+(define (range-of pc name)
+  "(FROM TO BREAKS) of PC's score NAME, or #f when PC is #f."
+  (and pc (let ((sc (score-named pc name)))
+            (list (score-from sc) (score-to sc) (score-breaks sc)))))
+
+(define (plain-range options)
+  "The range of a score s with OPTIONS (a string) over scores+: no
+colotomy, 4 pulses."
+  (range-of (read-scores+ (string-append "(score s " options
+                                         " (group \"U\" ugal))"))
+            's))
+
+;;; gilak (8 pulses) with a one-pulse pickup: 17 pulses; the pickup is
+;;; time 0, cycle 1 is 1-9, cycle 2 is 9-17. The score is on line 13.
+(define (gilak-score options)
+  (colo+ ":colotomy gilak :pickup 1" "(part ugal 1:17)"
+         (string-append "(score s " options " (group \"U\" ugal))")))
+
+(define (gilak-range options)
+  (range-of (try-read (lambda () (read-piece-string (gilak-score options)))) 's))
+
+;;; gilak without a pickup: 16 pulses, cycle 1 is 0-8, cycle 2 is 8-16.
+(define (gilak0-score options)
+  (colo+ ":colotomy gilak" "(part ugal 1:16)"
+         (string-append "(score s " options " (group \"U\" ugal))")))
+
+(define (gilak0-range options)
+  (range-of (try-read (lambda () (read-piece-string (gilak0-score options)))) 's))
+
+(test-group "[scores] every option reads"
+  (let ((pc (read-colo+
+             ":colotomy gilak :pickup 1" "(part ugal 1:17)"          ; 12
+             "(score s :title \"T\" :subtitle \"S\" :caption \"C\""   ; 13
+             "  :from (1 1) :to (2 8) :system-length 4 :breaks ((2 1))"
+             "  :cycle-numbers yes :pulse-numbers yes :numbering gong-last"
+             "  :pulse-label \"Beats\" :font-size \"10pt\""
+             "  :note-names yes :scheme by-degree :palette set1"
+             "  :colors ((ding \"#000000\")) :cell-width \"2em\" :cell-height \"2em\""
+             "  :rows notes :fill colour :holds none :pattern-names none"
+             "  :pattern-level 0 :labels short"
+             "  (group \"Ugal\" :short \"U.\" :subtitle \"s\" :labels long"
+             "    :note-names yes :scheme by-degree :palette set2"
+             "    :colors ((dong \"#ffffff\")) :rows notes :fill colour"
+             "    :holds none :pattern-names short :pattern-level 1 ugal)"
+             "  (group \"Gong\" gong))")))
+    (test-assert "a score with every score option, a group with every group option"
+      (piece? pc))
+    (test-equal "the range and breaks, as times" '(1 17 (9))
+      (range-of pc 's))
+    (test-equal "the group's labels and short label"
+      '(("Ugal" "U." long) ("Gong" "Gong" short))
+      (and pc (map (lambda (g) (list (group-label g) (group-short g)
+                                     (group-labels g)))
+                   (score-groups (score-named pc 's)))))))
+
+;;; ------------------------------------------------------------------
+;;; :from, :to and :breaks become times (02: `to` is the end of its
+;;; pulse; 04 slice 5: a position names the pulse as the score prints
+;;; it, the pickup is cycle 0)
+
+(test-group "[scores] :from, :to and :breaks without a colotomy"
+  (test-equal "the defaults: the whole piece, no breaks" '(0 4 ())
+    (plain-range ""))
+  (test-equal ":from 2 :to 3: from the start of pulse 2 to the end of pulse 3"
+    '(1 3 ()) (plain-range ":from 2 :to 3"))
+  (test-equal ":from 1 :to 4: the whole piece" '(0 4 ())
+    (plain-range ":from 1 :to 4"))
+  (test-equal ":to alone: from the start" '(0 1 ()) (plain-range ":to 1"))
+  (test-equal ":from alone: to the end" '(3 4 ()) (plain-range ":from 4"))
+  (test-equal ":breaks (2 4): the starts of pulses 2 and 4" '(0 4 (1 3))
+    (plain-range ":breaks (2 4)"))
+  (test-equal ":breaks (): none" '(0 4 ()) (plain-range ":breaks ()"))
+  (test-assert "times are exact"
+    (let ((r (plain-range ":from 2 :to 3 :breaks (3)")))
+      (and r (every exact? (list (car r) (cadr r) (car (caddr r)))))))
+  (test-equal "a break outside the range but inside the piece reads"
+    '(1 3) (let ((r (plain-range ":from 2 :to 3 :breaks (1 4)")))
+             (and r (list (car r) (cadr r)))))
+  (test-equal "a break at :from reads" '(1 3)
+    (let ((r (plain-range ":from 2 :to 3 :breaks (2)")))
+      (and r (list (car r) (cadr r))))))
+
+(test-group "[scores] :from, :to and :breaks with a colotomy, gong-last"
+  (test-equal "the defaults: the whole piece, pickup included" '(0 17 ())
+    (gilak-range ""))
+  (test-equal "cycle 1: (1 1) to (1 8)" '(1 9 ())
+    (gilak-range ":from (1 1) :to (1 8)"))
+  (test-equal "the pickup is cycle 0, its pulse numbered 8" '(0 17 ())
+    (gilak-range ":from (0 8) :to (2 8)"))
+  (test-equal "the pickup alone" '(0 1 ())
+    (gilak-range ":to (0 8)"))
+  (test-equal "inside cycle 2: (2 3) to (2 5)" '(11 14 ())
+    (gilak-range ":from (2 3) :to (2 5)"))
+  (test-equal "breaks at the start of each cycle" '(0 17 (1 9))
+    (gilak-range ":breaks ((1 1) (2 1))"))
+  (test-equal "without a pickup: cycle 1 starts at 0" '(0 8 (4))
+    (gilak0-range ":from (1 1) :to (1 8) :breaks ((1 5))"))
+  (test-equal "without a pickup: the whole of cycle 2" '(8 16 ())
+    (gilak0-range ":from (2 1) :to (2 8)")))
+
+(test-group "[scores] :from, :to and :breaks with a colotomy, gong-first"
+  ;; gong-first prints pulse k of the cycle as (k mod 8) + 1: a cycle's
+  ;; stretch is printed 2, ..., 8, 1, the 1 on its gong.
+  (test-equal "the whole of cycle 2: (2 2) to (2 1)" '(9 17 ())
+    (gilak-range ":numbering gong-first :from (2 2) :to (2 1)"))
+  (test-equal "the whole of cycle 1: (1 2) to (1 1)" '(1 9 ())
+    (gilak-range ":numbering gong-first :from (1 2) :to (1 1)"))
+  (test-equal "the pickup's pulse, on the gong, is (0 1)" '(0 9 ())
+    (gilak-range ":numbering gong-first :from (0 1) :to (1 1)"))
+  (test-equal "(2 1) is cycle 2's gong, its last pulse" '(16 17 ())
+    (gilak-range ":numbering gong-first :from (2 1)"))
+  (test-equal "breaks in the score's numbering" '(0 17 (1 8 9))
+    (gilak-range ":numbering gong-first :breaks ((1 2) (1 1) (2 2))"))
+  (test-equal ":numbering after the positions still applies to them" '(9 17 ())
+    (gilak-range ":from (2 2) :to (2 1) :numbering gong-first")))
+
+(test-group "[scores] :from, :to and :breaks in examples/gilak.nts"
+  (let ((pc (try-read (lambda () (read-piece-file "examples/gilak.nts")))))
+    (test-equal "two scores" '(full second-cycle)
+      (and pc (map score-name (piece-scores pc))))
+    (test-equal "full: the whole piece, breaks at each cycle" '(0 25 (1 9 17))
+      (range-of pc 'full))
+    (test-equal "second-cycle: (2 2) to (2 1) gong-first is cycle 2" '(9 17 ())
+      (range-of pc 'second-cycle))
+    (test-equal "the groups' labels"
+      '((full ("Ugal" "U." first-long) ("Gong" "G." first-long))
+        (second-cycle ("Ugal" "U." short) ("Gong" "G." short)))
+      (and pc (map (lambda (sc)
+                     (cons (score-name sc)
+                           (map (lambda (g) (list (group-label g) (group-short g)
+                                                  (group-labels g)))
+                                (score-groups sc))))
+                   (piece-scores pc))))))
+
+(test-group "[scores] bad-position without a colotomy"
+  (for-each
+   (match-lambda
+     ((name options)
+      (test-equal name '(bad-position 14)
+        (score-error (string-append "(score s " options " (group \"U\" ugal))")))))
+   '((":from 0: pulses count from 1" ":from 0")
+     (":from after the piece" ":from 5")
+     (":to after the piece" ":to 5")
+     (":to 0" ":to 0")
+     (":from negative" ":from -1")
+     (":from a (CYCLE PULSE) list without a colotomy" ":from (1 1)")
+     (":from a string" ":from \"1\"")
+     (":from a symbol" ":from one")
+     (":breaks after the piece" ":breaks (5)")
+     (":breaks 0" ":breaks (0)")
+     (":breaks with a list in it" ":breaks ((1 1))")
+     (":breaks with a string in it" ":breaks (2 \"3\")")))
+  (test-equal "fields: part and time #f" '(bad-position 14 #f #f)
+    (error-fields (scores+ "(score s :from 9 (group \"U\" ugal))")))
+  (test-equal "on its own line: the score's line" '(bad-position 14)
+    (score-error "(score s" "  :to 9" "  (group \"U\" ugal))")))
+
+(test-group "[scores] bad-position with a colotomy"
+  (for-each
+   (match-lambda
+     ((name options)
+      (test-equal name '(bad-position 13) (string-error (gilak-score options)))))
+   '((":from a pulse number with a colotomy" ":from 3")
+     (":from (1): no pulse" ":from (1)")
+     (":from (1 2 3)" ":from (1 2 3)")
+     (":from (1 9): no pulse 9 in 8" ":from (1 9)")
+     (":from (1 0)" ":from (1 0)")
+     (":from (3 1): no cycle 3" ":from (3 1)")
+     (":to (3 1): no cycle 3" ":to (3 1)")
+     (":from (0 7): before the one-pulse pickup" ":from (0 7)")
+     (":from (-1 8)" ":from (-1 8)")
+     (":from a cycle that is not a whole number" ":from (1.5 1)")
+     (":from a cycle written as a string" ":from (\"1\" 1)")
+     (":breaks with a pulse number" ":breaks (1)")
+     (":breaks outside the piece" ":breaks ((3 1))")
+     ("gong-first: (0 8) is before the pickup"
+      ":numbering gong-first :from (0 8)")
+     ("gong-first: (2 9)" ":numbering gong-first :to (2 9)")))
+  (test-equal "without a pickup, cycle 0 is not in the piece" '(bad-position 13)
+    (string-error (gilak0-score ":from (0 8)"))))
+
+(test-group "[scores] bad-range"
+  (test-equal ":from after :to" '(bad-range 14)
+    (score-error "(score s :from 3 :to 2 (group \"U\" ugal))"))
+  (test-equal ":from after :to, with a colotomy" '(bad-range 13)
+    (string-error (gilak-score ":from (2 1) :to (1 8)")))
+  (test-equal "gong-first: (1 1) is after (1 2)" '(bad-range 13)
+    (string-error (gilak-score ":numbering gong-first :from (1 1) :to (1 2)")))
+  (test-equal "fields: part and time #f" '(bad-range 14 #f #f)
+    (error-fields (scores+ "(score s :from 4 :to 1 (group \"U\" ugal))")))
+  (test-equal "a position outside the piece is bad-position, not bad-range"
+    '(bad-position 14)
+    (score-error "(score s :from 9 :to 1 (group \"U\" ugal))")))
+
+;;; ------------------------------------------------------------------
+;;; :labels and :short
+
+(define (labels-of pc name)
+  "(LABEL SHORT LABELS) of each group of PC's score NAME."
+  (and pc (map (lambda (g) (list (group-label g) (group-short g) (group-labels g)))
+               (score-groups (score-named pc name)))))
+
+(test-group "[scores] reading :labels and :short"
+  (test-equal "the defaults: first-long, the short label the long one"
+    '(("Ugal" "Ugal" first-long))
+    (labels-of (read-scores+ "(score s (group \"Ugal\" ugal))") 's))
+  (test-equal "a group's :short" '(("Ugal" "U." first-long))
+    (labels-of (read-scores+ "(score s (group \"Ugal\" :short \"U.\" ugal))") 's))
+  (test-equal "an empty :short is kept" '(("Ugal" "" first-long))
+    (labels-of (read-scores+ "(score s (group \"Ugal\" :short \"\" ugal))") 's))
+  (test-equal "the score's :labels for every group, a group's over it"
+    '(("Ugal" "U." short) ("Gong" "G." long) ("Pair" "Pair" short))
+    (labels-of (read-scores+ "(score s :labels short"
+                             "  (group \"Ugal\" :short \"U.\" ugal)"
+                             "  (group \"Gong\" :short \"G.\" :labels long gong)"
+                             "  (group \"Pair\" polos sangsih))")
+               's))
+  (test-equal "each choice on a group"
+    '(long short first-long)
+    (and=> (labels-of (read-scores+ "(score s"
+                                    "  (group \"A\" :labels long ugal)"
+                                    "  (group \"B\" :labels short gong)"
+                                    "  (group \"C\" :labels first-long polos))")
+                      's)
+           (lambda (l) (map caddr l)))))
+
+(test-group "[scores] :labels and :short: bad-option"
+  (for-each
+   (match-lambda
+     ((name options)
+      (test-equal (string-append "on a score: " name) '(bad-option 14)
+        (score-error (string-append "(score s " options " (group \"U\" ugal))")))))
+   '((":labels not a choice" ":labels medium")
+     (":labels a string" ":labels \"short\"")
+     (":labels a key with no value" ":labels :note-names yes")))
+  (for-each
+   (match-lambda
+     ((name group)
+      (test-equal (string-append "on a group: " name) '(bad-option 15)
+        (string-error (one-group group)))))
+   '((":labels not a choice" "(group \"U\" :labels medium ugal)")
+     (":short a symbol" "(group \"U\" :short U ugal)")
+     (":short a number" "(group \"U\" :short 1 ugal)")))
+  (test-equal "duplicate-option: :short" '(duplicate-option 15)
+    (string-error (one-group "(group \"U\" :short \"a\" :short \"b\" ugal)"))))
+
+(test-group "[scores] option-wrong-level: the range and labels"
   (for-each
    (lambda (option)
-     (test-equal (string-append "on a score: " option) '(not-implemented 14)
-       (score-error (string-append "(score s " option " (group \"U\" ugal))"))))
-   later-score-options)
-  (for-each
-   (lambda (option)
-     (test-equal (string-append "on a group: " option) '(not-implemented 15)
+     (test-equal (string-append "a score-only option on a group: " option)
+       '(option-wrong-level 15)
        (string-error (one-group (string-append "(group \"U\" " option " ugal)")))))
-   later-group-options)
-  (test-equal "on a group: at the group's line, not the score's" '(not-implemented 16)
-    (score-error "(score s" "  (group \"U\" ugal)" "  (group \"G\" :labels long gong))"))
-  (test-equal "fields: part and time #f" '(not-implemented 14 #f #f)
-    (error-fields (scores+ "(score s :labels short (group \"U\" ugal))"))))
+   '(":from 1" ":to 2" ":breaks (2)"))
+  (test-equal "a group-only option on a score: :short" '(option-wrong-level 14)
+    (score-error "(score s :short \"S.\" (group \"U\" ugal))"))
+  (test-equal ":short on a score: fields" '(option-wrong-level 14 #f #f)
+    (error-fields (scores+ "(score s :short \"S.\" (group \"U\" ugal))"))))
 
 (test-group "[scores] the options of slice feat/scores-contract"
   (let ((pc (read-scores+
@@ -5626,16 +5875,21 @@ STR, or the raised object (or no-error) unchanged."
           "(score a (group \"A\" nope))" "(part reyong :name short 1)")
     (list "16: a score's options before its groups" '(unknown-option 14)
           "(score a :tempo 1 (group \"A\" nope))")
-    (list "16: a score's not-implemented option before its groups" '(not-implemented 14)
-          "(score a :labels short (group \"A\" nope))")
+    (list "16: a score's bad-position before its groups" '(bad-position 14)
+          "(score a :from 9 (group \"A\" nope))")
+    (list "16: a score's bad-range before its groups" '(bad-range 14)
+          "(score a :from 3 :to 2 (group \"A\" nope))")
     (list "16: groups in order: the first group's member" '(undefined-part 15)
           "(score a" "  (group \"A\" nope)" "  (group \"B\" ugal polos))")
     (list "16: groups in order: the first group's instruments" '(mixed-pitched-group 15)
           "(score a" "  (group \"A\" ugal polos)" "  (group \"B\" nope))")
     (list "16: a group's options before its members" '(unknown-option 15)
           "(score a" "  (group \"A\" :tempo 1 nope))")
-    (list "16: a group's not-implemented option before its members" '(not-implemented 15)
-          "(score a" "  (group \"A\" :labels long nope))")
+    (list "16: a group's bad :labels before its members" '(bad-option 15)
+          "(score a" "  (group \"A\" :labels medium nope))")
+    (list "16: a group's :from (option-wrong-level) before its members"
+          '(option-wrong-level 15)
+          "(score a" "  (group \"A\" :from 1 nope))")
     (list "16: option-wrong-level before members" '(option-wrong-level 15)
           "(score a" "  (group \"A\" :title \"T\" nope))")
     (list "16: members before instruments: undefined-part" '(undefined-part 15)

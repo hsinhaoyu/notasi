@@ -137,8 +137,29 @@ start relative to FROM, or #f if it doesn't sound there."
 ;;; its row labels, and each voice's events in the whole piece, in
 ;;; columns of 1/K pulse.  Rows are the notes used (`notes'), one per
 ;;; member (`parts'), or one for all (`single').
-(define (prepare-group group k)
-  (append (prepare-rows group k) (list (group-overlays group k))))
+(define (prepare-group group k from to)
+  (append (prepare-rows group k from to) (list (group-overlays group k))))
+
+(define (sounds-in? event from to)
+  "Whether EVENT sounds somewhere in [FROM, TO), in pulses."
+  (and (< (event-start event) to)
+       (> (+ (event-start event) (event-duration event)) from)))
+
+(define (lanes-in-range group from to)
+  "GROUP's lanes that some note of its parts sounds on in [FROM, TO)."
+  (let ((used (append-map
+               (lambda (part)
+                 (let ((notes (instrument-notes (part-instrument part))))
+                   (append-map
+                    (lambda (event)
+                      (if (sounds-in? event from to)
+                          (map (lambda (i) (vector-ref notes i))
+                               (event-notes event))
+                          '()))
+                    (part-events part))))
+               (group-parts group))))
+    (filter (match-lambda ((_ . note) (memq note used)))
+            (lane-owners group))))
 
 (define (named-spans group)
   "The spans of GROUP's members at its pattern level, as (START END
@@ -166,7 +187,7 @@ pulse, identical ones written once, sorted by start."
               (named-spans group)))
         (lambda (a b) (< (car a) (car b)))))
 
-(define (prepare-rows group k)
+(define (prepare-rows group k from to)
   (let ((style (group-style group)))
     (define (voices lane-of-part)
       (map (lambda (part)
@@ -176,7 +197,7 @@ pulse, identical ones written once, sorted by start."
            (group-parts group)))
     (match (group-rows group)
       ('notes
-       (let ((lanes (lane-owners group)))
+       (let ((lanes (lanes-in-range group from to)))
          (list group (map lane-label lanes)
                (voices
                 (lambda (part)
@@ -210,10 +231,17 @@ pulse, identical ones written once, sorted by start."
                 (text . ,text)
                 (continued . ,(< start from)))))))))
 
-(define (group-in-system prepared from to)
+(define (printed-label group index)
+  "The label GROUP prints on the system numbered INDEX (from 0)."
+  (match (group-labels group)
+    ('long (group-label group))
+    ('short (group-short group))
+    ('first-long (if (zero? index) (group-label group) (group-short group)))))
+
+(define (group-in-system prepared index from to)
   (match prepared
     ((group lanes voices overlays)
-     `((label . ,(group-label group))
+     `((label . ,(printed-label group index))
        (subtitle . ,(null-if-false (group-subtitle group)))
        (lanes . ,(list->vector lanes))
        (voices
@@ -236,23 +264,32 @@ pulse, identical ones written once, sorted by start."
 
 (define (step-columns piece score)
   "K, the number of columns in a pulse: the step is the largest duration
-1/K that divides 1 pulse, the piece's length, the system length, and
-every start and end of the events the score prints."
-  (fold (lambda (time k) (lcm k (denominator time)))
-        1
-        (append
-         (list (piece-length piece) (or (score-system-length score) 1))
-         (append-map (lambda (part)
-                       (append-map (lambda (e)
-                                     (list (event-start e)
-                                           (+ (event-start e)
-                                              (event-duration e))))
-                                   (part-events part)))
-                     (append-map group-parts (score-groups score)))
-         (append-map (lambda (group)
-                       (append-map (match-lambda ((start end _) (list start end)))
-                                   (named-spans group)))
-                     (score-groups score)))))
+1/K that divides 1 pulse, the range's ends, the breaks, the system
+length, and every start and end, within the range, of the events and
+pattern names the score prints."
+  (let* ((from (score-from score))
+         (to (score-to score))
+         (edges (lambda (start end)
+                  (if (and (< start to) (> end from))
+                      (list (max start from) (min end to))
+                      '()))))
+    (fold (lambda (time k) (lcm k (denominator time)))
+          1
+          (append
+           (list from to (or (score-system-length score) 1))
+           (score-breaks score)
+           (append-map (lambda (part)
+                         (append-map (lambda (e)
+                                       (edges (event-start e)
+                                              (+ (event-start e)
+                                                 (event-duration e))))
+                                     (part-events part)))
+                       (append-map group-parts (score-groups score)))
+           (append-map (lambda (group)
+                         (append-map (match-lambda
+                                       ((start end _) (edges start end)))
+                                     (named-spans group)))
+                       (score-groups score))))))
 
 ;;; ------------------------------------------------------------------
 ;;; Header and lines (04, "Header and lines")
@@ -320,18 +357,39 @@ every start and end of the events the score prints."
 
 ;;; Systems of STEPS columns each (default: one for the whole piece),
 ;;; LENGTH columns in all.  The last may be shorter.
-(define (systems length steps prepared score meter k)
-  (list->vector
-   (map (lambda (start)
-          (let ((end (min length (+ start steps))))
+(define (system-starts score k)
+  "The columns where the score's systems start: its start, every break,
+and every system length from its start, in order."
+  (let* ((from (* k (score-from score)))
+         (to (* k (score-to score)))
+         (every (match (score-system-length score)
+                  (#f '())
+                  (pulses (let ((steps (* k pulses)))
+                            (iota (ceiling (/ (- to from) steps)) from steps))))))
+    (if (>= from to)
+        '()
+        (sort (delete-duplicates
+               (filter (lambda (c) (and (>= c from) (< c to)))
+                       (append (list from)
+                               (map (lambda (b) (* k b)) (score-breaks score))
+                               every)))
+              <))))
+
+(define (systems prepared score meter k)
+  (let* ((starts (system-starts score k))
+         (ends (match starts
+                 (() '())
+                 ((_ . later) (append later (list (* k (score-to score))))))))
+    (list->vector
+     (map (lambda (index start end)
             `((start . ,start)
               (steps . ,(- end start))
               (header . ,(header score meter k start end))
               (lines . ,(lines meter k start end))
               (groups . ,(list->vector
-                          (map (lambda (g) (group-in-system g start end))
-                               prepared))))))
-        (if (zero? length) '() (iota (ceiling (/ length steps)) 0 steps)))))
+                          (map (lambda (g) (group-in-system g index start end))
+                               prepared)))))
+          (iota (length starts)) starts ends))))
 
 ;;; ------------------------------------------------------------------
 ;;; Sizes
@@ -345,12 +403,15 @@ every start and end of the events the score prints."
 (define (longest strings)
   (fold (lambda (s m) (max m (string-length s))) 0 strings))
 
-(define (sizes prepared score)
-  (let ((labels (append-map (match-lambda
-                              ((group _ _ _)
-                               (filter string? (list (group-label group)
-                                                     (group-subtitle group)))))
-                            prepared))
+(define (sizes prepared score systems)
+  (let ((labels (append
+                 ;; The labels printed, on any system.
+                 (append-map (lambda (system)
+                               (map (lambda (g) (assq-ref g 'label))
+                                    (vector->list (assq-ref system 'groups))))
+                             (vector->list systems))
+                 (filter-map (match-lambda ((group _ _ _) (group-subtitle group)))
+                             prepared)))
         (lane-labels (append-map (match-lambda ((_ lanes _ _) lanes))
                                  prepared)))
     `((font_size . ,(null-if-false (score-font-size score)))
@@ -367,17 +428,15 @@ every start and end of the events the score prints."
 the contract in doc/design/05-typst-backend.md (version 2).  Its groups
 carry their effective settings (ADR 0033)."
   (let* ((k (step-columns piece score))
-         (length (* k (piece-length piece)))
-         (prepared (map (lambda (group) (prepare-group group k))
-                        (score-groups score))))
+         (prepared (map (lambda (group)
+                          (prepare-group group k (score-from score)
+                                         (score-to score)))
+                        (score-groups score)))
+         (systems (systems prepared score (piece-meter piece) k)))
     `((version . 2)
       (title . ,(score-title score))
       (subtitle . ,(null-if-false (score-subtitle score)))
       (steps_per_pulse . ,k)
-      (sizes . ,(sizes prepared score))
-      (systems . ,(systems length
-                           (match (score-system-length score)
-                             (#f (max length 1))
-                             (pulses (* k pulses)))
-                           prepared score (piece-meter piece) k))
+      (sizes . ,(sizes prepared score systems))
+      (systems . ,systems)
       (caption . ,(null-if-false (score-caption score))))))
