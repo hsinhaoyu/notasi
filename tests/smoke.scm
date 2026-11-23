@@ -2,6 +2,7 @@
 
 (use-modules (srfi srfi-64)
              (notasi piece)
+             (notasi expand)
              (notasi reader)
              (notasi layout)
              (notasi json)

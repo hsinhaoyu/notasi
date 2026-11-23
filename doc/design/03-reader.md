@@ -473,7 +473,29 @@ error cases tagged with its feature, and the steps above that they need.
    `/`; the condition's `time` and `uses` fields, with positions as
    `pulse P`; `steps-per-pulse` and `steps-per-system` gone, and layout
    deriving the step (04, "The step"), with systems one per piece until
-   scores.
+   scores. Decided for this slice:
+   - `piece` gains only what this slice needs:
+     `(make-piece title length scales instruments parts groups)`, with
+     `length` an exact rational in pulses; `steps-per-pulse` and
+     `steps-per-system` go. Later slices add their own fields, and
+     milestone 2 replaces `groups` with `scores`.
+   - `(notasi expand)` resolves note names (step 7 for tokens moves
+     into it) and exports `(expand-tokens tokens instrument)` →
+     `(EVENTS . LENGTH)`: event records with exact rational starts and
+     durations, and the written length in pulses (trailing rests
+     included). Its errors are `&expansion-error`, a subtype of
+     `&error`, with `expansion-error?`, `expansion-error-kind`,
+     `expansion-error-time` (pulses from the start of the tokens, or
+     `#f`) and `expansion-error-uses` (`'()` until patterns), and a
+     `&message` without a location. The reader catches it, adds the
+     file, line and part, and raises `&notasi-syntax-error` with the
+     same kind, `time` and `uses`.
+   - `part-steps` becomes `part-end` and `events-at` takes a time
+     (02, "Derived values").
+   - Without a colotomy, a time T is written `pulse P` with P = T + 1,
+     a fraction as a mixed number: time 3/2 is "pulse 2 1/2", e.g.
+     "part `ugal', pulse 2 1/2: …". A `time` of `#f` prints no
+     position.
 3. `feat/music-rep` **[rep]**: `rep`.
 4. `feat/music-colotomy` **[colotomy]**: `colotomy` forms, `:colotomy`
    and `:pickup`, generated parts (step 11), `||` checks, lengths

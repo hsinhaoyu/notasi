@@ -44,17 +44,17 @@
 ;;; ------------------------------------------------------------------
 ;;; Events
 
-(define (note-events part lanes style)
+(define (note-events part lanes style k)
   "PART's events, one per note (a chord gives several), as
-(START DURATION LANE LOOK) lists.  The look's text is dropped (#f):
+(START DURATION LANE LOOK) lists, in columns of 1/K pulse.  The look's text is dropped (#f):
 until scores (iteration 2, milestone 2) no note shows its name."
   (let ((instrument (part-instrument part)))
     (append-map
      (lambda (event)
        (map (lambda (index)
               (let ((note (vector-ref (instrument-notes instrument) index)))
-                (list (event-start event)
-                      (event-duration event)
+                (list (* k (event-start event))
+                      (* k (event-duration event))
                       (list-index (match-lambda ((_ . n) (eq? n note))) lanes)
                       (let ((look (note-look style instrument note)))
                         (make-look (look-fill look) #f
@@ -88,14 +88,15 @@ start relative to FROM, or #f if it doesn't sound there."
 ;;; Groups and systems
 
 ;;; A group prepared once for the whole piece: its JSON label fields,
-;;; its lanes, and each voice's events in the whole piece.
-(define (prepare-group group style)
+;;; its lanes, and each voice's events in the whole piece, in columns of
+;;; 1/K pulse.
+(define (prepare-group group style k)
   (let ((lanes (lane-owners group)))
     (list group
           lanes
           (map (lambda (part)
                  (cons (symbol->string (part-name part))
-                       (sort (note-events part lanes style) event<?)))
+                       (sort (note-events part lanes style k) event<?)))
                (group-parts group)))))
 
 (define (group-in-system prepared from to)
@@ -115,26 +116,35 @@ start relative to FROM, or #f if it doesn't sound there."
                                        events))))))
                  voices)))))))
 
-(define (system-starts length steps)
-  (iota (ceiling-quotient length steps) 0 steps))
+;;; ------------------------------------------------------------------
+;;; The step (04, "The step")
 
-(define (ceiling-quotient n d)
-  (quotient (+ n d -1) d))
+(define (step-columns piece)
+  "K, the number of columns in a pulse: the step is the largest duration
+1/K that divides 1 pulse, every event's start and end, and the piece's
+length."
+  (fold (lambda (time k) (lcm k (denominator time)))
+        1
+        (cons (piece-length piece)
+              (append-map (lambda (part)
+                            (append-map (lambda (e)
+                                          (list (event-start e)
+                                                (+ (event-start e)
+                                                   (event-duration e))))
+                                        (part-events part)))
+                          (piece-parts piece)))))
 
-(define (systems piece prepared)
-  (let* ((length (piece-length piece))
-         (steps (or (piece-steps-per-system piece) length)))
-    (if (zero? length)
-        #()
-        (list->vector
-         (map (lambda (start)
-                (let ((end (min length (+ start steps))))
-                  `((start . ,start)
-                    (steps . ,(- end start))
-                    (groups . ,(list->vector
-                                (map (lambda (g) (group-in-system g start end))
-                                     prepared))))))
-              (system-starts length steps))))))
+;;; One system for the whole piece, of LENGTH columns, until scores
+;;; (iteration 2, milestone 2) bring system breaks.
+(define (systems length prepared)
+  (if (zero? length)
+      #()
+      (vector
+       `((start . 0)
+         (steps . ,length)
+         (groups . ,(list->vector
+                     (map (lambda (g) (group-in-system g 0 length))
+                          prepared)))))))
 
 ;;; ------------------------------------------------------------------
 ;;; Sizes
@@ -168,11 +178,12 @@ start relative to FROM, or #f if it doesn't sound there."
 (define* (layout-piece piece #:key (style (default-style)))
   "Lay out PIECE as a figure: the JSON value of the contract in
 doc/design/05-typst-backend.md, with each note drawn as STYLE says."
-  (let ((prepared (map (lambda (group) (prepare-group group style))
-                       (piece-groups piece))))
+  (let* ((k (step-columns piece))
+         (prepared (map (lambda (group) (prepare-group group style k))
+                        (piece-groups piece))))
     `((version . 1)
       (title . ,(piece-title piece))
-      (steps_per_pulse . ,(piece-steps-per-pulse piece))
+      (steps_per_pulse . ,k)
       (sizes . ,(sizes prepared))
-      (systems . ,(systems piece prepared))
+      (systems . ,(systems (* k (piece-length piece)) prepared))
       (caption . null))))

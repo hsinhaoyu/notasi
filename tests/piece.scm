@@ -1,6 +1,11 @@
 ;;; Unit tests for (notasi piece): records and derived functions.
 ;;;
 ;;; Written from doc/design/02-piece.md, not from the implementation.
+;;;
+;;; Slice feat/music-durations (03-reader.md, "Slices (iteration 2)"):
+;;; `piece` is (make-piece title length scales instruments parts groups),
+;;; times are exact rationals in pulses, `part-end` replaces `part-steps`
+;;; and `events-at` takes a time.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -179,6 +184,12 @@
     (test-equal "duration" 2 (event-duration e))
     (test-equal "notes" '(0 3) (event-notes e))))
 
+(test-group "event record: times are exact rationals in pulses"
+  (let ((e (make-event 3/2 1/4 '(1))))
+    (test-equal "start" 3/2 (event-start e))
+    (test-equal "duration" 1/4 (event-duration e))
+    (test-assert "start stays exact" (exact? (event-start e)))))
+
 (test-group "part record"
   (let* ((events (list (ev 0 1 0) (ev 1 1 1)))
          (p (make-part 'polos reyong events loc)))
@@ -203,22 +214,22 @@
 (test-group "piece record"
   (let* ((p (mk-part 'polos reyong (ev 0 1 0)))
          (g (mk-group "Reyong" p))
-         (pc (make-piece "Test" 4 16 32
+         (pc (make-piece "Test" 8
                          (list selisir gong-strokes)
                          (list reyong gong)
                          (list p)
                          (list g))))
     (test-assert "predicate" (piece? pc))
     (test-equal "title" "Test" (piece-title pc))
-    (test-equal "steps-per-pulse" 4 (piece-steps-per-pulse pc))
-    (test-equal "steps-per-system" 16 (piece-steps-per-system pc))
-    (test-equal "length" 32 (piece-length pc))
+    (test-equal "length" 8 (piece-length pc))
     (test-equal "scales" (list selisir gong-strokes) (piece-scales pc))
     (test-equal "instruments" (list reyong gong) (piece-instruments pc))
     (test-equal "parts" (list p) (piece-parts pc))
     (test-equal "groups" (list g) (piece-groups pc)))
-  (test-eq "steps-per-system may be #f" #f
-    (piece-steps-per-system (make-piece "T" 4 #f 8 '() '() '() '()))))
+  (test-equal "length may be a fraction of a pulse" 9/2
+    (piece-length (make-piece "T" 9/2 '() '() '() '())))
+  (test-equal "length stays exact" #t
+    (exact? (piece-length (make-piece "T" 1/3 '() '() '() '())))))
 
 (test-assert "records are distinct types"
   (not (or (note? (ev 0 1 0))
@@ -353,35 +364,39 @@
                           (mk-part 'gong gong (ev 0 1 1))
                           (mk-part 'kempli kempli (ev 0 1 0))))))
 
-;;; part-steps
+;;; part-end
 
-(test-group "part-steps"
+(test-group "part-end"
   (test-equal "end of last event" 8
-    (part-steps (mk-part 'p reyong (ev 0 1 0) (ev 4 4 1))))
+    (part-end (mk-part 'p reyong (ev 0 1 0) (ev 4 4 1))))
   (test-equal "single held note" 3
-    (part-steps (mk-part 'p reyong (ev 0 3 0))))
+    (part-end (mk-part 'p reyong (ev 0 3 0))))
   (test-equal "no events" 0
-    (part-steps (mk-part 'p reyong)))
+    (part-end (mk-part 'p reyong)))
   (test-equal "trailing rests are not counted" 3
     ;; e.g. "1 - 2 - - -": events at 0 and 2, part ends at 3
-    (part-steps (mk-part 'p reyong (ev 0 1 0) (ev 2 1 1))))
+    (part-end (mk-part 'p reyong (ev 0 1 0) (ev 2 1 1))))
   (test-equal "leading rests" 6
-    (part-steps (mk-part 'p kempli (ev 5 1 0)))))
+    (part-end (mk-part 'p kempli (ev 5 1 0))))
+  (test-equal "fractions of a pulse: exact" 7/4
+    (part-end (mk-part 'p reyong (ev 0 1/4 0) (ev 3/2 1/4 1))))
+  (test-assert "the end stays exact"
+    (exact? (part-end (mk-part 'p reyong (ev 1/3 1/3 0))))))
 
 ;;; events-at
 
 (let* ((e-p0 (ev 0 1 3))
-       (e-p1 (ev 1 3 4))                ; held over steps 1, 2, 3
+       (e-p1 (ev 1 3 4))                ; held over pulses 1, 2, 3
        (e-p6 (ev 6 1 3 5))              ; chord
        (polos (mk-part 'polos reyong e-p0 e-p1 e-p6))
-       (e-s0 (ev 0 2 6))                ; held over steps 0, 1
+       (e-s0 (ev 0 2 6))                ; held over pulses 0, 1
        (e-s3 (ev 3 1 5))
        (e-s6 (ev 6 1 2))
        (sangsih (mk-part 'sangsih reyong e-s0 e-s3 e-s6))
        (e-k0 (ev 0 1 0))
        (e-k6 (ev 6 1 0))
        (kp (mk-part 'kempli kempli e-k0 e-k6))
-       (pc (make-piece "Test" 4 #f 8
+       (pc (make-piece "Test" 8
                        (list selisir kempli-strokes)
                        (list reyong kempli)
                        (list polos sangsih kp)
@@ -396,36 +411,60 @@
     (test-assert "returns pairs of part and event"
       (every (match-lambda ((p . e) (and (part? p) (event? e))))
              (events-at pc 0)))
-    (test-equal "step 0: all three parts, in piece part order"
+    (test-equal "time 0: all three parts, in piece part order"
       (list (cons 'polos e-p0) (cons 'sangsih e-s0) (cons 'kempli e-k0))
       (names+events (events-at pc 0)))
     (test-assert "the pair holds the part record itself"
       (eq? polos (car (car (events-at pc 0)))))
     (test-assert "the pair holds the event record itself"
       (eq? e-p0 (cdr (car (events-at pc 0)))))
-    (test-equal "step 1: event start and a hold from step 0"
+    (test-equal "time 1: event start and a hold from time 0"
       (list (cons 'polos e-p1) (cons 'sangsih e-s0))
       (names+events (events-at pc 1)))
-    (test-equal "step 2: hold covers the step; step = start+duration excluded"
+    (test-equal "time 2: hold covers the time; time = start+duration excluded"
       (list (cons 'polos e-p1))
       (names+events (events-at pc 2)))
-    (test-equal "step 3: last held step of polos plus a sangsih start"
+    (test-equal "time 3: last held pulse of polos plus a sangsih start"
       (list (cons 'polos e-p1) (cons 'sangsih e-s3))
       (names+events (events-at pc 3)))
-    (test-equal "step 4: polos event ended (start + duration = 4)"
+    (test-equal "time 4: polos event ended (start + duration = 4)"
       '()
       (events-at pc 4))
-    (test-equal "step 5: everything rests" '() (events-at pc 5))
-    (test-equal "step 6: a chord appears as one event"
+    (test-equal "time 5: everything rests" '() (events-at pc 5))
+    (test-equal "time 6: a chord appears as one event"
       (list (cons 'polos e-p6) (cons 'sangsih e-s6) (cons 'kempli e-k6))
       (names+events (events-at pc 6)))
-    (test-equal "step 6: chord keeps all its notes" '(3 5)
+    (test-equal "time 6: chord keeps all its notes" '(3 5)
       (event-notes (cdr (car (events-at pc 6)))))
-    (test-equal "step 7: last step, nothing sounding" '() (events-at pc 7))))
+    (test-equal "time 7: last pulse, nothing sounding" '() (events-at pc 7))
+    (test-equal "time 1/2: between pulses, the events sounding then"
+      (list (cons 'polos e-p0) (cons 'sangsih e-s0) (cons 'kempli e-k0))
+      (names+events (events-at pc 1/2)))
+    (test-equal "time 7/2: inside a held note"
+      (list (cons 'polos e-p1) (cons 'sangsih e-s3))
+      (names+events (events-at pc 7/2)))
+    (test-equal "time 11/2: a rest" '() (events-at pc 11/2))))
+
+(let* ((e1 (ev 0 1/4 0))
+       (e2 (ev 1/4 1/4 1))
+       (e3 (ev 3/4 1/4 2))
+       (p (mk-part 'polos reyong e1 e2 e3))
+       (pc (make-piece "Quarters" 1 (list selisir) (list reyong) (list p)
+                       (list (mk-group "R" p)))))
+  (define (events-at* time) (map cdr (events-at pc time)))
+  (test-group "events-at: fractions of a pulse"
+    (test-equal "time 0" (list e1) (events-at* 0))
+    (test-equal "time 1/8: inside the first quarter" (list e1)
+      (events-at* 1/8))
+    (test-equal "time 1/4: end of the first excluded, the second starts"
+      (list e2) (events-at* 1/4))
+    (test-equal "time 1/2: a rest" '() (events-at* 1/2))
+    (test-equal "time 3/4" (list e3) (events-at* 3/4))
+    (test-equal "time 1: after the last" '() (events-at* 1))))
 
 (let* ((a (mk-part 'a kempli (ev 0 1 0)))
        (b (mk-part 'b kempli (ev 0 1 0)))
-       (pc (make-piece "Order" 4 #f 4 '() (list kempli) (list b a)
+       (pc (make-piece "Order" 4 '() (list kempli) (list b a)
                        (list (mk-group "x" b a)))))
   (test-equal "events-at follows piece-parts order, not part names"
     '(b a)

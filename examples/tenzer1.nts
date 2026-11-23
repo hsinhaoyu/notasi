@@ -1,5 +1,5 @@
 ;; Eight-pulse gong cycle with ugal melody, kempli and gong/kempur.
-;; One step = one kempli pulse. Step 9 is pulse 1 of the next cycle,
+;; Each note is one kempli pulse. Pulse 9 is pulse 1 of the next cycle,
 ;; where the gong lands again; it is written out because the source
 ;; figure shows it. The ugal line continues ("etc.") beyond this.
 ;;
@@ -9,8 +9,7 @@
 ;; are four adjacent ugal keys: a1 i2 o2 e2. The figure does not give
 ;; the register; this places them in the middle of the ugal.
 
-(piece "Eight-pulse gong cycle"
-  :steps-per-pulse 1)
+(piece "Eight-pulse gong cycle")
 
 (use gong-kebyar)
 
