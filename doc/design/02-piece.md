@@ -11,7 +11,7 @@ the `pattern` and `pattern-span` records since `feat/music-patterns`;
 `feat/scores-form`, and `note-display #:damped?` since
 `feat/scores-rows`. Tests in `tests/piece.scm`. Planned for iteration
 3: the score's `cycle-label`; the group's `keys`, `octave-numbers?`,
-`display` and `background`; `note-label`'s `#:octave?`; invariants 9 and
+`key-numbers?`, `row-labels?`, `display` and `background`; `note-label`'s `#:octave?`; invariants 9 and
 10.
 
 Everything in this document is **Implemented** unless it says otherwise.
@@ -176,6 +176,11 @@ group                                  every setting filled in (ADR 0033)
                                        for `parts` and `single` rows
   octave-numbers? : boolean            **Planned**: octave numbers on
                                        row labels
+  key-numbers?  : boolean              **Planned**: a column of key
+                                       numbers; #f for strokes, `parts`
+                                       and `single` rows
+  row-labels?   : boolean              **Planned**: the column of row
+                                       labels
   display       : list of (symbol . string)   **Planned**: stroke name
                                        and the form shown for it in this
                                        score (`:display`); '() for none
@@ -267,7 +272,8 @@ construction, since events are built from the tokens.
     play in the score's range is within it; the range's notes are keys
     of the group's instrument, the lower first. A group whose `keys` is
     a range is pitched, with `rows` `notes`. Every stroke in a group's
-    `display` is a stroke of an instrument in the group.
+    `display` is a stroke of an instrument in the group. A group with
+    `key-numbers?` is pitched, with `rows` `notes`.
 
 ## Decided
 
