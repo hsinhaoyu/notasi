@@ -284,7 +284,8 @@ BAD, when given, is called instead of `bad-option' for a wrong value."
     (pickup ,(lambda (v) (and (number? v) (exact? v))) . "a whole number of pulses")))
 
 (define part-options
-  `((name ,(lambda (v) (and (symbol? v) (not (key? v)))) . "a name")))
+  `((instrument ,(lambda (v) (and (symbol? v) (not (key? v)))) . "an instrument's name")
+    (name ,(lambda (v) (and (symbol? v) (not (key? v)))) . "a name")))
 
 (define (parse-piece-form form)
   "The title and options of the `piece' form FORM, a (DATUM . LINE), as
@@ -353,13 +354,36 @@ in file order."
                     "a stroke set needs a name and its strokes: (strokes NAME STROKE ...)")))
 
 (define (split-part form)
-  "The (INSTRUMENT OPTIONS . TOKENS) of a well-formed `part' FORM."
+  "The (INSTRUMENT OPTIONS . TOKENS) of a well-formed `part' FORM, written
+(part :instrument INSTRUMENT :name NAME TOKEN ...) (ADR 0038)."
   (match form
-    ((('part instrument . items) . line)
+    ((('part . items) . line)
      (match (split-options items line)
        ((options . tokens)
-        (cons* instrument (check-options options part-options "a part" line)
-               tokens))))))
+        (let ((options (check-options options part-options "a part" line)))
+          (cons* (assq-ref options 'instrument) options tokens)))))))
+
+(define (check-part-shape form)
+  "A `part' FORM, at the top level or in a colotomy: options with
+:instrument, then its music."
+  (match form
+    ((('part . items) . line)
+     (match (split-options items line)
+       ((options . body)
+        (let ((options (check-options options part-options "a part" line)))
+          (unless (assq 'instrument options)
+            (match body
+              (((? note-name? old) . _)
+               (syntax-error 'missing-option line
+                             "a part names its instrument with :instrument: write `(part :instrument ~a ...)'"
+                             old))
+              (_
+               (syntax-error 'missing-option line
+                             "a part needs :instrument: (part :instrument INSTRUMENT TOKEN ...)"))))
+          (when (null? body)
+            (syntax-error 'bad-form line
+                          "a part needs its music: (part :instrument INSTRUMENT TOKEN ...)"))
+          (reject-keys body line)))))))
 
 (define (part-form-name form)
   "The name of the `part' FORM: its :name, else its instrument's name."
@@ -370,28 +394,40 @@ in file order."
   (match (split-part form)
     ((_ options . _) (and (assq 'name options) #t))))
 
-(define (colotomy-part-form? x)
-  (match x
-    (((? note-name?) (? note-name?) _ ..1) #t)
-    (_ #f)))
+(define (colotomy-part-forms form)
+  "The parts of a well-formed `colotomy' FORM, as (DATUM . LINE) forms."
+  (match form
+    ((('colotomy _ _ . parts) . line)
+     (map (lambda (part) (cons part (list-line part line))) parts))))
 
 (define (check-colotomy-shape form)
   "A `colotomy' FORM: a name, a cycle length in pulses, no options, then
-its parts, (PART INSTRUMENT TOKEN ...)."
+its parts, each a `part' form (ADR 0038)."
   (match form
     ((('colotomy (? note-name?) (? positive-whole-number?) . items) . line)
      (match (split-options items line)
        ((() . (? pair? parts))
         (reject-keys parts line)
-        (unless (every colotomy-part-form? parts)
-          (bad-colotomy-form line)))
+        (fold (lambda (part earlier)
+                (match part
+                  ((('part . _) . _)
+                   (check-part-shape part)
+                   (check-part-names part earlier)
+                   (cons part earlier))
+                  (((_ (? note-name? instrument) . _) . pline)
+                   (syntax-error 'bad-form pline
+                                 "a colotomy's parts are part forms: write `(part :instrument ~a ...)'"
+                                 instrument))
+                  ((_ . pline) (bad-colotomy-form pline))))
+              '()
+              (colotomy-part-forms form)))
        ((() . ()) (bad-colotomy-form line))
        ((options . _) (check-options options '() "a colotomy" line))))
     ((_ . line) (bad-colotomy-form line))))
 
 (define (bad-colotomy-form line)
   (syntax-error 'bad-form line
-                "a colotomy needs a name, its length in pulses and its parts: (colotomy NAME LENGTH (PART INSTRUMENT TOKEN ...) ...)"))
+                "a colotomy needs a name, its length in pulses and its parts: (colotomy NAME LENGTH (part :instrument INSTRUMENT TOKEN ...) ...)"))
 
 (define pattern-options
   `((instrument ,(lambda (v) (and (symbol? v) (not (key? v)))) . "an instrument's name")
@@ -492,18 +528,11 @@ value."
     ((('pattern . _) . _) (check-pattern-shape form))
     ((((or 'scale 'strokes) . _) . _) (check-set-shape form))
     ((('instrument (? note-name?) (? note-name?) (? note-name?) ..1) . _) #t)
-    ((('part (? note-name?) . items) . line)
-     (match (split-part form)
-       ((_ _ . ())
-        (syntax-error 'bad-form line
-                      "a part needs its music: (part INSTRUMENT TOKEN ...)"))
-       ((_ _ . tokens) (reject-keys tokens line))))
+    ((('part . _) . _) (check-part-shape form))
     ((('instrument . _) . line)
      (syntax-error 'bad-form line
                    "an instrument needs a name, a scale or stroke set, and its notes, and takes no options: (instrument NAME SCALE NOTE ...)"))
-    ((('part . _) . line)
-     (syntax-error 'bad-form line
-                   "a part needs an instrument and its music: (part INSTRUMENT :name NAME TOKEN ...)"))))
+))
 
 ;;; ------------------------------------------------------------------
 ;;; Item 7: duplicate definitions.  Scales and stroke sets share one set
@@ -998,9 +1027,11 @@ cycle.  INSTRUMENTS is an alist from name to instrument record."
     ((('colotomy name cycle . parts) . line)
      (make-colotomy
       name cycle 'kempli
-      (map (match-lambda
-             ((part-name instrument-name . tokens)
-              (let ((instrument
+      (map (lambda (part-form)
+             (match (split-part part-form)
+               ((instrument-name options . tokens)
+              (let* ((part-name (or (assq-ref options 'name) instrument-name))
+                     (instrument
                      (or (assq-ref instruments instrument-name)
                          (part-error 'undefined-instrument line part-name #f
                                      "no instrument called `~a'"
@@ -1016,8 +1047,8 @@ cycle.  INSTRUMENTS is an alist from name to instrument record."
                                  length name cycle))
                    (make-part part-name instrument
                               (repeat-events events length (/ cycle length))
-                              'colotomy '() (location line)))))))
-           parts)
+                              'colotomy '() (location line))))))))
+           (colotomy-part-forms form))
       (location line)))))
 
 (define (piece-meter title+options colotomies line)
