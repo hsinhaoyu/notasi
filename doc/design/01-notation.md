@@ -538,8 +538,9 @@ rest.
 milestone 1, slice 1). It differs from the rest as follows, and this
 section goes when iteration 2 is built:
 
-- Durations, `_`, `-`, `/` and `|` are read (slice 2). `piece` takes no
-  options yet, and there are no `||`, `rep`, patterns or colotomies.
+- Durations, `_`, `-`, `/`, `|` (slice 2) and `rep` (slice 3) are read.
+  `piece` takes no options yet, and there are no `||`, patterns or
+  colotomies.
   A figure is one system for the whole piece.
 - `colotomy`, `pattern` and `score` forms raise `not-implemented`.
   There are no scores yet: every part is drawn in its own group, and no
