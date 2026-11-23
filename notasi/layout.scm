@@ -138,6 +138,35 @@ start relative to FROM, or #f if it doesn't sound there."
 ;;; columns of 1/K pulse.  Rows are the notes used (`notes'), one per
 ;;; member (`parts'), or one for all (`single').
 (define (prepare-group group k)
+  (append (prepare-rows group k) (list (group-overlays group k))))
+
+(define (named-spans group)
+  "The spans of GROUP's members at its pattern level, as (START END
+TEXT) in pulses: none when it prints no pattern names."
+  (if (eq? (group-pattern-names group) 'none)
+      '()
+      (append-map
+       (lambda (part)
+         (filter-map
+          (lambda (span)
+            (and (= (pattern-span-depth span) (group-pattern-level group))
+                 (list (pattern-span-start span) (pattern-span-end span)
+                       (if (eq? (group-pattern-names group) 'long)
+                           (pattern-span-long span)
+                           (pattern-span-short span)))))
+          (part-spans part)))
+       (group-parts group))))
+
+(define (group-overlays group k)
+  "GROUP's pattern names as (START DURATION TEXT) in columns of 1/K
+pulse, identical ones written once, sorted by start."
+  (sort (delete-duplicates
+         (map (match-lambda
+                ((start end text) (list (* k start) (* k (- end start)) text)))
+              (named-spans group)))
+        (lambda (a b) (< (car a) (car b)))))
+
+(define (prepare-rows group k)
   (let ((style (group-style group)))
     (define (voices lane-of-part)
       (map (lambda (part)
@@ -166,9 +195,24 @@ start relative to FROM, or #f if it doesn't sound there."
       ('single
        (list group '("") (voices (lambda (part) (const 0))))))))
 
+(define (clip-overlay overlay rows from to)
+  "OVERLAY cut to the columns [FROM, TO), as a JSON overlay object, or
+#f.  A continued piece shows its text again."
+  (match overlay
+    ((start duration text)
+     (let ((end (+ start duration)))
+       (and (< start to) (> end from)
+            (let ((first (max start from)))
+              `((start . ,(- first from))
+                (dur . ,(- (min end to) first))
+                (row . 0)
+                (rows . ,rows)
+                (text . ,text)
+                (continued . ,(< start from)))))))))
+
 (define (group-in-system prepared from to)
   (match prepared
-    ((group lanes voices)
+    ((group lanes voices overlays)
      `((label . ,(group-label group))
        (subtitle . ,(null-if-false (group-subtitle group)))
        (lanes . ,(list->vector lanes))
@@ -182,7 +226,10 @@ start relative to FROM, or #f if it doesn't sound there."
                            (filter-map (lambda (e) (clip-event e from to))
                                        events))))))
                  voices)))
-       (overlays . #())))))
+       (overlays
+        . ,(list->vector
+            (filter-map (lambda (o) (clip-overlay o (length lanes) from to))
+                        overlays)))))))
 
 ;;; ------------------------------------------------------------------
 ;;; The step (04, "The step")
@@ -201,7 +248,11 @@ every start and end of the events the score prints."
                                            (+ (event-start e)
                                               (event-duration e))))
                                    (part-events part)))
-                     (append-map group-parts (score-groups score))))))
+                     (append-map group-parts (score-groups score)))
+         (append-map (lambda (group)
+                       (append-map (match-lambda ((start end _) (list start end)))
+                                   (named-spans group)))
+                     (score-groups score)))))
 
 ;;; ------------------------------------------------------------------
 ;;; Header and lines (04, "Header and lines")
@@ -296,11 +347,11 @@ every start and end of the events the score prints."
 
 (define (sizes prepared score)
   (let ((labels (append-map (match-lambda
-                              ((group _ _)
+                              ((group _ _ _)
                                (filter string? (list (group-label group)
                                                      (group-subtitle group)))))
                             prepared))
-        (lane-labels (append-map (match-lambda ((_ lanes _) lanes))
+        (lane-labels (append-map (match-lambda ((_ lanes _ _) lanes))
                                  prepared)))
     `((font_size . ,(null-if-false (score-font-size score)))
       (label_width . ,(em (+ (* 3/5 (longest labels)) 3/2)))

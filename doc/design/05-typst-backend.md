@@ -5,8 +5,8 @@ slices, see "Slices"): the JSON writer, figure files, the entry file,
 running Typst, `render-piece`, the template and the `notasi render`
 command; contract version 2 (ADR 0036) with the template's header rows
 and lines and the entry file's font size, subtitle and caption since
-iteration 2's `feat/scores-contract`. Planned: drawing overlays, and
-choosing a score (`--score`). Modules: `(notasi json)`,
+iteration 2's `feat/scores-contract`, and overlays since
+`feat/scores-overlays`. Planned: choosing a score (`--score`). Modules: `(notasi json)`,
 `(notasi typst)`, `(notasi command)` (Guile), `typst/notasi.typ` (Typst
 template), `scripts/notasi` (the command).
 
@@ -22,8 +22,7 @@ must work in both places; see "Typst template design", points 6 and 7.
 
 ## JSON contract (version 2)
 
-**Implemented** (ADR 0036), with `overlays` always empty until
-`feat/scores-overlays`. Layout writes it (04, where the keys are listed
+**Implemented** (ADR 0036). Layout writes it (04, where the keys are listed
 in order). An excerpt, for Jaya Semara's full score (arrays shortened):
 
 ```json
@@ -257,9 +256,9 @@ Lessons from the prototype (`doc/prototypes/score.typ`):
 - Sizes relative to the text (`em`, `luma` greys), never absolute font
   sizes or fonts: the surrounding document or entry file sets those.
 
-**Implemented** for version 2 (ADRs 0036, 0037), except overlays
-(**Planned**, `feat/scores-overlays`); version 1's header and pulse
-lines below are replaced by these:
+**Implemented** for version 2 (ADRs 0036, 0037); version 1's header
+and pulse lines below are replaced by these. The overlays are drawn in a
+third layer over the notes, since a grid can't overlap its cells:
 
 - **Columns and rows** use `cell_width` and `cell_height` for the grid
   cells, and the label columns as before.

@@ -548,9 +548,10 @@ section goes when iteration 2 is built:
   (`:title`, `:subtitle`, `:caption`, `:system-length`,
   `:cycle-numbers`, `:pulse-numbers`, `:numbering`, `:pulse-label`,
   `:font-size`, `:note-names`, `:scheme`, `:palette`, `:colors`,
-  `:cell-width`, `:cell-height`, `:rows`, `:fill`, `:holds`); the
-  others raise `not-implemented`. `notasi render` draws the first
-  score. Pattern names are kept but not printed.
+  `:cell-width`, `:cell-height`, `:rows`, `:fill`, `:holds`,
+  `:pattern-names`, `:pattern-level`); `:labels`, `:short`, `:from`,
+  `:to` and `:breaks` raise `not-implemented`. `notasi render` draws
+  the first score.
 
 The manual describes this notation until then.
 

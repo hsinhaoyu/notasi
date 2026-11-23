@@ -134,6 +134,27 @@
 ;;;   the note is held (its whole length counts, 04 slice 3).
 ;;; - A `notes` group without `note-names?` but with `:holds dash` is not
 ;;;   tested.
+;;;
+;;; Slice feat/scores-overlays (04, "Slices (iteration 2)", slice 4 and
+;;; its decided bullets; 04, "Pattern names (overlays)", "The step",
+;;; "The range and systems"; 05, overlays): with `pattern-names` short
+;;; or long, each group's `overlays` has one overlay per merged span of
+;;; its members at `pattern-level`: `start` and `dur` in columns from
+;;; the system's start, `row` 0, `rows` the group's row count (lanes on
+;;; notes rows, members on parts rows, 1 on a single row), `text` the
+;;; short or long name in force at the use, `continued` false; sorted by
+;;; start. Cut at system boundaries like a note, the later pieces
+;;; `continued` true with the text kept. Span edges at the chosen level
+;;; count towards the step.
+;;; Choices made where the docs are not explicit:
+;;; - Spans are merged when their start, end and chosen text agree: with
+;;;   `short`, two spans whose long names differ make one overlay.
+;;; - A span ending exactly on a system boundary is not cut, as for
+;;;   notes; a system with no span in it has `overlays` #().
+;;; - Spans of a group with `pattern-names` none, or at another level,
+;;;   do not count towards the step.
+;;; - Overlays of equal start (impossible after the reader's check) are
+;;;   not tested for order.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -2126,6 +2147,219 @@ give."
     (let ((fig (rows-fig "(score s :note-names yes :fill none :holds dash"
                          "  (group \"U\" :rows single q) (group \"P\" :rows parts p s))")))
       (and fig (string? (json-string fig))))))
+
+;;; ------------------------------------------------------------------
+;;; Pattern names (slice feat/scores-overlays; 04, "Pattern names
+;;; (overlays)", "The step", "The range and systems")
+
+(define overlay-keys '(start dur row rows text continued))
+
+(define (ov start dur row rows text continued)
+  "An overlay object, keys in the documented order."
+  `((start . ,start) (dur . ,dur) (row . ,row) (rows . ,rows)
+    (text . ,text) (continued . ,continued)))
+
+(define (overlays-of fig s g) (field (group-ref fig s g) 'overlays))
+
+;;; One-pulse notes: one column is one pulse. Every part is 8 pulses.
+;;;   p:  pair (P, 0-4; inside it U 0-2, D 2-4), up (U, 4-6), down (D, 6-8)
+;;;   q:  pair (0-4), up (4-6), then plain notes: the same spans as p's
+;;;       up to 6
+;;;   r:  silent, no spans
+;;;   t1: up at 4-6 only; t2: down at 0-2 only
+;;;   t3: like p, its up renamed "Rise" in its long name only
+;;;   t4: up at 4-6, renamed "U'" at the use
+;;; A group of p and q uses i2 o2 e2: 3 lanes.
+(define overlay-lines
+  '("(piece \"O\")"
+    "(scale sel (ding :alias i :display \"i\") (dong :alias o :display \"o\")"
+    "  (deng :alias e :display \"e\") (dung :alias u :display \"u\")"
+    "  (dang :alias a :display \"a\"))"
+    "(instrument u sel a1 i2 o2 e2 u2)"
+    "(pattern up :instrument u :short \"U\" :long \"Up\" i2 o2)"
+    "(pattern down :instrument u :short \"D\" :long \"Down\" o2 i2)"
+    "(pattern pair :instrument u :short \"P\" :long \"Pair\" @up @down)"
+    "(part u :name p @pair @up @down)"
+    "(part u :name q @pair @up e2 e2)"
+    "(part u :name r - - - - - - - -)"
+    "(part u :name t1 e2 e2 e2 e2 @up e2 e2)"
+    "(part u :name t2 @down e2 e2 e2 e2 e2 e2)"
+    "(part u :name t3 @pair (@ up :long \"Rise\") @down)"
+    "(part u :name t4 e2 e2 e2 e2 (@ up :short \"U'\") e2 e2)"))
+
+(define (overlay-fig . score-lines)
+  "The figure of the overlay piece with SCORE-LINES, or #f if it raises."
+  (layout-or-false (layout (apply piece-of (append overlay-lines score-lines)))))
+
+(define pqd-short
+  (vector (ov 0 4 0 3 "P" #f) (ov 4 2 0 3 "U" #f) (ov 6 2 0 3 "D" #f)))
+
+(test-group "overlays: names at the chosen level"
+  (let ((fig (overlay-fig "(score s :pattern-names short (group \"U\" p q))")))
+    (test-equal "level 0, short: one overlay per span, identical ones merged"
+      pqd-short
+      (and fig (overlays-of fig 0 0)))
+    (test-equal "an overlay's keys in order" overlay-keys
+      (and fig (keys (vector-ref (overlays-of fig 0 0) 0))))
+    (test-assert "well-formed" (and fig (well-formed? fig)))
+    (test-assert "json-string accepts a figure with overlays"
+      (and fig (string? (json-string fig))))
+    (test-assert "the notes are as without pattern names"
+      (let ((plain (overlay-fig "(score s (group \"U\" p q))")))
+        (and fig plain
+             (equal? (field (group-ref plain 0 0) 'voices)
+                     (field (group-ref fig 0 0) 'voices))))))
+  (test-equal "long: the long names"
+    (vector (ov 0 4 0 3 "Pair" #f) (ov 4 2 0 3 "Up" #f) (ov 6 2 0 3 "Down" #f))
+    (let ((fig (overlay-fig "(score s :pattern-names long (group \"U\" p q))")))
+      (and fig (overlays-of fig 0 0))))
+  (test-equal "level 1: the spans inside pair"
+    (vector (ov 0 2 0 3 "U" #f) (ov 2 2 0 3 "D" #f))
+    (let ((fig (overlay-fig "(score s :pattern-names short :pattern-level 1"
+                            "  (group \"U\" p q))")))
+      (and fig (overlays-of fig 0 0))))
+  (test-equal "a level with no spans: none" #()
+    (let ((fig (overlay-fig "(score s :pattern-names short :pattern-level 2"
+                            "  (group \"U\" p q))")))
+      (and fig (overlays-of fig 0 0))))
+  (test-equal ":pattern-names none (the default): none" #()
+    (let ((fig (overlay-fig "(score s (group \"U\" p q))")))
+      (and fig (overlays-of fig 0 0))))
+  (test-equal ":pattern-names none written out: none" #()
+    (let ((fig (overlay-fig "(score s :pattern-names none (group \"U\" p q))")))
+      (and fig (overlays-of fig 0 0))))
+  (test-equal "a group's own options over the score's"
+    ;; t3 plays only i2 and o2: two lanes.
+    ;; q alone has no `down' figure.
+    (list #() (vector (ov 0 4 0 3 "P" #f) (ov 4 2 0 3 "U" #f))
+          (vector (ov 0 2 0 2 "Up" #f) (ov 2 2 0 2 "Down" #f)))
+    (let ((fig (overlay-fig "(score s :pattern-names short"
+                            "  (group \"A\" :pattern-names none p)"
+                            "  (group \"B\" q)"
+                            "  (group \"C\" :pattern-names long :pattern-level 1 t3))")))
+      (and fig (map (lambda (g) (overlays-of fig 0 g)) '(0 1 2)))))
+  (test-equal "a group whose parts have no spans: none" #()
+    (let ((fig (overlay-fig "(score s :pattern-names short (group \"R\" r))")))
+      (and fig (overlays-of fig 0 0))))
+  (test-equal "sorted by start, whatever the members' order"
+    (vector (ov 0 2 0 3 "D" #f) (ov 4 2 0 3 "U" #f))
+    (let ((fig (overlay-fig "(score s :pattern-names short (group \"T\" t1 t2))")))
+      (and fig (overlays-of fig 0 0))))
+  (test-equal "short: the same short name with different long names is merged"
+    ;; p and t3 play only i2 and o2: two lanes.
+    (vector (ov 0 4 0 2 "P" #f) (ov 4 2 0 2 "U" #f) (ov 6 2 0 2 "D" #f))
+    (let ((fig (overlay-fig "(score s :pattern-names short (group \"U\" p t3))")))
+      (and fig (overlays-of fig 0 0))))
+  (test-equal "the names given at a use"
+    (vector (ov 4 2 0 3 "U'" #f))
+    (let ((fig (overlay-fig "(score s :pattern-names short (group \"T\" t4))")))
+      (and fig (overlays-of fig 0 0)))))
+
+(test-group "overlays: the rows they cover"
+  (test-equal "notes rows: every lane" 3
+    ;; p and q together play i2, o2 and e2: three lanes.
+    (let ((fig (overlay-fig "(score s :pattern-names short (group \"U\" p q))")))
+      (and fig (field (vector-ref (overlays-of fig 0 0) 0) 'rows))))
+  (test-equal "parts rows: every member, a silent one too"
+    (vector (ov 0 4 0 3 "P" #f) (ov 4 2 0 3 "U" #f) (ov 6 2 0 3 "D" #f))
+    (let ((fig (overlay-fig "(score s :pattern-names short :note-names yes"
+                            "  (group \"U\" :rows parts p q r))")))
+      (and fig (overlays-of fig 0 0))))
+  (test-equal "parts rows: two members, two rows"
+    (vector (ov 0 4 0 2 "P" #f) (ov 4 2 0 2 "U" #f) (ov 6 2 0 2 "D" #f))
+    (let ((fig (overlay-fig "(score s :pattern-names short :note-names yes"
+                            "  (group \"U\" :rows parts p r))")))
+      (and fig (overlays-of fig 0 0))))
+  (test-equal "a single row: one row"
+    (vector (ov 0 4 0 1 "P" #f) (ov 4 2 0 1 "U" #f) (ov 6 2 0 1 "D" #f))
+    (let ((fig (overlay-fig "(score s :pattern-names short :note-names yes"
+                            "  (group \"U\" :rows single p r))")))
+      (and fig (overlays-of fig 0 0)))))
+
+(test-group "overlays across systems"
+  (test-equal "cut at each boundary: the later piece continued, its text kept"
+    (list (vector (ov 0 3 0 3 "P" #f))
+          (vector (ov 0 1 0 3 "P" #t) (ov 1 2 0 3 "U" #f))
+          (vector (ov 0 2 0 3 "D" #f)))
+    (let ((fig (overlay-fig "(score s :pattern-names short :system-length 3"
+                            "  (group \"U\" p q))")))
+      (and fig (map (lambda (s) (overlays-of fig s 0)) '(0 1 2)))))
+  (test-equal "a span ending on a boundary is not cut"
+    (list (vector (ov 0 4 0 3 "P" #f))
+          (vector (ov 0 2 0 3 "U" #f) (ov 2 2 0 3 "D" #f)))
+    (let ((fig (overlay-fig "(score s :pattern-names short :system-length 4"
+                            "  (group \"U\" p q))")))
+      (and fig (map (lambda (s) (overlays-of fig s 0)) '(0 1)))))
+  (test-equal "cut at several boundaries: every later piece continued"
+    (list (vector (ov 0 1 0 3 "Pair" #f)) (vector (ov 0 1 0 3 "Pair" #t))
+          (vector (ov 0 1 0 3 "Pair" #t)) (vector (ov 0 1 0 3 "Pair" #t)))
+    (let ((fig (overlay-fig "(score s :pattern-names long :system-length 1"
+                            "  (group \"U\" p q))")))
+      (and fig (map (lambda (s) (overlays-of fig s 0)) '(0 1 2 3)))))
+  (test-equal "a system without a span in it: no overlays"
+    (list (vector (ov 0 2 0 3 "D" #f)) #())
+    (let ((fig (overlay-fig "(score s :pattern-names short :system-length 4"
+                            "  (group \"T\" t2))")))
+      (and fig (map (lambda (s) (overlays-of fig s 0)) '(0 1))))))
+
+;;; For the step: rh is one pulse of i2 then half a pulse of rest; outer
+;;; is rh then another half pulse, 2 pulses. Part h plays outer then o2:
+;;; events i2 0-1 and o2 2-3 (whole pulses), outer 0-2 at depth 0 and rh
+;;; 0-3/2 at depth 1. Lanes: o2 i2.
+(define (span-step-fig . score-lines)
+  (layout-or-false
+   (layout (apply piece-of
+                  (append (list-head overlay-lines 5)
+                          '("(pattern rh :instrument u :short \"R\" i2:1 -:1/2)"
+                            "(pattern outer :instrument u :short \"O\" @rh -:1/2)"
+                            "(part u :name h @outer o2:1)")
+                          score-lines)))))
+
+(test-group "the step: pattern-span edges at the chosen level"
+  (test-equal "without pattern names, the spans don't count: 1" 1
+    (let ((fig (span-step-fig "(score s (group \"H\" h))")))
+      (and fig (field fig 'steps_per_pulse))))
+  (let ((fig (span-step-fig "(score s :pattern-names short (group \"H\" h))")))
+    (test-equal "level 0: outer's edges are whole pulses: 1" 1
+      (and fig (field fig 'steps_per_pulse)))
+    (test-equal "level 0: its overlay" (vector (ov 0 2 0 2 "O" #f))
+      (and fig (overlays-of fig 0 0))))
+  (let ((fig (span-step-fig "(score s :pattern-names short :pattern-level 1"
+                            "  (group \"H\" h))")))
+    (test-equal "level 1: rh ends on a half pulse: 2" 2
+      (and fig (field fig 'steps_per_pulse)))
+    (test-equal "level 1: its overlay in half-pulse columns"
+      (vector (ov 0 3 0 2 "R" #f))
+      (and fig (overlays-of fig 0 0)))
+    (test-equal "level 1: the notes in half-pulse columns"
+      '((0 2 1 #f) (4 2 0 #f))
+      (and fig (timing (events-of fig 0 0 0))))
+    (test-equal "level 1: the system is 6 columns" '((0 6))
+      (and fig (starts+steps fig))))
+  (test-equal "a group's :pattern-names none over the score's level: its spans don't count" 1
+    (let ((fig (span-step-fig "(score s :pattern-level 1"
+                              "  (group \"H\" :pattern-names none h))")))
+      (and fig (field fig 'steps_per_pulse)))))
+
+(test-group "overlays: a group built by hand"
+  ;; The piece read without a score; the group carries pattern-names
+  ;; short and pattern-level 0 as the reader would fill them in.
+  (let* ((piece (apply piece-of overlay-lines))
+         (fig (and piece
+                   (layout-or-false
+                    (layout-score
+                     piece
+                     (hand-score
+                      piece
+                      (list (make-group "U" "U" #f 'first-long 'notes
+                                        (map (lambda (n)
+                                               (cons (part-named piece n)
+                                                     (symbol->string n)))
+                                             '(p q))
+                                        #f 'colour 'none 'short 0
+                                        'by-degree 'pastel1 '() #f))))))))
+    (test-equal "the overlays" pqd-short
+      (and fig (overlays-of fig 0 0)))))
 
 ;;; ------------------------------------------------------------------
 ;;; A complete figure

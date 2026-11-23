@@ -25,6 +25,16 @@
 ;;;   with `fill` null (`:fill none`) and the one-column "-" events of
 ;;;   `:holds dash`, one of them at the start of a second system.
 ;;;
+;;; - Slice feat/scores-overlays: a sixth hand-written figure has
+;;;   overlays (05, "JSON contract (version 2)" and the template's
+;;;   "Overlays" bullet): over every lane of a `notes` group, on a
+;;;   `parts` group and on a `single` row, a long name over fewer
+;;;   columns than it needs, one starting mid-system, one cut by the
+;;;   system break and continued in the second system (its text
+;;;   written again), and a group with no overlays beside them.  The
+;;;   test only checks that it compiles without a warning; how it looks
+;;;   is checked by eye.
+;;;
 ;;; Run from the repo root: guile -L . tests/template.scm
 
 (use-modules (srfi srfi-1)
@@ -526,6 +536,182 @@ prints no warning.  Typst's output is shown when either fails."
 }
 ")
 
+;; Overlays (slice feat/scores-overlays): two systems of 4 and 2
+;; columns.  "Gangsa" (notes rows, 3 lanes): "norot" over all 3 rows at
+;; 0-2, "Norot polos on 1" over 2 columns from 2, cut at the break and
+;; continued in system 2.  "Kotekan" (parts rows, 2 rows): one overlay
+;; over both rows.  "Sung" (a single row): an overlay of 1 row.  "Gong"
+;; has none.
+(define overlays
+  "{
+  \"version\": 2,
+  \"title\": \"Overlays\",
+  \"subtitle\": null,
+  \"steps_per_pulse\": 1,
+  \"sizes\": {
+    \"font_size\": null,
+    \"label_width\": \"6.3em\",
+    \"lane_width\": \"4.6em\",
+    \"cell_width\": \"2em\",
+    \"cell_height\": \"2em\"
+  },
+  \"systems\": [
+    {
+      \"start\": 0,
+      \"steps\": 4,
+      \"header\": {
+        \"label\": null,
+        \"cycles\": null,
+        \"pulses\": [\"1\", \"2\", \"3\", \"4\"]
+      },
+      \"lines\": [\"none\", \"pulse\", \"pulse\", \"pulse\"],
+      \"groups\": [
+        {
+          \"label\": \"Gangsa\",
+          \"subtitle\": null,
+          \"lanes\": [\"e2\", \"o2\", \"i2\"],
+          \"voices\": [
+            {
+              \"name\": \"polos\",
+              \"events\": [
+                { \"start\": 0, \"dur\": 1, \"lane\": 2, \"text\": null,
+                  \"fill\": \"#fbb4ae\", \"text_color\": \"#222222\", \"continued\": false },
+                { \"start\": 1, \"dur\": 1, \"lane\": 1, \"text\": null,
+                  \"fill\": \"#b3cde3\", \"text_color\": \"#222222\", \"continued\": false },
+                { \"start\": 2, \"dur\": 2, \"lane\": 0, \"text\": null,
+                  \"fill\": \"#ccebc5\", \"text_color\": \"#222222\", \"continued\": false }
+              ]
+            }
+          ],
+          \"overlays\": [
+            { \"start\": 0, \"dur\": 2, \"row\": 0, \"rows\": 3,
+              \"text\": \"norot\", \"continued\": false },
+            { \"start\": 2, \"dur\": 2, \"row\": 0, \"rows\": 3,
+              \"text\": \"Norot polos on 1\", \"continued\": false }
+          ]
+        },
+        {
+          \"label\": \"Kotekan\",
+          \"subtitle\": null,
+          \"lanes\": [\"polos\", \"sangsih\"],
+          \"voices\": [
+            {
+              \"name\": \"polos\",
+              \"events\": [
+                { \"start\": 1, \"dur\": 1, \"lane\": 0, \"text\": \"i\",
+                  \"fill\": \"#fbb4ae\", \"text_color\": \"#222222\", \"continued\": false }
+              ]
+            },
+            {
+              \"name\": \"sangsih\",
+              \"events\": [
+                { \"start\": 2, \"dur\": 1, \"lane\": 1, \"text\": \"o'\",
+                  \"fill\": \"#b3cde3\", \"text_color\": \"#222222\", \"continued\": false }
+              ]
+            }
+          ],
+          \"overlays\": [
+            { \"start\": 1, \"dur\": 3, \"row\": 0, \"rows\": 2,
+              \"text\": \"6\", \"continued\": false }
+          ]
+        },
+        {
+          \"label\": \"Sung\",
+          \"subtitle\": null,
+          \"lanes\": [\"\"],
+          \"voices\": [
+            {
+              \"name\": \"vocal\",
+              \"events\": [
+                { \"start\": 0, \"dur\": 1, \"lane\": 0, \"text\": \"nang\",
+                  \"fill\": null, \"text_color\": \"#222222\", \"continued\": false }
+              ]
+            }
+          ],
+          \"overlays\": [
+            { \"start\": 0, \"dur\": 1, \"row\": 0, \"rows\": 1,
+              \"text\": \"S\", \"continued\": false }
+          ]
+        },
+        {
+          \"label\": \"Gong\",
+          \"subtitle\": null,
+          \"lanes\": [\"G\"],
+          \"voices\": [
+            {
+              \"name\": \"gong\",
+              \"events\": [
+                { \"start\": 3, \"dur\": 1, \"lane\": 0, \"text\": null,
+                  \"fill\": \"#cccccc\", \"text_color\": \"#222222\", \"continued\": false }
+              ]
+            }
+          ],
+          \"overlays\": []
+        }
+      ]
+    },
+    {
+      \"start\": 4,
+      \"steps\": 2,
+      \"header\": {
+        \"label\": null,
+        \"cycles\": null,
+        \"pulses\": [\"5\", \"6\"]
+      },
+      \"lines\": [\"none\", \"pulse\"],
+      \"groups\": [
+        {
+          \"label\": \"Gangsa\",
+          \"subtitle\": null,
+          \"lanes\": [\"e2\", \"o2\", \"i2\"],
+          \"voices\": [
+            {
+              \"name\": \"polos\",
+              \"events\": [
+                { \"start\": 0, \"dur\": 1, \"lane\": 0, \"text\": null,
+                  \"fill\": \"#ccebc5\", \"text_color\": \"#222222\", \"continued\": true }
+              ]
+            }
+          ],
+          \"overlays\": [
+            { \"start\": 0, \"dur\": 1, \"row\": 0, \"rows\": 3,
+              \"text\": \"Norot polos on 1\", \"continued\": true }
+          ]
+        },
+        {
+          \"label\": \"Kotekan\",
+          \"subtitle\": null,
+          \"lanes\": [\"polos\", \"sangsih\"],
+          \"voices\": [
+            { \"name\": \"polos\", \"events\": [] },
+            { \"name\": \"sangsih\", \"events\": [] }
+          ],
+          \"overlays\": []
+        },
+        {
+          \"label\": \"Sung\",
+          \"subtitle\": null,
+          \"lanes\": [\"\"],
+          \"voices\": [ { \"name\": \"vocal\", \"events\": [] } ],
+          \"overlays\": [
+            { \"start\": 1, \"dur\": 1, \"row\": 0, \"rows\": 1,
+              \"text\": \"T\", \"continued\": false }
+          ]
+        },
+        {
+          \"label\": \"Gong\",
+          \"subtitle\": null,
+          \"lanes\": [\"G\"],
+          \"voices\": [ { \"name\": \"gong\", \"events\": [] } ],
+          \"overlays\": []
+        }
+      ]
+    }
+  ],
+  \"caption\": null
+}
+")
+
 ;;; The tests.
 
 (test-begin "template")
@@ -551,7 +737,9 @@ prints no warning.  Typst's output is shown when either fails."
       (check-figure "both header rows off" "no-header-rows.json"
                     no-header-rows)
       (check-figure "parts and single rows, fill null, dashes" "rows.json"
-                    rows))
+                    rows)
+      (check-figure "overlays, one continued and one over several rows"
+                    "overlays.json" overlays))
     (test-assert "typst is installed (CI installs 0.15.1)" #f))
 
 (define runner (test-runner-current))
