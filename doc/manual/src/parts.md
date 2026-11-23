@@ -20,9 +20,9 @@ only one, so it is simply `gong`.
   different instruments.
 - `:name` comes right after the instrument, before the music.
 
-For now, each part is drawn on its own in the score, with its name on
-the left. Drawing polos and sangsih together in one block is coming
-later.
+Without a score, each part is drawn in a block of its own, with its
+name on the left. To draw polos and sangsih together in one block, write
+a [score](scores.md).
 
 Next: sharing scales and instruments between pieces, with
 [templates](templates.md).

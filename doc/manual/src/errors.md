@@ -241,6 +241,31 @@ before it (see [Gong cycles](gong-cycles.md)).
 With a colotomy, a piece is its pickup plus whole cycles. This ugal part
 lasts 7 pulses, one short of the eight-pulse cycle.
 
+### A part in two groups
+
+```scheme
+{{#include mistakes/part-in-two-groups.nts}}
+```
+
+```text
+{{#include mistakes/part-in-two-groups.txt}}
+```
+
+In one score, each part can be in only one group (see
+[Scores](scores.md)). Remove it from one of them.
+
+### A group naming a part that doesn't exist
+
+```scheme
+{{#include mistakes/undefined-part.nts}}
+```
+
+```text
+{{#include mistakes/undefined-part.txt}}
+```
+
+Check the spelling of the part's name in the group.
+
 ### A pattern that doesn't exist
 
 ```scheme
@@ -397,5 +422,7 @@ Put the `part` in the piece.
   load each other. Remove one of the `use` lines.
 - **a chord needs two or more notes …** / **a chord has the same note
   twice**: see [Chords](chords.md).
-- **a group is written inside a score**: groups aren't ready yet; leave
-  the `group` line out, and each part is drawn on its own.
+- **a group is written inside a score**: put the `group` line inside a
+  `(score NAME …)` (see [Scores](scores.md)).
+- **… is set on the score, not on a group**: move the setting to the
+  `score` line.

@@ -36,9 +36,10 @@ This is what you get:
 ## Reading the drawing
 
 - The **title** is at the top.
-- Each **part** is a block of rows, with its name on the left. Each
-  row is one note of the instrument, highest at the top, labelled with
-  the note's name.
+- Each **group** is a block of rows, with its label on the left. Without
+  a [score](scores.md), each part is a group of its own, labelled with
+  its name. Each row is one note of the instrument, highest at the top,
+  labelled with the note's name.
 - Each **column** is one step of time: a whole pulse, or a part of one
   when the piece has shorter notes. The numbers along the top count pulses,
   and a thin line marks where each pulse begins (see

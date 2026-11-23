@@ -20,6 +20,10 @@
 - [Patterns](patterns.md)
 - [Several parts on one instrument](parts.md)
 
+# Printing
+
+- [Scores](scores.md)
+
 # Templates
 
 - [Using templates](templates.md)
