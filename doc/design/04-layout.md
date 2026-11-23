@@ -1,10 +1,10 @@
 # 04 — Layout
 
-Status: partly implemented (iteration 2). The layout below,
-`layout-score`, is agreed and not yet built: `(notasi layout)`
-implements v1's `layout-piece` (all four v1 slices, see "What layout
-does today"), with the step worked out from the piece's times since
-iteration 2, milestone 1.
+Status: partly implemented (iteration 2): milestone 2, slice 1 of 5
+(`feat/scores-form`, see "Slices (iteration 2)"). `layout-score` lays
+out a score with `notes` rows, `:note-names`, one style per group, the
+cell sizes and `:system-length`, still as contract version 1; the rest
+is planned. "What layout does today" lists what differs.
 "Note style" is **Implemented** and stays, with the style now built from
 a score's options. Modules: `(notasi style)`, `(notasi layout)`; tests
 in `tests/style.scm`, `tests/layout.scm` and `tests/golden.scm`.
@@ -321,11 +321,29 @@ changes the reader's score checks (03, **[scores]**), the records (02),
 layout, and the template and commands (05) as far as it needs, with the
 examples, golden files and manual pages it affects.
 
-1. `feat/scores-form`: the `score` and `group` forms; the default
+1. **Implemented.** `feat/scores-form`: the `score` and `group` forms; the default
    score; groups with their effective settings (ADR 0033);
    `layout-score` with `notes` rows, `:note-names`, the colour options
    (one style per group) and the size options; `:system-length`; ADR
-   0034's group check.
+   0034's group check. Decided for this slice:
+   - The reader reads, on a score, `:title`, `:system-length`,
+     `:note-names`, `:scheme`, `:palette`, `:colors`, `:cell-width` and
+     `:cell-height`; on a group, `:subtitle`, `:note-names`, `:scheme`,
+     `:palette` and `:colors`. The options later slices build (`:rows`,
+     `:fill`, `:holds`, `:pattern-names`, `:pattern-level`, `:labels`,
+     `:short`, `:from`, `:to`, `:breaks`, `:cycle-numbers`,
+     `:pulse-numbers`, `:numbering`, `:pulse-label`, a score's
+     `:subtitle` and `:caption`, `:font-size`) raise `not-implemented`
+     at the score's or group's line. The `score` and `group` records
+     have every field of 02, the unbuilt ones at their defaults.
+   - `layout-piece` is removed: `(layout-score piece score)` replaces
+     it. `render-piece`, `notasi render` and the golden tests lay out a
+     piece's first score (or its default score) until `--score`
+     (slice 5).
+   - The default score is named `default`.
+   - The figure stays contract version 1: `:cell-width` and
+     `:cell-height` go into `step_width` and `row_height` as written
+     (default `"2em"`).
 2. `feat/scores-contract`: contract version 2 (ADR 0036): header rows,
    `:cycle-numbers`, `:pulse-numbers`, `:numbering`, `:pulse-label`,
    `lines` with heavier cycle lines (ADR 0037), `subtitle`, `caption`,
@@ -342,26 +360,24 @@ examples, golden files and manual pages it affects.
 
 ## What layout does today
 
-**Implemented** (v1, four slices: `feat/json`, `feat/layout-style`,
-`feat/layout`, `feat/layout-golden`). It differs from the above as
-follows, and this section goes when iteration 2 is built:
+**Implemented**: `(layout-score piece score)` (milestone 2, slice 1).
+It differs from the above as follows, and this section goes when
+iteration 2 is built:
 
-- The interface is `(layout-piece piece #:key (style (default-style)))`:
-  one figure per piece, with one style for the whole figure, set from
-  Guile.
 - The figure is contract version 1 (05): `sizes` has `label_width`,
-  `lane_width`, `step_width` and `row_height` (`"2.0em"` each); there
-  is no `subtitle`, `font_size`, `header`, `lines` or `overlays`; the
-  template counts pulse numbers itself; `caption` is always `null`.
-- The step is worked out as in "The step" (since iteration 2, slice 2),
-  from every event's start and end and the piece's length, and the
-  figure is one system for the whole piece.
-- Every group of the piece is drawn, with `notes` rows only. Since
-  iteration 2, slice 1, every group is a default group of one part, and
-  an event's `text` is always `null`: no note shows its name until
-  scores.
-- Golden tests: each `examples/NAME.nts` has its one figure in
-  `tests/golden/NAME.json`.
+  `lane_width`, and the score's cell sizes as `step_width` and
+  `row_height`; there is no `subtitle`, `font_size`, `header`, `lines`
+  or `overlays`; the template counts pulse numbers itself; `caption` is
+  always `null`.
+- The step is worked out from the piece's length, the system length and
+  the events of the score's parts; there is no range (`:from`, `:to`)
+  or `:breaks`, and systems start every `:system-length` pulses from
+  the start of the piece.
+- Rows are `notes` only; a group's label is always its long label; note
+  names are the display form (no damped form); there are no holds,
+  `fill none` or overlays.
+- Golden tests: each `examples/NAME.nts` has the figure of its first
+  score in `tests/golden/NAME.json`.
 
 ### Golden tests
 

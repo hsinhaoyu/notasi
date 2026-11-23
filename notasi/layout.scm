@@ -1,5 +1,5 @@
-;;; (notasi layout) -- Lay out a piece as a figure: systems, groups,
-;;; lanes and events, each event with its look.  See
+;;; (notasi layout) -- Lay out one score of a piece as a figure: systems,
+;;; groups, lanes and events, each event with its look.  See
 ;;; doc/design/04-layout.md.
 ;;;
 ;;; The figure is the JSON value of 05's contract itself: alists with
@@ -11,7 +11,7 @@
   #:use-module (notasi style)
   #:use-module (ice-9 match)
   #:use-module (srfi srfi-1)
-  #:export (layout-piece))
+  #:export (layout-score))
 
 (define (null-if-false x)
   (or x 'null))
@@ -44,10 +44,10 @@
 ;;; ------------------------------------------------------------------
 ;;; Events
 
-(define (note-events part lanes style k)
+(define (note-events part lanes style names? k)
   "PART's events, one per note (a chord gives several), as
-(START DURATION LANE LOOK) lists, in columns of 1/K pulse.  The look's text is dropped (#f):
-until scores (iteration 2, milestone 2) no note shows its name."
+(START DURATION LANE LOOK) lists, in columns of 1/K pulse.  The look's
+text is kept only when NAMES? (the group's :note-names)."
   (let ((instrument (part-instrument part)))
     (append-map
      (lambda (event)
@@ -57,8 +57,10 @@ until scores (iteration 2, milestone 2) no note shows its name."
                       (* k (event-duration event))
                       (list-index (match-lambda ((_ . n) (eq? n note))) lanes)
                       (let ((look (note-look style instrument note)))
-                        (make-look (look-fill look) #f
-                                   (look-text-color look))))))
+                        (if names?
+                            look
+                            (make-look (look-fill look) #f
+                                       (look-text-color look)))))))
             (event-notes event)))
      (part-events part))))
 
@@ -87,16 +89,26 @@ start relative to FROM, or #f if it doesn't sound there."
 ;;; ------------------------------------------------------------------
 ;;; Groups and systems
 
+;;; The style of GROUP, from its effective scheme, palette and colours
+;;; (ADR 0032).  The reader has checked them.
+(define (group-style group)
+  (make-style #:scheme (group-scheme group)
+              #:palette (group-palette group)
+              #:degree-colors (group-colors group)))
+
 ;;; A group prepared once for the whole piece: its JSON label fields,
 ;;; its lanes, and each voice's events in the whole piece, in columns of
 ;;; 1/K pulse.
-(define (prepare-group group style k)
-  (let ((lanes (lane-owners group)))
+(define (prepare-group group k)
+  (let ((lanes (lane-owners group))
+        (style (group-style group)))
     (list group
           lanes
           (map (lambda (part)
                  (cons (symbol->string (part-name part))
-                       (sort (note-events part lanes style k) event<?)))
+                       (sort (note-events part lanes style
+                                          (group-note-names? group) k)
+                             event<?)))
                (group-parts group)))))
 
 (define (group-in-system prepared from to)
@@ -119,32 +131,34 @@ start relative to FROM, or #f if it doesn't sound there."
 ;;; ------------------------------------------------------------------
 ;;; The step (04, "The step")
 
-(define (step-columns piece)
+(define (step-columns piece score)
   "K, the number of columns in a pulse: the step is the largest duration
-1/K that divides 1 pulse, every event's start and end, and the piece's
-length."
+1/K that divides 1 pulse, the piece's length, the system length, and
+every start and end of the events the score prints."
   (fold (lambda (time k) (lcm k (denominator time)))
         1
-        (cons (piece-length piece)
-              (append-map (lambda (part)
-                            (append-map (lambda (e)
-                                          (list (event-start e)
-                                                (+ (event-start e)
-                                                   (event-duration e))))
-                                        (part-events part)))
-                          (piece-parts piece)))))
+        (append
+         (list (piece-length piece) (or (score-system-length score) 1))
+         (append-map (lambda (part)
+                       (append-map (lambda (e)
+                                     (list (event-start e)
+                                           (+ (event-start e)
+                                              (event-duration e))))
+                                   (part-events part)))
+                     (append-map group-parts (score-groups score))))))
 
-;;; One system for the whole piece, of LENGTH columns, until scores
-;;; (iteration 2, milestone 2) bring system breaks.
-(define (systems length prepared)
-  (if (zero? length)
-      #()
-      (vector
-       `((start . 0)
-         (steps . ,length)
-         (groups . ,(list->vector
-                     (map (lambda (g) (group-in-system g 0 length))
-                          prepared)))))))
+;;; Systems of STEPS columns each (default: one for the whole piece),
+;;; LENGTH columns in all.  The last may be shorter.
+(define (systems length steps prepared)
+  (list->vector
+   (map (lambda (start)
+          (let ((end (min length (+ start steps))))
+            `((start . ,start)
+              (steps . ,(- end start))
+              (groups . ,(list->vector
+                          (map (lambda (g) (group-in-system g start end))
+                               prepared))))))
+        (if (zero? length) '() (iota (ceiling (/ length steps)) 0 steps)))))
 
 ;;; ------------------------------------------------------------------
 ;;; Sizes
@@ -158,7 +172,7 @@ length."
 (define (longest strings)
   (fold (lambda (s m) (max m (string-length s))) 0 strings))
 
-(define (sizes prepared)
+(define (sizes prepared score)
   (let ((labels (append-map (match-lambda
                               ((group _ _)
                                (filter string? (list (group-label group)
@@ -169,21 +183,27 @@ length."
                                  prepared)))
     `((label_width . ,(em (+ (* 3/5 (longest labels)) 3/2)))
       (lane_width . ,(em (+ (* 13/25 (longest lane-labels)) 1)))
-      (step_width . "2.0em")
-      (row_height . "2.0em"))))
+      (step_width . ,(score-cell-width score))
+      (row_height . ,(score-cell-height score)))))
 
 ;;; ------------------------------------------------------------------
 ;;; Entry point
 
-(define* (layout-piece piece #:key (style (default-style)))
-  "Lay out PIECE as a figure: the JSON value of the contract in
-doc/design/05-typst-backend.md, with each note drawn as STYLE says."
-  (let* ((k (step-columns piece))
-         (prepared (map (lambda (group) (prepare-group group style k))
-                        (piece-groups piece))))
+(define (layout-score piece score)
+  "Lay out SCORE, one of PIECE's scores, as a figure: the JSON value of
+the contract in doc/design/05-typst-backend.md (version 1).  Its groups
+carry their effective settings (ADR 0033)."
+  (let* ((k (step-columns piece score))
+         (length (* k (piece-length piece)))
+         (prepared (map (lambda (group) (prepare-group group k))
+                        (score-groups score))))
     `((version . 1)
-      (title . ,(piece-title piece))
+      (title . ,(score-title score))
       (steps_per_pulse . ,k)
-      (sizes . ,(sizes prepared))
-      (systems . ,(systems (* k (piece-length piece)) prepared))
+      (sizes . ,(sizes prepared score))
+      (systems . ,(systems length
+                           (match (score-system-length score)
+                             (#f (max length 1))
+                             (pulses (* k pulses)))
+                           prepared))
       (caption . null))))

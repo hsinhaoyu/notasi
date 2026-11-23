@@ -1,0 +1,13 @@
+(piece "Kotekan")
+
+(use gong-kebyar)
+
+(part reyong :name polos    i2:1/4 _  i2 o2 | _  i2 o2 _  | o2 i2 _  o2 | i2 o2 _  i2)
+(part reyong :name sangsih  e2:1/4 u2 e2 _  | u2 e2 _  u2 | _  e2 u2 _  | e2 _  u2 e2)
+(part gong                  G:1 -:2 P:1)
+
+;; Polos and sangsih together, the gongs and kempli with their letters,
+;; two pulses on each line.
+(score full :palette set2 :system-length 2
+  (group "Reyong" :subtitle "polos + sangsih"  polos sangsih)
+  (group "Gong" :note-names yes  gong kempli))

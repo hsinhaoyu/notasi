@@ -9,8 +9,8 @@
 (define-module (notasi typst)
   #:use-module (notasi json)
   #:use-module (notasi layout)
+  #:use-module (notasi piece)
   #:use-module (notasi reader)
-  #:use-module (notasi style)
   #:use-module (ice-9 exceptions)
   #:use-module (ice-9 ftw)
   #:use-module (ice-9 match)
@@ -37,7 +37,7 @@
 ;;; Files
 
 (define (write-figure figure path)
-  "Write FIGURE (from `layout-piece') to the file PATH as pretty JSON in
+  "Write FIGURE (from `layout-score') to the file PATH as pretty JSON in
 UTF-8, ending with a newline, replacing any file already there.  The
 JSON is built first, so a figure that can't be written raises an &error
 and leaves PATH as it was."
@@ -127,13 +127,15 @@ missing or fails; the message then includes Typst's own output."
 (define (temporary-folder)
   (mkdtemp (string-append (or (getenv "TMPDIR") "/tmp") "/notasi-XXXXXX")))
 
-(define* (render-piece nts-path out-path #:key (style (default-style)) keep-in)
-  "Draw the piece in NTS-PATH to OUT-PATH (.pdf, .png or .svg) with
-STYLE, and return OUT-PATH.  The figure, template and entry file are
-made in a temporary folder that is deleted afterwards, or in KEEP-IN,
-which is kept.  Reader errors pass through unchanged."
+(define* (render-piece nts-path out-path #:key keep-in)
+  "Draw the first score of the piece in NTS-PATH (its default score if
+it has none) to OUT-PATH (.pdf, .png or .svg), and return OUT-PATH.  The
+figure, template and entry file are made in a temporary folder that is
+deleted afterwards, or in KEEP-IN, which is kept.  Reader errors pass
+through unchanged."
   (output-format out-path)              ; a bad extension fails first
-  (let* ((figure (layout-piece (read-piece-file nts-path) #:style style))
+  (let* ((piece (read-piece-file nts-path))
+         (figure (layout-score piece (car (piece-scores piece))))
          (template (find-template))
          (dir (or keep-in (temporary-folder))))
     (dynamic-wind

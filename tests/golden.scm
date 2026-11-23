@@ -8,6 +8,12 @@
 ;;;   write-figure, delete saved copies with no example, and say what
 ;;;   changed.  No comparisons are run: the copies were just written.
 ;;;
+;;;
+;;; Slice feat/scores-form (04, "Slices (iteration 2)", slice 1):
+;;; layout-piece is gone; each example's figure is its first score (its
+;;; default score when it has none) laid out with layout-score.  One
+;;; figure per example until slice 5.
+;;;
 ;;; Run from the repo root: guile -L . tests/golden.scm [--update]
 
 (use-modules (srfi srfi-1)
@@ -15,6 +21,7 @@
              (ice-9 ftw)
              (ice-9 textual-ports)
              (notasi layout)
+             (notasi piece)
              (notasi reader)
              (notasi typst))
 
@@ -34,8 +41,9 @@ sorted.  No names if DIR doesn't exist."
   (call-with-input-file path get-string-all #:encoding "UTF-8"))
 
 (define (example-figure name)
-  "The figure of example NAME, laid out with the default style."
-  (layout-piece (read-piece-file (example-path name))))
+  "The figure of example NAME: its first score, laid out."
+  (let ((piece (read-piece-file (example-path name))))
+    (layout-score piece (car (piece-scores piece)))))
 
 (define (figure-text name)
   "The text write-figure writes for example NAME, read back from a

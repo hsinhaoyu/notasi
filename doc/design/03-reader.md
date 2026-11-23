@@ -576,9 +576,10 @@ The **[scores]** cases are built in milestone 2 (04, "Slices").
 iteration 2. It differs from the above as follows, and this section
 goes when iteration 2 is built:
 
-- There are no scores: step 12 is not built, and `score` raises
-  `not-implemented`.
-- Every part is in its own default group (`piece-groups`).
+- Step 12 reads scores with milestone 2, slice 1's options; the later
+  slices' options raise `not-implemented`, and `bad-position`,
+  `bad-range`, `needs-note-names`, `notes-collide` and
+  `pattern-names-overlap` are not built.
 
 ## Open questions
 

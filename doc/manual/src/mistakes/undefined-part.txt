@@ -1,0 +1,1 @@
+undefined-part.nts:5: part `sangsi': no part with this name

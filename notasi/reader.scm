@@ -11,9 +11,11 @@
 (define-module (notasi reader)
   #:use-module (notasi piece)
   #:use-module (notasi expand)
+  #:use-module (notasi style)
   #:use-module (ice-9 exceptions)
   #:use-module (ice-9 format)
   #:use-module (ice-9 match)
+  #:use-module (ice-9 regex)
   #:use-module (srfi srfi-1)
   #:export (read-piece-file
             read-piece-port
@@ -169,7 +171,7 @@ relative to some %load-path entry."
   '(piece use scale strokes instrument colotomy pattern part score))
 
 ;;; Known forms that later slices of iteration 2 build.
-(define not-yet-heads '(score))
+(define not-yet-heads '())
 
 (define (check-form form)
   "Raise an error unless FORM, a (DATUM . LINE) pair, is a proper list
@@ -326,7 +328,7 @@ in file order."
 ;;; Item 6: the shape and options of scale, strokes, instrument and part
 ;;; forms
 
-(define definition-heads '(scale strokes instrument colotomy pattern part))
+(define definition-heads '(scale strokes instrument colotomy pattern part score))
 
 (define (note-name? x)
   (and (symbol? x) (not (key? x))))
@@ -422,9 +424,71 @@ its parts, (PART INSTRUMENT TOKEN ...)."
      (syntax-error 'bad-form line
                    "a pattern needs a name (not starting with : or @) and its music: (pattern NAME :instrument INSTRUMENT TOKEN ...)"))))
 
+(define (member-form? x)
+  (match x
+    ((? note-name?) #t)
+    (((? note-name?) . items)
+     (and (list? items)
+          (match (split-member-options items)
+            (#f #f)
+            (_ #t))))
+    (_ #f)))
+
+(define (split-member-options items)
+  "A member's options, `:label STRING', as an alist, or #f."
+  (match items
+    (() '())
+    ((':label (? string? label)) `((label . ,label)))
+    (_ #f)))
+
+(define (group-form? x)
+  "Is X the shape of a group?  Its options are checked with the score's
+(check 16), so a key with no value, or a key among the members, passes
+here."
+  (match x
+    (('group (? string?) . items)
+     (and (list? items)
+          (match (split-options-quietly items)
+            (#f #t)
+            ((_ . (? pair? members))
+             (every (lambda (m) (or (key? m) (member-form? m))) members))
+            (_ #f))))
+    (_ #f)))
+
+(define (split-options-quietly items)
+  "Like `split-options', but #f instead of an error for a key with no
+value."
+  (let loop ((items items) (options '()))
+    (match items
+      (((? key?)) #f)
+      (((? key?) (? key?) . _) #f)
+      (((? key? key) value . rest) (loop rest (cons (cons key value) options)))
+      (body (cons (reverse options) body)))))
+
+(define (check-score-shape form)
+  "A `score' FORM: a name, options, then its groups."
+  (match form
+    ((('score (? note-name?) . items) . line)
+     (match (split-options items line)
+       ((_ . (? pair? groups))
+        (reject-keys groups line)
+        (for-each (lambda (group)
+                    (unless (group-form? group)
+                      (syntax-error 'bad-form (list-line group line)
+                                    "a group is (group \"LABEL\" :key value ... PART ...), not ~s"
+                                    group)))
+                  groups))
+       (_ (bad-score-form line))))
+    ((_ . line) (bad-score-form line))))
+
+(define (bad-score-form line)
+  (syntax-error 'bad-form line
+                "a score needs a name and its groups: (score NAME :key value ... (group \"LABEL\" PART ...) ...)"))
+
 (define (check-definition-shape form)
   (match form
     ((('colotomy . _) . _) (check-colotomy-shape form))
+    ((('score . _) . _) (check-score-shape form))
     ((('pattern . _) . _) (check-pattern-shape form))
     ((((or 'scale 'strokes) . _) . _) (check-set-shape form))
     ((('instrument (? note-name?) (? note-name?) (? note-name?) ..1) . _) #t)
@@ -1078,16 +1142,192 @@ cut at the piece's end, on the piece's kempli or a built-in one."
             written))
 
 ;;; ------------------------------------------------------------------
-;;; Groups.  Until scores (iteration 2, milestone 2) every part is drawn
-;;; in its own default group, except a timekeeper on the built-in
-;;; kempli, which is never printed.
+;;; Item 16 (step 12): scores (ADRs 0031, 0033, 0034)
 
-(define (default-groups parts)
-  (filter-map (lambda (part)
-                (and (not (eq? (part-instrument part) built-in-kempli))
-                     (make-group (symbol->string (part-name part)) #f
-                                 (list part) #f)))
-              parts))
+;;; Options a later slice of milestone 2 builds: `not-implemented' until
+;;; then.
+(define score-options-not-yet
+  '(rows fill holds pattern-names pattern-level labels short from to
+    breaks cycle-numbers pulse-numbers numbering pulse-label subtitle
+    caption font-size))
+
+(define group-options-not-yet
+  '(rows fill holds pattern-names pattern-level labels short
+    from to breaks cycle-numbers pulse-numbers numbering pulse-label
+    caption font-size))
+
+(define (colour? x)
+  (and (string? x)
+       (= (string-length x) 7)
+       (char=? (string-ref x 0) #\#)
+       (string-every char-set:hex-digit x 1)))
+
+(define (palette? v)
+  (or (and (symbol? v) (memq v (palette-names)) #t)
+      (and (pair? v) (list? v) (every colour? v))))
+
+(define (colors? v)
+  (and (list? v)
+       (every (match-lambda
+                (((? note-name?) (? colour?)) #t)
+                (_ #f))
+              v)))
+
+(define (length-string? v)
+  (and (string? v)
+       (regexp-match? (string-match "^[0-9]+(\\.[0-9]+)?(em|pt|mm|cm|in)$" v))))
+
+(define (yes-no? v) (memq v '(yes no)))
+
+(define style-options
+  `((note-names ,yes-no? . "yes or no")
+    (scheme ,(lambda (v) (eq? v 'by-degree)) . "a colour scheme: by-degree")
+    (palette ,palette? . "a palette name or a list of \"#rrggbb\" colours")
+    (colors ,colors? . "a list of (DEGREE \"#rrggbb\")")))
+
+(define score-only-options
+  `((title ,string? . "a string")
+    (system-length ,positive-whole-number? . "a whole number of pulses")
+    (cell-width ,length-string? . "a length such as \"2em\"")
+    (cell-height ,length-string? . "a length such as \"2em\"")))
+
+(define group-only-options
+  `((subtitle ,string? . "a string")))
+
+(define (check-not-yet options not-yet line)
+  (for-each (match-lambda
+              ((key . _)
+               (when (memq (key-name key) not-yet)
+                 (syntax-error 'not-implemented line
+                               "the option `~a' is not supported yet" key))))
+            options))
+
+(define (score-settings options line)
+  (check-not-yet options score-options-not-yet line)
+  (check-options options (append score-only-options style-options)
+                 "a score" line))
+
+(define (group-settings options line)
+  (check-not-yet options group-options-not-yet line)
+  (for-each (match-lambda
+              ((key . _)
+               (when (assq (key-name key) score-only-options)
+                 (syntax-error 'option-wrong-level line
+                               "`~a' is set on the score, not on a group" key))))
+            options)
+  (check-options options (append group-only-options style-options)
+                 "a group" line))
+
+(define (setting name own score default)
+  "A group's effective setting NAME: its own, else the score's, else
+DEFAULT (ADR 0033)."
+  (cond ((assq name own) => cdr)
+        ((assq name score) => cdr)
+        (else default)))
+
+(define (make-score-group label subtitle members own score-opts location)
+  (let ((colors (setting 'colors own score-opts '())))
+    (make-group label label subtitle 'first-long 'notes members
+                (eq? (setting 'note-names own score-opts 'no) 'yes)
+                'colour 'none 'none 0
+                (setting 'scheme own score-opts 'by-degree)
+                (setting 'palette own score-opts 'pastel1)
+                (map (match-lambda ((degree colour) (cons degree colour)))
+                     colors)
+                location)))
+
+(define (printable-parts parts)
+  "PARTS a score may print: all but a timekeeper on the built-in kempli."
+  (remove (lambda (part) (eq? (part-instrument part) built-in-kempli))
+          parts))
+
+(define (check-group-instruments members line)
+  "ADRs 0011 and 0034: one pitched instrument, or only stroke
+instruments."
+  (match members
+    (() #t)
+    (((first . _) . others)
+     (let ((pitched? (lambda (part)
+                       (scale-pitched? (instrument-scale (part-instrument part))))))
+       (for-each
+        (match-lambda
+          ((part . _)
+           (cond
+            ((not (eq? (pitched? part) (pitched? first)))
+             (part-error 'pitched-with-strokes line (part-name part) #f
+                         "a group holds pitched instruments or gongs and drums, not both; put `~a' in a group of its own"
+                         (part-name part)))
+            ((and (pitched? part)
+                  (not (eq? (part-instrument part) (part-instrument first))))
+             (part-error 'mixed-pitched-group line (part-name part) #f
+                         "a group can hold one pitched instrument, but this one has `~a' and `~a'; put them in separate groups"
+                         (instrument-name (part-instrument first))
+                         (instrument-name (part-instrument part)))))))
+        others)))))
+
+(define (build-score form parts title length colotomy)
+  "Build a score record from FORM.  PARTS are the parts a score may
+print."
+  (match form
+    ((('score name . items) . line)
+     (match (split-options items line)
+       ((options . groups)
+        (let* ((opts (score-settings options line))
+               (used '())
+               (built
+                (map (lambda (group)
+                       (let ((gline (list-line group line)))
+                         (match group
+                           (('group label . gitems)
+                            (match (split-options gitems gline)
+                              ((goptions . member-forms)
+                               (reject-keys member-forms gline)
+                               (let* ((own (group-settings goptions gline))
+                                      (members
+                                       (map (lambda (member)
+                                              (let* ((name (if (pair? member)
+                                                               (car member)
+                                                               member))
+                                                     (label (or (and (pair? member)
+                                                                     (assq-ref (split-member-options
+                                                                                (cdr member))
+                                                                               'label))
+                                                                (symbol->string name)))
+                                                     (part (or (find (lambda (p)
+                                                                       (eq? (part-name p) name))
+                                                                     parts)
+                                                               (part-error 'undefined-part gline name #f
+                                                                           "no part with this name"))))
+                                                (when (memq name used)
+                                                  (part-error 'part-in-two-groups gline name #f
+                                                              "is already in a group of this score; a part can be in only one"))
+                                                (set! used (cons name used))
+                                                (cons part label)))
+                                            member-forms)))
+                                 (check-group-instruments members gline)
+                                 (make-score-group label (assq-ref own 'subtitle)
+                                                   members own opts
+                                                   (location gline)))))))))
+                     groups)))
+          (make-score name (or (assq-ref opts 'title) title) #f #f 0 length
+                      (assq-ref opts 'system-length) '()
+                      (and colotomy #t) #t 'gong-last #f #f
+                      (or (assq-ref opts 'cell-width) "2em")
+                      (or (assq-ref opts 'cell-height) "2em")
+                      built (location line))))))))
+
+(define (default-score parts title length colotomy)
+  "A file with no score gets this one: every part in its own group."
+  (make-score 'default title #f #f 0 length #f '() (and colotomy #t) #t
+              'gong-last #f #f "2em" "2em"
+              (map (lambda (part)
+                     (let ((name (symbol->string (part-name part))))
+                       (make-group name name #f 'first-long 'notes
+                                   (list (cons part name))
+                                   #f 'colour 'none 'none 0
+                                   'by-degree 'pastel1 '() #f)))
+                   parts)
+              #f))
 
 ;;; ------------------------------------------------------------------
 ;;; Entry points
@@ -1167,7 +1407,16 @@ so a file with several problems always reports the same one."
       (make-piece (car piece) length pickup
                   (if colotomy (list (cons 0 colotomy)) '())
                   scales instruments (map car patterns+tokens)
-                  parts (default-groups parts)))))
+                  parts
+                  (let ((printable (printable-parts parts))
+                        (forms (forms-with-heads forms '(score))))
+                    (if (null? forms)
+                        (list (default-score printable (car piece) length
+                                             colotomy))
+                        (map (lambda (form)
+                               (build-score form printable (car piece)
+                                            length colotomy))
+                             forms)))))))
 
 (define (read-port port dir chain)
   (read-piece (read-forms port) dir chain))
