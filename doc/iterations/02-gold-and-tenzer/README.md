@@ -73,4 +73,13 @@ the manual describes what the code does.
    rewritten; the two targets are added to `examples/` as
    `jaya-semara.nts` and `baris.nts`, with golden files per score; the
    manual is brought up to date. Done when both draw as the books show,
-   checked by eye.
+   checked by eye. Decided when it started:
+   - The template gets every instrument of Gold's figure 2.7 (01,
+     "instrument"), the reyong e2 to u4, and the gongs `G GL P T`, each
+     shown by its name; colotomies stay in the pieces.
+   - `examples/tenzer1.nts` is rewritten with `:colotomy gilak :pickup
+     1`, so its gongs come from the colotomy.
+   - The targets are copied to `examples/jaya-semara.nts` and
+     `examples/baris.nts`, without the notes that the reader can't read
+     them and without the definitions the template now gives;
+     `targets/` stays as the iteration's record.

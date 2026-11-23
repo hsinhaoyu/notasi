@@ -1,7 +1,7 @@
 (piece "Pokok with gong")
 
-;; Everything for a gong kebyar: the selisir scale, the ugal, reyong,
-;; kempli, gong and kendang.
+;; Everything for a gong kebyar: the selisir scale, its instruments,
+;; and the kempli, gong and kendang.
 (use gong-kebyar)
 
 (part ugal  a1 o2 i2 e2 o2 a1 o2 i2)

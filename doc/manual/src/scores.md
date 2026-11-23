@@ -121,6 +121,9 @@ don't overwrite each other.
   both. To compare the ugal and the reyong, give each a group.
 - A part can be in only one group of a score.
 - Every part a group names must exist.
+- When parts share a group's rows, two of them can play the same key at
+  once only by striking it together, for the same length (a unison,
+  drawn once).
 - `:from` must come before `:to`, and every position must be in the
   piece.
 

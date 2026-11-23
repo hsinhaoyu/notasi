@@ -11,7 +11,7 @@ another length, write it after a colon:
 ```
 
 - The ugal plays one note to each pulse, so it needs no lengths.
-- The reyong plays four notes to each pulse. `i2:1/4` is a quarter of a
+- The reyong plays four notes to each pulse. `i3:1/4` is a quarter of a
   pulse, and the notes after it are quarter pulses too: **a length
   carries on** until you write another.
 - The gong strikes once, `G:1`, and then rests for three pulses with

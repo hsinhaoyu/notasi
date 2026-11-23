@@ -1,0 +1,6 @@
+(piece "Gilak")
+(use gong-kebyar)
+(part reyong :name polos i3 _ o3 -)
+(part reyong :name sangsih - i3 - e3)
+(score full
+  (group "Reyong" polos sangsih))

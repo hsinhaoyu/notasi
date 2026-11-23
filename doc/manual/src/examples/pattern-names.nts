@@ -3,7 +3,7 @@
 (use gong-kebyar)
 
 (pattern norot :instrument reyong :short "i" :long "Norot on i"
-  o2:1/4 i2 i2 - | i2 - i2 -)
+  o3:1/4 i3 i3 - | i3 - i3 -)
 
 ;; Each use is named after the tone it plays.
 (part reyong

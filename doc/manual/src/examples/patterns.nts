@@ -4,7 +4,7 @@
 
 ;; A two-pulse norot figure on the tone i (ding).
 (pattern norot :instrument reyong
-  o2:1/4 i2 i2 - | i2 - i2 -)
+  o3:1/4 i3 i3 - | i3 - i3 -)
 
 ;; The figure on i, moved down a degree (to a), up a degree (to o),
 ;; and on i again: eight pulses.

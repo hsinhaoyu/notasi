@@ -141,6 +141,11 @@ Layout works out every header number and every line, for every column:
 - **`rows` `single`**: one row for all the members, labelled `""`; every
   event's `lane` is 0. The reader has checked that no two notes share a
   cell.
+- On `notes` rows, a unison (two parts striking one key at the same
+  start, for the same length) is written once, under the first member
+  that plays it; the reader has refused any other sharing of a cell
+  (`notes-collide`). Decided in iteration 2's `feat/targets`: the norot
+  kotekan of Jaya Semara opens each figure in unison.
 - A chord gives one event per note, with the same start and duration,
   in `notes` rows. In `parts` and `single` rows it is one event: its
   notes' names joined by a space, with the look of its lowest note. A voice's events

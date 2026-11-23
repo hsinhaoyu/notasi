@@ -1,6 +1,6 @@
 (piece "Gilak")
 (use gong-kebyar)
-(pattern pair :instrument reyong :short "pair" i2 o2)
+(pattern pair :instrument reyong :short "pair" i3 o3)
 (part reyong :name polos @pair @pair -)
 (part reyong :name sangsih - @pair @pair)
 (score full :pattern-names short
