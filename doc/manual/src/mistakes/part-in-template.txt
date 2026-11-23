@@ -1,1 +1,1 @@
-templates/with-a-part.nts:3: a template holds only scale, strokes, instrument and use forms, not `part'
+templates/with-a-part.nts:3: a template holds only scale, strokes, instrument, colotomy, pattern and use forms, not `part'

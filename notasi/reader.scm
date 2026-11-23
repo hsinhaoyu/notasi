@@ -578,7 +578,7 @@ canonical path of each template already loaded to its definitions."
         (#f #t)
         ((datum . line)
          (syntax-error 'not-in-template line
-                       "a template holds only scale, strokes, instrument and use forms, not `~a'"
+                       "a template holds only scale, strokes, instrument, colotomy, pattern and use forms, not `~a'"
                        (car datum))))
       (check-not-implemented forms)
       (file-definitions forms (dirname path) chain table))))

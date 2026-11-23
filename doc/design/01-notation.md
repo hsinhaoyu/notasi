@@ -1,9 +1,10 @@
 # 01 — Notation language
 
-Status: partly implemented (iteration 2). The reader reads the syntax
-below (`:key value` options, `part`, degrees and strokes, instruments)
-since `feat/music-syntax`; the rest is planned, and "What the reader
-reads today" says what it reads in the meantime.
+Status: partly implemented (iteration 2). The music below is read since
+milestone 1 (`feat/music`): options, `part`, degrees, strokes and
+instruments, durations, `rep`, colotomies and patterns. Scores (`score`,
+groups and printing options) are planned for milestone 2; "What the
+reader reads today" says what is drawn in the meantime.
 
 Everything in this document is **Planned** unless it says otherwise.
 

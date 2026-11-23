@@ -435,7 +435,7 @@ All errors at a use carry the part, the time and the chain of uses.
   generated: `undefined-part` (`part` set to the name).
 - [scores] A part in two groups of one score, or twice in one group:
   `part-in-two-groups`.
-- [v1] A group with parts on two different pitched instruments:
+- [scores] A group with parts on two different pitched instruments:
   `mixed-pitched-group` (`part` set to the first part on a second
   pitched instrument).
 - [scores] A group mixing pitched and stroke instruments (ADR 0034):
