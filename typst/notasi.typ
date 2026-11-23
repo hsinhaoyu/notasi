@@ -8,8 +8,8 @@
 // decisions (ADR 0005). It sets no page, font or text size, so a
 // score takes on the look of the document around it.
 
-// A length from the figure, e.g. "10.5em".
-#let _len(s) = float(s.trim("em", at: end)) * 1em
+// A length from the figure, e.g. "10.5em" or "4mm".
+#let _len(s) = eval(s)
 
 // The content of one note's cell: a block filling the cell in the
 // note's colour, with its name when the figure gives one (ADR 0019,
@@ -29,19 +29,47 @@
   }
 }
 
-// One system as a grid: a background layer for the pulse lines, and a
-// transparent foreground layer for labels, header and notes, drawn on
-// top. A single grid can't do both: a note spanning
-// several columns would cover the lines under it.
+// The line at the left of a column, as the figure's `lines' says
+// (ADR 0037): thin at a pulse, heavier at the start of a gong cycle.
+#let _line(kind) = if kind == "cycle" {
+  (left: 1pt + luma(90))
+} else if kind == "pulse" {
+  (left: 0.5pt + luma(170))
+}
+
+// One system as a grid: a background layer for the lines, and a
+// transparent foreground layer for labels, header rows and notes, drawn
+// on top. A single grid can't do both: a note spanning several columns
+// would cover the lines under it. The template does no counting: every
+// number and line comes from the figure (ADR 0036).
 #let _system(data, sys) = {
-  let spp = data.steps_per_pulse
   let sizes = data.sizes
   let first = 2                     // column 0: group label, 1: lane label
-  let pulse-start(i) = calc.rem(sys.start + i, spp) == 0
-  let pulse(i) = calc.quo(sys.start + i, spp)
+  let header = sys.header
 
   let cells = ()
-  let row = 1                       // row 0: the header
+  let row = 0
+  if header.cycles != none {
+    for m in header.cycles {
+      cells.push(grid.cell(x: first + m.column, y: row,
+        align: left + horizon, inset: (left: 2pt),
+        text(weight: "bold", m.text)))
+    }
+    row += 1
+  }
+  if header.pulses != none {
+    if header.label != none {
+      cells.push(grid.cell(x: 0, y: row, colspan: 2,
+        align: left + horizon, text(weight: "bold", header.label)))
+    }
+    for (i, p) in header.pulses.enumerate() {
+      cells.push(grid.cell(x: first + i, y: row, align: center + horizon,
+        if p != none { text(weight: "bold", p) }
+        else { text(fill: luma(150), "·") }))
+    }
+    row += 1
+  }
+
   for g in sys.groups {
     let lanes = g.lanes
     cells.push(grid.hline(y: row, stroke: 0.8pt + luma(120)))
@@ -68,23 +96,17 @@
     row += lanes.len()
   }
   cells.push(grid.hline(y: row, stroke: 0.8pt + luma(120)))
+  let rows-count = calc.max(row, 1)
 
   let cols = ((_len(sizes.label_width), _len(sizes.lane_width))
-    + (_len(sizes.step_width),) * sys.steps)
-  let rows = (_len(sizes.row_height),) * row
+    + (_len(sizes.cell_width),) * sys.steps)
+  let rows = (_len(sizes.cell_height),) * rows-count
 
   let background = grid(columns: cols, rows: rows,
-    stroke: (x, y) => if x >= first and pulse-start(x - first) {
-      (left: 0.5pt + luma(170))
-    },
-    ..range(cols.len() * row).map(_ => []))
+    stroke: (x, y) => if x >= first { _line(sys.lines.at(x - first)) },
+    ..range(cols.len() * rows-count).map(_ => []))
 
-  let foreground = grid(columns: cols, rows: rows,
-    ..range(sys.steps).map(i => grid.cell(x: first + i, y: 0,
-      align: center + horizon,
-      if pulse-start(i) { text(weight: "bold", str(pulse(i) + 1)) }
-      else { text(fill: luma(150), "·") })),
-    ..cells)
+  let foreground = grid(columns: cols, rows: rows, ..cells)
 
   box({
     place(top + left, background)
@@ -93,7 +115,8 @@
 }
 
 /// Draw DATA, the figure laid out by notasi: its systems stacked, 1em
-/// apart. Returns content; captions and numbering are the caller's.
+/// apart. Returns content; title, subtitle, caption and numbering are
+/// the caller's.
 #let score(data) = {
   data.systems.map(sys => _system(data, sys)).join(v(1em))
 }

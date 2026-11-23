@@ -50,12 +50,20 @@ and leaves PATH as it was."
   (string-append
    "#import \"notasi.typ\": score\n"
    "#set page(width: auto, height: auto, margin: 14pt, fill: white)\n"
-   "#set text(font: \"Libertinus Serif\", size: 8pt)\n"
    "#let data = json(\"" json-name "\")\n"
+   "#set text(font: \"Libertinus Serif\",\n"
+   "  size: if data.sizes.font_size == none { 8pt } else { eval(data.sizes.font_size) })\n"
    "#if data.title != \"\" {\n"
-   "  block(below: 1em, text(weight: \"bold\", size: 1.2em, data.title))\n"
+   "  block(below: if data.subtitle == none { 1em } else { 0.4em },\n"
+   "    text(weight: \"bold\", size: 1.2em, data.title))\n"
    "}\n"
-   "#score(data)\n"))
+   "#if data.subtitle != none {\n"
+   "  block(below: 1em, text(style: \"italic\", data.subtitle))\n"
+   "}\n"
+   "#score(data)\n"
+   "#if data.caption != none {\n"
+   "  block(above: 1em, text(style: \"italic\", data.caption))\n"
+   "}\n"))
 
 (define (write-entry-file path json-name)
   "Write the entry file Typst compiles to PATH: it draws the figure in

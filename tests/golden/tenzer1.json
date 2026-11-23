@@ -1,17 +1,25 @@
 {
-  "version": 1,
+  "version": 2,
   "title": "Eight-pulse gong cycle",
+  "subtitle": null,
   "steps_per_pulse": 1,
   "sizes": {
+    "font_size": null,
     "label_width": "5.1em",
     "lane_width": "2.0em",
-    "step_width": "2em",
-    "row_height": "2em"
+    "cell_width": "2em",
+    "cell_height": "2em"
   },
   "systems": [
     {
       "start": 0,
       "steps": 9,
+      "header": {
+        "label": null,
+        "cycles": null,
+        "pulses": ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+      },
+      "lines": ["none", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse"],
       "groups": [
         {
           "label": "ugal",
@@ -104,7 +112,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "overlays": []
         },
         {
           "label": "gong",
@@ -161,7 +170,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "overlays": []
         },
         {
           "label": "kempli",
@@ -254,7 +264,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "overlays": []
         }
       ]
     }

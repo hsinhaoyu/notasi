@@ -47,6 +47,25 @@
 ;;; first score is the one drawn: a copy of tenzer1 with two scores, the
 ;;; first with :palette set3.  render-piece takes no #:style any more;
 ;;; #:score is slice 5.
+;;;
+;;; Slice feat/scores-contract (04, "Slices (iteration 2)", slice 2; 05,
+;;; "The entry file and running Typst", "Planned for version 2"): the
+;;; entry file sets the text size from `data.sizes.font_size` (8pt when
+;;; it is null), prints the subtitle under the title and the caption, in
+;;; italics, under the score when they are not null.  05 no longer pins
+;;; the entry file's exact text, so:
+;;; - The exact-text tests are replaced by lines it must still hold (the
+;;;   import, the page, the font, the figure's json(...), #score(data))
+;;;   and the fields it must read (data.sizes.font_size, data.subtitle,
+;;;   data.caption), plus what it draws: entry files written with
+;;;   write-entry-file are compiled to PNG with tenzer1's figure, changed
+;;;   by hand, and the pictures compared.  font_size null and "8pt" give
+;;;   the same picture; "16pt" a wider and taller one; a subtitle or a
+;;;   caption a taller one, as wide or wider.
+;;; - keep-in's piece.typ is compared with what write-entry-file writes
+;;;   for piece.json.
+;;; - compile-typst keeps its hand-written entry file (the v1 text,
+;;;   which still draws a version 2 figure: it reads no new field).
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -331,17 +350,108 @@ path at the front of %load-path, then restore both."
 ;;; ------------------------------------------------------------------
 ;;; write-entry-file
 
+(define (entry-file-text json-name)
+  "What write-entry-file writes for JSON-NAME, or #f if it raises."
+  (guard (c (#t #f))
+    (let ((path (tmp-path (string-append "entry-for-" json-name ".typ"))))
+      (write-entry-file path json-name)
+      (read-text path))))
+
+(define (contains-all? text parts)
+  (and (string? text)
+       (every (lambda (part) (string-contains text part)) parts)
+       #t))
+
 (test-group "write-entry-file"
-  (let ((path (tmp-path "entry.typ")))
-    (test-equal "writes the spec's entry file for figure.json"
-      (spec-entry-text "figure.json")
-      (begin (write-entry-file path "figure.json")
-             (read-text path))))
-  (let ((path (tmp-path "entry-other.typ")))
-    (test-equal "uses the given json-name (piece.json)"
-      (spec-entry-text "piece.json")
-      (begin (write-entry-file path "piece.json")
-             (read-text path)))))
+  (test-assert "holds the import, the page, the font and #score(data)"
+    (contains-all? (entry-file-text "figure.json")
+                   '("#import \"notasi.typ\": score\n"
+                     "#set page(width: auto, height: auto, margin: 14pt, fill: white)\n"
+                     "font: \"Libertinus Serif\""
+                     "#let data = json(\"figure.json\")\n"
+                     "#score(data)")))
+  (test-assert "uses the given json-name (piece.json)"
+    (contains-all? (entry-file-text "piece.json")
+                   '("json(\"piece.json\")")))
+  (test-assert "ends with a newline"
+    (let ((text (entry-file-text "figure.json")))
+      (and text (string-suffix? "\n" text))))
+  (test-assert "reads the font size, the subtitle and the caption from the figure"
+    (contains-all? (entry-file-text "figure.json")
+                   '("data.sizes.font_size" "data.subtitle" "data.caption")))
+  (test-assert "still shows the title"
+    (contains-all? (entry-file-text "figure.json") '("data.title"))))
+
+;;; What the entry file draws: tenzer1's figure with its top-level
+;;; fields changed, compiled to PNG next to the template.
+(define entry-dir (make-subdir "entry-draws"))
+
+(define (set-field obj key value)
+  "OBJ (an alist) with KEY's value replaced, in its place."
+  (map (lambda (pair) (if (eq? (car pair) key) (cons key value) pair)) obj))
+
+(define (with-sizes figure key value)
+  (set-field figure 'sizes (set-field (assq-ref figure 'sizes) key value)))
+
+(define base-figure
+  (guard (c (#t #f)) (first-score-figure "examples/tenzer1.nts")))
+
+(define (drawn-size name figure)
+  "Write FIGURE as NAME.json and an entry file NAME.typ from
+write-entry-file, compile it to NAME.png and return the PNG's
+(width height), or #f if any step raises."
+  (guard (c (#t (format (current-error-port) "~a not drawn: ~a~%" name
+                        (if (exception-with-message? c) (exception-message c) c))
+                #f))
+    (let ((json (string-append entry-dir "/" name ".json"))
+          (typ (string-append entry-dir "/" name ".typ"))
+          (png (string-append entry-dir "/" name ".png")))
+      (unless (file-exists? (string-append entry-dir "/notasi.typ"))
+        (copy-file template-path (string-append entry-dir "/notasi.typ")))
+      (write-figure figure json)
+      (write-entry-file typ (string-append name ".json"))
+      (compile-typst typ png)
+      (png-size png))))
+
+(test-group "what the entry file draws"
+  (let ((plain (and base-figure
+                    (drawn-size "plain"
+                                (with-sizes (set-field
+                                             (set-field base-figure 'subtitle 'null)
+                                             'caption 'null)
+                                            'font_size 'null))))
+        (eight (and base-figure
+                    (drawn-size "eight" (with-sizes base-figure 'font_size "8pt"))))
+        (big (and base-figure
+                  (drawn-size "big" (with-sizes base-figure 'font_size "16pt"))))
+        (sub (and base-figure
+                  (drawn-size "sub" (with-sizes (set-field base-figure 'subtitle
+                                                           "A subtitle")
+                                                'font_size 'null))))
+        (cap (and base-figure
+                  (drawn-size "cap" (with-sizes (set-field base-figure 'caption
+                                                           "A caption")
+                                                'font_size 'null)))))
+    (test-assert "(tenzer1's figure is version 2, with every field null)"
+      (and base-figure
+           (eqv? 2 (assq-ref base-figure 'version))
+           (eq? 'null (assq-ref base-figure 'subtitle))
+           (eq? 'null (assq-ref base-figure 'caption))
+           (eq? 'null (assq-ref (assq-ref base-figure 'sizes) 'font_size))))
+    (test-assert "draws a figure with every field null" (and plain #t))
+    (test-equal "font_size null: the same picture as \"8pt\"" plain eight)
+    (test-assert "font_size \"16pt\": a wider and taller picture"
+      (and plain big
+           (> (car big) (car plain))
+           (> (cadr big) (cadr plain))))
+    (test-assert "a subtitle: a taller picture, as wide or wider"
+      (and plain sub
+           (>= (car sub) (car plain))
+           (> (cadr sub) (cadr plain))))
+    (test-assert "a caption: a taller picture, as wide or wider"
+      (and plain cap
+           (>= (car cap) (car plain))
+           (> (cadr cap) (cadr plain))))))
 
 ;;; ------------------------------------------------------------------
 ;;; compile-typst
@@ -469,7 +579,7 @@ path at the front of %load-path, then restore both."
       (expected-figure-text example-path)
       (and (file-exists? (kept "piece.json")) (read-text (kept "piece.json"))))
     (test-equal "keep-in: piece.typ is the entry file for piece.json"
-      (spec-entry-text "piece.json")
+      (entry-file-text "piece.json")
       (and (file-exists? (kept "piece.typ")) (read-text (kept "piece.typ"))))
     (test-equal "keep-in: notasi.typ is a copy of the template"
       (read-text template-path)

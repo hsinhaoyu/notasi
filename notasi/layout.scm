@@ -126,7 +126,8 @@ start relative to FROM, or #f if it doesn't sound there."
                        . ,(list->vector
                            (filter-map (lambda (e) (clip-event e from to))
                                        events))))))
-                 voices)))))))
+                 voices)))
+       (overlays . #())))))
 
 ;;; ------------------------------------------------------------------
 ;;; The step (04, "The step")
@@ -147,14 +148,80 @@ every start and end of the events the score prints."
                                    (part-events part)))
                      (append-map group-parts (score-groups score))))))
 
+;;; ------------------------------------------------------------------
+;;; Header and lines (04, "Header and lines")
+
+;;; The meter the header counts by: (CYCLE . PICKUP), or #f without a
+;;; colotomy.
+(define (piece-meter piece)
+  (match (piece-colotomies piece)
+    (() #f)
+    (((_ . colotomy) . _)
+     (cons (colotomy-length colotomy) (piece-pickup piece)))))
+
+(define (pulse-text t meter numbering)
+  "The number printed for the pulse starting at time T."
+  (number->string
+   (match meter
+     (#f (+ t 1))
+     ((cycle . pickup)
+      (let ((p (+ (modulo (- t pickup) cycle) 1)))
+        (if (eq? numbering 'gong-first)
+            (+ (modulo p cycle) 1)
+            p))))))
+
+(define (cycle-start? t meter)
+  (match meter
+    (#f #f)
+    ((cycle . pickup)
+     (and (>= t pickup) (zero? (modulo (- t pickup) cycle))))))
+
+(define (header score meter k start end)
+  `((label . ,(null-if-false (score-pulse-label score)))
+    (cycles
+     . ,(if (and meter (score-cycle-numbers? score))
+            (list->vector
+             (filter-map
+              (lambda (c)
+                (let ((t (/ c k)))
+                  (and (integer? t) (cycle-start? t meter)
+                       `((column . ,(- c start))
+                         (text . ,(number->string
+                                   (+ (/ (- t (cdr meter)) (car meter))
+                                      1)))))))
+              (iota (- end start) start)))
+            'null))
+    (pulses
+     . ,(if (score-pulse-numbers? score)
+            (list->vector
+             (map (lambda (c)
+                    (let ((t (/ c k)))
+                      (if (integer? t)
+                          (pulse-text t meter (score-numbering score))
+                          'null)))
+                  (iota (- end start) start)))
+            'null))))
+
+(define (lines meter k start end)
+  (list->vector
+   (map (lambda (c)
+          (let ((t (/ c k)))
+            (cond ((= c start) "none")
+                  ((not (integer? t)) "none")
+                  ((cycle-start? t meter) "cycle")
+                  (else "pulse"))))
+        (iota (- end start) start))))
+
 ;;; Systems of STEPS columns each (default: one for the whole piece),
 ;;; LENGTH columns in all.  The last may be shorter.
-(define (systems length steps prepared)
+(define (systems length steps prepared score meter k)
   (list->vector
    (map (lambda (start)
           (let ((end (min length (+ start steps))))
             `((start . ,start)
               (steps . ,(- end start))
+              (header . ,(header score meter k start end))
+              (lines . ,(lines meter k start end))
               (groups . ,(list->vector
                           (map (lambda (g) (group-in-system g start end))
                                prepared))))))
@@ -181,29 +248,31 @@ every start and end of the events the score prints."
         (lane-labels (append-map (match-lambda
                                    ((_ lanes _) (map lane-label lanes)))
                                  prepared)))
-    `((label_width . ,(em (+ (* 3/5 (longest labels)) 3/2)))
+    `((font_size . ,(null-if-false (score-font-size score)))
+      (label_width . ,(em (+ (* 3/5 (longest labels)) 3/2)))
       (lane_width . ,(em (+ (* 13/25 (longest lane-labels)) 1)))
-      (step_width . ,(score-cell-width score))
-      (row_height . ,(score-cell-height score)))))
+      (cell_width . ,(score-cell-width score))
+      (cell_height . ,(score-cell-height score)))))
 
 ;;; ------------------------------------------------------------------
 ;;; Entry point
 
 (define (layout-score piece score)
   "Lay out SCORE, one of PIECE's scores, as a figure: the JSON value of
-the contract in doc/design/05-typst-backend.md (version 1).  Its groups
+the contract in doc/design/05-typst-backend.md (version 2).  Its groups
 carry their effective settings (ADR 0033)."
   (let* ((k (step-columns piece score))
          (length (* k (piece-length piece)))
          (prepared (map (lambda (group) (prepare-group group k))
                         (score-groups score))))
-    `((version . 1)
+    `((version . 2)
       (title . ,(score-title score))
+      (subtitle . ,(null-if-false (score-subtitle score)))
       (steps_per_pulse . ,k)
       (sizes . ,(sizes prepared score))
       (systems . ,(systems length
                            (match (score-system-length score)
                              (#f (max length 1))
                              (pulses (* k pulses)))
-                           prepared))
-      (caption . null))))
+                           prepared score (piece-meter piece) k))
+      (caption . ,(null-if-false (score-caption score))))))

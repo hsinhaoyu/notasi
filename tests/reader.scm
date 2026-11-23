@@ -127,7 +127,8 @@
 ;;; score when the file has none), and a group's parts are the parts of
 ;;; its members. `score` is no longer `not-implemented` as a form: the
 ;;; tests that used a score to stand for "a form not built yet" use a
-;;; score with an option a later slice builds (`:font-size`), which is
+;;; score with an option a later slice builds (`:labels`; `:font-size`
+;;; until slice feat/scores-contract), which is
 ;;; `not-implemented` at the score's line.
 ;;; Choices made where the docs are not explicit (or disagree):
 ;;; - Check 6 ("the shape and options of each form") and check 16
@@ -166,6 +167,25 @@
 ;;;   without (01: "yes with a colotomy"); `font-size` is #f (02).
 ;;; - A file with scores has no default score: `piece-scores` is exactly
 ;;;   its scores, in file order.
+;;;
+;;; Slice feat/scores-contract (04, "Slices (iteration 2)", slice 2 and
+;;; its decided bullets; 01, the score options; 03, [scores]): the
+;;; reader now reads, on a score, `:cycle-numbers`, `:pulse-numbers`,
+;;; `:numbering`, `:pulse-label`, `:subtitle`, `:caption` and
+;;; `:font-size`; they leave the `not-implemented` list, and the tests
+;;; that used `:font-size` or `:caption` to stand for "an option not
+;;; built yet" use `:labels short` or `:breaks (3)` instead.
+;;; Choices made where the docs are not explicit:
+;;; - yes/no options are stored as #t/#f; `:numbering` as the symbol
+;;;   written; strings and lengths as written.
+;;; - `:cycle-numbers yes` on a piece without a colotomy reads (layout
+;;;   then prints no cycle row, 04 slice 2); the value stored is not
+;;;   tested.
+;;; - `:font-size` takes a LENGTH like `:cell-width` (01: "A LENGTH is
+;;;   a string holding a Typst length").
+;;; - All seven are score-only except `:subtitle` (01: "score, group"),
+;;;   so the six others on a group are `option-wrong-level`. Whether a
+;;;   score's `:subtitle` becomes its groups' default is not tested.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -257,7 +277,7 @@ tests follow their layout instead of hard-coding it."
 ;;; where this is used), and a score with an option a later slice
 ;;; builds, which is not-implemented at its line.
 (define pattern-form "(pattern polos-1 :instrument ugal 1 2)")
-(define score-form "(score full :font-size \"8pt\" (group \"Ugal\" ugal))")
+(define score-form "(score full :labels short (group \"Ugal\" ugal))")
 
 (define (default-groups pc)
   "The groups of PC's first score: its default score when the file has
@@ -716,11 +736,11 @@ none (what v1 called piece-groups)."
     '(not-implemented 3)
     (string-error (lines "(piece \"P\")" ";; next" score-form)))
   (test-equal "a multi-line score: the form's line" '(not-implemented 2)
-    (string-error (lines "(piece \"P\")" "(score full :font-size \"8pt\""
+    (string-error (lines "(piece \"P\")" "(score full :labels short"
                          "  (group \"G\" a))")))
   (test-equal "the first not-implemented score in file order" '(not-implemented 4)
     (string-error (lines "(piece \"P\")" "" "" score-form
-                         "(score other :caption \"c\" (group \"G\" a))")))
+                         "(score other :breaks (3) (group \"G\" a))")))
   (let ((c (catch-syntax-error
             (lambda () (read-piece-string (lines "(piece \"P\")" score-form))))))
     (test-equal "not-implemented: file #f" #f
@@ -5338,10 +5358,7 @@ STR, or the raised object (or no-error) unchanged."
 ;;; The options later slices build (04, slice 1's decided bullets).
 (define later-score-options
   '(":rows single" ":fill none" ":holds dash" ":pattern-names long"
-    ":pattern-level 1" ":labels short" ":from 1" ":to 4" ":breaks (3)"
-    ":cycle-numbers no" ":pulse-numbers no" ":numbering gong-first"
-    ":pulse-label \"Beats\"" ":subtitle \"pangecet\"" ":caption \"c\""
-    ":font-size \"8pt\""))
+    ":pattern-level 1" ":labels short" ":from 1" ":to 4" ":breaks (3)"))
 
 (define later-group-options
   '(":rows parts" ":fill none" ":holds dash" ":pattern-names short"
@@ -5361,7 +5378,85 @@ STR, or the raised object (or no-error) unchanged."
   (test-equal "on a group: at the group's line, not the score's" '(not-implemented 16)
     (score-error "(score s" "  (group \"U\" ugal)" "  (group \"G\" :holds dash gong))"))
   (test-equal "fields: part and time #f" '(not-implemented 14 #f #f)
-    (error-fields (scores+ "(score s :caption \"c\" (group \"U\" ugal))"))))
+    (error-fields (scores+ "(score s :labels short (group \"U\" ugal))"))))
+
+(test-group "[scores] the options of slice feat/scores-contract"
+  (let ((pc (read-scores+
+             "(score full :subtitle \"pangecet\" :caption \"From Tenzer\""   ; 14
+             "  :cycle-numbers no :pulse-numbers no :numbering gong-first"
+             "  :pulse-label \"Beats\" :font-size \"10pt\""
+             "  (group \"U\" ugal))")))
+    (test-equal "every option read, in 02's order"
+      (list "Parts" "pangecet" "From Tenzer" 0 4 #f '() #f #f 'gong-first
+            "Beats" "10pt" "2em" "2em")
+      (and pc (score-settings (score-named pc 'full)))))
+  (let ((pc (read-scores+ "(score s :pulse-numbers yes :numbering gong-last"
+                          "  (group \"U\" ugal))")))
+    (test-equal "the defaults written out"
+      '(#t gong-last)
+      (and pc (let ((sc (score-named pc 's)))
+                (list (score-pulse-numbers? sc) (score-numbering sc))))))
+  (let ((pc (read-colo+ ":colotomy gilak" "(part ugal 1:16)"           ; 12
+                        "(score s :cycle-numbers no (group \"U\" ugal))")))
+    (test-equal "with a colotomy, :cycle-numbers no: #f" '(#f)
+      (and pc (list (score-cycle-numbers? (score-named pc 's))))))
+  (let ((pc (read-colo+ ":colotomy gilak" "(part ugal 1:16)"
+                        "(score s (group \"U\" ugal))")))
+    (test-equal "with a colotomy, by default: #t" #t
+      (and pc (score-cycle-numbers? (score-named pc 's)))))
+  (test-assert "without a colotomy, :cycle-numbers yes reads"
+    (piece? (read-scores+ "(score s :cycle-numbers yes (group \"U\" ugal))")))
+  (let ((pc (read-scores+ "(score s :subtitle \"\" :caption \"\" :pulse-label \"\""
+                          "  (group \"U\" ugal))")))
+    (test-equal "empty strings are kept as written" '("" "" "")
+      (and pc (let ((sc (score-named pc 's)))
+                (list (score-subtitle sc) (score-caption sc)
+                      (score-pulse-label sc))))))
+  (let ((pc (read-scores+ "(score s :subtitle \"S\" (group \"U\" :subtitle \"g\" ugal))")))
+    (test-equal "a score's and a group's :subtitle together" '("S" "g")
+      (and pc (let ((sc (score-named pc 's)))
+                (list (score-subtitle sc)
+                      (group-subtitle (car (score-groups sc))))))))
+  (for-each
+   (lambda (len)
+     (test-equal (string-append ":font-size " len " reads, as written") len
+       (let ((pc (read-scores+ (string-append "(score s :font-size \"" len
+                                              "\" (group \"U\" ugal))"))))
+         (and pc (score-font-size (score-named pc 's))))))
+   '("8pt" "10pt" "3.5mm" "1.2em"))
+  (for-each
+   (match-lambda
+     ((name options)
+      (test-equal name '(bad-option 14)
+        (score-error (string-append "(score s " options " (group \"U\" ugal))")))))
+   (list
+    (list ":cycle-numbers not yes or no" ":cycle-numbers maybe")
+    (list ":cycle-numbers a string" ":cycle-numbers \"yes\"")
+    (list ":pulse-numbers not yes or no" ":pulse-numbers 1")
+    (list ":pulse-numbers #f" ":pulse-numbers #f")
+    (list ":numbering an unknown choice" ":numbering gong-middle")
+    (list ":numbering a string" ":numbering \"gong-last\"")
+    (list ":pulse-label a symbol" ":pulse-label beats")
+    (list ":pulse-label a number" ":pulse-label 3")
+    (list ":subtitle a symbol" ":subtitle pangecet")
+    (list ":caption a number" ":caption 3")
+    (list ":font-size without a unit" ":font-size \"8\"")
+    (list ":font-size a unit only" ":font-size \"pt\"")
+    (list ":font-size a number" ":font-size 8")
+    (list ":font-size a symbol" ":font-size 8pt")
+    (list "a key with no value: :caption" ":caption :font-size \"8pt\"")))
+  (test-equal "duplicate-option: :caption" '(duplicate-option 14)
+    (score-error "(score s :caption \"a\" :caption \"b\" (group \"U\" ugal))"))
+  (for-each
+   (lambda (option)
+     (test-equal (string-append "score-only, on a group: " option)
+       '(option-wrong-level 15)
+       (string-error (one-group (string-append "(group \"U\" " option " ugal)")))))
+   '(":cycle-numbers no" ":pulse-numbers no" ":numbering gong-first"
+     ":pulse-label \"Beats\"" ":caption \"c\"" ":font-size \"8pt\""))
+  (test-equal "on a group, at the group's line" '(option-wrong-level 16)
+    (score-error "(score s" "  (group \"U\" ugal)"
+                 "  (group \"G\" :font-size \"8pt\" gong))")))
 
 (test-group "[scores] undefined-part"
   (for-each
@@ -5477,7 +5572,7 @@ STR, or the raised object (or no-error) unchanged."
     (list "16: a score's options before its groups" '(unknown-option 14)
           "(score a :tempo 1 (group \"A\" nope))")
     (list "16: a score's not-implemented option before its groups" '(not-implemented 14)
-          "(score a :font-size \"8pt\" (group \"A\" nope))")
+          "(score a :labels short (group \"A\" nope))")
     (list "16: groups in order: the first group's member" '(undefined-part 15)
           "(score a" "  (group \"A\" nope)" "  (group \"B\" ugal polos))")
     (list "16: groups in order: the first group's instruments" '(mixed-pitched-group 15)

@@ -347,7 +347,24 @@ examples, golden files and manual pages it affects.
 2. `feat/scores-contract`: contract version 2 (ADR 0036): header rows,
    `:cycle-numbers`, `:pulse-numbers`, `:numbering`, `:pulse-label`,
    `lines` with heavier cycle lines (ADR 0037), `subtitle`, `caption`,
-   `sizes`; the template and the entry file to match.
+   `sizes`; the template and the entry file to match. Decided for this slice:
+   - The reader now reads `:cycle-numbers`, `:pulse-numbers`,
+     `:numbering`, `:pulse-label`, a score's `:subtitle` and `:caption`,
+     and `:font-size`; the rest of the later options stay
+     `not-implemented`.
+   - Every group carries `overlays`, an empty list until slice 4, so the
+     shape of contract version 2 is final here.
+   - `font_size` is the score's `:font-size`, or `null` when it sets
+     none; the entry file then uses 8pt, and a document (06) its own
+     size.
+   - `:cycle-numbers yes` on a piece without a colotomy has no cycles to
+     number: `header.cycles` is `null`.
+   - The line at a system's first column is always `none`: its left edge
+     is the edge of the grid.
+   - A cycle mark's `column` is counted from its system's start, like an
+     event's `start`; a system in which no cycle starts has an empty
+     `cycles` list, and the pickup has no mark. Hiding one header row
+     leaves the other and the lines.
 3. `feat/scores-rows`: `:rows parts` and `single`, row labels, `:fill
    none`, `:holds dash`, the damped and open names, and
    `needs-note-names` and `notes-collide`.
