@@ -31,8 +31,8 @@ It loads a smaller template, `selisir`, which holds just the scale, so
 ## Your own template
 
 Write a template for your own gamelan in a file of its own. It holds
-only `scale`, `strokes`, `instrument` and `use` lines, with no `piece`
-line:
+only `scale`, `strokes`, `instrument`, `colotomy`, `pattern` and `use`
+lines, with no `piece` line:
 
 ```scheme
 {{#include examples/templates/my-gamelan.nts}}

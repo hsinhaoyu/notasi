@@ -23,7 +23,7 @@ Always run from the repo root with `-L .` so `(notasi ...)` modules resolve.
 
 Modules live in `notasi/` under the `(notasi <name>)` namespace. The intended pipeline is:
 
-`reader` (text notation → piece) → `piece` (core records: instruments, notes, parts, gongan) → `layout` (visual structure) → `typst` (Typst source output). There is no analysis module (ADR 0015).
+`reader` (text notation, with `expand` turning each part's tokens into timed events) → `piece` (core records: instruments, notes, parts, colotomies, patterns) → `layout` (visual structure) → `typst` (Typst source output). There is no analysis module (ADR 0015).
 
 The notation that `reader` parses is specified in `doc/design/01-notation.md`.
 

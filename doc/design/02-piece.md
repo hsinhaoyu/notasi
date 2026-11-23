@@ -203,21 +203,21 @@ group                                  every setting filled in (ADR 0033)
   the instrument's order. With several stroke instruments, each
   instrument's lanes come as a block, in the order its first part
   appears in the group.
-- `(part-end part)`: the end of the last event (`start + duration`), or
+- `(part-end part)` (**Implemented**): the end of the last event (`start + duration`), or
   0 for a part with no events. The reader uses it to check invariant 1.
   It is not a part's written length: trailing rests are not events, so
   the reader checks that parts have equal length while it expands them
   (ADR 0012). Replaces `part-steps`.
-- `(events-at piece time)`: everything sounding at TIME, a list of
+- `(events-at piece time)` (**Implemented**): everything sounding at TIME, a list of
   `(part . event)` pairs, one for each event with
   `start ≤ time < start + duration`, in the piece's part order.
-- `(time->position piece time)`: `(CYCLE PULSE)`, PULSE a rational from
+- `(time->position piece time)` (**Implemented**): `(CYCLE PULSE)`, PULSE a rational from
   1. With a pickup P and a cycle of N pulses, TIME is cycle
   `floor((TIME − P) / N) + 1`, pulse `(TIME − P) mod N + 1`; the pickup
   is cycle 0. Without a colotomy, the pulse number `TIME + 1`. Used by
   error messages and by layout's cycle and pulse numbers.
 - `(position->time piece cycle pulse)`, or `(position->time piece pulse)`
-  without a colotomy: the inverse.
+  without a colotomy: the inverse (**Implemented**).
 - `(piece-score piece name)`: the score called NAME, or `#f`.
 
 ## Invariants (checked by the reader, assumed by everyone else)

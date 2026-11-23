@@ -1,8 +1,10 @@
 # 04 — Layout
 
-Status: planned (iteration 2). The layout below, `layout-score`, is
-agreed and not yet built: `(notasi layout)` implements v1's
-`layout-piece` (all four v1 slices, see "What layout does today").
+Status: partly implemented (iteration 2). The layout below,
+`layout-score`, is agreed and not yet built: `(notasi layout)`
+implements v1's `layout-piece` (all four v1 slices, see "What layout
+does today"), with the step worked out from the piece's times since
+iteration 2, milestone 1.
 "Note style" is **Implemented** and stays, with the style now built from
 a score's options. Modules: `(notasi style)`, `(notasi layout)`; tests
 in `tests/style.scm`, `tests/layout.scm` and `tests/golden.scm`.
@@ -64,6 +66,10 @@ in this order:
 ## Decisions layout makes
 
 ### The step
+
+**Implemented** for the whole piece (`step-columns`, from every event's
+start and end and the piece's length); per score, with its range and
+pattern spans, **Planned**.
 
 The piece's times are rationals in pulses (ADR 0025); the figure counts
 in columns. For each score, layout takes the **step**: the largest
