@@ -90,7 +90,7 @@ missing bracket is somewhere before that.
 ```
 
 A few settings in the notation reference, such as a score's
-`:font-size`, aren't ready yet. Everything in this manual works.
+`:labels`, aren't ready yet. Everything in this manual works.
 
 ## Mistakes in scales and instruments
 

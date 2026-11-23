@@ -1148,13 +1148,11 @@ cut at the piece's end, on the piece's kempli or a built-in one."
 ;;; then.
 (define score-options-not-yet
   '(rows fill holds pattern-names pattern-level labels short from to
-    breaks cycle-numbers pulse-numbers numbering pulse-label subtitle
-    caption font-size))
+    breaks))
 
 (define group-options-not-yet
   '(rows fill holds pattern-names pattern-level labels short
-    from to breaks cycle-numbers pulse-numbers numbering pulse-label
-    caption font-size))
+    from to breaks))
 
 (define (colour? x)
   (and (string? x)
@@ -1187,6 +1185,13 @@ cut at the piece's end, on the piece's kempli or a built-in one."
 
 (define score-only-options
   `((title ,string? . "a string")
+    (subtitle ,string? . "a string")
+    (caption ,string? . "a string")
+    (cycle-numbers ,yes-no? . "yes or no")
+    (pulse-numbers ,yes-no? . "yes or no")
+    (numbering ,(lambda (v) (memq v '(gong-last gong-first))) . "gong-last or gong-first")
+    (pulse-label ,string? . "a string")
+    (font-size ,length-string? . "a length such as \"8pt\"")
     (system-length ,positive-whole-number? . "a whole number of pulses")
     (cell-width ,length-string? . "a length such as \"2em\"")
     (cell-height ,length-string? . "a length such as \"2em\"")))
@@ -1211,7 +1216,8 @@ cut at the piece's end, on the piece's kempli or a built-in one."
   (check-not-yet options group-options-not-yet line)
   (for-each (match-lambda
               ((key . _)
-               (when (assq (key-name key) score-only-options)
+               (when (and (assq (key-name key) score-only-options)
+                          (not (assq (key-name key) group-only-options)))
                  (syntax-error 'option-wrong-level line
                                "`~a' is set on the score, not on a group" key))))
             options)
@@ -1309,9 +1315,17 @@ print."
                                                    members own opts
                                                    (location gline)))))))))
                      groups)))
-          (make-score name (or (assq-ref opts 'title) title) #f #f 0 length
+          (make-score name (or (assq-ref opts 'title) title)
+                      (assq-ref opts 'subtitle) (assq-ref opts 'caption)
+                      0 length
                       (assq-ref opts 'system-length) '()
-                      (and colotomy #t) #t 'gong-last #f #f
+                      (match (assq-ref opts 'cycle-numbers)
+                        (#f (and colotomy #t))
+                        (v (eq? v 'yes)))
+                      (not (eq? (assq-ref opts 'pulse-numbers) 'no))
+                      (or (assq-ref opts 'numbering) 'gong-last)
+                      (assq-ref opts 'pulse-label)
+                      (assq-ref opts 'font-size)
                       (or (assq-ref opts 'cell-width) "2em")
                       (or (assq-ref opts 'cell-height) "2em")
                       built (location line))))))))

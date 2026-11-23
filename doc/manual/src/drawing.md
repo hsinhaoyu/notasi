@@ -41,8 +41,11 @@ This is what you get:
   its name. Each row is one note of the instrument, highest at the top,
   labelled with the note's name.
 - Each **column** is one step of time: a whole pulse, or a part of one
-  when the piece has shorter notes. The numbers along the top count pulses,
-  and a thin line marks where each pulse begins (see
+  when the piece has shorter notes. The numbers along the top count
+  pulses, within each gong cycle when the piece has one, and a thin line
+  marks where each pulse begins. With a colotomy, a row above them
+  numbers the cycles, and a heavier line marks where each cycle begins,
+  just after the gong (see
   [Pulses and durations](pulses-and-durations.md)).
 - A **note** is a coloured square in its row. A held note (`_`) is a
   longer block. Each pitch has its own colour, the same in every

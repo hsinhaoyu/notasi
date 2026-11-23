@@ -544,10 +544,11 @@ section goes when iteration 2 is built:
 - All of the music is read (milestone 1): durations, `_`, `-`, `/`,
   `|`, `rep`, colotomies with `:colotomy`, `:pickup` and `||`, and
   patterns. A figure is one system for the whole piece.
-- Scores are read with the options of milestone 2's first slice
-  (`:title`, `:system-length`, `:note-names`, `:scheme`, `:palette`,
-  `:colors`, `:cell-width`, `:cell-height`, and a group's `:subtitle`);
-  the others raise `not-implemented`. `notasi render` draws the first
+- Scores are read with the options of milestone 2's first two slices
+  (`:title`, `:subtitle`, `:caption`, `:system-length`,
+  `:cycle-numbers`, `:pulse-numbers`, `:numbering`, `:pulse-label`,
+  `:font-size`, `:note-names`, `:scheme`, `:palette`, `:colors`,
+  `:cell-width`, `:cell-height`); the others raise `not-implemented`. `notasi render` draws the first
   score. Pattern names are kept but not printed.
 
 The manual describes this notation until then.

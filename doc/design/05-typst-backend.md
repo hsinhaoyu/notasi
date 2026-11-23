@@ -1,11 +1,12 @@
 # 05 — Typst backend and JSON contract
 
-Status: partly planned (iteration 2). Implemented (v1, all three
+Status: partly implemented (iteration 2). Implemented (v1, all three
 slices, see "Slices"): the JSON writer, figure files, the entry file,
 running Typst, `render-piece`, the template and the `notasi render`
-command, for contract version 1. Planned: contract version 2 (ADR
-0036), the template's header rows, lines and overlays, sizes from the
-score, and choosing a score (`--score`). Modules: `(notasi json)`,
+command; contract version 2 (ADR 0036) with the template's header rows
+and lines and the entry file's font size, subtitle and caption since
+iteration 2's `feat/scores-contract`. Planned: drawing overlays, and
+choosing a score (`--score`). Modules: `(notasi json)`,
 `(notasi typst)`, `(notasi command)` (Guile), `typst/notasi.typ` (Typst
 template), `scripts/notasi` (the command).
 
@@ -21,7 +22,8 @@ must work in both places; see "Typst template design", points 6 and 7.
 
 ## JSON contract (version 2)
 
-**Planned** (ADR 0036). Layout writes it (04, where the keys are listed
+**Implemented** (ADR 0036), with `overlays` always empty until
+`feat/scores-overlays`. Layout writes it (04, where the keys are listed
 in order). An excerpt, for Jaya Semara's full score (arrays shortened):
 
 ```json
@@ -78,7 +80,7 @@ Rules, besides those of version 1 below, which still hold:
 
 ## JSON contract (version 1)
 
-**Implemented.** An excerpt of `tests/golden/tenzer1.json`, the figure for
+Replaced by version 2; kept for the record. An excerpt of `tests/golden/tenzer1.json`, the figure for
 `examples/tenzer1.nts` (the first group, with its first event shown):
 
 ```json
@@ -255,7 +257,9 @@ Lessons from the prototype (`doc/prototypes/score.typ`):
 - Sizes relative to the text (`em`, `luma` greys), never absolute font
   sizes or fonts: the surrounding document or entry file sets those.
 
-**Planned** for version 2 (ADRs 0036, 0037):
+**Implemented** for version 2 (ADRs 0036, 0037), except overlays
+(**Planned**, `feat/scores-overlays`); version 1's header and pulse
+lines below are replaced by these:
 
 - **Columns and rows** use `cell_width` and `cell_height` for the grid
   cells, and the label columns as before.
@@ -289,7 +293,7 @@ checked that way.
 
 ## The entry file and running Typst
 
-**Planned** for version 2: the entry file sets the text size from
+**Implemented** for version 2: the entry file sets the text size from
 `data.sizes.font_size` (it is always set for a standalone figure),
 prints the `subtitle` under the title when not `null`, and the `caption`
 under the score when not `null`, in italics. The rest is as below.

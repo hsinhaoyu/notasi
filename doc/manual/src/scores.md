@@ -27,6 +27,13 @@ own instead.
 | Setting | Where | What it does |
 |---|---|---|
 | `:title "…"` | score | The title, instead of the piece's. |
+| `:subtitle "…"` | score or group | A line under the title, or under a group's label. |
+| `:caption "…"` | score | A line under the score. |
+| `:cycle-numbers yes` / `no` | score | Number each gong cycle above its first pulse. On by default when the piece has a [colotomy](gong-cycles.md). |
+| `:pulse-numbers yes` / `no` | score | The row of pulse numbers. On by default. |
+| `:numbering gong-last` / `gong-first` | score | Count the pulses of a cycle with the gong last (1 to 8, the gong on 8; the default) or first (the gong on 1). |
+| `:pulse-label "…"` | score | A label at the left of the pulse numbers, such as `"Beats"`. |
+| `:font-size "8pt"` | score | The size of the text (8pt unless you say). |
 | `:system-length N` | score | N pulses on each line of the score. Without it, the whole piece is one line. |
 | `:note-names yes` | score or group | Write each note's name in its square. The gongs above show `G`, `P` and `K`. |
 | `:palette NAME` | score or group | The colours of the notes: `pastel1` (the default), `set2`, `dark2` and others, or a list of colours such as `("#e41a1c" "#377eb8")`. |

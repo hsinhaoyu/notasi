@@ -1,1 +1,1 @@
-not-yet.nts:4: the option `:font-size' is not supported yet
+not-yet.nts:4: the option `:labels' is not supported yet
