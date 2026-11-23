@@ -1,1 +1,1 @@
-not-yet.nts:2: the `score' form is not supported yet
+not-yet.nts:4: the option `:font-size' is not supported yet

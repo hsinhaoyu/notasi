@@ -1,2 +1,5 @@
 (piece "Gilak")
-(score full (group "Ugal" ugal))
+(use gong-kebyar)
+(part ugal a1 o2 i2 e2)
+(score full :font-size "10pt"
+  (group "Ugal" ugal))

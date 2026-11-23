@@ -325,7 +325,25 @@ examples, golden files and manual pages it affects.
    score; groups with their effective settings (ADR 0033);
    `layout-score` with `notes` rows, `:note-names`, the colour options
    (one style per group) and the size options; `:system-length`; ADR
-   0034's group check.
+   0034's group check. Decided for this slice:
+   - The reader reads, on a score, `:title`, `:system-length`,
+     `:note-names`, `:scheme`, `:palette`, `:colors`, `:cell-width` and
+     `:cell-height`; on a group, `:subtitle`, `:note-names`, `:scheme`,
+     `:palette` and `:colors`. The options later slices build (`:rows`,
+     `:fill`, `:holds`, `:pattern-names`, `:pattern-level`, `:labels`,
+     `:short`, `:from`, `:to`, `:breaks`, `:cycle-numbers`,
+     `:pulse-numbers`, `:numbering`, `:pulse-label`, a score's
+     `:subtitle` and `:caption`, `:font-size`) raise `not-implemented`
+     at the score's or group's line. The `score` and `group` records
+     have every field of 02, the unbuilt ones at their defaults.
+   - `layout-piece` is removed: `(layout-score piece score)` replaces
+     it. `render-piece`, `notasi render` and the golden tests lay out a
+     piece's first score (or its default score) until `--score`
+     (slice 5).
+   - The default score is named `default`.
+   - The figure stays contract version 1: `:cell-width` and
+     `:cell-height` go into `step_width` and `row_height` as written
+     (default `"2em"`).
 2. `feat/scores-contract`: contract version 2 (ADR 0036): header rows,
    `:cycle-numbers`, `:pulse-numbers`, `:numbering`, `:pulse-label`,
    `lines` with heavier cycle lines (ADR 0037), `subtitle`, `caption`,

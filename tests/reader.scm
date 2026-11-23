@@ -116,6 +116,56 @@
 ;;;   pattern's token error comes before a later pattern's missing
 ;;;   `:instrument`; bad-form and the option kinds are check 6.
 ;;; - Spans that start together are not tested for order.
+;;;
+;;; Milestone 2, slice feat/scores-form (04, "Slices (iteration 2)",
+;;; slice 1; 03, step 12 and check 16; 02, the `score` and `group`
+;;; records): `score` and `group` forms, the default score, groups with
+;;; their effective settings (ADR 0033), `piece-scores` in place of
+;;; `piece-groups`, `piece-score`, and the **[scores]** errors this slice
+;;; raises. Existing tests that looked at `piece-groups` now look at the
+;;; groups of the piece's first score (`default-groups`: the default
+;;; score when the file has none), and a group's parts are the parts of
+;;; its members. `score` is no longer `not-implemented` as a form: the
+;;; tests that used a score to stand for "a form not built yet" use a
+;;; score with an option a later slice builds (`:font-size`), which is
+;;; `not-implemented` at the score's line.
+;;; Choices made where the docs are not explicit (or disagree):
+;;; - Check 6 ("the shape and options of each form") and check 16
+;;;   ("each score: its options, then each group") both name a score's
+;;;   options. Tests order option errors only within check 16 (a score's
+;;;   options before its groups, a group's options before its members),
+;;;   and a score's top-level shape (`(score)`) as check 6.
+;;; - A group's errors (`bad-form`, its option kinds, `undefined-part`,
+;;;   `part-in-two-groups`, `mixed-pitched-group`, `pitched-with-strokes`,
+;;;   `option-wrong-level`, `not-implemented`) are at the group's line;
+;;;   tests write each group, with its members, on one line, so that
+;;;   the group's line and a member list's line are the same.
+;;; - `part-in-two-groups` is at the line of the group where the part
+;;;   comes the second time; its `part` field is not tested.
+;;; - `undefined-part`, `mixed-pitched-group` and `pitched-with-strokes`
+;;;   have `part` set as 03 says; `time` is #f for every score error.
+;;; - A score-only option on a group is `option-wrong-level` for the
+;;;   options this slice reads (`:title`, `:system-length`,
+;;;   `:cell-width`, `:cell-height`); the score-only options of later
+;;;   slices on a group are not tested (either kind would do).
+;;; - `not-implemented` is tested with valid values for each later
+;;;   option, on the score and (for the options a group takes) on a
+;;;   group, at that form's line.
+;;; - `:system-length` takes an exact positive integer here; 0, a
+;;;   negative number, a decimal, a string and a symbol are
+;;;   `bad-option`. Fractions are not tested.
+;;; - A LENGTH is a string of a number and one of Typst's units; "2em",
+;;;   "2.5em", "4mm", "10pt", "1cm" and "0.5in" read, and "3", "em",
+;;;   "three em", a number and a symbol are `bad-option`.
+;;; - Colours are tested in lowercase only, `:palette ()` is
+;;;   `bad-option` (make-style refuses an empty list), and `:colors`
+;;;   entries are `(DEGREE "#rrggbb")` lists, stored as
+;;;   `(DEGREE . "#rrggbb")` pairs. A group's `:colors` replaces the
+;;;   score's whole list; it is not merged with it.
+;;; - The default score's `cycle-numbers?` is #t with a colotomy and #f
+;;;   without (01: "yes with a colotomy"); `font-size` is #f (02).
+;;; - A file with scores has no default score: `piece-scores` is exactly
+;;;   its scores, in file order.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -204,9 +254,19 @@ tests follow their layout instead of hard-coding it."
   (rmdir tmp-dir))
 
 ;;; A pattern on an instrument no fixture defines (ugal is not defined
-;;; where this is used), and a score, the one form not built yet.
+;;; where this is used), and a score with an option a later slice
+;;; builds, which is not-implemented at its line.
 (define pattern-form "(pattern polos-1 :instrument ugal 1 2)")
-(define score-form "(score full (group \"Ugal\" ugal))")
+(define score-form "(score full :font-size \"8pt\" (group \"Ugal\" ugal))")
+
+(define (default-groups pc)
+  "The groups of PC's first score: its default score when the file has
+none (what v1 called piece-groups)."
+  (score-groups (car (piece-scores pc))))
+
+(define (member-parts g)
+  "The part records of G's members, in order."
+  (map car (group-members g)))
 
 (test-begin "reader")
 
@@ -225,7 +285,7 @@ tests follow their layout instead of hard-coding it."
       (map (lambda (p) (list (part-name p) (part-origin p) (part-events p)))
            (piece-parts pc)))
     (test-equal "no groups: the built-in kempli is not printed" '()
-      (piece-groups pc))
+      (default-groups pc))
     (test-equal "pickup 0" 0 (piece-pickup pc))
     (test-equal "no colotomies" '() (piece-colotomies pc)))
 
@@ -523,7 +583,7 @@ tests follow their layout instead of hard-coding it."
     (list "the first of two groups" '(group-outside-score 3)
           (lines "(piece \"P\")" "(part reyong 1)" "(group \"A\" reyong)"
                  "(group \"B\" reyong)"))
-    (list "a group inside a score is not top-level" '(not-implemented 2)
+    (list "a group inside a score is not top-level" '(undefined-part 2)
           (lines "(piece \"P\")" "(score full (group \"G\" a))"))))
   (let ((c (catch-syntax-error
             (lambda () (read-piece-string (lines "(piece \"P\")" "(group \"G\" a)"))))))
@@ -647,28 +707,20 @@ tests follow their layout instead of hard-coding it."
 ;;; unknown key. `part options` tests duplicate-option.
 
 ;;; ------------------------------------------------------------------
-;;; score is a known form, not built yet (colotomy is built since slice
-;;; 4, pattern since slice 5)
+;;; A score with an option a later slice builds is not-implemented at
+;;; the score's line (04, slice 1); the [scores] section below tests
+;;; every such option.
 
 (test-group "not-implemented"
-  (for-each
-   (match-lambda
-     ((head form)
-      (test-equal (string-append head ": not-implemented at its own line")
-        '(not-implemented 3)
-        (string-error (lines "(piece \"P\")" ";; next" form)))))
-   (list (list "score" score-form)))
-  (for-each
-   (match-lambda
-     ((head form)
-      (test-equal (string-append head " with nothing in it: still not-implemented")
-        '(not-implemented 2)
-        (string-error (lines "(piece \"P\")" form)))))
-   (list (list "score" "(score)")))
+  (test-equal "a score option not built yet: not-implemented at the score's line"
+    '(not-implemented 3)
+    (string-error (lines "(piece \"P\")" ";; next" score-form)))
   (test-equal "a multi-line score: the form's line" '(not-implemented 2)
-    (string-error (lines "(piece \"P\")" "(score full" "  (group \"G\" a))")))
-  (test-equal "the first not-implemented form in file order" '(not-implemented 4)
-    (string-error (lines "(piece \"P\")" "" "" score-form "(score other)")))
+    (string-error (lines "(piece \"P\")" "(score full :font-size \"8pt\""
+                         "  (group \"G\" a))")))
+  (test-equal "the first not-implemented score in file order" '(not-implemented 4)
+    (string-error (lines "(piece \"P\")" "" "" score-form
+                         "(score other :caption \"c\" (group \"G\" a))")))
   (let ((c (catch-syntax-error
             (lambda () (read-piece-string (lines "(piece \"P\")" score-form))))))
     (test-equal "not-implemented: file #f" #f
@@ -873,7 +925,7 @@ so a test using it fails rather than passing on #f."
     (test-equal "no written parts: only the timekeeper" '(kempli)
       (map part-name (piece-parts pc)))
     (test-equal "no groups: no kempli instrument, so it is not printed" '()
-      (piece-groups pc))
+      (default-groups pc))
     (test-equal "title" "Definitions" (piece-title pc)))
 
   (let ((pc (try-read-string "(piece \"P\")"
@@ -1024,7 +1076,7 @@ so a test using it fails rather than passing on #f."
     (test-equal "length 0, only the timekeeper, its default group"
       '(0 (kempli) ("kempli"))
       (list (piece-length pc) (map part-name (piece-parts pc))
-            (map group-label (piece-groups pc))))))
+            (map group-label (default-groups pc))))))
 
 ;;; ------------------------------------------------------------------
 ;;; Error cases for definitions. Each checks (KIND LINE).
@@ -1613,7 +1665,7 @@ so a test using it fails rather than passing on #f."
   (filter (lambda (p) (eq? (part-origin p) 'written)) (piece-parts pc)))
 
 (define (group-labelled pc label)
-  (or (find (lambda (g) (equal? (group-label g) label)) (piece-groups pc))
+  (or (find (lambda (g) (equal? (group-label g) label)) (default-groups pc))
       (error "no group labelled:" label)))
 
 (define (event-triple e)
@@ -1632,7 +1684,7 @@ so a test using it fails rather than passing on #f."
 events as (START DURATION NOTES) triples."
   (part-triples (read-defs+ (part-p-form instrument tokens)) 'p))
 
-(define (group-part-names g) (map part-name (group-parts g)))
+(define (group-part-names g) (map part-name (member-parts g)))
 
 (define (group-line g)
   (and=> (group-location g) source-location-line))
@@ -1749,7 +1801,7 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
   (let ((pc (read-defs+)))
     (test-equal "no parts: length 0" 0 (piece-length pc))
     (test-equal "no parts: only the timekeeper's group" '("kempli")
-      (map group-label (piece-groups pc))))
+      (map group-label (default-groups pc))))
   (let ((pc (read-defs+ "(part reyong 1 2 - -)" "(part gong G _ _ _)")))
     (test-equal "part-end is the end of the last event (ADR 0012)" '(2 4 4)
       (map part-end (piece-parts pc)))
@@ -1802,7 +1854,7 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
     (test-assert "no :name: its instrument"
       (eq? (part-instrument (part-named pc 'ugal)) (instrument-named pc 'ugal)))
     (test-equal "no :name: its default group" '("ugal" "kempli")
-      (map group-label (piece-groups pc))))
+      (map group-label (default-groups pc))))
 
   (let ((pc (read-defs+ "(part reyong"         ; 10
                         "  :name polos"        ; 11
@@ -1849,7 +1901,7 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
       (map (lambda (p) (source-location-line (part-location p)))
            (written-parts pc)))
     (test-equal "default groups have no location, even from a file" '(#f #f #f)
-      (map group-location (piece-groups pc)))))
+      (map group-location (default-groups pc)))))
 
 ;;; ------------------------------------------------------------------
 ;;; Default groups: with no top-level groups, every part is in its own
@@ -1862,18 +1914,18 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
                         "(part gong G - - P)")))                 ; 13
     (test-equal "one group per part, in part order, labelled with its name"
       '("ugal" "polos" "sangsih" "gong" "kempli")
-      (map group-label (piece-groups pc)))
-    (test-assert "groups are group records" (every group? (piece-groups pc)))
+      (map group-label (default-groups pc)))
+    (test-assert "groups are group records" (every group? (default-groups pc)))
     (test-equal "one part each" '((ugal) (polos) (sangsih) (gong) (kempli))
-      (map group-part-names (piece-groups pc)))
+      (map group-part-names (default-groups pc)))
     (test-equal "subtitles #f" '(#f #f #f #f #f)
-      (map group-subtitle (piece-groups pc)))
+      (map group-subtitle (default-groups pc)))
     (test-equal "locations #f" '(#f #f #f #f #f)
-      (map group-location (piece-groups pc)))
+      (map group-location (default-groups pc)))
     (test-assert "a group's part is the piece's part record"
-      (every (lambda (g) (eq? (car (group-parts g))
+      (every (lambda (g) (eq? (car (member-parts g))
                               (part-named pc (car (group-part-names g)))))
-             (piece-groups pc)))
+             (default-groups pc)))
     (test-equal "parts stay in file order, then the timekeeper"
       '(ugal polos sangsih gong kempli)
       (map part-name (piece-parts pc))))
@@ -1882,10 +1934,10 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
                         "(part reyong :name sangsih 3 4)")))
     (test-equal "two parts on one instrument: two groups, then kempli"
       '("polos" "sangsih" "kempli")
-      (map group-label (piece-groups pc)))
+      (map group-label (default-groups pc)))
     (test-equal "group-lanes of each" '((dung1 deng1) (ding2 dang1) (K))
       (map (lambda (g) (map note-name (group-lanes g)))
-           (piece-groups pc)))))
+           (default-groups pc)))))
 
 ;;; ------------------------------------------------------------------
 ;;; The textbook excerpt at the end of 01-notation.md. In v1 it was
@@ -1923,10 +1975,10 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
     (test-equal "gong events" '((0 1/4 (0))) (part-triples pc 'gong))
     (test-equal "groups: one per written part (the built-in kempli has none)"
       '("polos" "sangsih" "gong")
-      (map group-label (piece-groups pc)))
+      (map group-label (default-groups pc)))
     (test-equal "group parts" '((polos) (sangsih) (gong))
-      (map group-part-names (piece-groups pc)))
-    (test-equal "group lines" '(#f #f #f) (map group-line (piece-groups pc)))
+      (map group-part-names (default-groups pc)))
+    (test-equal "group lines" '(#f #f #f) (map group-line (default-groups pc)))
     ;; Light checks with the derived functions of (notasi piece).
     (test-equal "group-lanes: polos, highest first" '(ning1 nang1)
       (map note-name (group-lanes (group-labelled pc "polos"))))
@@ -3676,7 +3728,7 @@ line 12."
     (test-equal "the written part keeps its own line" 12 (line-of-part pc 'ugal))
     (test-equal "default groups: one per part, generated ones included"
       '("ugal" "gong" "kempli")
-      (map group-label (piece-groups pc)))
+      (map group-label (default-groups pc)))
     (test-equal "part-end of each" '(16 16 16) (map part-end (piece-parts pc))))
 
   (let ((pc (read-colo+ ":colotomy gilak :pickup 0" "(part ugal 1:16)")))
@@ -3740,7 +3792,7 @@ line 12."
     (test-equal "locations: the colotomy's line" '(10 10 10)
       (map (lambda (name) (line-of-part pc name)) '(kempur gong kempli)))
     (test-equal "default groups" '("ugal" "kempur" "gong" "kempli")
-      (map group-label (piece-groups pc))))
+      (map group-label (default-groups pc))))
 
   (let ((pc (read-colo+ ":colotomy long :pickup 1" "(part ugal 1:5)")))
     (test-equal "a stroke starting before time 0 is cut at 0"
@@ -3781,7 +3833,7 @@ line 12."
       (not (memq (instrument-scale inst) (piece-scales pc))))
     (test-equal "piece-scales are the file's" '(s gong-strokes) (scale-names pc))
     (test-equal "never printed: no default group" '("u" "gong")
-      (map group-label (piece-groups pc)))
+      (map group-label (default-groups pc)))
     (test-equal "location: the colotomy's" 6 (line-of-part pc 'kempli)))
 
   (let* ((pc (read-bare+ "" "(part u 1 2 1)"))
@@ -3796,7 +3848,7 @@ line 12."
     (test-assert "without a colotomy: not in piece-instruments"
       (not (memq (part-instrument k) (piece-instruments pc))))
     (test-equal "without a colotomy: no group" '("u")
-      (map group-label (piece-groups pc)))))
+      (map group-label (default-groups pc)))))
 
 (test-group "[colotomy] the piece's kempli"
   (let* ((pc (read-defs+ "(part ugal 1 2 3)"))
@@ -3808,7 +3860,7 @@ line 12."
       (eq? (part-instrument k) (instrument-named pc 'kempli)))
     (test-equal "events" (ones 0 3 0) (part-triples pc 'kempli))
     (test-equal "printed: it has a default group" '("ugal" "kempli")
-      (map group-label (piece-groups pc)))))
+      (map group-label (default-groups pc)))))
 
 (test-group "[colotomy] the timekeeper in a piece of fractional length"
   (for-each
@@ -4274,7 +4326,7 @@ line 12."
            (instrument-named pc 'kempli)))
     (test-equal "groups: one default group per part, kempli printed"
       '("ugal" "gong" "kempli")
-      (map group-label (piece-groups pc)))
+      (map group-label (default-groups pc)))
     (test-equal "ugal events"
       '((0 1 (3)) (1 1 (5)) (2 1 (4)) (3 1 (6)) (4 1 (5))
         (5 1 (3)) (6 1 (5)) (7 1 (4)) (8 1 (3)))
@@ -4313,7 +4365,7 @@ line 12."
                      (source-location-line loc))))
            (written-parts pc)))
     (test-equal "groups have no location" '(#f #f #f)
-      (map group-line (piece-groups pc)))))
+      (map group-line (default-groups pc)))))
 
 ;;; ==================================================================
 ;;; [patterns] Patterns, their uses and spans (slice feat/music-patterns)
@@ -4845,6 +4897,605 @@ STR, or the raised object (or no-error) unchanged."
           (defs+ "(part reyong :name a 9 1)" "(part reyong :name b @nope 1)"))
     (list "13 before 14: a use before unequal-length" '(undefined-pattern 11)
           (defs+ "(part reyong :name a 1 2)" "(part reyong :name b @nope)")))))
+
+;;; ==================================================================
+;;; [scores] Scores and groups (slice feat/scores-form)
+;;; ==================================================================
+
+;;; ------------------------------------------------------------------
+;;; Helpers
+
+;;; parts-defs (lines 1 to 9) and four parts; scores start on line 14.
+;;; The parts: ugal, polos and sangsih (both on reyong), gong, and the
+;;; generated kempli (on the piece's kempli instrument).
+(define scores-parts
+  (list "(part ugal 1 2 3 4)"                    ; 10
+        "(part reyong :name polos 1 2 3 4)"      ; 11
+        "(part reyong :name sangsih 4 3 2 1)"    ; 12
+        "(part gong G - - P)"))                  ; 13
+
+(define (scores+ . more)
+  "parts-defs, the four parts, then the lines MORE from line 14."
+  (apply defs+ (append scores-parts more)))
+
+(define (read-scores+ . more)
+  (try-read-string (apply scores+ more)))
+
+(define (score-named pc name)
+  (or (piece-score pc name) (error "no score:" name)))
+
+(define (score-line sc)
+  (and=> (score-location sc) source-location-line))
+
+(define (group-settings g)
+  "Every setting of G but its members and location, in 02's order."
+  (list (group-label g) (group-short g) (group-subtitle g) (group-labels g)
+        (group-rows g) (group-note-names? g) (group-fill g) (group-holds g)
+        (group-pattern-names g) (group-pattern-level g) (group-scheme g)
+        (group-palette g) (group-colors g)))
+
+(define (default-group-settings label)
+  "group-settings of a group LABEL with every option at its default."
+  (list label label #f 'first-long 'notes #f 'colour 'none 'none 0
+        'by-degree 'pastel1 '()))
+
+(define (member-names g)
+  "G's members as (PART-NAME ROW-LABEL)."
+  (map (match-lambda ((part . label) (list (part-name part) label)))
+       (group-members g)))
+
+(define (score-settings sc)
+  "Every setting of SC but its name, groups and location, in 02's order."
+  (list (score-title sc) (score-subtitle sc) (score-caption sc)
+        (score-from sc) (score-to sc) (score-system-length sc)
+        (score-breaks sc) (score-cycle-numbers? sc) (score-pulse-numbers? sc)
+        (score-numbering sc) (score-pulse-label sc) (score-font-size sc)
+        (score-cell-width sc) (score-cell-height sc)))
+
+(define (score-group-labels sc) (map group-label (score-groups sc)))
+
+(define (score-error+part . more)
+  "(KIND LINE PART) for reading scores+ with the lines MORE."
+  (error-kind+line+part (apply scores+ more)))
+
+(define (score-error . more)
+  "(KIND LINE) for reading scores+ with the lines MORE."
+  (string-error (apply scores+ more)))
+
+(define (group-in-score . group-lines)
+  "A score on line 14 whose groups are GROUP-LINES, from line 15."
+  (append (list "(score s") group-lines (list ")")))
+
+(define (one-group group-line)
+  "scores+ with a score on line 14 and GROUP-LINE on line 15."
+  (apply scores+ (group-in-score group-line)))
+
+;;; ------------------------------------------------------------------
+;;; Successful reads
+
+(test-group "[scores] reading scores and groups"
+  (let ((pc (read-scores+
+             "(score full :title \"Full\" :system-length 2 :note-names yes"   ; 14
+             "  :palette set1 :colors ((ding \"#000000\"))"                    ; 15
+             "  :cell-width \"3em\" :cell-height \"1.5em\""                    ; 16
+             "  (group \"Gangsa\" :subtitle \"norot\"  polos sangsih)"         ; 17
+             "  (group \"Ugal\" :note-names no :palette dark2  ugal)"          ; 18
+             "  (group \"\" :colors ((dong \"#ffffff\")) :scheme by-degree  gong kempli))" ; 19
+             "(score parts"                                                    ; 20
+             "  (group \"P\"  (polos :label \"Pol.\") sangsih))")))             ; 21
+    (test-assert "reads" (piece? pc))
+    (test-equal "piece-scores: the file's scores, in file order, no default"
+      '(full parts)
+      (map score-name (piece-scores pc)))
+    (test-assert "score records" (every score? (piece-scores pc)))
+    (test-eq "piece-score finds the first" (car (piece-scores pc))
+      (piece-score pc 'full))
+    (test-eq "piece-score finds the second" (cadr (piece-scores pc))
+      (piece-score pc 'parts))
+    (test-eq "piece-score: no default score when the file has scores" #f
+      (piece-score pc 'default))
+    (test-eq "piece-score: an unknown name is #f" #f (piece-score pc 'nope))
+
+    (test-equal "full: the score's settings, the unbuilt ones at their defaults"
+      (list "Full" #f #f 0 4 2 '() #f #t 'gong-last #f #f "3em" "1.5em")
+      (score-settings (score-named pc 'full)))
+    (test-equal "parts: every setting at its default; the title is the piece's"
+      (list "Parts" #f #f 0 4 #f '() #f #t 'gong-last #f #f "2em" "2em")
+      (score-settings (score-named pc 'parts)))
+    (test-assert ":system-length stays exact"
+      (exact? (score-system-length (score-named pc 'full))))
+    (test-equal "score locations: the form's line, file #f"
+      '((#f 14) (#f 20))
+      (map (lambda (sc) (list (source-location-file (score-location sc))
+                              (score-line sc)))
+           (piece-scores pc)))
+
+    (test-equal "full: its groups, in the order written"
+      '("Gangsa" "Ugal" "")
+      (score-group-labels (score-named pc 'full)))
+    (test-assert "group records" (every group? (score-groups (score-named pc 'full))))
+    (test-equal "group locations: the group's line, file #f"
+      '((#f 17) (#f 18) (#f 19))
+      (map (lambda (g) (list (source-location-file (group-location g))
+                             (source-location-line (group-location g))))
+           (score-groups (score-named pc 'full))))
+    (test-equal "a group without options: the score's settings, else the defaults"
+      (list "Gangsa" "Gangsa" "norot" 'first-long 'notes #t 'colour 'none 'none 0
+            'by-degree 'set1 '((ding . "#000000")))
+      (group-settings (car (score-groups (score-named pc 'full)))))
+    (test-equal "a group's own :note-names and :palette override the score's"
+      (list "Ugal" "Ugal" #f 'first-long 'notes #f 'colour 'none 'none 0
+            'by-degree 'dark2 '((ding . "#000000")))
+      (group-settings (cadr (score-groups (score-named pc 'full)))))
+    (test-equal "a group's own :colors replace the score's; an empty label"
+      (list "" "" #f 'first-long 'notes #t 'colour 'none 'none 0
+            'by-degree 'set1 '((dong . "#ffffff")))
+      (group-settings (caddr (score-groups (score-named pc 'full)))))
+    (test-equal "members: (part . row-label), the label the part's name"
+      '(((polos "polos") (sangsih "sangsih"))
+        ((ugal "ugal"))
+        ((gong "gong") (kempli "kempli")))
+      (map member-names (score-groups (score-named pc 'full))))
+    (test-assert "members hold the piece's part records"
+      (every (lambda (g)
+               (every (lambda (m) (eq? (car m) (part-named pc (part-name (car m)))))
+                      (group-members g)))
+             (score-groups (score-named pc 'full))))
+    (test-assert "the generated kempli may be in a group"
+      (eq? (part-named pc 'kempli)
+           (car (cadr (group-members (caddr (score-groups (score-named pc 'full))))))))
+
+    (test-equal "parts: a member's :label is its row label"
+      '(((polos "Pol.") (sangsih "sangsih")))
+      (map member-names (score-groups (score-named pc 'parts))))
+    (test-equal "parts: a group in a score without options has the defaults"
+      (list (default-group-settings "P"))
+      (map group-settings (score-groups (score-named pc 'parts))))
+    (test-equal "the same part in two scores: the same part record"
+      (part-named pc 'polos)
+      (car (car (group-members (car (score-groups (score-named pc 'parts)))))))
+    (test-equal "parts stay as they were" '(ugal polos sangsih gong kempli)
+      (map part-name (piece-parts pc))))
+
+  (let ((pc (read-scores+ "(score s :palette (\"#111111\" \"#eeeeee\")"       ; 14
+                          "  (group \"U\" ugal)"                               ; 15
+                          "  (group \"G\" :palette (\"#123456\") gong))")))    ; 16
+    (test-equal "a palette written as a list of colours, on the score and a group"
+      '(("#111111" "#eeeeee") ("#123456"))
+      (map group-palette (score-groups (score-named pc 's)))))
+
+  (let ((pc (read-scores+ "(score s :palette dark2 (group \"U\" :palette set1 ugal))")))
+    (test-equal "a group's palette name over the score's" '(set1)
+      (map group-palette (score-groups (score-named pc 's)))))
+
+  (let ((pc (read-scores+ "(score s :colors ((ding \"#000000\") (dang \"#ff0000\"))"
+                          "  (group \"U\" ugal))")))
+    (test-equal ":colors with several degrees, in order"
+      '(((ding . "#000000") (dang . "#ff0000")))
+      (map group-colors (score-groups (score-named pc 's)))))
+
+  (let ((pc (read-scores+ "(score s :note-names no (group \"U\" :note-names yes ugal)"
+                          "  (group \"G\" gong))")))
+    (test-equal ":note-names: the group's yes over the score's no" '(#t #f)
+      (map group-note-names? (score-groups (score-named pc 's)))))
+
+  (for-each
+   (match-lambda
+     ((len)
+      (test-equal (string-append "a length " len " reads, as written")
+        (list len len)
+        (let ((pc (read-scores+
+                   (string-append "(score s :cell-width \"" len
+                                  "\" :cell-height \"" len "\" (group \"U\" ugal))"))))
+          (and pc (list (score-cell-width (score-named pc 's))
+                        (score-cell-height (score-named pc 's))))))))
+   '(("2em") ("2.5em") ("4mm") ("10pt") ("1cm") ("0.5in")))
+
+  (let ((pc (read-scores+ "(score ugal (group \"U\" ugal))"
+                          "(score polos (group \"P\" polos))")))
+    (test-equal "scores may be named like parts" '(ugal polos)
+      (and pc (map score-name (piece-scores pc)))))
+
+  (let ((pc (read-scores+ "(score s (group \"Ugal\" ugal) (group \"Ugal\" gong))")))
+    (test-equal "group labels need not be unique" '("Ugal" "Ugal")
+      (and pc (score-group-labels (score-named pc 's)))))
+
+  (let ((pc (read-scores+ "(score s (group \"Gangsa\" polos sangsih))")))
+    (test-equal "parts on one pitched instrument share a group"
+      '((polos "polos") (sangsih "sangsih"))
+      (and pc (member-names (car (score-groups (score-named pc 's)))))))
+
+  (let ((pc (read-scores+ "(score s (group \"Pulse\" kempli gong))")))
+    (test-equal "parts on two stroke instruments share a group"
+      '((kempli "kempli") (gong "gong"))
+      (and pc (member-names (car (score-groups (score-named pc 's)))))))
+
+  (let ((pc (read-scores+ "(score s (group \"U\" ugal))")))
+    (test-equal "a part in no group is not in the score" '(("U" ((ugal "ugal"))))
+      (and pc (map (lambda (g) (list (group-label g) (member-names g)))
+                   (score-groups (score-named pc 's))))))
+
+  (let ((pc (read-scores+ "(score s"                                   ; 14
+                          "  :title \"T\""                             ; 15
+                          "  (group \"U\""                             ; 16
+                          "    :subtitle \"s\""                        ; 17
+                          "    ugal))")))                              ; 18
+    (test-equal "options on their own lines: the form's and group's lines"
+      '(14 16)
+      (and pc (let ((sc (score-named pc 's)))
+                (list (score-line sc)
+                      (source-location-line
+                       (group-location (car (score-groups sc)))))))))
+
+  (let ((pc (read-colo+ ":colotomy gilak :pickup 1" "(part ugal 1:17)"    ; 12
+                        "(score s (group \"U\" ugal) (group \"G\" gong kempli))")))
+    (test-equal "a colotomy's generated parts in a score"
+      '(((ugal "ugal")) ((gong "gong") (kempli "kempli")))
+      (and pc (map member-names (score-groups (score-named pc 's)))))
+    (test-equal "with a colotomy: to is the length, cycle-numbers? #t"
+      '(0 17 #t)
+      (and pc (let ((sc (score-named pc 's)))
+                (list (score-from sc) (score-to sc) (score-cycle-numbers? sc))))))
+
+  (let* ((path (write-temp-file "scores.nts"
+                                (scores+ "(score s"                 ; 14
+                                         "  (group \"U\" ugal))"))) ; 15
+         (pc (try-read (lambda () (read-piece-file path)))))
+    (test-equal "from a file: score and group locations have the file"
+      (list (list path 14) (list path 15))
+      (and pc (let ((sc (score-named pc 's)))
+                (list (list (source-location-file (score-location sc))
+                            (score-line sc))
+                      (let ((loc (group-location (car (score-groups sc)))))
+                        (list (source-location-file loc)
+                              (source-location-line loc)))))))))
+
+;;; ------------------------------------------------------------------
+;;; The default score (01, "Files without a score"; 03, step 12)
+
+(test-group "[scores] the default score"
+  (let ((pc (read-scores+)))
+    (test-equal "one score, named default" '(default)
+      (map score-name (piece-scores pc)))
+    (test-eq "piece-score finds it" (car (piece-scores pc))
+      (piece-score pc 'default))
+    (test-equal "its location is #f" #f (score-location (score-named pc 'default)))
+    (test-equal "every setting at its default, the title the piece's"
+      (list "Parts" #f #f 0 4 #f '() #f #t 'gong-last #f #f "2em" "2em")
+      (score-settings (score-named pc 'default)))
+    (test-equal "one group per part, in part order, labelled with its name"
+      '("ugal" "polos" "sangsih" "gong" "kempli")
+      (score-group-labels (score-named pc 'default)))
+    (test-equal "each group: one member, its name as row label"
+      '(((ugal "ugal")) ((polos "polos")) ((sangsih "sangsih")) ((gong "gong"))
+        ((kempli "kempli")))
+      (map member-names (score-groups (score-named pc 'default))))
+    (test-equal "each group: every option at its default"
+      (map default-group-settings '("ugal" "polos" "sangsih" "gong" "kempli"))
+      (map group-settings (score-groups (score-named pc 'default))))
+    (test-equal "group locations #f" '(#f #f #f #f #f)
+      (map group-location (score-groups (score-named pc 'default))))
+    (test-assert "members are the piece's part records"
+      (every (lambda (g p) (eq? (car (car (group-members g))) p))
+             (score-groups (score-named pc 'default))
+             (piece-parts pc))))
+
+  (let ((pc (read-bare+ "" "(part u 1 2 1)")))
+    (test-equal "the built-in kempli is left out" '("u")
+      (and pc (score-group-labels (score-named pc 'default)))))
+
+  (let ((pc (read-colo+ ":colotomy gilak" "(part ugal 1:16)")))
+    (test-equal "a colotomy's generated parts are in it"
+      '("ugal" "gong" "kempli")
+      (and pc (score-group-labels (score-named pc 'default))))
+    (test-equal "with a colotomy: cycle-numbers? #t; to is the length" '(#t 0 16)
+      (and pc (let ((sc (score-named pc 'default)))
+                (list (score-cycle-numbers? sc) (score-from sc) (score-to sc))))))
+
+  (let ((pc (try-read-string "(piece \"Empty\")")))
+    (test-equal "a piece with no parts: a default score with no groups"
+      '((default) () "Empty" 0)
+      (and pc (list (map score-name (piece-scores pc))
+                    (score-groups (score-named pc 'default))
+                    (score-title (score-named pc 'default))
+                    (score-to (score-named pc 'default)))))))
+
+;;; ------------------------------------------------------------------
+;;; Error cases
+
+(test-group "[scores] bad-form"
+  (table-tests 'bad-form
+   (list
+    (list "a score with nothing in it" 14 (scores+ "(score)"))
+    (list "a score name that is a string" 14
+          (scores+ "(score \"full\" (group \"U\" ugal))"))
+    (list "a score name that is a number" 14 (scores+ "(score 3 (group \"U\" ugal))"))
+    (list "a score with options and no name" 14
+          (scores+ "(score :title \"x\" (group \"U\" ugal))"))
+    (list "a body item that is not a group: a number" 14
+          (scores+ "(score full (group \"U\" ugal) 3)"))
+    (list "a body item that is not a group: a symbol" 14
+          (scores+ "(score full (group \"U\" ugal) foo)"))
+    (list "a body item that is not a group: a part form" 14
+          (scores+ "(score full (part ugal 1 2 3 4))"))
+    (list "a group label that is a symbol: the group's line" 15
+          (one-group "(group ugal ugal)"))
+    (list "a group label that is a number" 15 (one-group "(group 3 ugal)"))
+    (list "an empty group" 15 (one-group "(group)"))
+    (list "a group with no parts" 15 (one-group "(group \"U\")"))
+    (list "a group with options and no parts" 15
+          (one-group "(group \"U\" :note-names yes)"))
+    (list "a member that is a string" 15 (one-group "(group \"U\" \"ugal\")"))
+    (list "a member that is a number" 15 (one-group "(group \"U\" ugal 3)"))
+    (list "a member's :label that is not a string" 15
+          (one-group "(group \"U\" (ugal :label 3))"))
+    (list "a member list whose part is not a name" 15
+          (one-group "(group \"U\" (\"ugal\" :label \"U\"))"))
+    (list "the second group of a score" 16
+          (scores+ "(score s" "  (group \"U\" ugal)" "  (group \"G\"))")))))
+
+(test-group "[scores] duplicate-definition"
+  (table-tests 'duplicate-definition
+   (list (list "two scores with one name: the second" 15
+               (scores+ "(score a (group \"U\" ugal))" "(score a (group \"G\" gong))"))
+         (list "the first and the third" 16
+               (scores+ "(score a (group \"U\" ugal))" "(score b (group \"G\" gong))"
+                        "(score a (group \"P\" polos))")))))
+
+(test-group "[scores] option kinds on a score"
+  (for-each
+   (match-lambda
+     ((name expected options)
+      (test-equal name expected
+        (score-error (string-append "(score s " options " (group \"U\" ugal))")))))
+   (list
+    (list "unknown-option" '(unknown-option 14) ":tempo 60")
+    (list "a part's key is not a score option: :name" '(unknown-option 14)
+          ":name x")
+    (list "duplicate-option" '(duplicate-option 14) ":note-names yes :note-names no")
+    (list "duplicate-option: :palette" '(duplicate-option 14)
+          ":palette set1 :palette set2")
+    (list "a key with no value, followed by another key" '(bad-option 14)
+          ":title :note-names yes")
+    (list ":title not a string: a symbol" '(bad-option 14) ":title full")
+    (list ":title not a string: a number" '(bad-option 14) ":title 3")
+    (list ":system-length 0" '(bad-option 14) ":system-length 0")
+    (list ":system-length negative" '(bad-option 14) ":system-length -2")
+    (list ":system-length a decimal" '(bad-option 14) ":system-length 1.5")
+    (list ":system-length a string" '(bad-option 14) ":system-length \"4\"")
+    (list ":system-length a symbol" '(bad-option 14) ":system-length four")
+    (list ":note-names not yes or no" '(bad-option 14) ":note-names maybe")
+    (list ":note-names a string" '(bad-option 14) ":note-names \"yes\"")
+    (list ":note-names #t" '(bad-option 14) ":note-names #t")
+    (list ":palette an unknown name" '(bad-option 14) ":palette rainbow")
+    (list ":palette a string" '(bad-option 14) ":palette \"set1\"")
+    (list ":palette a number" '(bad-option 14) ":palette 3")
+    (list ":palette an empty list" '(bad-option 14) ":palette ()")
+    (list ":palette a colour of five digits" '(bad-option 14) ":palette (\"#12345\")")
+    (list ":palette a colour without #" '(bad-option 14) ":palette (\"123456\")")
+    (list ":palette a colour that is not hex" '(bad-option 14) ":palette (\"#gggggg\")")
+    (list ":palette a list holding a symbol" '(bad-option 14) ":palette (red)")
+    (list ":palette one bad colour among good ones" '(bad-option 14)
+          ":palette (\"#111111\" \"#2222\")")
+    (list ":scheme an unknown name" '(bad-option 14) ":scheme rainbow")
+    (list ":scheme a string" '(bad-option 14) ":scheme \"by-degree\"")
+    (list ":colors a colour name" '(bad-option 14) ":colors ((ding \"black\"))")
+    (list ":colors a short colour" '(bad-option 14) ":colors ((ding \"#00000\"))")
+    (list ":colors a symbol" '(bad-option 14) ":colors ding")
+    (list ":colors one entry, not a list of entries" '(bad-option 14)
+          ":colors (ding \"#000000\")")
+    (list ":colors a degree written as a string" '(bad-option 14)
+          ":colors ((\"ding\" \"#000000\"))")
+    (list ":colors an entry without a colour" '(bad-option 14) ":colors ((ding))")
+    (list ":cell-width without a unit" '(bad-option 14) ":cell-width \"3\"")
+    (list ":cell-width a unit only" '(bad-option 14) ":cell-width \"em\"")
+    (list ":cell-width words" '(bad-option 14) ":cell-width \"three em\"")
+    (list ":cell-width a number" '(bad-option 14) ":cell-width 3")
+    (list ":cell-width a symbol" '(bad-option 14) ":cell-width em")
+    (list ":cell-height without a unit" '(bad-option 14) ":cell-height \"3\"")))
+  (test-equal "option-after-body: a key after the first group" '(option-after-body 14)
+    (score-error "(score s (group \"U\" ugal) :title \"T\")"))
+  (test-equal "an option on its own line: the score's line" '(bad-option 14)
+    (score-error "(score s" "  :palette rainbow" "  (group \"U\" ugal))")))
+
+(test-group "[scores] option kinds on a group"
+  (for-each
+   (match-lambda
+     ((name expected group)
+      (test-equal name expected (string-error (one-group group)))))
+   (list
+    (list "unknown-option" '(unknown-option 15) "(group \"U\" :tempo 60 ugal)")
+    (list "duplicate-option" '(duplicate-option 15)
+          "(group \"U\" :note-names yes :note-names no ugal)")
+    (list "a key with no value, followed by another key" '(bad-option 15)
+          "(group \"U\" :subtitle :note-names yes ugal)")
+    (list ":subtitle a symbol" '(bad-option 15) "(group \"U\" :subtitle norot ugal)")
+    (list ":subtitle a number" '(bad-option 15) "(group \"U\" :subtitle 3 ugal)")
+    (list ":note-names not yes or no" '(bad-option 15)
+          "(group \"U\" :note-names maybe ugal)")
+    (list ":palette an unknown name" '(bad-option 15) "(group \"U\" :palette rainbow ugal)")
+    (list ":palette a bad colour" '(bad-option 15) "(group \"U\" :palette (\"#12\") ugal)")
+    (list ":scheme an unknown name" '(bad-option 15) "(group \"U\" :scheme rainbow ugal)")
+    (list ":colors a bad colour" '(bad-option 15)
+          "(group \"U\" :colors ((ding \"black\")) ugal)")
+    (list "option-after-body: a key after a member" '(option-after-body 15)
+          "(group \"U\" ugal :note-names yes)")))
+  (test-equal "the group's line, not the score's" '(unknown-option 16)
+    (score-error "(score s" "  (group \"U\" ugal)" "  (group \"G\" :tempo 1 gong))")))
+
+(test-group "[scores] option-wrong-level"
+  (for-each
+   (match-lambda
+     ((option)
+      (test-equal (string-append "a score-only option on a group: " option)
+        '(option-wrong-level 15)
+        (string-error (one-group (string-append "(group \"U\" " option " ugal)"))))))
+   '((":title \"T\"") (":system-length 4") (":cell-width \"3em\"")
+     (":cell-height \"3em\"")))
+  (test-equal "fields: part and time #f" '(option-wrong-level 15 #f #f)
+    (error-fields (one-group "(group \"U\" :title \"T\" ugal)"))))
+
+;;; The options later slices build (04, slice 1's decided bullets).
+(define later-score-options
+  '(":rows single" ":fill none" ":holds dash" ":pattern-names long"
+    ":pattern-level 1" ":labels short" ":from 1" ":to 4" ":breaks (3)"
+    ":cycle-numbers no" ":pulse-numbers no" ":numbering gong-first"
+    ":pulse-label \"Beats\"" ":subtitle \"pangecet\"" ":caption \"c\""
+    ":font-size \"8pt\""))
+
+(define later-group-options
+  '(":rows parts" ":fill none" ":holds dash" ":pattern-names short"
+    ":pattern-level 1" ":labels long" ":short \"U.\""))
+
+(test-group "[scores] not-implemented: options of later slices"
+  (for-each
+   (lambda (option)
+     (test-equal (string-append "on a score: " option) '(not-implemented 14)
+       (score-error (string-append "(score s " option " (group \"U\" ugal))"))))
+   later-score-options)
+  (for-each
+   (lambda (option)
+     (test-equal (string-append "on a group: " option) '(not-implemented 15)
+       (string-error (one-group (string-append "(group \"U\" " option " ugal)")))))
+   later-group-options)
+  (test-equal "on a group: at the group's line, not the score's" '(not-implemented 16)
+    (score-error "(score s" "  (group \"U\" ugal)" "  (group \"G\" :holds dash gong))"))
+  (test-equal "fields: part and time #f" '(not-implemented 14 #f #f)
+    (error-fields (scores+ "(score s :caption \"c\" (group \"U\" ugal))"))))
+
+(test-group "[scores] undefined-part"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (apply score-error+part more))))
+   (list
+    (list "a name that is no part" '(undefined-part 15 nope)
+          "(score s" "  (group \"U\" nope))")
+    (list "the second member" '(undefined-part 15 nope)
+          "(score s" "  (group \"U\" ugal nope))")
+    (list "a member with a :label" '(undefined-part 15 nope)
+          "(score s" "  (group \"U\" (nope :label \"N\")))")
+    (list "an instrument whose parts have other names" '(undefined-part 15 reyong)
+          "(score s" "  (group \"R\" reyong))")
+    (list "a scale's name" '(undefined-part 15 selisir)
+          "(score s" "  (group \"S\" selisir))")
+    (list "in the second group" '(undefined-part 16 nope)
+          "(score s" "  (group \"U\" ugal)" "  (group \"N\" nope))")))
+  (test-equal "the built-in kempli is never printed: undefined-part"
+    '(undefined-part 8 kempli)
+    (error-kind+line+part (bare+ "" "(part u 1 2 1)"            ; 7
+                                 "(score s (group \"K\" kempli))")))  ; 8
+  (test-equal "the piece's kempli may be printed"
+    '(("kempli"))
+    (let ((pc (read-scores+ "(score s (group \"K\" kempli))")))
+      (and pc (map (lambda (g) (map cadr (member-names g)))
+                   (score-groups (score-named pc 's))))))
+  (test-equal "fields: time #f" '(undefined-part 15 nope #f)
+    (error-fields (scores+ "(score s" "  (group \"U\" nope))"))))
+
+(test-group "[scores] part-in-two-groups"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (apply score-error more))))
+   (list
+    (list "in two groups: the second group's line" '(part-in-two-groups 16)
+          "(score s" "  (group \"A\" ugal)" "  (group \"B\" ugal))")
+    (list "twice in one group" '(part-in-two-groups 15)
+          "(score s" "  (group \"A\" polos polos))")
+    (list "with a row label the first time" '(part-in-two-groups 16)
+          "(score s" "  (group \"A\" (polos :label \"P\"))" "  (group \"B\" polos))")
+    (list "in the first and third groups" '(part-in-two-groups 17)
+          "(score s" "  (group \"A\" gong)" "  (group \"B\" ugal)"
+          "  (group \"C\" gong))")))
+  (test-assert "the same part in two scores is not an error"
+    (piece? (read-scores+ "(score a (group \"A\" ugal))"
+                          "(score b (group \"B\" ugal))"))))
+
+(test-group "[scores] mixed-pitched-group"
+  (for-each
+   (match-lambda
+     ((name expected group)
+      (test-equal name expected (error-kind+line+part (one-group group)))))
+   (list
+    (list "ugal and a reyong part" '(mixed-pitched-group 15 polos)
+          "(group \"X\" ugal polos)")
+    (list "the first part on a second instrument" '(mixed-pitched-group 15 polos)
+          "(group \"X\" ugal polos sangsih)")
+    (list "two reyong parts, then the ugal" '(mixed-pitched-group 15 ugal)
+          "(group \"X\" polos sangsih ugal)")))
+  (test-equal "fields: time #f" '(mixed-pitched-group 15 polos #f)
+    (error-fields (one-group "(group \"X\" ugal polos)"))))
+
+(test-group "[scores] pitched-with-strokes (ADR 0034)"
+  (for-each
+   (match-lambda
+     ((name expected group)
+      (test-equal name expected (error-kind+line+part (one-group group)))))
+   (list
+    (list "pitched, then a stroke" '(pitched-with-strokes 15 gong)
+          "(group \"X\" ugal gong)")
+    (list "a stroke, then pitched" '(pitched-with-strokes 15 ugal)
+          "(group \"X\" gong ugal)")
+    (list "two strokes, then pitched" '(pitched-with-strokes 15 polos)
+          "(group \"X\" gong kempli polos)")
+    (list "two pitched parts, then the kempli" '(pitched-with-strokes 15 kempli)
+          "(group \"X\" polos sangsih kempli)")))
+  (test-equal "fields: time #f" '(pitched-with-strokes 15 gong #f)
+    (error-fields (one-group "(group \"X\" ugal gong)"))))
+
+(test-group "[scores] errors read from a file"
+  (let* ((path (write-temp-file "score-error.nts"
+                                (scores+ "(score s" "  (group \"U\" nope))")))
+         (c (catch-syntax-error (lambda () (read-piece-file path)))))
+    (test-equal "kind, file, line and part"
+      (list 'undefined-part path 15 'nope)
+      (and (notasi-syntax-error? c)
+           (list (notasi-syntax-error-kind c) (notasi-syntax-error-file c)
+                 (notasi-syntax-error-line c) (notasi-syntax-error-part c))))))
+
+;;; ------------------------------------------------------------------
+;;; Check order (03, "Error reporting", checks 6, 7, 13, 14 and 16)
+
+(test-group "[scores] check order"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (apply score-error more))))
+   (list
+    (list "6 before 13: a score's shape before a part's tokens" '(bad-form 15)
+          "(part reyong :name bad 99 1 1 1)" "(score)")
+    (list "7 before 16: a duplicate score before a group's part"
+          '(duplicate-definition 15)
+          "(score a (group \"A\" nope))" "(score a (group \"B\" ugal))")
+    (list "13 before 16: a part's tokens before a score written first"
+          '(note-out-of-range 15)
+          "(score a (group \"A\" nope))" "(part reyong :name bad 99 1 1 1)")
+    (list "14 before 16: lengths before a score written first"
+          '(unequal-length 15)
+          "(score a (group \"A\" nope))" "(part reyong :name short 1)")
+    (list "16: a score's options before its groups" '(unknown-option 14)
+          "(score a :tempo 1 (group \"A\" nope))")
+    (list "16: a score's not-implemented option before its groups" '(not-implemented 14)
+          "(score a :font-size \"8pt\" (group \"A\" nope))")
+    (list "16: groups in order: the first group's member" '(undefined-part 15)
+          "(score a" "  (group \"A\" nope)" "  (group \"B\" ugal polos))")
+    (list "16: groups in order: the first group's instruments" '(mixed-pitched-group 15)
+          "(score a" "  (group \"A\" ugal polos)" "  (group \"B\" nope))")
+    (list "16: a group's options before its members" '(unknown-option 15)
+          "(score a" "  (group \"A\" :tempo 1 nope))")
+    (list "16: a group's not-implemented option before its members" '(not-implemented 15)
+          "(score a" "  (group \"A\" :rows parts nope))")
+    (list "16: option-wrong-level before members" '(option-wrong-level 15)
+          "(score a" "  (group \"A\" :title \"T\" nope))")
+    (list "16: members before instruments: undefined-part" '(undefined-part 15)
+          "(score a" "  (group \"A\" ugal gong nope))")
+    (list "16: members before instruments: part-in-two-groups" '(part-in-two-groups 15)
+          "(score a" "  (group \"A\" ugal gong ugal))")
+    (list "16: scores in file order" '(undefined-part 14)
+          "(score a (group \"A\" nope))" "(score b (group \"B\" ugal polos))")
+    (list "16: scores in file order, the other way" '(mixed-pitched-group 14)
+          "(score b (group \"B\" ugal polos))" "(score a (group \"A\" nope))"))))
 
 (define runner (test-runner-current))
 (test-end "reader")

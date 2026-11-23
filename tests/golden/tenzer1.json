@@ -5,8 +5,8 @@
   "sizes": {
     "label_width": "5.1em",
     "lane_width": "2.0em",
-    "step_width": "2.0em",
-    "row_height": "2.0em"
+    "step_width": "2em",
+    "row_height": "2em"
   },
   "systems": [
     {

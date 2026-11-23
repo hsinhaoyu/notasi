@@ -89,8 +89,8 @@ missing bracket is somewhere before that.
 {{#include mistakes/not-yet.txt}}
 ```
 
-A few forms in the notation reference, such as `score`, aren't ready
-yet. Everything in this manual works.
+A few settings in the notation reference, such as a score's
+`:font-size`, aren't ready yet. Everything in this manual works.
 
 ## Mistakes in scales and instruments
 

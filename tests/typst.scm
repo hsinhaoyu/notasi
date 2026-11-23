@@ -7,7 +7,7 @@
 ;;; Choices where the spec leaves room (also noted at the tests):
 ;;; - Most tests use small hand-made figures (any value write-json
 ;;;   accepts), so that the expected text is easy to state; one test
-;;;   uses a real figure from layout-piece.
+;;;   uses a real figure from layout-score.
 ;;; - "In UTF-8" is checked at the byte level, so the file must be
 ;;;   UTF-8 whatever the locale's default port encoding is.
 ;;; - Each write-figure call happens inside a test, so a failing or
@@ -39,6 +39,14 @@
 ;;;   a guard (exception-from), so while they are unbound the tests fail
 ;;;   rather than the file stopping; an unbound variable never counts as
 ;;;   the expected &error.
+;;;
+;;; Slice feat/scores-form (04, "Slices (iteration 2)", slice 1):
+;;; layout-piece is gone, and render-piece lays out the piece's first
+;;; score (or its default score) with layout-score.  Colours come from
+;;; the score (ADR 0032), so the #:style test is now a test that the
+;;; first score is the one drawn: a copy of tenzer1 with two scores, the
+;;; first with :palette set3.  render-piece takes no #:style any more;
+;;; #:score is slice 5.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -50,8 +58,8 @@
              (rnrs bytevectors)
              (notasi json)
              (notasi layout)
+             (notasi piece)
              (notasi reader)
-             (notasi style)
              (notasi typst))
 
 ;;; ------------------------------------------------------------------
@@ -72,6 +80,12 @@
 (define (write-text path text)
   (call-with-output-file path (lambda (port) (put-string port text))
     #:encoding "UTF-8"))
+
+(define (first-score-figure nts-path)
+  "The figure of NTS-PATH's first score (its default score when the file
+has none), laid out with layout-score."
+  (let ((piece (read-piece-file nts-path)))
+    (layout-score piece (car (piece-scores piece)))))
 
 (define (expected-text figure)
   "What write-figure should write for FIGURE: pretty JSON and a newline."
@@ -164,7 +178,7 @@ these tests from passing by accident."
 ;;; ------------------------------------------------------------------
 ;;; A real figure
 
-(let ((figure (layout-piece (read-piece-file "examples/tenzer1.nts")))
+(let ((figure (guard (c (#t #f)) (first-score-figure "examples/tenzer1.nts")))
       (path (tmp-path "tenzer1.json")))
   (test-equal "writes a real figure (examples/tenzer1.nts)"
     (string->utf8 (expected-text figure))
@@ -310,9 +324,9 @@ path at the front of %load-path, then restore both."
            (and (file-exists? file) (access? file X_OK))))
        (string-split path #\:)))
 
-(define (expected-figure-text nts-path style)
-  "What write-figure writes for NTS-PATH laid out with STYLE."
-  (expected-text (layout-piece (read-piece-file nts-path) #:style style)))
+(define (expected-figure-text nts-path)
+  "What write-figure writes for NTS-PATH's first score."
+  (expected-text (first-score-figure nts-path)))
 
 ;;; ------------------------------------------------------------------
 ;;; write-entry-file
@@ -338,7 +352,7 @@ path at the front of %load-path, then restore both."
 (define (compile-path name) (string-append compile-dir "/" name))
 (copy-file template-path (compile-path "notasi.typ"))
 (write-text (compile-path "figure.json")
-            (expected-figure-text "examples/tenzer1.nts" (default-style)))
+            (expected-figure-text "examples/tenzer1.nts"))
 (write-text (compile-path "entry.typ") (spec-entry-text "figure.json"))
 (write-text (compile-path "broken.typ") "#nonexistent()\n")
 (write-text (compile-path "inch.typ")
@@ -452,7 +466,7 @@ path at the front of %load-path, then restore both."
       '("notasi.typ" "piece.json" "piece.typ")
       (folder-entries keep))
     (test-equal "keep-in: piece.json is the figure, as write-figure writes it"
-      (expected-figure-text example-path (default-style))
+      (expected-figure-text example-path)
       (and (file-exists? (kept "piece.json")) (read-text (kept "piece.json"))))
     (test-equal "keep-in: piece.typ is the entry file for piece.json"
       (spec-entry-text "piece.json")
@@ -463,19 +477,27 @@ path at the front of %load-path, then restore both."
     (test-assert "keep-in: leaves nothing in TMPDIR"
       (render-tmp-empty?)))
 
-  ;; #:style: the figure is laid out with the given style.
-  (let ((keep (make-subdir "keep-style"))
-        (out (render-path "styled.pdf"))
-        (style (make-style #:palette 'set3)))
-    (test-assert "style: (the test's style changes the figure)"
-      (not (equal? (expected-figure-text example-path style)
-                   (expected-figure-text example-path (default-style)))))
-    (test-equal "style: piece.json is laid out with #:style"
-      (expected-figure-text example-path style)
+  ;; The first score is drawn (04, slice 1): its colours are the
+  ;; score's, so a piece whose first score has :palette set3 gives
+  ;; another figure than its default score would.
+  (let ((keep (make-subdir "keep-score"))
+        (out (render-path "scored.pdf"))
+        (nts (tmp-path "scored.nts")))
+    (write-text nts (string-append
+                     (read-text example-path)
+                     "\n(score coloured :palette set3 (group \"Ugal\" ugal))\n"
+                     "(score plain (group \"Ugal\" ugal))\n"))
+    (test-assert "first score: (the test's score changes the figure)"
+      (not (equal? (expected-figure-text nts)
+                   (expected-text
+                    (let ((piece (read-piece-file nts)))
+                      (layout-score piece (piece-score piece 'plain)))))))
+    (test-equal "first score: piece.json is the first score's figure"
+      (expected-figure-text nts)
       (begin
         (with-render-tmp
          (lambda ()
-           (render-piece example-path out #:style style #:keep-in keep)))
+           (render-piece nts out #:keep-in keep)))
         (let ((json (string-append keep "/piece.json")))
           (and (file-exists? json) (read-text json))))))
 

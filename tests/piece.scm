@@ -24,6 +24,20 @@
 ;;; events origin spans location)`, and the `pattern` and `pattern-span`
 ;;; records. Existing tests build records with the new arities (no
 ;;; patterns, no spans) and check what they checked before.
+;;;
+;;; Slice feat/scores-form (04, "Slices (iteration 2)", slice 1; 02,
+;;; "Records"): `(make-piece title length pickup colotomies scales
+;;; instruments patterns parts scores)`, `scores` in place of `groups`;
+;;; the `score` record and the new `group` record, with every field of
+;;; 02 (ADR 0033), and `piece-score`. Existing tests build groups with
+;;; the new shape (members are (part . row-label)) and wrap them in a
+;;; score where a piece needs one.
+;;; Choices made where the docs are not explicit:
+;;; - Accessors follow 02's field names, `?` included:
+;;;   `group-note-names?`, `score-cycle-numbers?`, `score-pulse-numbers?`.
+;;; - `piece-score` of a name the piece has no score for is #f, and the
+;;;   first of two scores with one name is returned (the reader forbids
+;;;   them; this only pins down that it looks names up, not positions).
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -133,12 +147,32 @@
 (define (mk-part name instrument . events)
   (make-part name instrument events 'written '() loc))
 
-(define (mk-piece title length scales instruments parts groups)
-  "A piece without a colotomy or patterns: pickup 0, no colotomies."
-  (make-piece title length 0 '() scales instruments '() parts groups))
+(define* (mk-group* label parts
+                    #:key (short label) (subtitle #f) (labels 'first-long)
+                    (rows 'notes) (note-names? #f) (fill 'colour)
+                    (holds 'none) (pattern-names 'none) (pattern-level 0)
+                    (scheme 'by-degree) (palette 'pastel1) (colors '())
+                    (location #f))
+  "A group of PARTS, each with its name as row label; every other
+setting at its default unless given."
+  (make-group label short subtitle labels rows
+              (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
+              note-names? fill holds pattern-names pattern-level
+              scheme palette colors location))
 
 (define (mk-group label . parts)
-  (make-group label #f parts #f))
+  (mk-group* label parts))
+
+(define* (mk-score name groups #:key (title "T") (to 0) (location #f))
+  "A score called NAME holding GROUPS, every other setting at its default."
+  (make-score name title #f #f 0 to #f '() #f #t 'gong-last #f #f
+              "2em" "2em" groups location))
+
+(define (mk-piece title length scales instruments parts groups)
+  "A piece without a colotomy or patterns: pickup 0, no colotomies, and
+one score holding GROUPS."
+  (make-piece title length 0 '() scales instruments '() parts
+              (list (mk-score 'default groups #:title title #:to length))))
 
 (define (lane-names group)
   (map note-name (group-lanes group)))
@@ -235,26 +269,100 @@
 
 (test-group "group record"
   (let* ((p (mk-part 'polos reyong))
-         (g (make-group "Reyong" "polos + sangsih" (list p) loc))
-         (d (make-group "polos" #f (list p) #f)))
+         (s (mk-part 'sangsih reyong))
+         (members (list (cons p "polos") (cons s "S.")))
+         (g (make-group "Reyong" "Rey." "polos + sangsih" 'short 'parts
+                        members #t 'none 'dash 'long 1
+                        'by-degree '("#111111" "#eeeeee")
+                        '((ding . "#000000")) loc))
+         (d (mk-group "polos" p)))
     (test-assert "predicate" (group? g))
     (test-equal "label" "Reyong" (group-label g))
+    (test-equal "short" "Rey." (group-short g))
     (test-equal "subtitle" "polos + sangsih" (group-subtitle g))
-    (test-equal "parts" (list p) (group-parts g))
+    (test-eq "labels" 'short (group-labels g))
+    (test-eq "rows" 'parts (group-rows g))
+    (test-equal "members: (part . row-label), in order" members
+      (group-members g))
+    (test-assert "members hold the part records themselves"
+      (and (eq? p (car (car (group-members g))))
+           (eq? s (car (cadr (group-members g))))))
+    (test-eq "note-names?" #t (group-note-names? g))
+    (test-eq "fill" 'none (group-fill g))
+    (test-eq "holds" 'dash (group-holds g))
+    (test-eq "pattern-names" 'long (group-pattern-names g))
+    (test-equal "pattern-level" 1 (group-pattern-level g))
+    (test-eq "scheme" 'by-degree (group-scheme g))
+    (test-equal "palette: a list of colours" '("#111111" "#eeeeee")
+      (group-palette g))
+    (test-equal "colors" '((ding . "#000000")) (group-colors g))
     (test-eq "location" loc (group-location g))
-    (test-eq "default group: subtitle #f" #f (group-subtitle d))
-    (test-eq "default group: location #f" #f (group-location d))))
+    (test-equal "a default group: its settings"
+      (list "polos" "polos" #f 'first-long 'notes (list (cons p "polos"))
+            #f 'colour 'none 'none 0 'by-degree 'pastel1 '() #f)
+      (list (group-label d) (group-short d) (group-subtitle d)
+            (group-labels d) (group-rows d) (group-members d)
+            (group-note-names? d) (group-fill d) (group-holds d)
+            (group-pattern-names d) (group-pattern-level d)
+            (group-scheme d) (group-palette d) (group-colors d)
+            (group-location d)))
+    (test-equal "palette: a name" 'set1
+      (group-palette (mk-group* "x" (list p) #:palette 'set1)))
+    (test-equal "the label may be empty" ""
+      (group-label (mk-group* "" (list p) #:short "")))))
+
+(test-group "score record"
+  (let* ((p (mk-part 'polos reyong))
+         (g (mk-group "Reyong" p))
+         (sc (make-score 'full "Full score" "pangecet" "A caption"
+                         1/2 15/2 4 '(2 6) #t #f 'gong-first "Beats"
+                         "8pt" "3em" "1.5em" (list g) loc))
+         (d (mk-score 'default (list g) #:title "Piece" #:to 8)))
+    (test-assert "predicate" (score? sc))
+    (test-eq "name" 'full (score-name sc))
+    (test-equal "title" "Full score" (score-title sc))
+    (test-equal "subtitle" "pangecet" (score-subtitle sc))
+    (test-equal "caption" "A caption" (score-caption sc))
+    (test-equal "from" 1/2 (score-from sc))
+    (test-equal "to" 15/2 (score-to sc))
+    (test-equal "system-length" 4 (score-system-length sc))
+    (test-equal "breaks" '(2 6) (score-breaks sc))
+    (test-eq "cycle-numbers?" #t (score-cycle-numbers? sc))
+    (test-eq "pulse-numbers?" #f (score-pulse-numbers? sc))
+    (test-eq "numbering" 'gong-first (score-numbering sc))
+    (test-equal "pulse-label" "Beats" (score-pulse-label sc))
+    (test-equal "font-size" "8pt" (score-font-size sc))
+    (test-equal "cell-width" "3em" (score-cell-width sc))
+    (test-equal "cell-height" "1.5em" (score-cell-height sc))
+    (test-equal "groups" (list g) (score-groups sc))
+    (test-eq "location" loc (score-location sc))
+    (test-assert "times stay exact"
+      (and (exact? (score-from sc)) (exact? (score-to sc))))
+    (test-equal "a default score: its settings"
+      (list 'default "Piece" #f #f 0 8 #f '() #f #t 'gong-last #f #f
+            "2em" "2em" (list g) #f)
+      (list (score-name d) (score-title d) (score-subtitle d)
+            (score-caption d) (score-from d) (score-to d)
+            (score-system-length d) (score-breaks d)
+            (score-cycle-numbers? d) (score-pulse-numbers? d)
+            (score-numbering d) (score-pulse-label d) (score-font-size d)
+            (score-cell-width d) (score-cell-height d) (score-groups d)
+            (score-location d)))
+    (test-assert "a score is not a group, a group not a score"
+      (not (or (group? sc) (score? g))))))
 
 (test-group "piece record"
   (let* ((p (mk-part 'polos reyong (ev 0 1 0)))
          (g (mk-group "Reyong" p))
+         (full (mk-score 'full (list g) #:title "Test" #:to 8))
+         (other (mk-score 'other '() #:title "Test" #:to 8))
          (pat (make-pattern 'polos-1 reyong "1" "1" loc))
          (pc (make-piece "Test" 8 0 '()
                          (list selisir gong-strokes)
                          (list reyong gong)
                          (list pat)
                          (list p)
-                         (list g))))
+                         (list full other))))
     (test-assert "predicate" (piece? pc))
     (test-equal "title" "Test" (piece-title pc))
     (test-equal "length" 8 (piece-length pc))
@@ -264,7 +372,20 @@
     (test-equal "instruments" (list reyong gong) (piece-instruments pc))
     (test-equal "patterns" (list pat) (piece-patterns pc))
     (test-equal "parts" (list p) (piece-parts pc))
-    (test-equal "groups" (list g) (piece-groups pc)))
+    (test-equal "scores, in order" (list full other) (piece-scores pc))
+    (test-eq "piece-score: by name" full (piece-score pc 'full))
+    (test-eq "piece-score: the second score" other (piece-score pc 'other))
+    (test-eq "piece-score: a name with no score is #f" #f
+      (piece-score pc 'nope))
+    (test-equal "the score's groups" (list g)
+      (score-groups (piece-score pc 'full))))
+  (let* ((a (mk-score 'same '() #:title "first"))
+         (b (mk-score 'same '() #:title "second"))
+         (pc (make-piece "T" 0 0 '() '() '() '() '() (list a b))))
+    (test-eq "piece-score looks the name up: the first with it" a
+      (piece-score pc 'same)))
+  (test-eq "piece-score: a piece with no scores" #f
+    (piece-score (make-piece "T" 0 0 '() '() '() '() '() '()) 'default))
   (test-equal "length may be a fraction of a pulse" 9/2
     (piece-length (mk-piece "T" 9/2 '() '() '() '())))
   (test-equal "length stays exact" #t
@@ -316,6 +437,9 @@
            (event? (make-note 'dag 0 #f))
            (scale? reyong)
            (part? (mk-group "g"))
+           (score? (mk-group "g"))
+           (group? (mk-score 's '()))
+           (piece? (mk-score 's '()))
            (pattern? (mk-part 'p reyong))
            (pattern-span? (make-pattern 'p reyong "p" "p" loc))
            (part? (make-pattern 'p reyong "p" "p" loc))

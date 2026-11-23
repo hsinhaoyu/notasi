@@ -20,7 +20,7 @@ make-source-location source-location?
             piece-title
             piece-length piece-pickup piece-colotomies
             piece-scales piece-instruments piece-patterns piece-parts
-            piece-groups
+            piece-scores piece-score
 
             make-pattern pattern?
             pattern-name pattern-instrument pattern-short pattern-long
@@ -55,8 +55,18 @@ make-source-location source-location?
             make-event event?
             event-start event-duration event-notes
 
+            make-score score?
+            score-name score-title score-subtitle score-caption score-from
+            score-to score-system-length score-breaks score-cycle-numbers?
+            score-pulse-numbers? score-numbering score-pulse-label
+            score-font-size score-cell-width score-cell-height score-groups
+            score-location
+
             make-group group?
-            group-label group-subtitle group-parts group-location))
+            group-label group-short group-subtitle group-labels group-rows
+            group-members group-note-names? group-fill group-holds
+            group-pattern-names group-pattern-level group-scheme
+            group-palette group-colors group-location group-parts))
 
 ;;; Where a record came from, for error messages.  FILE is #f when the
 ;;; source was a string or port; LINE is 1-based.
@@ -69,7 +79,7 @@ make-source-location source-location?
 ;;; A whole piece after reading, with templates merged.
 (define-record-type <piece>
   (make-piece title length pickup colotomies scales instruments patterns
-              parts groups)
+              parts scores)
   piece?
   (title            piece-title)
   (length           piece-length)           ; pulses, an exact rational
@@ -79,7 +89,7 @@ make-source-location source-location?
   (instruments      piece-instruments)
   (patterns         piece-patterns)
   (parts            piece-parts)
-  (groups           piece-groups))
+  (scores           piece-scores))      ; at least one (the default score)
 
 ;;; A scale (pitched? #t, degrees ascending within one octave) or a
 ;;; stroke set (pitched? #f, strokes unordered).
@@ -177,14 +187,63 @@ make-source-location source-location?
   (duration event-duration)
   (notes    event-notes))
 
-;;; LOCATION is #f for a default group (a part with no `group` form).
+;;; How the music is printed (ADR 0031): groups of parts and printing
+;;; options.  LOCATION is #f for the default score.
+(define-record-type <score>
+  (make-score name title subtitle caption from to system-length breaks
+              cycle-numbers? pulse-numbers? numbering pulse-label
+              font-size cell-width cell-height groups location)
+  score?
+  (name           score-name)
+  (title          score-title)
+  (subtitle       score-subtitle)
+  (caption        score-caption)
+  (from           score-from)
+  (to             score-to)
+  (system-length  score-system-length)
+  (breaks         score-breaks)
+  (cycle-numbers? score-cycle-numbers?)
+  (pulse-numbers? score-pulse-numbers?)
+  (numbering      score-numbering)
+  (pulse-label    score-pulse-label)
+  (font-size      score-font-size)
+  (cell-width     score-cell-width)
+  (cell-height    score-cell-height)
+  (groups         score-groups)
+  (location       score-location))
+
+;;; A block of rows in a score, with its effective settings filled in
+;;; (ADR 0033).  MEMBERS are (PART . ROW-LABEL).  LOCATION is #f for a
+;;; group of the default score.
 (define-record-type <group>
-  (make-group label subtitle parts location)
+  (make-group label short subtitle labels rows members note-names? fill
+              holds pattern-names pattern-level scheme palette colors
+              location)
   group?
-  (label    group-label)
-  (subtitle group-subtitle)
-  (parts    group-parts)
-  (location group-location))
+  (label         group-label)
+  (short         group-short)
+  (subtitle      group-subtitle)
+  (labels        group-labels)
+  (rows          group-rows)
+  (members       group-members)
+  (note-names?   group-note-names?)
+  (fill          group-fill)
+  (holds         group-holds)
+  (pattern-names group-pattern-names)
+  (pattern-level group-pattern-level)
+  (scheme        group-scheme)
+  (palette       group-palette)
+  (colors        group-colors)
+  (location      group-location))
+
+(define (group-parts group)
+  "The parts of GROUP's members, in order."
+  (map car (group-members group)))
+
+(define (piece-score piece name)
+  "The score of PIECE called NAME, or #f."
+  (find (lambda (score) (eq? (score-name score) name))
+        (piece-scores piece)))
 
 ;;; ------------------------------------------------------------------
 ;;; Derived values
