@@ -2,8 +2,8 @@
 
 (use gong-kebyar)
 
-(part reyong :name polos    i2:1/4 _  i2 o2 | _  i2 o2 _  | o2 i2 _  o2 | i2 o2 _  i2)
-(part reyong :name sangsih  e2:1/4 u2 e2 _  | u2 e2 _  u2 | _  e2 u2 _  | e2 _  u2 e2)
+(part reyong :name polos    i3:1/4 _  i3 o3 | _  i3 o3 _  | o3 i3 _  o3 | i3 o3 _  i3)
+(part reyong :name sangsih  e3:1/4 u3 e3 _  | u3 e3 _  u3 | _  e3 u3 _  | e3 _  u3 e3)
 (part gong                  G:1 -:2 P:1)
 
 ;; Polos and sangsih together, the gongs and kempli with their letters,

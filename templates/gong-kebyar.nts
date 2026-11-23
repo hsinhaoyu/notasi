@@ -1,22 +1,29 @@
-;; Gong kebyar: selisir scale, pitched instruments and colotomic strokes.
-;; Only the instruments used so far are defined; add others as needed.
+;; Gong kebyar: selisir scale, the instruments of Gold's figure 2.7
+;; (Music in Bali, 2005, p. 40), and the gongs, kempli and kendang.
 ;; A piece can redefine any of these, e.g. to change an instrument's range.
+;; Colotomies are not here: a piece defines its own (01, "colotomy").
 
 (use selisir)
 
+;; Stroke sets.  Following Gold's symbols, the gongs are one instrument:
+;; G gong wadon, GL gong lanang, P kempur, T klentong.
 (strokes kempli-strokes  K)
-(strokes gong-strokes
-  G                                           ; gong
-  P)                                          ; kempur
+(strokes gong-strokes  G GL P T)
 (strokes kendang-strokes  dag dug du)
 
-;; Ugal: 10 keys, o1 (dong1) to i3 (ding3), an octave below the pemade.
-(instrument ugal    selisir  o1 e1 u1 a1 i2 o2 e2 u2 a2 i3)
+;; Pitched instruments, lowest first.  Octave numbers are shared by all
+;; instruments: o2 on the ugal and o2 on the jublag are the same pitch.
+(instrument jegogan   selisir  i1 o1 e1 u1 a1)
+(instrument jublag    selisir  i2 o2 e2 u2 a2)
+(instrument calung    selisir  i2 o2 e2 u2 a2)     ; another name for the jublag
+(instrument panyacah  selisir  i3 o3 e3 u3 a3)
+(instrument ugal      selisir  o1 e1 u1 a1 i2 o2 e2 u2 a2 i3)
+(instrument pemade    selisir  o2 e2 u2 a2 i3 o3 e3 u3 a3 i4)    ; gangsa pemade
+(instrument kantilan  selisir  o3 e3 u3 a3 i4 o4 e4 u4 a4 i5)    ; gangsa kantilan
+(instrument trompong  selisir  a1 i2 o2 e2 u2 a2 i3 o3 e3 u3)
+(instrument reyong    selisir  e2 u2 a2 i3 o3 e3 u3 a3 i4 o4 e4 u4)
 
-;; Reyong: 12 pots, e1 (deng1) to u3 (dung3).
-(instrument reyong  selisir  e1 u1 a1 i2 o2 e2 u2 a2 i3 o3 e3 u3)
-
-;; Stroke instruments.  A score shows their letters with :note-names.
+;; Stroke instruments.  A score shows their names with :note-names.
 (instrument kempli  kempli-strokes   K)
-(instrument gong    gong-strokes     G P)
+(instrument gong    gong-strokes     G GL P T)
 (instrument kendang kendang-strokes  dag dug du)

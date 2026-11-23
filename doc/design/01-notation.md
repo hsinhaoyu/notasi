@@ -227,6 +227,15 @@ about how it is played or printed. It has no options.
   | trompong | a1 … u3 (10) |
   | reyong | e2 … u4 (12) |
 
+  The `gong-kebyar` template defines every instrument in this table
+  with these keys (gangsa pemade as `pemade`, gangsa kantilan as
+  `kantilan`, and `calung` with the jublag's keys), besides the gongs,
+  the kempli and the kendang. Its gongs are one instrument, `gong`, with
+  the strokes `G GL P T`, each shown by its name, so the two gongs are
+  told apart; a piece that prints both as "G", as Tenzer does,
+  redefines the strokes. Colotomies are not in the template: a piece
+  defines its own (`gilak`, `pangecet-16`).
+
 - With a stroke set, each NOTE is a stroke from that set (`G`, `dag`),
   in any order. The order sets the note indices and the order of the
   rows.
@@ -503,7 +512,9 @@ otherwise. Without a damped form, the display form is used for both.
 - `:from` must come before `:to`, and both must lie in the piece.
 - `:rows parts`, `:rows single` and `:fill none` need `:note-names yes`
   on the group, since without names those rows would not show pitch.
-- With `:rows single`, two notes may not fall in one cell.
+- With `:rows single`, two notes may not fall in one cell. With `:rows
+  notes`, two parts may share a cell only as a unison: the same key,
+  start and length, which is drawn once.
 - Pattern names: identical names from several parts of a group (the
   same start, length and text) are written once; different names that
   overlap in one group are an error, naming the parts and the position.

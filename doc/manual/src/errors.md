@@ -307,6 +307,22 @@ On a single row, only one note can sound in each column. Here polos is
 still holding its note when sangsih strikes. Give the parts their own
 rows, or change the music.
 
+### Two parts on one key
+
+```scheme
+{{#include mistakes/notes-collide-key.nts}}
+```
+
+```text
+{{#include mistakes/notes-collide-key.txt}}
+```
+
+When parts share a group's rows, two of them can play the same key only
+by striking it together, for the same length: that is drawn once, as a
+single note. Here sangsih strikes i3 while polos is still holding it, so
+the two notes would be drawn in the same place. Give the parts groups
+of their own, or `:rows parts`.
+
 ### Pattern names written over each other
 
 ```scheme

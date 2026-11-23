@@ -17,11 +17,27 @@ notasi comes with a `gong-kebyar` template:
 - the `selisir` scale, with the vowel names `i o e u a`, which are
   also how its notes are shown in the score
   (see [Scales and stroke sets](scales-and-strokes.md));
-- a **ugal** with ten keys, dong1 (`o1`) to ding3 (`i3`);
-- a **reyong** with twelve pots, deng1 (`e1`) to dung3 (`u3`);
+- the instruments of a gong kebyar, with the ranges Lisa Gold gives
+  in *Music in Bali* (figure 2.7):
+
+  | Instrument | Keys |
+  |---|---|
+  | `jegogan` | `i1` to `a1` (5) |
+  | `jublag`, `calung` | `i2` to `a2` (5) |
+  | `panyacah` | `i3` to `a3` (5) |
+  | `ugal` | `o1` to `i3` (10) |
+  | `pemade` (gangsa pemade) | `o2` to `i4` (10) |
+  | `kantilan` (gangsa kantilan) | `o3` to `i5` (10) |
+  | `trompong` | `a1` to `u3` (10) |
+  | `reyong` | `e2` to `u4` (12) |
+
 - a **kempli** that plays `K`;
-- a **gong** that plays `G` (gong) and `P` (kempur);
+- a **gong** that plays `G` (gong wadon), `GL` (gong lanang), `P`
+  (kempur) and `T` (klentong);
 - a **kendang** that plays `dag`, `dug` and `du`.
+
+It has no gong cycles: a piece defines its own `colotomy` (see
+[Gong cycles](gong-cycles.md)).
 
 You can read the whole template on
 [GitHub](https://github.com/hsinhaoyu/notasi/blob/dev/templates/gong-kebyar.nts).

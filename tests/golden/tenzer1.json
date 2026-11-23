@@ -16,10 +16,15 @@
       "steps": 9,
       "header": {
         "label": null,
-        "cycles": null,
-        "pulses": ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        "cycles": [
+          {
+            "column": 1,
+            "text": "1"
+          }
+        ],
+        "pulses": ["8", "1", "2", "3", "4", "5", "6", "7", "8"]
       },
-      "lines": ["none", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse"],
+      "lines": ["none", "cycle", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse"],
       "groups": [
         {
           "label": "ugal",
@@ -118,7 +123,7 @@
         {
           "label": "gong",
           "subtitle": null,
-          "lanes": ["G", "P"],
+          "lanes": ["G", "GL", "P"],
           "voices": [
             {
               "name": "gong",
@@ -135,7 +140,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 0,
+                  "lane": 1,
                   "text": null,
                   "fill": "#cccccc",
                   "text_color": "#222222",
@@ -144,7 +149,7 @@
                 {
                   "start": 5,
                   "dur": 1,
-                  "lane": 1,
+                  "lane": 2,
                   "text": null,
                   "fill": "#cccccc",
                   "text_color": "#222222",
@@ -153,7 +158,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 1,
+                  "lane": 2,
                   "text": null,
                   "fill": "#cccccc",
                   "text_color": "#222222",

@@ -441,8 +441,10 @@ All errors at a use carry the part, the time and the chain of uses.
   kind).
 - [scores] `:rows parts`, `:rows single` or `:fill none` without
   `:note-names yes` on the group: `needs-note-names`.
-- [scores] With `:rows single`, two notes in one cell: `notes-collide`
-  (`part` set to the second part, `time` set).
+- [scores] With `:rows single`, two notes in one cell; with `:rows
+  notes`, two notes on one key that share a column without being a
+  unison (the same key, start and length): `notes-collide` (`part` set
+  to the second part, `time` set to the first shared column).
 - [scores] Different pattern names overlapping in one group at the
   chosen level: `pattern-names-overlap` (`part` and `time` set).
 

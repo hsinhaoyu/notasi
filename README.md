@@ -13,7 +13,8 @@ Tools for notating and visualizing Balinese gamelan music, written in GNU Guile 
 - `notasi/typst.scm`: the Guile side of the Typst backend: writes figure files and draws them with Typst
 - `notasi/command.scm`: the `notasi` command (`scripts/notasi`)
 - `tests/`: SRFI-64 test suites
-- `examples/`: example pieces
+- `examples/`: example pieces, among them Gold's Jaya Semara
+  (`jaya-semara.nts`) and Tenzer's Baris (`baris.nts`)
 - `templates/`: shared scales, stroke sets and instruments, loaded with `(use NAME)`
 - `doc/manual/`: the user manual (mdBook)
 

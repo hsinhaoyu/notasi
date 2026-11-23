@@ -710,8 +710,10 @@ at its default: font_size null, cells \"2em\"."
                      "(part u :name x 2)")
            'lane_width))
 
-  (test-equal "a subtitle longer than every label counts (20 chars → 13.5em)"
-    "13.5em"
+  ;; A one-row group: its subtitle follows the label, "Bb", two spaces
+  ;; and the 20 characters (feat/targets).
+  (test-equal "a subtitle longer than every label counts (24 chars → 15.9em)"
+    "15.9em"
     (field (sizes-of "(piece \"P\")"
                      "(strokes k-strokes K)"
                      "(instrument kempli k-strokes K)"
@@ -1272,7 +1274,8 @@ at its default: font_size null, cells \"2em\"."
     '("ugal" "gong" "kempli")
     (group-labels (layout tenzer) 0))
   (test-equal "tenzer1: lanes of the three groups"
-    (list #("e2" "o2" "i2" "a1") #("G" "P") #("K"))
+    ;; The gongs from the gilak colotomy: G GL P (no T).
+    (list #("e2" "o2" "i2" "a1") #("G" "GL" "P") #("K"))
     (map (lambda (g) (lanes-of (layout tenzer) 0 g)) '(0 1 2)))
   (test-equal "tenzer1: labels, subtitles and voice names"
     '(("ugal" null ("ugal"))
@@ -1299,9 +1302,9 @@ at its default: font_size null, cells \"2em\"."
     (events-of (layout tenzer) 0 2 0))
   (test-equal "tenzer1: gong and kempur"
     (list (ev 0 1 0 'null grey dark #f)
-          (ev 4 1 0 'null grey dark #f)
-          (ev 5 1 1 'null grey dark #f)
-          (ev 7 1 1 'null grey dark #f)
+          (ev 4 1 1 'null grey dark #f)
+          (ev 5 1 2 'null grey dark #f)
+          (ev 7 1 2 'null grey dark #f)
           (ev 8 1 0 'null grey dark #f))
     (events-of (layout tenzer) 0 1 0)))
 
@@ -1694,8 +1697,8 @@ column's line is tested on its own, in \"lines: the first column\")."
   (test-equal "within the piece: 1 to 10"
     (list->vector (map number->string (iota 10 1)))
     (pulses-of (layout (ten-steps)) 0))
-  (test-equal "tenzer1: 1 to 9 (it has no colotomy)"
-    (list->vector (map number->string (iota 9 1)))
+  (test-equal "tenzer1: 8, then 1 to 8 (gilak, a one-pulse pickup)"
+    (list->vector (map number->string (cons 8 (iota 8 1))))
     (pulses-of (layout tenzer) 0))
   (test-equal "half pulses (tiny)"
     #("1" null "2" null "3")
@@ -1735,13 +1738,15 @@ column's line is tested on its own, in \"lines: the first column\")."
   (test-eq "no colotomy, :cycle-numbers yes: null (no cycles to number)" 'null
     (cycles-of (layout (ten-score ":cycle-numbers yes")) 0))
   (test-eq "no colotomy, a score built by hand with cycle-numbers? #t: null" 'null
-    (cycles-of (layout-score
-                tenzer
-                (hand-score tenzer
-                            (list (hand-group "ugal"
-                                              (list (part-named tenzer 'ugal))))
-                            #:cycle-numbers? #t))
-               0))
+    ;; tenzer1 has a colotomy now; ten-steps has none.
+    (let ((pc (ten-steps)))
+      (cycles-of (layout-score
+                  pc
+                  (hand-score pc
+                              (list (hand-group "m"
+                                                (list (part-named pc 'melody))))
+                              #:cycle-numbers? #t))
+                 0)))
   (test-equal "a score built by hand with a colotomy and cycle-numbers? #t"
     (marks '(0 "1") '(4 "2"))
     (let ((pc (colo-piece (notes 8))))
@@ -2673,6 +2678,45 @@ give."
     (layout-named tiny 'split)))
 
 (define runner (test-runner-current))
+
+;;; A unison on `notes' rows (milestone 3, decided while drawing Jaya
+;;; Semara: 04, "Groups and rows") is drawn once, under the first part.
+(test-group "a unison is drawn once"
+  (let ((fig (layout-or-false
+              (layout (piece-of "(piece \"P\")" "(scale s a b c)"
+                                "(instrument u s a1 b1 c1)"
+                                "(part u :name p 1 2 _ -)"
+                                "(part u :name q 1 3 _ -)"
+                                "(score s (group \"G\" p q))")))))
+    (test-equal "the first part keeps it"
+      '((0 1 2) (1 2 1))
+      (and fig (map (lambda (e) (list (field e 'start) (field e 'dur) (field e 'lane)))
+                    (vector->list (field (vector-ref (field (group-ref fig 0 0) 'voices) 0)
+                                         'events)))))
+    (test-equal "the later part leaves it out"
+      '((1 2 0))
+      (and fig (map (lambda (e) (list (field e 'start) (field e 'dur) (field e 'lane)))
+                    (vector->list (field (vector-ref (field (group-ref fig 0 0) 'voices) 1)
+                                         'events)))))))
+
+;;; A one-row group prints its subtitle after its label (04, "Sizes";
+;;; 05, decided in feat/targets for Baris), so the label column fits both.
+(test-group "label_width: a one-row group's subtitle follows its label"
+  (let ((width (lambda (score)
+                 (let ((fig (layout-or-false
+                             (layout (piece-of "(piece \"P\")" "(scale s a b)"
+                                               "(instrument u s a1 b1)"
+                                               "(part u :name p 1 1 1)"
+                                               "(part u :name q 1 2 1)"
+                                               score)))))
+                   (and fig (field (field fig 'sizes) 'label_width))))))
+    (test-equal "one row: \"Ugal\", two spaces, \"main\": 10 characters"
+      "7.5em"
+      (width "(score s (group \"Ugal\" :subtitle \"main\" p))"))
+    (test-equal "two rows: the longest of \"Ugal\" and \"main\""
+      "3.9em"
+      (width "(score s (group \"Ugal\" :subtitle \"main\" q))"))))
+
 (test-end "layout")
 
 (exit (zero? (+ (test-runner-fail-count runner)

@@ -244,7 +244,9 @@ Lessons from the prototype (`doc/prototypes/score.typ`):
 - **Groups:** a horizontal rule (`0.8pt`, `luma(120)`) above each group
   and below the last. The group label in bold, slightly larger
   (`1.1em`), with its subtitle under it in grey italics when not
-  `null`, spanning the group's rows. Lane labels right-aligned, small
+  `null` (after it, on the same line, for a group of one row, which
+  has no room for two lines; `feat/targets`), spanning the group's
+  rows. Lane labels right-aligned, small
   (`0.85em`) and grey (`luma(140)`).
 - **Notes** (ADRs 0019, 0020): a block filling its cells exactly, with
   no margin, in `fill`, with a thin white border (`0.5pt`) so that

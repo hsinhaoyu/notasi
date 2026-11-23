@@ -56,7 +56,7 @@ See [its README](../iterations/02-gold-and-tenzer/README.md).
    [03-reader.md](03-reader.md#slices-iteration-2)
 2. **Implemented.** `feat/scores`: scores; five slices, see
    [04-layout.md](04-layout.md#slices-iteration-2)
-3. `feat/targets`: the acceptance test: Jaya Semara and Baris as
+3. **Implemented.** `feat/targets`: the acceptance test: Jaya Semara and Baris as
    examples
 
 ### Deferred
