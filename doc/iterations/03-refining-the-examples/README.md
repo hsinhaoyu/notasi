@@ -28,6 +28,8 @@ Notation:
   `(colotomy gilak 8 (part ...))`, no more `(gong gong ...)`.
 - [A part names its instrument with `:instrument`](design_ideas/2026-11-23-part-syntax.md):
   `(part :instrument gong ...)`, required.
+- [Common colotomies come from the template](design_ideas/2026-11-23-template-colotomies.md):
+  `gilak` in `gong-kebyar`, used by name.
 
 Files:
 
@@ -40,6 +42,8 @@ Drawing:
   shows cycle number `0`; the pickup doesn't join the first system.
 - [Lane labels](design_ideas/2026-11-23-lane-labels.md): `:octave-numbers`,
   and a line between the labels and the notes.
+- [Key numbers beside the row labels](design_ideas/2026-11-23-key-numbers.md):
+  `:key-numbers`, and `:row-labels` to hide the row labels.
 - [The cycle and pulse rows are labelled](design_ideas/2026-11-23-header-labels.md):
   `:cycle-label`, `:pulse-label`, "Cycle" and "Pulse" by default.
 - [Cycle and pulse numbers are centred over their pulse](design_ideas/2026-11-23-header-alignment.md).
