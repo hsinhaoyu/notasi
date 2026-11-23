@@ -1,15 +1,17 @@
 # 03 — Reader and validation
 
-Status: partly implemented (iteration 2): milestone 1, slice 1 of 5
-(`feat/music-syntax`, see "Slices (iteration 2)"); the rest is planned.
+Status: partly implemented (iteration 2): milestone 1, slices 1–2 of 5
+(`feat/music-syntax`, `feat/music-durations`, see "Slices (iteration
+2)"); the rest is planned.
 "What the reader reads today" says what `(notasi reader)` does in the
 meantime. Tests in `tests/reader.scm`.
 
 Everything in this document is **Planned** unless it says otherwise.
-**Implemented** since slice 1: steps 1, 2 (with `colotomy`, `pattern`
-and `score` raising `not-implemented`), 3, 4, 5, 6 and 7 as far as
-scales, stroke sets, instruments and parts go, and every **[syntax]**
-case.
+**Implemented** since slices 1 and 2: steps 1, 2 (with `colotomy`,
+`pattern` and `score` raising `not-implemented`), 3 to 7, step 9 for
+tokens (durations, `_`, `-`, `/` and `|`, without `rep`, patterns or
+spans) in `(notasi expand)`, step 10 without colotomies, the condition's
+`time` and `uses`, and every **[syntax]** and **[durations]** case.
 
 ## Responsibility
 
@@ -467,7 +469,7 @@ error cases tagged with its feature, and the steps above that they need.
    - Tests written in the v1 syntax are translated to the new syntax,
      keeping what they check; tests of what this slice removes are
      deleted or turned into the new errors.
-2. `feat/music-durations` **[durations]**: `(notasi expand)` (ADR 0035)
+2. **Implemented.** `feat/music-durations` **[durations]**: `(notasi expand)` (ADR 0035)
    and step 9 for tokens: times as exact rationals in pulses (02),
    duration suffixes and the current duration, `_` and `-`, `|` checks,
    `/`; the condition's `time` and `uses` fields, with positions as
@@ -516,14 +518,10 @@ The **[scores]** cases are built in milestone 2 (04, "Slices").
 iteration 2. It differs from the above as follows, and this section
 goes when iteration 2 is built:
 
-- `piece` takes the transitional `:steps-per-pulse` and
-  `:steps-per-system` options, and no `:colotomy` or `:pickup`.
-- Every token is one step; `-` is the rest and `/` takes no step; there
-  are no duration suffixes, `rep`, checks, patterns, colotomies or
-  scores. Steps 8 to 12 are not built.
+- `piece` takes no options yet (no `:colotomy` or `:pickup`).
+- There are no `rep`, `||` checks, patterns, colotomies or scores.
+  Steps 8, 11 and 12 are not built; `uses` is always `'()`.
 - Every part is in its own default group (`piece-groups`).
-- The condition has a `step` field (0-based) instead of `time` and
-  `uses`, and messages count steps from 1.
 
 ## Open questions
 

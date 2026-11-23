@@ -347,8 +347,9 @@ follows, and this section goes when iteration 2 is built:
   `lane_width`, `step_width` and `row_height` (`"2.0em"` each); there
   is no `subtitle`, `font_size`, `header`, `lines` or `overlays`; the
   template counts pulse numbers itself; `caption` is always `null`.
-- A step is a step of the piece (`steps_per_pulse` from the piece), and
-  systems are `steps-per-system` steps long.
+- The step is worked out as in "The step" (since iteration 2, slice 2),
+  from every event's start and end and the piece's length, and the
+  figure is one system for the whole piece.
 - Every group of the piece is drawn, with `notes` rows only. Since
   iteration 2, slice 1, every group is a default group of one part, and
   an event's `text` is always `null`: no note shows its name until
