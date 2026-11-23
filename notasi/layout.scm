@@ -44,25 +44,62 @@
 ;;; ------------------------------------------------------------------
 ;;; Events
 
-(define (note-events part lanes style names? k)
-  "PART's events, one per note (a chord gives several), as
-(START DURATION LANE LOOK) lists, in columns of 1/K pulse.  The look's
-text is kept only when NAMES? (the group's :note-names)."
+(define (note-text instrument note columns)
+  "NOTE's name for an event COLUMNS long: its damped form when the note
+lasts no longer than one column, its display form otherwise."
+  (note-display instrument note #:damped? (<= columns 1)))
+
+(define (event-looks group style instrument indices columns)
+  "The looks of an event striking INDICES on INSTRUMENT, COLUMNS long:
+one per note on `notes' rows; one for the whole chord on `parts' and
+`single' rows, its names joined and the look of its lowest note."
+  (define (look-of index text)
+    (let ((look (note-look style instrument
+                           (vector-ref (instrument-notes instrument) index))))
+      (make-look (and (not (eq? (group-fill group) 'none)) (look-fill look))
+                 (and (group-note-names? group) text)
+                 (look-text-color look))))
+  (define (name index)
+    (note-text instrument (vector-ref (instrument-notes instrument) index)
+               columns))
+  (if (eq? (group-rows group) 'notes)
+      (map (lambda (index) (cons index (look-of index (name index)))) indices)
+      (let ((lowest (apply min indices)))
+        (list (cons lowest
+                    (look-of lowest
+                             (string-join (map name (sort indices <)) " ")))))))
+
+(define (with-holds group events)
+  "With `holds' `dash', each event takes its first column only, and
+every later column it was held for gets a one-column \"-\" event."
+  (if (eq? (group-holds group) 'dash)
+      (append-map
+       (match-lambda
+         ((start duration lane look)
+          (cons (list start 1 lane look)
+                (map (lambda (c)
+                       (list c 1 lane
+                             (make-look #f "-" (look-text-color look))))
+                     (iota (max 0 (- duration 1)) (+ start 1))))))
+       events)
+      events))
+
+(define (note-events group part lane-of style k)
+  "PART's events in GROUP as (START DURATION LANE LOOK) lists, in columns
+of 1/K pulse.  LANE-OF gives a note's lane from its index."
   (let ((instrument (part-instrument part)))
-    (append-map
-     (lambda (event)
-       (map (lambda (index)
-              (let ((note (vector-ref (instrument-notes instrument) index)))
-                (list (* k (event-start event))
-                      (* k (event-duration event))
-                      (list-index (match-lambda ((_ . n) (eq? n note))) lanes)
-                      (let ((look (note-look style instrument note)))
-                        (if names?
-                            look
-                            (make-look (look-fill look) #f
-                                       (look-text-color look)))))))
-            (event-notes event)))
-     (part-events part))))
+    (with-holds
+     group
+     (append-map
+      (lambda (event)
+        (let ((columns (* k (event-duration event))))
+          (map (match-lambda
+                 ((index . look)
+                  (list (* k (event-start event)) columns
+                        (lane-of index) look)))
+               (event-looks group style instrument (event-notes event)
+                            columns))))
+      (part-events part)))))
 
 (define (clip-event event from to)
   "EVENT cut to the steps [FROM, TO), as a JSON event object with a
@@ -97,26 +134,44 @@ start relative to FROM, or #f if it doesn't sound there."
               #:degree-colors (group-colors group)))
 
 ;;; A group prepared once for the whole piece: its JSON label fields,
-;;; its lanes, and each voice's events in the whole piece, in columns of
-;;; 1/K pulse.
+;;; its row labels, and each voice's events in the whole piece, in
+;;; columns of 1/K pulse.  Rows are the notes used (`notes'), one per
+;;; member (`parts'), or one for all (`single').
 (define (prepare-group group k)
-  (let ((lanes (lane-owners group))
-        (style (group-style group)))
-    (list group
-          lanes
-          (map (lambda (part)
-                 (cons (symbol->string (part-name part))
-                       (sort (note-events part lanes style
-                                          (group-note-names? group) k)
-                             event<?)))
-               (group-parts group)))))
+  (let ((style (group-style group)))
+    (define (voices lane-of-part)
+      (map (lambda (part)
+             (cons (symbol->string (part-name part))
+                   (sort (note-events group part (lane-of-part part) style k)
+                         event<?)))
+           (group-parts group)))
+    (match (group-rows group)
+      ('notes
+       (let ((lanes (lane-owners group)))
+         (list group (map lane-label lanes)
+               (voices
+                (lambda (part)
+                  (lambda (index)
+                    (let ((note (vector-ref (instrument-notes
+                                             (part-instrument part))
+                                            index)))
+                      (list-index (match-lambda ((_ . n) (eq? n note)))
+                                  lanes))))))))
+      ('parts
+       (list group (map cdr (group-members group))
+             (voices (lambda (part)
+                       (let ((row (list-index (match-lambda ((p . _) (eq? p part)))
+                                              (group-members group))))
+                         (const row))))))
+      ('single
+       (list group '("") (voices (lambda (part) (const 0))))))))
 
 (define (group-in-system prepared from to)
   (match prepared
     ((group lanes voices)
      `((label . ,(group-label group))
        (subtitle . ,(null-if-false (group-subtitle group)))
-       (lanes . ,(list->vector (map lane-label lanes)))
+       (lanes . ,(list->vector lanes))
        (voices
         . ,(list->vector
             (map (match-lambda
@@ -245,8 +300,7 @@ every start and end of the events the score prints."
                                (filter string? (list (group-label group)
                                                      (group-subtitle group)))))
                             prepared))
-        (lane-labels (append-map (match-lambda
-                                   ((_ lanes _) (map lane-label lanes)))
+        (lane-labels (append-map (match-lambda ((_ lanes _) lanes))
                                  prepared)))
     `((font_size . ,(null-if-false (score-font-size score)))
       (label_width . ,(em (+ (* 3/5 (longest labels)) 3/2)))

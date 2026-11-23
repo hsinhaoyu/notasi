@@ -144,8 +144,9 @@ Layout works out every header number and every line, for every column:
 - **`rows` `single`**: one row for all the members, labelled `""`; every
   event's `lane` is 0. The reader has checked that no two notes share a
   cell.
-- A chord gives one event per note, with the same start and duration.
-  In `parts` and `single` rows its notes share the row. A voice's events
+- A chord gives one event per note, with the same start and duration,
+  in `notes` rows. In `parts` and `single` rows it is one event: its
+  notes' names joined by a space, with the look of its lowest note. A voice's events
   are sorted by start, then by lane.
 
 ### Note text, fill and holds
@@ -368,7 +369,19 @@ examples, golden files and manual pages it affects.
      leaves the other and the lines.
 3. `feat/scores-rows`: `:rows parts` and `single`, row labels, `:fill
    none`, `:holds dash`, the damped and open names, and
-   `needs-note-names` and `notes-collide`.
+   `needs-note-names` and `notes-collide`. Decided for this slice:
+   - The reader now reads `:rows`, `:fill` and `:holds` on a score and
+     on a group.
+   - On a `parts` or `single` row a chord is one event: its notes'
+     names joined by a space, with the look of its lowest note.
+   - With `:holds dash`, a note's event takes only its first column;
+     each column it is held after that gets a one-column `"-"` event.
+   - On a `single` row two notes collide when any column has both
+     sounding, held columns included, whatever parts they come from
+     (`notes-collide`, at the group's line, at the time of the first
+     shared column).
+   - A note shows its damped form when it lasts no longer than one
+     column, counting its whole length even if a system break cuts it.
 4. `feat/scores-overlays`: `:pattern-names` and `:pattern-level`,
    merged overlays, `pattern-names-overlap`, and the template's
    overlays.

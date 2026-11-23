@@ -104,6 +104,36 @@
 ;;;   N) + 1" needs a cycle length N.
 ;;; - `:cycle-numbers no` hides the cycle row only: the cycle lines
 ;;;   stay. `:pulse-numbers no` likewise leaves `lines` and `cycles`.
+;;;
+;;; Slice feat/scores-rows (04, "Slices (iteration 2)", slice 3 and its
+;;; decided bullets; 04, "Groups and rows", "Note text, fill and holds",
+;;; "Lane labels", "Sizes"; 05, `lanes` and `fill` null): `:rows parts`
+;;; (one row per member, `lanes` its row labels, an event's `lane` its
+;;; part's row) and `single` (`lanes` #(""), every lane 0); on these
+;;; rows a chord is one event, its notes' names joined by a space, with
+;;; its lowest note's look; with `note-names?` the text is the damped
+;;; form when the note lasts no longer than one column (its whole
+;;; length, even when cut), else the display form, on every kind of
+;;; row; `:fill none` gives fill null; `:holds dash` gives the note's
+;;; event its first column only and a one-column "-" event, fill null,
+;;; in the same row for each later held column; `lane_width` counts row
+;;; labels.
+;;; Choices made where the docs are not explicit (or disagree):
+;;; - 04's "Groups and rows" says a chord gives one event per note, "In
+;;;   `parts` and `single` rows its notes share the row"; slice 3's
+;;;   decided bullet makes it one event. The tests follow the bullet.
+;;;   Tests write chords lowest note first, so whether the names are
+;;;   joined in written or pitch order is not pinned.
+;;; - A "-" event's `text_color` is not given by 04, so tests of dashes
+;;;   leave it out (`shape`). With pastel1 every look's text colour is
+;;;   dark, so events with fill null are tested with `dark`.
+;;; - A "-" event is never cut (it is one column), so its `continued` is
+;;;   #f, also at the start of a system after the note began in an
+;;;   earlier one: drawn continued, its "-" would not show (05).
+;;; - The note's own event under `:holds dash` shows the open form when
+;;;   the note is held (its whole length counts, 04 slice 3).
+;;; - A `notes` group without `note-names?` but with `:holds dash` is not
+;;;   tested.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -1839,6 +1869,263 @@ column's line is tested on its own, in \"lines: the first column\")."
   (test-assert "json-string accepts a figure with a header"
     (string? (json-string (layout (colo-piece (notes 9) #:pickup 1
                                               #:options ":pulse-label \"B\""))))))
+
+;;; ------------------------------------------------------------------
+;;; Rows, damped names, fill and holds (slice feat/scores-rows; 04,
+;;; "Groups and rows", "Note text, fill and holds", "Lane labels",
+;;; "Sizes")
+
+;;; A scale with damped forms for ding, dong and dang (colours as
+;;; selisir's: ding-fill, dong-fill, ...); kendang's dag has one too.
+;;; All one-pulse steps: one column is one pulse.
+;;;   p: i2 (0-2), o2 (2), e2 (3), rest     → lanes of p: e2 o2 i2
+;;;   q: rest, a1 (1-3), chord i2+o2 (3), rest
+;;;   r: silent
+;;;   s: u2 at 4 only (never sounds with p)
+;;;   d: dag (0), dug (1-3), rests
+(define rows-lines
+  '("(piece \"R\")"
+    "(scale sel (ding :alias i :display \"i\" :damped \"i'\")"
+    "  (dong :alias o :display \"o\" :damped \"o'\") (deng :alias e :display \"e\")"
+    "  (dung :alias u :display \"u\") (dang :alias a :display \"nang\" :damped \"na'\"))"
+    "(strokes k (dag :display \"D\" :damped \"d\") dug)"
+    "(instrument u sel a1 i2 o2 e2 u2)"
+    "(instrument kendang k dag dug)"
+    "(part u :name p i2:2 o2:1 e2 -)"
+    "(part u :name q - a1 _ (i2 o2) -)"
+    "(part u :name r - - - - -)"
+    "(part u :name s - - - - u2)"
+    "(part kendang :name d dag dug _ - -)"))
+
+(define (rows-piece . score-lines)
+  (apply piece-of (append rows-lines score-lines)))
+
+(define (rows-fig . score-lines)
+  "The figure of rows-piece with SCORE-LINES, or #f if it raises."
+  (layout-or-false (layout (apply rows-piece score-lines))))
+
+(define (shape e)
+  "An event as (start dur lane text fill continued): its text_color
+left out, for the \"-\" events of :holds dash, whose colour 04 doesn't
+give."
+  (map (lambda (k) (field e k)) '(start dur lane text fill continued)))
+
+(define (shapes fig s g v) (map shape (events-of fig s g v)))
+
+(define (dash start lane) (list start 1 lane "-" 'null #f))
+
+(test-group ":rows parts"
+  (let ((fig (rows-fig "(score s :note-names yes"
+                       "  (group \"U\" :rows parts (p :label \"Polos\") q r))")))
+    (test-equal "lanes: the row labels in member order, the default the part's name"
+      #("Polos" "q" "r")
+      (and fig (lanes-of fig 0 0)))
+    (test-equal "voices: one per member, named after the part, not its label"
+      '("p" "q" "r")
+      (and fig (voice-names fig 0 0)))
+    (test-equal "p: every event on row 0; damped names for one-column notes"
+      (list (ev 0 2 0 "i" ding-fill dark #f)
+            (ev 2 1 0 "o'" dong-fill dark #f)
+            (ev 3 1 0 "e" deng-fill dark #f))
+      (and fig (events-of fig 0 0 0)))
+    (test-equal "q: row 1; a chord is one event, names joined, the lowest note's look"
+      (list (ev 1 2 1 "nang" dang-fill dark #f)
+            (ev 3 1 1 "i' o'" ding-fill dark #f))
+      (and fig (events-of fig 0 0 1)))
+    (test-equal "r: a silent part keeps its row, with no events"
+      '()
+      (and fig (events-of fig 0 0 2)))
+    (test-assert "well-formed" (and fig (well-formed? fig))))
+  (let ((fig (rows-fig "(score s :rows parts :note-names yes"
+                       "  (group \"K\" (q :label \"Q\") (p :label \"P\")))")))
+    (test-equal "the score's :rows parts; rows follow the members' order"
+      (list #("Q" "P") '(0 0) '(1 1 1))
+      (and fig (list (lanes-of fig 0 0)
+                     (map (lambda (e) (field e 'lane)) (events-of fig 0 0 0))
+                     (map (lambda (e) (field e 'lane)) (events-of fig 0 0 1))))))
+  (let ((fig (rows-fig "(score s :rows parts :note-names yes"
+                       "  (group \"U\" :rows notes p) (group \"K\" d))")))
+    (test-equal "a group's :rows notes over the score's parts: note lanes"
+      #("e2" "o2" "i2")
+      (and fig (lanes-of fig 0 0)))
+    (test-equal "strokes on a parts row: one row, damped names"
+      (list #("d") (list (ev 0 1 0 "d" grey dark #f) (ev 1 2 0 "dug" grey dark #f)))
+      (and fig (list (lanes-of fig 0 1) (events-of fig 0 1 0))))))
+
+(test-group ":rows single"
+  (let ((fig (rows-fig "(score s :note-names yes"
+                       "  (group \"U\" :rows single p s))")))
+    (test-equal "lanes: one row labelled \"\"" #("")
+      (and fig (lanes-of fig 0 0)))
+    (test-equal "voices: one per member" '("p" "s")
+      (and fig (voice-names fig 0 0)))
+    (test-equal "every event on lane 0"
+      (list (list (ev 0 2 0 "i" ding-fill dark #f)
+                  (ev 2 1 0 "o'" dong-fill dark #f)
+                  (ev 3 1 0 "e" deng-fill dark #f))
+            (list (ev 4 1 0 "u" dung-fill dark #f)))
+      (and fig (list (events-of fig 0 0 0) (events-of fig 0 0 1))))
+    (test-assert "well-formed" (and fig (well-formed? fig))))
+  (let ((fig (rows-fig "(score s :rows single :note-names yes (group \"Q\" q))")))
+    (test-equal "the score's :rows single; a chord is one event"
+      (list #("") (list (ev 1 2 0 "nang" dang-fill dark #f)
+                        (ev 3 1 0 "i' o'" ding-fill dark #f)))
+      (and fig (list (lanes-of fig 0 0) (events-of fig 0 0 0))))))
+
+(test-group "damped and open names"
+  (let ((fig (rows-fig "(score s :note-names yes (group \"U\" p) (group \"K\" d))")))
+    (test-equal "notes rows too: a one-column note shows its damped form"
+      '("i" "o'" "e")
+      (and fig (texts fig 0 0 0)))
+    (test-equal "a stroke: damped when it lasts one column"
+      '("d" "dug")
+      (and fig (texts fig 0 1 0))))
+  (test-equal "without :note-names: text null, whatever the length"
+    '(null null null)
+    (let ((fig (rows-fig "(score s (group \"U\" p))")))
+      (and fig (texts fig 0 0 0))))
+  (test-equal "columns, not pulses: a one-pulse note of two columns is open"
+    '(("o'" 1) ("i" 2))
+    (let ((fig (layout-or-false
+                (layout (apply piece-of
+                               (append (list-head rows-lines 6)
+                                       '("(part u :name f o2:1/2 i2 _ - -:1 - -)"
+                                         "(score s :note-names yes (group \"f\" f))")))))))
+      (and fig (map (lambda (e) (list (field e 'text) (field e 'dur)))
+                    (events-of fig 0 0 0)))))
+  (test-equal "a note cut by a system break counts its whole length"
+    '((("i" #f)) (("i" #t)))
+    (let ((fig (layout-or-false
+                (layout (apply piece-of
+                               (append (list-head rows-lines 6)
+                                       '("(part u :name h i2:2 - - -)"
+                                         "(score s :note-names yes :system-length 1"
+                                         "  (group \"h\" h))")))))))
+      (and fig (map (lambda (s)
+                      (map (lambda (e) (list (field e 'text) (field e 'continued)))
+                           (events-of fig s 0 0)))
+                    '(0 1)))))
+  (test-equal "a one-column note at a system's end is damped"
+    '("o'")
+    (let ((fig (layout-or-false
+                (layout (apply piece-of
+                               (append (list-head rows-lines 6)
+                                       '("(part u :name h - o2 - - -)"
+                                         "(score s :note-names yes :system-length 2"
+                                         "  (group \"h\" h))")))))))
+      (and fig (texts fig 0 0 0)))))
+
+(test-group ":fill none"
+  (let ((fig (rows-fig "(score s :note-names yes :fill none"
+                       "  (group \"U\" p) (group \"K\" d))")))
+    (test-equal "pitched notes: fill null, text as before"
+      (list (ev 0 2 2 "i" 'null dark #f)
+            (ev 2 1 1 "o'" 'null dark #f)
+            (ev 3 1 0 "e" 'null dark #f))
+      (and fig (events-of fig 0 0 0)))
+    (test-equal "strokes: fill null too"
+      '((0 1 0 "d" null #f) (1 2 1 "dug" null #f))
+      (and fig (shapes fig 0 1 0)))
+    (test-assert "well-formed" (and fig (well-formed? fig))))
+  (let ((fig (rows-fig "(score s :note-names yes"
+                       "  (group \"U\" :fill none p) (group \"K\" d))")))
+    (test-equal "on one group only: the other keeps its colours"
+      (list '(null null null) (list grey grey))
+      (and fig (list (map (lambda (e) (field e 'fill)) (events-of fig 0 0 0))
+                     (map (lambda (e) (field e 'fill)) (events-of fig 0 1 0))))))
+  (let ((fig (rows-fig "(score s :note-names yes :fill none"
+                       "  (group \"U\" :rows single q))")))
+    (test-equal "with :rows single: a chord with fill null"
+      (list (ev 1 2 0 "nang" 'null dark #f) (ev 3 1 0 "i' o'" 'null dark #f))
+      (and fig (events-of fig 0 0 0)))))
+
+(test-group ":holds dash"
+  (let ((fig (rows-fig "(score s :note-names yes :holds dash"
+                       "  (group \"U\" :rows parts p q))")))
+    (test-equal "a held note: its first column, then a \"-\" per held column"
+      (list (list 0 1 0 "i" ding-fill #f) (dash 1 0)
+            (list 2 1 0 "o'" dong-fill #f) (list 3 1 0 "e" deng-fill #f))
+      (and fig (shapes fig 0 0 0)))
+    (test-equal "the note's event keeps its look; its text is the open form"
+      (ev 0 1 0 "i" ding-fill dark #f)
+      (and fig (car (events-of fig 0 0 0))))
+    (test-equal "q: the dash in q's row; the chord after it"
+      (list (list 1 1 1 "nang" dang-fill #f) (dash 2 1) (list 3 1 1 "i' o'" ding-fill #f))
+      (and fig (shapes fig 0 0 1)))
+    (test-assert "well-formed" (and fig (well-formed? fig))))
+  (let ((fig (rows-fig "(score s :note-names yes :holds dash (group \"U\" p))")))
+    (test-equal "notes rows: the dash in the note's lane"
+      (list (list 0 1 2 "i" ding-fill #f) (dash 1 2)
+            (list 2 1 1 "o'" dong-fill #f) (list 3 1 0 "e" deng-fill #f))
+      (and fig (shapes fig 0 0 0))))
+  (let ((fig (rows-fig "(score s :note-names yes :holds dash"
+                       "  (group \"K\" :rows single d))")))
+    (test-equal "strokes on a single row"
+      (list (list 0 1 0 "d" grey #f) (list 1 1 0 "dug" grey #f) (dash 2 0))
+      (and fig (shapes fig 0 0 0))))
+  (let ((fig (rows-fig "(score s :note-names yes :holds dash :fill none"
+                       "  (group \"U\" :rows single q))")))
+    (test-equal "with :fill none: the note and its dashes all fill null"
+      (list (list 1 1 0 "nang" 'null #f) (dash 2 0) (list 3 1 0 "i' o'" 'null #f))
+      (and fig (shapes fig 0 0 0))))
+  (let ((fig (layout-or-false
+              (layout (apply piece-of
+                             (append (list-head rows-lines 6)
+                                     '("(part u :name h u2:3 - -:1)"
+                                       "(score s :note-names yes :holds dash"
+                                       "  :system-length 2 (group \"h\" :rows parts h))")))))))
+    (test-equal "across a system break: dashes in each system, one column each"
+      (list (list (list 0 1 0 "u" dung-fill #f) (dash 1 0))
+            (list (dash 0 0))
+            '())
+      (and fig (map (lambda (s) (shapes fig s 0 0)) '(0 1 2)))))
+  (let ((fig (rows-fig "(score s :note-names yes (group \"U\" :rows parts p))")))
+    (test-equal ":holds none (the default): no dashes, one event per note"
+      '((0 2) (2 1) (3 1))
+      (and fig (map (lambda (e) (list (field e 'start) (field e 'dur)))
+                    (events-of fig 0 0 0))))))
+
+(test-group "sizes: lane_width from row labels"
+  (test-equal "parts rows: the row labels count, not the notes' labels"
+    "1.5em"                         ; "P": 0.52 + 1; "nang1" would be 3.6em
+    (let ((fig (rows-fig "(score s :note-names yes"
+                         "  (group \"U\" :rows parts (q :label \"P\") (r :label \"S\")))")))
+      (and fig (field (field fig 'sizes) 'lane_width))))
+  (test-equal "parts rows: the longest row label"
+    "9.3em"                         ; "sangsih kantilan": 16 chars
+    (let ((fig (rows-fig "(score s :note-names yes"
+                         "  (group \"U\" :rows parts (p :label \"sangsih kantilan\") q))")))
+      (and fig (field (field fig 'sizes) 'lane_width))))
+  (test-equal "a single row only: its label \"\" counts 0"
+    "1.0em"
+    (let ((fig (rows-fig "(score s :note-names yes (group \"U\" :rows single q))")))
+      (and fig (field (field fig 'sizes) 'lane_width))))
+  (test-equal "parts rows and notes rows: the longest of all"
+    "3.6em"                         ; "nang1" in the notes group
+    (let ((fig (rows-fig "(score s :note-names yes"
+                         "  (group \"U\" :rows parts (p :label \"P\"))"
+                         "  (group \"Q\" q))")))
+      (and fig (field (field fig 'sizes) 'lane_width)))))
+
+(test-group "rows: a complete system"
+  (test-equal "parts rows with :fill none, written out"
+    (sys 0 5
+         (hdr 'null 'null #("1" "2" "3" "4" "5"))
+         #("none" "pulse" "pulse" "pulse" "pulse")
+         (grp "Sung" 'null #("polos" "s")
+              (voice "p"
+                     (ev 0 2 0 "i" 'null dark #f)
+                     (ev 2 1 0 "o'" 'null dark #f)
+                     (ev 3 1 0 "e" 'null dark #f))
+              (voice "s"
+                     (ev 4 1 1 "u" 'null dark #f))))
+    (let ((fig (rows-fig "(score s :note-names yes :fill none"
+                         "  (group \"Sung\" :rows parts (p :label \"polos\") s))")))
+      (and fig (system-ref fig 0))))
+  (test-assert "json-string accepts a figure with dashes and fill null"
+    (let ((fig (rows-fig "(score s :note-names yes :fill none :holds dash"
+                         "  (group \"U\" :rows single q) (group \"P\" :rows parts p s))")))
+      (and fig (string? (json-string fig))))))
 
 ;;; ------------------------------------------------------------------
 ;;; A complete figure

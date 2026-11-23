@@ -19,6 +19,12 @@
 ;;;   lines, a figure subtitle and caption, a font size, and a second
 ;;;   system with no cycle mark; a fourth has both header rows off.
 ;;;
+;;; - Slice feat/scores-rows: a fifth hand-written figure has a group
+;;;   on `parts` rows (row labels as `lanes`), a group on a `single` row
+;;;   (`lanes` [""]), a chord as one event with joined names, events
+;;;   with `fill` null (`:fill none`) and the one-column "-" events of
+;;;   `:holds dash`, one of them at the start of a second system.
+;;;
 ;;; Run from the repo root: guile -L . tests/template.scm
 
 (use-modules (srfi srfi-1)
@@ -390,6 +396,136 @@ prints no warning.  Typst's output is shown when either fails."
 }
 ")
 
+;; Rows of slice feat/scores-rows, in two systems: a group on parts rows
+;; (a chord as one event, a dash, fill null for the dash only) and a
+;; sung line on a single row with fill null throughout and dashes, one
+;; of them starting the second system; a held note cut into it.
+(define rows
+  "{
+  \"version\": 2,
+  \"title\": \"Rows\",
+  \"subtitle\": null,
+  \"steps_per_pulse\": 1,
+  \"sizes\": {
+    \"font_size\": null,
+    \"label_width\": \"6.3em\",
+    \"lane_width\": \"4.6em\",
+    \"cell_width\": \"2em\",
+    \"cell_height\": \"2em\"
+  },
+  \"systems\": [
+    {
+      \"start\": 0,
+      \"steps\": 4,
+      \"header\": {
+        \"label\": null,
+        \"cycles\": null,
+        \"pulses\": [\"1\", \"2\", \"3\", \"4\"]
+      },
+      \"lines\": [\"none\", \"pulse\", \"pulse\", \"pulse\"],
+      \"groups\": [
+        {
+          \"label\": \"Kotekan\",
+          \"subtitle\": null,
+          \"lanes\": [\"polos\", \"sangsih\"],
+          \"voices\": [
+            {
+              \"name\": \"polos\",
+              \"events\": [
+                { \"start\": 0, \"dur\": 1, \"lane\": 0, \"text\": \"i\",
+                  \"fill\": \"#fbb4ae\", \"text_color\": \"#222222\", \"continued\": false },
+                { \"start\": 1, \"dur\": 1, \"lane\": 0, \"text\": \"-\",
+                  \"fill\": null, \"text_color\": \"#222222\", \"continued\": false },
+                { \"start\": 2, \"dur\": 1, \"lane\": 0, \"text\": \"o'\",
+                  \"fill\": \"#b3cde3\", \"text_color\": \"#222222\", \"continued\": false }
+              ]
+            },
+            {
+              \"name\": \"sangsih\",
+              \"events\": [
+                { \"start\": 1, \"dur\": 1, \"lane\": 1, \"text\": \"i' o'\",
+                  \"fill\": \"#fbb4ae\", \"text_color\": \"#222222\", \"continued\": false },
+                { \"start\": 3, \"dur\": 1, \"lane\": 1, \"text\": \"nang\",
+                  \"fill\": \"#fed9a6\", \"text_color\": \"#222222\", \"continued\": false }
+              ]
+            }
+          ],
+          \"overlays\": []
+        },
+        {
+          \"label\": \"Sung\",
+          \"subtitle\": null,
+          \"lanes\": [\"\"],
+          \"voices\": [
+            {
+              \"name\": \"vocal\",
+              \"events\": [
+                { \"start\": 0, \"dur\": 1, \"lane\": 0, \"text\": \"nang\",
+                  \"fill\": null, \"text_color\": \"#222222\", \"continued\": false },
+                { \"start\": 1, \"dur\": 1, \"lane\": 0, \"text\": \"-\",
+                  \"fill\": null, \"text_color\": \"#222222\", \"continued\": false },
+                { \"start\": 2, \"dur\": 1, \"lane\": 0, \"text\": \"-\",
+                  \"fill\": null, \"text_color\": \"#222222\", \"continued\": false },
+                { \"start\": 3, \"dur\": 1, \"lane\": 0, \"text\": \"ni'\",
+                  \"fill\": null, \"text_color\": \"#222222\", \"continued\": false }
+              ]
+            }
+          ],
+          \"overlays\": []
+        }
+      ]
+    },
+    {
+      \"start\": 4,
+      \"steps\": 2,
+      \"header\": {
+        \"label\": null,
+        \"cycles\": null,
+        \"pulses\": [\"5\", \"6\"]
+      },
+      \"lines\": [\"none\", \"pulse\"],
+      \"groups\": [
+        {
+          \"label\": \"Kotekan\",
+          \"subtitle\": null,
+          \"lanes\": [\"polos\", \"sangsih\"],
+          \"voices\": [
+            {
+              \"name\": \"polos\",
+              \"events\": []
+            },
+            {
+              \"name\": \"sangsih\",
+              \"events\": [
+                { \"start\": 0, \"dur\": 1, \"lane\": 1, \"text\": \"nang\",
+                  \"fill\": \"#fed9a6\", \"text_color\": \"#222222\", \"continued\": true }
+              ]
+            }
+          ],
+          \"overlays\": []
+        },
+        {
+          \"label\": \"Sung\",
+          \"subtitle\": null,
+          \"lanes\": [\"\"],
+          \"voices\": [
+            {
+              \"name\": \"vocal\",
+              \"events\": [
+                { \"start\": 0, \"dur\": 1, \"lane\": 0, \"text\": \"-\",
+                  \"fill\": null, \"text_color\": \"#222222\", \"continued\": false }
+              ]
+            }
+          ],
+          \"overlays\": []
+        }
+      ]
+    }
+  ],
+  \"caption\": null
+}
+")
+
 ;;; The tests.
 
 (test-begin "template")
@@ -413,7 +549,9 @@ prints no warning.  Typst's output is shown when either fails."
       (check-figure "header rows, lines, subtitle and caption" "header-rows.json"
                     header-rows)
       (check-figure "both header rows off" "no-header-rows.json"
-                    no-header-rows))
+                    no-header-rows)
+      (check-figure "parts and single rows, fill null, dashes" "rows.json"
+                    rows))
     (test-assert "typst is installed (CI installs 0.15.1)" #f))
 
 (define runner (test-runner-current))
