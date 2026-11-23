@@ -9,9 +9,10 @@ iteration 2's `feat/scores-contract`, and overlays since
 `feat/scores-overlays`, and choosing a score (`--score`, `render-piece
 #:score`) since `feat/scores-range`. Modules: `(notasi json)`,
 `(notasi typst)`, `(notasi command)` (Guile), `typst/notasi.typ` (Typst
-template), `scripts/notasi` (the command). Planned for iteration 3:
-contract version 3 (ADR 0043); the template's labels, centred header
-and frame (ADR 0044), row lines, pulse lines by group and grey note
+template), `scripts/notasi` (the command). Contract version 3 (ADR
+0043) with the template's header labels and centred numbers (ADR 0044)
+since iteration 3's `feat/drawing-header`. Planned for iteration 3:
+the frame (ADR 0044), row lines, pulse lines by group and grey note
 borders (ADR 0041); the key-number column and row labels left out
 (ADR 0047); a sans-serif font for standalone figures (ADR 0045); file
 names `NAME_SCORE` (ADR 0040).
@@ -28,13 +29,14 @@ must work in both places; see "Typst template design", points 6 and 7.
 
 ## JSON contract (version 3)
 
-**Planned** (ADR 0043). Version 2 below, with these changes (04 lists the
-keys in order):
+**Implemented** for the header (ADR 0043, `feat/drawing-header`); the
+rest **Planned**, added by the later slices of `feat/drawing`. Version 2
+below, with these changes (04 lists the keys in order):
 
 - `version` is 3.
 - `header.label` becomes `header.cycle_label` and `header.pulse_label`,
-  each a string or `null`; `header.pulse_lines` (boolean) says whether
-  pulse lines run through the header rows.
+  each a string or `null`. **Planned:** `header.pulse_lines` (boolean)
+  says whether pulse lines run through the header rows.
 - Each group gets `pulse_lines` and `row_lines` (booleans): whether its
   rows show pulse lines, and lines between its rows.
 - Each group gets `key_numbers`, one string per lane or `null`, and
@@ -311,13 +313,13 @@ third layer over the notes, since a grid can't overlap its cells:
 **Planned** for version 3 (ADRs 0039, 0041, 0043, 0044), changing the
 above:
 
-- **Header labels:** `cycle_label` at the left of the cycle row and
-  `pulse_label` at the left of the pulse row, each in the group-label
-  column, when not `null`.
-- **Header numbers** are centred over their pulse: a pulse number spans
-  `steps_per_pulse` columns from its entry, and a cycle number spans the
-  first pulse of its cycle, so the two line up. No `·` in the other
-  columns.
+- **Header labels** (**Implemented**): `cycle_label` at the left of the
+  cycle row and `pulse_label` at the left of the pulse row, each in the
+  group-label column, when not `null`.
+- **Header numbers** (**Implemented**) are centred over their pulse: a
+  pulse number spans `steps_per_pulse` columns from its entry, and a
+  cycle number spans the first pulse of its cycle, so the two line up.
+  No `·` in the other columns.
 - **Lines:** cycle lines and the rules between groups are always drawn.
   Pulse lines are drawn through the header when `header.pulse_lines` is
   true, and through a group's rows when its `pulse_lines` is. When a

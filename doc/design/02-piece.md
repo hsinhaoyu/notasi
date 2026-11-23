@@ -9,8 +9,10 @@ time, since `feat/music-durations`; `pickup`, `colotomies`,
 the `pattern` and `pattern-span` records since `feat/music-patterns`;
 `scores`, the `score` and `group` records and `piece-score` since
 `feat/scores-form`, and `note-display #:damped?` since
-`feat/scores-rows`. Tests in `tests/piece.scm`. Planned for iteration
-3: the score's `cycle-label`; the group's `keys`, `octave-numbers?`,
+`feat/scores-rows`, and the score's `cycle-label` and the "Pulse"
+default since `feat/drawing-header`. Tests in `tests/piece.scm`.
+Planned for iteration
+3: the group's `keys`, `octave-numbers?`,
 `key-numbers?`, `row-labels?`, `display` and `background`; `note-label`'s `#:octave?`; invariants 9 and
 10.
 
@@ -146,10 +148,10 @@ score
   cycle-numbers? : boolean
   pulse-numbers? : boolean
   numbering      : symbol              gong-last | gong-first
-  cycle-label    : string | #f         **Planned**: "Cycle" unless
-                                       `:cycle-label`; #f for ""
-  pulse-label    : string | #f         **Planned**: "Pulse" unless
-                                       `:pulse-label` (today #f); #f for ""
+  cycle-label    : string | #f         "Cycle" unless `:cycle-label`;
+                                       #f for ""
+  pulse-label    : string | #f         "Pulse" unless `:pulse-label`;
+                                       #f for ""
   font-size      : string | #f         a Typst length; #f: the document's
   cell-width     : string              a Typst length
   cell-height    : string

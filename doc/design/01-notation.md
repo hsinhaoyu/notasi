@@ -7,7 +7,8 @@ and patterns; scores, groups and every printing option since
 milestone 2 (`feat/scores`); parts written with `:instrument`, also
 inside a colotomy (ADR 0038), and `gilak` and `bapang` in the
 `gong-kebyar` template (ADR 0046) since iteration 3's `feat/syntax`.
-Planned for iteration 3: labelled number rows (ADR 0039); `:keys`, `:octave-numbers`, `:background` (ADR 0041)
+Labelled number rows (ADR 0039) and the pickup shown as cycle 0 since
+`feat/drawing-header`. Planned for iteration 3: `:keys`, `:octave-numbers`, `:background` (ADR 0041)
 and a group's own stroke names (`:display`); no `_` in score names
 (ADR 0040); `:key-numbers` and `:row-labels`.
 
@@ -491,14 +492,13 @@ Above the grid:
 
 | Option | Level | Default | Meaning |
 |---|---|---|---|
-| `:cycle-numbers yes/no` | score | `yes` with a colotomy | A row with the cycle number, once at the start of each cycle. A pickup is cycle 0: a system that starts with the pickup shows `0` (**Planned**, iteration 3). |
+| `:cycle-numbers yes/no` | score | `yes` with a colotomy | A row with the cycle number, once at the start of each cycle. A pickup is cycle 0: a system that starts with the pickup shows `0`. |
 | `:pulse-numbers yes/no` | score | `yes` | A row with the pulse number within the cycle (within the piece, without a colotomy). |
 | `:numbering gong-last/gong-first` | score | `gong-last` | Number the pulses 1 to N with the gong on N (Gold), or with the gong on 1 (Tenzer): pulse k of an N-pulse cycle is printed (k mod N) + 1. Only the printed numbers change. |
-| `:cycle-label STRING` | score | `"Cycle"` | A label at the left of the cycle row (**Planned**, ADR 0039). |
-| `:pulse-label STRING` | score | `"Pulse"` | A label at the left of the pulse row, e.g. "Beats". Today the default is none; `"Pulse"` is **Planned** (ADR 0039). |
+| `:cycle-label STRING` | score | `"Cycle"` | A label at the left of the cycle row (ADR 0039). |
+| `:pulse-label STRING` | score | `"Pulse"` | A label at the left of the pulse row, e.g. "Beats" (ADR 0039). |
 
-`""` removes a label, and a label is printed only when its row is
-(**Planned**).
+`""` removes a label, and a label is printed only when its row is.
 
 In the grid:
 
