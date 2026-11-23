@@ -5,9 +5,9 @@
   "steps_per_pulse": 4,
   "sizes": {
     "font_size": null,
-    "label_width": "9.9em",
+    "label_width": "12.9em",
     "lane_width": "7.8em",
-    "cell_width": "2em",
+    "cell_width": "3em",
     "cell_height": "2em"
   },
   "systems": [

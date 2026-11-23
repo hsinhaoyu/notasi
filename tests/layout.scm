@@ -710,8 +710,10 @@ at its default: font_size null, cells \"2em\"."
                      "(part u :name x 2)")
            'lane_width))
 
-  (test-equal "a subtitle longer than every label counts (20 chars → 13.5em)"
-    "13.5em"
+  ;; A one-row group: its subtitle follows the label, "Bb", two spaces
+  ;; and the 20 characters (feat/targets).
+  (test-equal "a subtitle longer than every label counts (24 chars → 15.9em)"
+    "15.9em"
     (field (sizes-of "(piece \"P\")"
                      "(strokes k-strokes K)"
                      "(instrument kempli k-strokes K)"
@@ -2696,6 +2698,24 @@ give."
       (and fig (map (lambda (e) (list (field e 'start) (field e 'dur) (field e 'lane)))
                     (vector->list (field (vector-ref (field (group-ref fig 0 0) 'voices) 1)
                                          'events)))))))
+
+;;; A one-row group prints its subtitle after its label (04, "Sizes";
+;;; 05, decided in feat/targets for Baris), so the label column fits both.
+(test-group "label_width: a one-row group's subtitle follows its label"
+  (let ((width (lambda (score)
+                 (let ((fig (layout-or-false
+                             (layout (piece-of "(piece \"P\")" "(scale s a b)"
+                                               "(instrument u s a1 b1)"
+                                               "(part u :name p 1 1 1)"
+                                               "(part u :name q 1 2 1)"
+                                               score)))))
+                   (and fig (field (field fig 'sizes) 'label_width))))))
+    (test-equal "one row: \"Ugal\", two spaces, \"main\": 10 characters"
+      "7.5em"
+      (width "(score s (group \"Ugal\" :subtitle \"main\" p))"))
+    (test-equal "two rows: the longest of \"Ugal\" and \"main\""
+      "3.9em"
+      (width "(score s (group \"Ugal\" :subtitle \"main\" q))"))))
 
 (test-end "layout")
 

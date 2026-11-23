@@ -305,7 +305,9 @@ text. `dark2` gives strong colours with mostly white text.
   figure (all systems):
   - `label_width` (group labels and subtitles): 0.6em × the longest
     label or subtitle printed (long or short, as each system prints
-    it) + 1.5em.
+    it) + 1.5em. A group of one row prints its subtitle after its label
+    (05), so there the subtitle counts as the longer of its labels, two
+    spaces and the subtitle (decided in `feat/targets`, for Baris).
   - `lane_width` (lane and row labels): 0.52em × the longest label +
     1em.
   - Lengths are strings in `em` with one decimal, even when whole,

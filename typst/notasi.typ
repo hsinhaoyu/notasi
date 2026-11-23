@@ -79,7 +79,9 @@
         align: horizon + left, inset: (right: 10pt), {
           text(weight: "bold", size: 1.1em, g.label)
           if g.subtitle != none {
-            linebreak()
+            // A one-row group has no room for a second line: the
+            // subtitle follows the label on the same line.
+            if lanes.len() > 1 { linebreak() } else { h(0.5em) }
             text(fill: luma(110), style: "italic", g.subtitle)
           }
         }))

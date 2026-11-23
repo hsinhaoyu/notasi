@@ -16,7 +16,8 @@ choose:
   [Several scores](#several-scores)).
 - Each `(group "Reyong" … polos sangsih)` is one block of rows, with its
   label on the left. Here polos and sangsih share the reyong's rows, so
-  you see how they interlock. `:subtitle` adds a line under the label.
+  you see how they interlock. `:subtitle` adds a line under the label (or follows it, when the
+  group has only one row).
 - A part that is in no group isn't printed. The kempli is added for you
   (see [Gong cycles](gong-cycles.md)); name it in a group to print it.
 
@@ -28,7 +29,7 @@ own instead.
 | Setting | Where | What it does |
 |---|---|---|
 | `:title "…"` | score | The title, instead of the piece's. |
-| `:subtitle "…"` | score or group | A line under the title, or under a group's label. |
+| `:subtitle "…"` | score or group | A line under the title, or under a group's label (after it, on a group of one row). |
 | `:caption "…"` | score | A line under the score. |
 | `:cycle-numbers yes` / `no` | score | Number each gong cycle above its first pulse. On by default when the piece has a [colotomy](gong-cycles.md). |
 | `:pulse-numbers yes` / `no` | score | The row of pulse numbers. On by default. |

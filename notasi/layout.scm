@@ -425,8 +425,23 @@ and every system length from its start, in order."
                                (map (lambda (g) (assq-ref g 'label))
                                     (vector->list (assq-ref system 'groups))))
                              (vector->list systems))
-                 (filter-map (match-lambda ((group _ _ _) (group-subtitle group)))
-                             prepared)))
+                 ;; A subtitle is under its label, or after it on a
+                 ;; group of one row (05, "Groups"), which then needs
+                 ;; room for both: the longest label it prints, a space
+                 ;; and the subtitle.
+                 (filter-map
+                  (match-lambda
+                    ((group lanes _ _)
+                     (and (group-subtitle group)
+                          (if (= (length lanes) 1)
+                              (string-append
+                               (make-string
+                                (longest (list (group-label group)
+                                               (group-short group)))
+                                #\x)
+                               "  " (group-subtitle group))
+                              (group-subtitle group)))))
+                  prepared)))
         (lane-labels (append-map (match-lambda ((_ lanes _ _) lanes))
                                  prepared)))
     `((font_size . ,(null-if-false (score-font-size score)))

@@ -67,7 +67,7 @@ the manual describes what the code does.
    3. `feat/scores-rows`
    4. `feat/scores-overlays`
    5. `feat/scores-range`
-3. **`feat/targets`**: the acceptance test, with no slices. The
+3. **`feat/targets`** (done): the acceptance test, with no slices. The
    `gong-kebyar` template's reyong becomes e2 to u4 and its gongs one
    instrument with strokes `G GL P T`; `examples/tenzer1.nts` is
    rewritten; the two targets are added to `examples/` as
