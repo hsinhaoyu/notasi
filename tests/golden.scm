@@ -1,24 +1,35 @@
-;;; Golden tests: each example's figure, as saved in tests/golden/.
-;;; See doc/design/04-layout.md, "Slices", item 4.
-;;; - Each examples/NAME.nts, laid out with the default style, must
-;;;   match tests/golden/NAME.json as text, exactly as write-figure
-;;;   writes it.  An example with no saved copy fails, and so does a
-;;;   saved copy with no example.
+;;; Golden tests: each example's figures, as saved in tests/golden/.
+;;; See doc/design/04-layout.md, "Golden tests".
+;;; - Each examples/NAME.nts has one figure per score.  A file with only
+;;;   the default score (no `score' form) has tests/golden/NAME.json; a
+;;;   file with scores has tests/golden/NAME.SCORE.json for each of its
+;;;   scores.  Each figure, laid out with layout-score, must match its
+;;;   saved copy as text, exactly as write-figure writes it.  A figure
+;;;   with no saved copy fails, and so does a saved copy with no figure.
 ;;; - With --update (make golden), rewrite every saved copy with
-;;;   write-figure, delete saved copies with no example, and say what
+;;;   write-figure, delete saved copies with no figure, and say what
 ;;;   changed.  No comparisons are run: the copies were just written.
 ;;;
-;;;
 ;;; Slice feat/scores-form (04, "Slices (iteration 2)", slice 1):
-;;; layout-piece is gone; each example's figure is its first score (its
-;;; default score when it has none) laid out with layout-score.  One
-;;; figure per example until slice 5.
+;;; layout-piece is gone; figures are laid out with layout-score.
+;;;
+;;; Slice feat/scores-range (04, slice 5 and "Golden tests"): one figure
+;;; per score, named as above (examples/gilak.nts has two scores, so its
+;;; figures are gilak.full.json and gilak.second-cycle.json).
+;;; Choices made where the docs are not explicit:
+;;; - "Only the default score" means the piece's only score has no
+;;;   source location (03, step 12: the default score's location is #f).
+;;; - An example that can't be read fails one test, and its saved
+;;;   copies (NAME.json, NAME.*.json) count neither as figures nor as
+;;;   orphans; --update then keeps them and exits non-zero.
 ;;;
 ;;; Run from the repo root: guile -L . tests/golden.scm [--update]
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
+             (ice-9 exceptions)
              (ice-9 ftw)
+             (ice-9 match)
              (ice-9 textual-ports)
              (notasi layout)
              (notasi piece)
@@ -40,60 +51,112 @@ sorted.  No names if DIR doesn't exist."
 (define (read-text path)
   (call-with-input-file path get-string-all #:encoding "UTF-8"))
 
-(define (example-figure name)
-  "The figure of example NAME: its first score, laid out."
-  (let ((piece (read-piece-file (example-path name))))
-    (layout-score piece (car (piece-scores piece)))))
+(define (read-example name)
+  "Example NAME's piece, or the exception reading it raised."
+  (guard (e (#t e))
+    (read-piece-file (example-path name))))
 
-(define (figure-text name)
-  "The text write-figure writes for example NAME, read back from a
-temporary file so that the comparison goes through write-figure."
+(define (default-score-only? piece)
+  (match (piece-scores piece)
+    ((score) (not (score-location score)))
+    (_ #f)))
+
+;;; A figure: (GOLDEN-NAME PIECE SCORE).
+(define (figures-of name piece)
+  "The figures of example NAME, whose piece is PIECE."
+  (if (default-score-only? piece)
+      (list (list name piece (car (piece-scores piece))))
+      (map (lambda (score)
+             (list (string-append name "." (symbol->string (score-name score)))
+                   piece score))
+           (piece-scores piece))))
+
+(define (figure-name f) (car f))
+
+(define (figure-value f)
+  (match f
+    ((_ piece score) (layout-score piece score))))
+
+(define (figure-text f)
+  "The text write-figure writes for figure F, read back from a temporary
+file so that the comparison goes through write-figure."
   (let* ((dir (mkdtemp (string-append (or (getenv "TMPDIR") "/tmp")
                                       "/notasi-golden-XXXXXX")))
-         (path (string-append dir "/" name ".json")))
+         (path (string-append dir "/figure.json")))
     (dynamic-wind
       (const #f)
       (lambda ()
-        (write-figure (example-figure name) path)
+        (write-figure (figure-value f) path)
         (read-text path))
       (lambda ()
         (when (file-exists? path) (delete-file path))
         (rmdir dir)))))
 
 (define examples (names-in examples-dir ".nts"))
+(define pieces (map (lambda (name) (cons name (read-example name))) examples))
+(define unreadable
+  (filter-map (match-lambda
+                ((name . p) (and (not (piece? p)) name)))
+              pieces))
+(define figures
+  (append-map (match-lambda
+                ((name . p) (if (piece? p) (figures-of name p) '())))
+              pieces))
+(define figure-names (map figure-name figures))
 (define goldens (names-in golden-dir ".json"))
-(define orphans (lset-difference string=? goldens examples))
+
+(define (of-unreadable? golden)
+  "Is GOLDEN a saved copy of an example that can't be read?"
+  (any (lambda (name)
+         (or (string=? golden name)
+             (string-prefix? (string-append name ".") golden)))
+       unreadable))
+
+(define orphans
+  (remove of-unreadable? (lset-difference string=? goldens figure-names)))
 
 (define (update!)
-  "Rewrite every saved copy and delete the orphans."
+  "Rewrite every saved copy and delete the orphans; #f if an example
+can't be read."
   (unless (file-exists? golden-dir) (mkdir golden-dir))
-  (for-each (lambda (name)
-              (write-figure (example-figure name) (golden-path name))
-              (format #t "wrote ~a~%" (golden-path name)))
-            examples)
+  (for-each (lambda (f)
+              (write-figure (figure-value f) (golden-path (figure-name f)))
+              (format #t "wrote ~a~%" (golden-path (figure-name f))))
+            figures)
   (for-each (lambda (name)
               (delete-file (golden-path name))
-              (format #t "deleted ~a (no example)~%" (golden-path name)))
-            orphans))
+              (format #t "deleted ~a (no figure)~%" (golden-path name)))
+            orphans)
+  (for-each (lambda (name)
+              (format (current-error-port) "can't read ~a: ~a~%"
+                      (example-path name) (assoc-ref pieces name)))
+            unreadable)
+  (null? unreadable))
 
 (define (check)
-  "Compare each example with its saved copy; return #t if all pass."
+  "Compare each figure with its saved copy; return #t if all pass."
   (test-begin "golden")
   (for-each
    (lambda (name)
-     (if (member name goldens)
-         (test-equal (string-append "figure matches " (golden-path name))
-           (read-text (golden-path name))
-           (figure-text name))
-         (test-assert (string-append "example has a saved copy: "
-                                     (golden-path name)
-                                     " is missing (run make golden)")
-           #f)))
-   examples)
+     (test-assert (string-append "example reads: " (example-path name)) #f))
+   unreadable)
+  (for-each
+   (lambda (f)
+     (let ((name (figure-name f)))
+       (if (member name goldens)
+           (test-equal (string-append "figure matches " (golden-path name))
+             (read-text (golden-path name))
+             (figure-text f))
+           (test-assert (string-append "figure has a saved copy: "
+                                       (golden-path name)
+                                       " is missing (run make golden)")
+             #f))))
+   figures)
   (for-each
    (lambda (name)
-     (test-assert (string-append "saved copy has an example: "
-                                 (example-path name) " is missing")
+     (test-assert (string-append "saved copy has a figure: "
+                                 (golden-path name)
+                                 " is no example's figure")
        #f))
    orphans)
   (let ((runner (test-runner-current)))
@@ -102,5 +165,5 @@ temporary file so that the comparison goes through write-figure."
               (test-runner-xpass-count runner)))))
 
 (exit (if (member "--update" (command-line))
-          (begin (update!) #t)
+          (update!)
           (check)))

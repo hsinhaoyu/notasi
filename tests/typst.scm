@@ -66,6 +66,15 @@
 ;;;   for piece.json.
 ;;; - compile-typst keeps its hand-written entry file (the v1 text,
 ;;;   which still draws a version 2 figure: it reads no new field).
+;;;
+;;; Slice feat/scores-range (04, slice 5; 05, "The entry file and
+;;; running Typst"): render-piece takes #:score, the name of the score
+;;; to draw (a symbol); without it, the first score.  Tested on
+;;; examples/gilak.nts (scores full and second-cycle) with #:keep-in,
+;;; comparing piece.json with that score's figure.  A score the piece
+;;; doesn't have is an &error (not a notation mistake) whose message
+;;; names the score and the file; like other failures, it writes no
+;;; output and leaves nothing in TMPDIR.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -343,6 +352,15 @@ path at the front of %load-path, then restore both."
            (and (file-exists? file) (access? file X_OK))))
        (string-split path #\:)))
 
+(define gilak-path (string-append repo-dir "/examples/gilak.nts"))
+
+(define (score-figure-text nts-path name)
+  "What write-figure writes for NTS-PATH's score NAME, or #f if reading
+or laying it out raises."
+  (guard (e (#t #f))
+    (let ((piece (read-piece-file nts-path)))
+      (expected-text (layout-score piece (piece-score piece name))))))
+
 (define (expected-figure-text nts-path)
   "What write-figure writes for NTS-PATH's first score."
   (expected-text (first-score-figure nts-path)))
@@ -610,6 +628,54 @@ write-entry-file, compile it to NAME.png and return the PNG's
            (render-piece nts out #:keep-in keep)))
         (let ((json (string-append keep "/piece.json")))
           (and (file-exists? json) (read-text json))))))
+
+  ;; #:score (slice feat/scores-range): the score named SCORE is drawn;
+  ;; examples/gilak.nts has two, full and second-cycle.
+  (for-each
+   (lambda (name)
+     (let ((keep (make-subdir (string-append "keep-" (symbol->string name))))
+           (out (render-path (string-append "gilak." (symbol->string name) ".pdf"))))
+       (test-equal (string-append "#:score " (symbol->string name) ": returns OUT-PATH")
+         out
+         (with-render-tmp
+          (lambda () (render-piece gilak-path out #:score name #:keep-in keep))))
+       (test-assert (string-append "#:score " (symbol->string name) ": writes the PDF")
+         (pdf-file? out))
+       (test-assert (string-append "#:score " (symbol->string name)
+                                   ": piece.json is that score's figure")
+         (let ((want (score-figure-text gilak-path name))
+               (json (string-append keep "/piece.json")))
+           (and want (file-exists? json)
+                (equal? want (read-text json)))))))
+   '(second-cycle full))
+  (test-assert "#:score: (the two scores give different figures)"
+    (not (equal? (score-figure-text gilak-path 'full)
+                 (score-figure-text gilak-path 'second-cycle))))
+  (let ((keep (make-subdir "keep-gilak-first"))
+        (out (render-path "gilak.pdf")))
+    (test-assert "without #:score: the first score, full"
+      (let ((want (score-figure-text gilak-path 'full)))
+        (with-render-tmp
+         (lambda () (exception-from
+                     (lambda () (render-piece gilak-path out #:keep-in keep)))))
+        (let ((json (string-append keep "/piece.json")))
+          (and want (file-exists? json) (equal? want (read-text json)))))))
+  (let* ((out (render-path "gilak.nope.pdf"))
+         (e (with-render-tmp
+             (lambda ()
+               (exception-from
+                (lambda () (render-piece gilak-path out #:score 'nope)))))))
+    (test-assert "unknown score: raises an &error" (the-error? e))
+    (test-assert "unknown score: not a notation mistake"
+      (and e (not (notasi-syntax-error? e))))
+    (test-assert "unknown score: the message names the score"
+      (message-contains? e "nope"))
+    (test-assert "unknown score: the message names the file"
+      (message-contains? e "gilak.nts"))
+    (test-assert "unknown score: writes no output file"
+      (not (file-exists? out)))
+    (test-assert "unknown score: leaves nothing in TMPDIR"
+      (render-tmp-empty?)))
 
   ;; A reader error passes through unchanged.
   (let ((nts (tmp-path "bad.nts"))

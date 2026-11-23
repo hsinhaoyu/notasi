@@ -25,6 +25,13 @@
 ;;;   the tests never write into examples/.
 ;;; - "typst not on the PATH": PATH is the current PATH minus every
 ;;;   folder holding a `typst', as in tests/typst.scm.
+;;; - --score (slice feat/scores-range; 05, "The `notasi' command"):
+;;;   tested on a copy of examples/gilak.nts.  That the right score is
+;;;   drawn is checked by drawing SVGs: --score full and no --score give
+;;;   the same bytes, --score second-cycle different ones.  --score may
+;;;   come before or after PIECE.nts and -o.  `--score' as the last
+;;;   argument is the "without a value" usage error; its message is
+;;;   not checked to name --score.  An unknown score's message names it.
 ;;; - scripts/notasi is run by its absolute path from inside the
 ;;;   temporary folder, with a relative PIECE.nts and OUT, so it must
 ;;;   find the project (and the gong-kebyar template) from its own
@@ -205,6 +212,51 @@ each string in ALSO."
      ("--output before PIECE, .png" ("render" "--output" ,d ,piece) ,d ,png-file?))))
 
 ;;; ------------------------------------------------------------------
+;;; --score NAME (slice feat/scores-range): gilak has scores full and
+;;; second-cycle.
+
+(define gilak (tmp-path "gilak.nts"))
+(copy-file (string-append repo-dir "/examples/gilak.nts") gilak)
+
+(define (same-bytes? a b)
+  (and (file-exists? a) (file-exists? b)
+       (equal? (read-bytes a) (read-bytes b))))
+
+(test-group "render --score, default OUT"
+  (for-each
+   (lambda (args)
+     (let* ((score (car args))
+            (out (tmp-path (string-append "gilak." score ".pdf")))
+            (r (apply run (cdr args))))
+       (test-equal (string-append score ": exits with status 0") 0 (status-of r))
+       (test-equal (string-append score ": prints PIECE.NAME.pdf and a newline")
+         (string-append out "\n") (stdout-of r))
+       (test-equal (string-append score ": prints nothing to stderr") "" (stderr-of r))
+       (test-assert (string-append score ": writes a PDF there") (pdf-file? out))))
+   `(("second-cycle" "render" ,gilak "--score" "second-cycle")
+     ("full" "render" "--score" "full" ,gilak)))
+  (let ((r (run "render" gilak)))
+    (test-equal "without --score: PIECE.pdf" (string-append (tmp-path "gilak.pdf") "\n")
+      (stdout-of r))))
+
+(test-group "render --score with -o"
+  (let ((full (tmp-path "full.svg"))
+        (second (tmp-path "second.svg"))
+        (first (tmp-path "first.svg")))
+    (let ((r (run "render" gilak "--score" "second-cycle" "-o" second)))
+      (test-equal "exits with status 0" 0 (status-of r))
+      (test-equal "prints OUT as given" (string-append second "\n") (stdout-of r))
+      (test-assert "writes an SVG" (svg-file? second)))
+    (run "render" "-o" full "--score" "full" gilak)
+    (run "render" gilak "-o" first)
+    (test-assert "--score full: an SVG" (svg-file? full))
+    (test-assert "the two scores draw different pictures"
+      (and (svg-file? full) (svg-file? second)
+           (not (same-bytes? full second))))
+    (test-assert "without --score, the first score (full) is drawn"
+      (same-bytes? full first))))
+
+;;; ------------------------------------------------------------------
 ;;; A notation mistake: the reader's message exactly, status 1
 
 (test-group "notation mistake"
@@ -250,6 +302,11 @@ each string in ALSO."
     (other-problem-checks "unsupported extension (.jpg)"
                           (run "render" piece "-o" out) out))
 
+  ;; A score the piece doesn't have: "notasi: " and the message.
+  (let ((out (tmp-path "gilak.nope.pdf")))
+    (other-problem-checks "unknown score" (run "render" gilak "--score" "nope")
+                          out "nope"))
+
   (let* ((path (path-without-typst))
          (out (tmp-path "no-typst.pdf")))
     (test-assert "typst not on the PATH: (the test's PATH really has no typst)"
@@ -270,7 +327,8 @@ each string in ALSO."
   (usage-error-checks "render with no PIECE.nts" (run "render"))
   (usage-error-checks "render with two PIECE.nts"
                       (run "render" piece (tmp-path "other.nts")))
-  (usage-error-checks "-o without a value" (run "render" piece "-o")))
+  (usage-error-checks "-o without a value" (run "render" piece "-o"))
+  (usage-error-checks "--score without a value" (run "render" piece "--score")))
 
 ;;; ------------------------------------------------------------------
 ;;; --help
