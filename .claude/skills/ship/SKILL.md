@@ -35,7 +35,13 @@ description: Open a pull request from the current branch into dev - run the test
 5. **Push and open the PR.**
    - `git push -u origin <branch>`. If the branch was rebased after an
      earlier push, use `--force-with-lease`.
-   - `gh pr create --base dev`. `--body` replaces
+   - `gh pr create --base dev`, with `--milestone '<title>'` when the
+     branch belongs to a milestone of the current iteration: a slice or
+     the milestone itself (as its README's "Milestones" lists them), or
+     a fix or `/doc-audit` sync for it. The title is
+     `Iteration N · <milestone branch>` (`/start-milestone` creates it).
+     Promotions, governance and housekeeping PRs get no milestone; if
+     it isn't clear, ask. `--body` replaces
      `.github/pull_request_template.md`, so write the body with the
      template's sections: Summary, Test plan (with `make check` ticked),
      and Docs, with each docs checkbox (design docs, user manual) ticked
