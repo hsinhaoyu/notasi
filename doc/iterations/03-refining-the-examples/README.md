@@ -28,6 +28,8 @@ Notation:
   `(colotomy gilak 8 (part ...))`, no more `(gong gong ...)`.
 - [A part names its instrument with `:instrument`](design_ideas/2026-11-23-part-syntax.md):
   `(part :instrument gong ...)`, required.
+- [Common colotomies come from the template](design_ideas/2026-11-23-template-colotomies.md):
+  `gilak` in `gong-kebyar`, used by name.
 
 Files:
 
