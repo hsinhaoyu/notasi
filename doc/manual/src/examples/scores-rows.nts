@@ -10,8 +10,8 @@
   (dung :alias (u nung) :display "nung" :damped "nu'")
   (dang :alias (a nang) :display "nang" :damped "na'"))
 
-(part reyong :name polos    a2:1/4 _  a2 i3 | _  a2 i3 _  | i3 a2 _  i3 | a2 _  a2 i3)
-(part reyong :name sangsih  e3:1/4 o3 e3 _  | o3 e3 _  o3 | _  e3 o3 _  | e3 o3 e3 _)
+(part :instrument reyong :name polos    a2:1/4 _  a2 i3 | _  a2 i3 _  | i3 a2 _  i3 | a2 _  a2 i3)
+(part :instrument reyong :name sangsih  e3:1/4 o3 e3 _  | o3 e3 _  o3 | _  e3 o3 _  | e3 o3 e3 _)
 
 ;; Each part on a row of its own, names only, "-" while a note is held.
 (score sung :fill none :note-names yes :rows parts :holds dash

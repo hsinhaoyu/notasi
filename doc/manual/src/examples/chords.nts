@@ -9,4 +9,4 @@
 (instrument reyong  selisir  e1 u1 a1 i2 o2 e2 u2 a2 i3 o3 e3 u3)
 
 ;; (e2 a2) and (6 8) are the same chord: two pots struck together.
-(part reyong :name byong  (e2 a2) - (e2 a2) - / (6 8) _ - -)
+(part :instrument reyong :name byong  (e2 a2) - (e2 a2) - / (6 8) _ - -)

@@ -18,18 +18,16 @@
 ;; Not notated here: the reyong norot (described but not written out in
 ;; the book), the alternation with nyog-cag kotekan, dynamics and tempo.
 
-(piece "Jaya Semara: pangecet" :colotomy pangecet-16 :pickup 1)
+(piece "Jaya Semara: pangecet" :colotomy bapang :pickup 1)
 
 (use gong-kebyar)
 
 ;; The instruments, with Gold's ranges (figure 2.7), and the gongs come
 ;; from the template.
 
-;; Gold calls this meter bapang (p. 140): kempur, klentong, kempur,
-;; gong. Here it spans 16 pulses (activity 2.4): kempur on 4 and 12,
-;; klentong on 8, gong on 16.
-(colotomy pangecet-16 16
-  (gong gong  -:3 P:1 -:3 T:1 -:3 P:1 -:3 G:1))
+;; The meter is bapang, from the template (Gold, p. 140): kempur,
+;; klentong, kempur, gong over 16 pulses (activity 2.4), kempur on 4 and
+;; 12, klentong on 8, gong on 16.
 
 ;; ---------------------------------------------------------------
 ;; Patterns. Each part below is built from these. Each pattern says
@@ -87,12 +85,12 @@
 ;; twice (one 16-pulse cycle), ||. In the pickup every part plays 2 (o),
 ;; the end of the melody.
 
-(part pemade :name polos    o3:1/4 - o3 -  || (rep 2 @polos)         ||)
-(part pemade :name sangsih  -:1/4 e3 - e3  || (rep 2 @sangsih)       ||)
-(part ugal                  o2             || (rep 2 @pokok-ugal)    ||)
-(part panyacah              o3             || (rep 2 @panyacah-fill) ||)
-(part jublag                o2             || (rep 2 @pokok)         ||)
-(part jegogan               o1             || (rep 2 @jegogan-pokok) ||)
+(part :instrument pemade :name polos    o3:1/4 - o3 -  || (rep 2 @polos)         ||)
+(part :instrument pemade :name sangsih  -:1/4 e3 - e3  || (rep 2 @sangsih)       ||)
+(part :instrument ugal                  o2             || (rep 2 @pokok-ugal)    ||)
+(part :instrument panyacah              o3             || (rep 2 @panyacah-fill) ||)
+(part :instrument jublag                o2             || (rep 2 @pokok)         ||)
+(part :instrument jegogan               o1             || (rep 2 @jegogan-pokok) ||)
 
 ;; ---------------------------------------------------------------
 ;; Scores: how the music is printed.

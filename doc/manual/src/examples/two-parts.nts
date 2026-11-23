@@ -11,6 +11,6 @@
 (instrument gong    gong-strokes  G P)
 
 ;; Four notes to each pulse, in quarter pulses.
-(part reyong :name polos    i2:1/4 _  i2 o2 | _  i2 o2 _  | o2 i2 _  o2 | i2 o2 _  i2)
-(part reyong :name sangsih  e2:1/4 u2 e2 _  | u2 e2 _  u2 | _  e2 u2 _  | e2 _  u2 e2)
-(part gong                  G:1               -:2                         P:1)
+(part :instrument reyong :name polos    i2:1/4 _  i2 o2 | _  i2 o2 _  | o2 i2 _  o2 | i2 o2 _  i2)
+(part :instrument reyong :name sangsih  e2:1/4 u2 e2 _  | u2 e2 _  u2 | _  e2 u2 _  | e2 _  u2 e2)
+(part :instrument gong                  G:1               -:2                         P:1)

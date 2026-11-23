@@ -6,4 +6,4 @@
 ;; everything else still comes from gong-kebyar.
 (instrument ugal selisir  o1 e1 u1 a1 i2)
 
-(part ugal  o1 e1 u1 a1 i2 a1 u1 e1)
+(part :instrument ugal  o1 e1 u1 a1 i2 a1 u1 e1)
