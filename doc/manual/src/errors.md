@@ -7,9 +7,8 @@ you where it is and what is wrong:
 {{#include mistakes/not-a-number.txt}}
 ```
 
-This says: in the file `not-a-number.nts`, in the form that starts on
-line 1, the number of steps per pulse is the word `four`, not a
-number.
+This says: in the file `not-a-number.nts`, on line 4, in the part
+`ugal` at pulse 1, the length `four` is not a number.
 
 Fix that one problem and try again. If there is another, notasi will
 tell you about it next.
@@ -49,10 +48,10 @@ notasi doesn't know `pice`; check the spelling.
 {{#include mistakes/unknown-option.txt}}
 ```
 
-The `piece` line accepts only `:steps-per-pulse` and `:steps-per-system`
-(see [Steps and pulses](steps-and-pulses.md)).
+The `piece` line takes no settings yet, only its title. Check for a
+stray word starting with `:`.
 
-## Not a whole number
+## A length that isn't a number
 
 ```scheme
 {{#include mistakes/not-a-number.nts}}
@@ -62,7 +61,8 @@ The `piece` line accepts only `:steps-per-pulse` and `:steps-per-system`
 {{#include mistakes/not-a-number.txt}}
 ```
 
-Write the number in digits, with no decimal point: `:steps-per-pulse 4`.
+Write a length in digits, as a whole number or a fraction above zero:
+`dang1:4`, `dang1:1/4` (see [Pulses and durations](pulses-and-durations.md)).
 
 ## Missing bracket
 
@@ -158,8 +158,8 @@ scale: `ding1 dong1 deng1`.
 ```
 
 `_` holds the note before it, so it can't come after a rest or at the
-start of a part. The step number counts from the start of the part,
-skipping `/`.
+start of a part. The pulse number counts from the start of the part,
+from 1.
 
 ### Note number too high
 
@@ -197,8 +197,23 @@ instrument's range, or the octave.
 {{#include mistakes/unequal-length.txt}}
 ```
 
-Every part needs the same number of steps. Count the notes, `_` and
-`-` in each (not `/`), and add rests to the shorter part.
+Every part lasts the same number of pulses. Count the notes, `_` and
+`-` in each at their lengths (not `/` or `|`), and add rests to the
+shorter part.
+
+### A pulse check out of place
+
+```scheme
+{{#include mistakes/pulse-check.nts}}
+```
+
+```text
+{{#include mistakes/pulse-check.txt}}
+```
+
+`|` must fall at the start of a pulse. Here half a pulse and two whole
+pulses come before it, so it falls at pulse 2½. A note is too long or
+too short, or one is missing, somewhere before the `|`.
 
 ### Two parts on one instrument
 

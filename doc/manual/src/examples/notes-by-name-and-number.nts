@@ -1,4 +1,4 @@
-(piece "Pokok" :steps-per-pulse 1)
+(piece "Pokok")
 
 (scale selisir
   (ding :alias i)

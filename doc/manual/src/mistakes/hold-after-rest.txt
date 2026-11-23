@@ -1,1 +1,1 @@
-hold-after-rest.nts:4: part `melody', step 3: `_' (hold) after a rest: there is no note to hold
+hold-after-rest.nts:4: part `melody', pulse 3: `_' (hold) after a rest: there is no note to hold

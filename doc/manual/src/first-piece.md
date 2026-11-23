@@ -20,8 +20,8 @@ Every piece starts with a title. Here is a whole file:
 - The `piece` line comes first, before anything else except comments
   and blank lines.
 - A file has exactly one `piece` line.
-- Spaces and line breaks don't matter, so you can spread the line over
-  several lines when it gets long (see [Steps and pulses](steps-and-pulses.md)).
+- Spaces and line breaks don't matter, so you can spread a line over
+  several lines when it gets long.
 
 ## What you get
 

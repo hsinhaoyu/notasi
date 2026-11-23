@@ -13,7 +13,7 @@
 
 # Writing music
 
-- [Steps and pulses](steps-and-pulses.md)
+- [Pulses and durations](pulses-and-durations.md)
 - [Notes, rests and holds](notes-rests-and-holds.md)
 - [Chords](chords.md)
 - [Several parts on one instrument](parts.md)
