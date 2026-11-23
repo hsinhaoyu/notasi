@@ -4,16 +4,14 @@ Status: implemented (iteration 2); iteration 3's changes are planned.
 The music below is read since milestone 1 (`feat/music`): options,
 `part`, degrees, strokes and instruments, durations, `rep`, colotomies
 and patterns; scores, groups and every printing option since
-milestone 2 (`feat/scores`). Planned for iteration 3: parts written
-with `:instrument`, also inside a colotomy (ADR 0038); labelled number
-rows (ADR 0039); `:keys`, `:octave-numbers`, `:background` (ADR 0041)
+milestone 2 (`feat/scores`); parts written with `:instrument`, also
+inside a colotomy (ADR 0038), and `gilak` and `bapang` in the
+`gong-kebyar` template (ADR 0046) since iteration 3's `feat/syntax`.
+Planned for iteration 3: labelled number rows (ADR 0039); `:keys`, `:octave-numbers`, `:background` (ADR 0041)
 and a group's own stroke names (`:display`); no `_` in score names
-(ADR 0040); `:key-numbers` and `:row-labels`; `gilak` and `bapang` in
-the `gong-kebyar` template (ADR 0046).
+(ADR 0040); `:key-numbers` and `:row-labels`.
 
 Everything in this document is **Implemented** unless it says otherwise.
-Where iteration 3 changes a form, the section shows the planned form
-and says what the reader reads until it is built.
 
 ## Goals
 
@@ -100,8 +98,7 @@ A short piece:
 ```
 
 The gong and kempli parts are generated from the colotomy `gilak`,
-which comes from the template (**Planned**, ADR 0046; until then the
-piece defines it, see `colotomy`).
+which comes from the template (ADR 0046).
 
 ## Options
 
@@ -243,9 +240,8 @@ about how it is played or printed. It has no options.
   the kempli and the kendang. Its gongs are one instrument, `gong`, with
   the strokes `G GL P T`, each shown by its name, so the two gongs are
   told apart; a piece that prints both as "G", as Tenzer does,
-  redefines the strokes. Colotomies are not in the template: a piece
-  defines its own (`gilak`, `pangecet-16`). **Planned** (ADR 0046): the
-  template defines the common colotomies, `gilak` (8 pulses: gong
+  redefines the strokes. The template defines the common colotomies
+  (ADR 0046), `gilak` (8 pulses: gong
   lanang on 4, kempur on 5 and 7, gong on 8) and `bapang` (16 pulses:
   kempur on 4 and 12, klentong on 8, gong on 16); a piece names one
   with `:colotomy` and writes no `colotomy` form, or defines its own,
@@ -260,7 +256,7 @@ about how it is played or printed. It has no options.
 
 A colotomic meter (ADRs 0030, 0038): a cycle of LENGTH pulses and the
 gong parts that mark it. The common ones come from the `gong-kebyar`
-template (**Planned**, ADR 0046); a piece writes a `colotomy` form for a
+template (ADR 0046); a piece writes a `colotomy` form for a
 meter the template lacks, or to change one. The template's `gilak`:
 
 ```scheme
@@ -271,10 +267,9 @@ meter the template lacks, or to change one. The template's `gilak`:
 - Each part is a `part` form, exactly as at the top level (see `part`
   below): named after its instrument unless `:name` gives another, and
   two parts on one instrument without names are an error. Only `part`
-  forms are allowed inside `colotomy`. **Planned** (iteration 3): until
-  it is built, a colotomy part is written `(PART INSTRUMENT TOKEN ...)`,
-  e.g. `(gong gong -:3 GL:1 P - P G)`; that form then becomes an error
-  whose message shows the new one.
+  forms are allowed inside `colotomy`; the old form,
+  `(gong gong -:3 GL:1 P - P G)`, is an error whose message shows the
+  new one.
 - Each part is a colotomic part over one cycle, in ordinary part
   tokens. A part shorter than LENGTH repeats; its length must divide
   LENGTH.
@@ -312,15 +307,13 @@ When an instrument has several parts, each gets a name with `:name`:
 | `:instrument INSTRUMENT` | required | The instrument the part is played on, the same key a pattern uses. |
 | `:name NAME` | the instrument's name | The part's name, used by scores. |
 
-**Planned** (iteration 3): until it is built, a part is written
-`(part INSTRUMENT :name NAME TOKEN ...)` (ADR 0027), with the
-instrument first and no `:instrument`. That form then becomes an error:
-a part without `:instrument` is reported with a message that shows how
-to write it (`(part :instrument gong ...)`), rather than as a strange
-first note.
+The old form of ADR 0027, `(part INSTRUMENT :name NAME TOKEN ...)`, is
+an error: a part without `:instrument` is reported with a message that
+shows how to write it (`(part :instrument gong ...)`), rather than as a
+strange first note.
 
 Rules:
-- A part without `:instrument` is an error (**Planned**).
+- A part without `:instrument` is an error.
 - Two parts on one instrument without names are an error: "instrument
   `pemade` has two parts; give them names with `:name`".
 - Part names are unique in the piece, generated parts included.

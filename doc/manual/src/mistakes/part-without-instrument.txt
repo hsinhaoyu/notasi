@@ -1,0 +1,1 @@
+part-without-instrument.nts:3: a part names its instrument with :instrument: write `(part :instrument ugal ...)'
