@@ -241,6 +241,31 @@ before it (see [Gong cycles](gong-cycles.md)).
 With a colotomy, a piece is its pickup plus whole cycles. This ugal part
 lasts 7 pulses, one short of the eight-pulse cycle.
 
+### A pattern that doesn't exist
+
+```scheme
+{{#include mistakes/undefined-pattern.nts}}
+```
+
+```text
+{{#include mistakes/undefined-pattern.txt}}
+```
+
+Check the spelling after the `@` (see [Patterns](patterns.md)).
+
+### A pattern for another instrument
+
+```scheme
+{{#include mistakes/wrong-instrument.nts}}
+```
+
+```text
+{{#include mistakes/wrong-instrument.txt}}
+```
+
+A pattern can only be played on the instrument named by its
+`:instrument`. Write another pattern for this instrument.
+
 ### A pulse check out of place
 
 ```scheme
