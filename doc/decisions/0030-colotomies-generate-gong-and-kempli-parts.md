@@ -1,6 +1,6 @@
 # 0030 Colotomies generate the gong and kempli parts
 
-Status: accepted (2026-11-21)
+Status: superseded by 0038
 
 Context: Every piece repeats a colotomic meter, and writing the gong and kempli out for every cycle is repetitive and easy to get wrong. Gold reads cycles with the gong on the last pulse, and many pieces open on the gong, one pulse before the first complete cycle.
 

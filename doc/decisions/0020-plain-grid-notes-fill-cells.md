@@ -1,6 +1,6 @@
 # 0020 A plain white grid; notes fill their cells
 
-Status: accepted (2026-11-20)
+Status: superseded by 0041
 
 Context: The template (05) followed the prototype: alternate pulses shaded grey, and each note drawn as a block inset 1.5pt from its cells, with a cut note's block flush to the left (ADR 0019) as the only sign that it continues. Reviewing the drawings, the shading and margins made the score look busy. Removing the margins alone made neighbouring notes of the same colour merge: two strokes of the same pot, or a kempli on every step, looked like one held note.
 

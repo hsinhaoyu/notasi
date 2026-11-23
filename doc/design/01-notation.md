@@ -1,11 +1,18 @@
 # 01 — Notation language
 
-Status: implemented (iteration 2). The music below is read since
-milestone 1 (`feat/music`): options, `part`, degrees, strokes and
-instruments, durations, `rep`, colotomies and patterns; scores, groups
-and every printing option since milestone 2 (`feat/scores`).
+Status: implemented (iteration 2); iteration 3's changes are planned.
+The music below is read since milestone 1 (`feat/music`): options,
+`part`, degrees, strokes and instruments, durations, `rep`, colotomies
+and patterns; scores, groups and every printing option since
+milestone 2 (`feat/scores`). Planned for iteration 3: parts written
+with `:instrument`, also inside a colotomy (ADR 0038); labelled number
+rows (ADR 0039); `:keys`, `:octave-numbers`, `:background` (ADR 0041)
+and a group's own stroke names (`:display`); no `_` in score names
+(ADR 0040).
 
 Everything in this document is **Implemented** unless it says otherwise.
+Where iteration 3 changes a form, the section shows the planned form
+and says what the reader reads until it is built.
 
 ## Goals
 
@@ -84,7 +91,7 @@ A short piece:
 (piece "Gilak" :colotomy gilak :pickup 1)
 (use gong-kebyar)
 
-(part ugal  a1 ||  o2 i2 e2 o2 | a1 o2 i2 a1 ||)
+(part :instrument ugal  a1 ||  o2 i2 e2 o2 | a1 o2 i2 a1 ||)
 
 (score full
   (group "Ugal" ugal)
@@ -99,7 +106,7 @@ Optional settings are written as `:key value` pairs (ADR 0026):
 
 ```scheme
 (piece "Jaya Semara: pangecet" :colotomy pangecet-16 :pickup 1)
-(part pemade :name polos  o3:1/4 - o3 - || ...)
+(part :instrument pemade :name polos  o3:1/4 - o3 - || ...)
 ```
 
 - A key is a symbol that starts with `:` followed by a letter.
@@ -241,19 +248,26 @@ about how it is played or printed. It has no options.
   rows.
 - Note indices (key numbers) are 1-based in list order.
 
-### `(colotomy NAME LENGTH :key value ... (PART INSTRUMENT TOKEN ...) ...)`
+### `(colotomy NAME LENGTH :key value ... (part ...) ...)`
 
-A colotomic meter (ADR 0030): a cycle of LENGTH pulses and the gong
-parts that mark it.
+A colotomic meter (ADRs 0030, 0038): a cycle of LENGTH pulses and the
+gong parts that mark it.
 
 ```scheme
 (colotomy gilak 8
-  (gong gong  -:3 GL:1 P - P G))
+  (part :instrument gong  -:3 GL:1 P - P G))
 ```
 
-- Each `(PART INSTRUMENT TOKEN ...)` is a colotomic part over one cycle,
-  in ordinary part tokens. A part shorter than LENGTH repeats; its
-  length must divide LENGTH.
+- Each part is a `part` form, exactly as at the top level (see `part`
+  below): named after its instrument unless `:name` gives another, and
+  two parts on one instrument without names are an error. Only `part`
+  forms are allowed inside `colotomy`. **Planned** (iteration 3): until
+  it is built, a colotomy part is written `(PART INSTRUMENT TOKEN ...)`,
+  e.g. `(gong gong -:3 GL:1 P - P G)`; that form then becomes an error
+  whose message shows the new one.
+- Each part is a colotomic part over one cycle, in ordinary part
+  tokens. A part shorter than LENGTH repeats; its length must divide
+  LENGTH.
 - Pulse k of a cycle starts at time k − 1, so the gong on pulse N starts
   at N − 1 and the cycle ends at N: the gong falls on the last pulse.
 - A piece with `:colotomy NAME` gets each of its parts, generated for
@@ -266,27 +280,37 @@ parts that mark it.
   and part names stay unique, so a written part cannot take a generated
   part's name.
 
-### `(part INSTRUMENT :key value ... TOKEN ...)`
+### `(part :key value ... TOKEN ...)`
 
-A line of music on one instrument (ADR 0027). Most parts are the only
-part on their instrument and are named after it:
+A line of music on one instrument (ADR 0038). `part` has no positional
+arguments: its options, in any order, then its tokens. Most parts are
+the only part on their instrument and are named after it:
 
 ```scheme
-(part panyacah  o3 || (rep 2  a3 i3 u3 a3 o3 e3 i3 o3) ||)   ; part `panyacah`
+(part :instrument panyacah  o3 || (rep 2  a3 i3 u3 a3 o3 e3 i3 o3) ||)   ; part `panyacah`
 ```
 
 When an instrument has several parts, each gets a name with `:name`:
 
 ```scheme
-(part pemade :name polos    o3:1/4 - o3 - || ...)
-(part pemade :name sangsih  -:1/4 e3 - e3 || ...)
+(part :instrument pemade :name polos    o3:1/4 - o3 - || ...)
+(part :instrument pemade :name sangsih  -:1/4 e3 - e3 || ...)
 ```
 
 | Option | Default | Meaning |
 |---|---|---|
+| `:instrument INSTRUMENT` | required | The instrument the part is played on, the same key a pattern uses. |
 | `:name NAME` | the instrument's name | The part's name, used by scores. |
 
+**Planned** (iteration 3): until it is built, a part is written
+`(part INSTRUMENT :name NAME TOKEN ...)` (ADR 0027), with the
+instrument first and no `:instrument`. That form then becomes an error:
+a part without `:instrument` is reported with a message that shows how
+to write it (`(part :instrument gong ...)`), rather than as a strange
+first note.
+
 Rules:
+- A part without `:instrument` is an error (**Planned**).
 - Two parts on one instrument without names are an error: "instrument
   `pemade` has two parts; give them names with `:name`".
 - Part names are unique in the piece, generated parts included.
@@ -366,7 +390,7 @@ A named figure, written for one instrument (ADR 0029):
 writing them one after another; repeating them uses `rep`:
 
 ```scheme
-(part pemade :name polos
+(part :instrument pemade :name polos
   o3:1/4 - o3 - ||
   (rep 2  @polos-1 @polos-6 @polos-3 @polos-2)
   ||)
@@ -464,10 +488,14 @@ Above the grid:
 
 | Option | Level | Default | Meaning |
 |---|---|---|---|
-| `:cycle-numbers yes/no` | score | `yes` with a colotomy | A row with the cycle number, once at the start of each cycle. |
+| `:cycle-numbers yes/no` | score | `yes` with a colotomy | A row with the cycle number, once at the start of each cycle. A pickup is cycle 0: a system that starts with the pickup shows `0` (**Planned**, iteration 3). |
 | `:pulse-numbers yes/no` | score | `yes` | A row with the pulse number within the cycle (within the piece, without a colotomy). |
 | `:numbering gong-last/gong-first` | score | `gong-last` | Number the pulses 1 to N with the gong on N (Gold), or with the gong on 1 (Tenzer): pulse k of an N-pulse cycle is printed (k mod N) + 1. Only the printed numbers change. |
-| `:pulse-label STRING` | score | none | A label at the left of the pulse row, e.g. "Beats". |
+| `:cycle-label STRING` | score | `"Cycle"` | A label at the left of the cycle row (**Planned**, ADR 0039). |
+| `:pulse-label STRING` | score | `"Pulse"` | A label at the left of the pulse row, e.g. "Beats". Today the default is none; `"Pulse"` is **Planned** (ADR 0039). |
+
+`""` removes a label, and a label is printed only when its row is
+(**Planned**).
 
 In the grid:
 
@@ -479,6 +507,10 @@ In the grid:
 | `:fill colour/none` | score, group | `colour` | `none` draws the names alone, without a coloured box. |
 | `:holds none/dash` | score, group | `none` | `dash` writes "-" in every step a note is held, as in a sung line. |
 | `:rows notes/parts/single` | score, group | `notes` | `notes`: one row per key or stroke used. `parts`: one row per part, labelled. `single`: all the group's parts on one row. |
+| `:keys used/all/(LOW HIGH)` | score, group | `used` | With `:rows notes`, which rows a group has: the keys or strokes played in the score's range, every key or stroke of the instrument, or the keys from LOW up to HIGH, both included (`:keys (a1 u2)`). **Planned** (iteration 3). |
+| `:octave-numbers yes/no` | score, group | `yes` | Write the octave number after each row label (`i2`), or the display form alone (`i`). Only rows of pitched keys change. **Planned** (iteration 3). |
+| `:display ((STROKE STRING) ...)` | score, group | none | Show these strokes with these forms in this score, in row labels and note names, instead of their own display forms: `:display ((GL "G"))`. **Planned** (iteration 3). |
+| `:background grid/vertical/horizontal/empty` | score, group | `grid` | The lines behind the notes: pulse lines and a line between every two rows (`grid`), pulse lines only (`vertical`), row lines only (`horizontal`), or neither (`empty`). The lines between groups and the cycle lines are always drawn. **Planned** (ADR 0041); today every score is drawn as `vertical`. |
 
 Colour and size (ADR 0032):
 
@@ -498,10 +530,15 @@ A LENGTH is a string holding a Typst length, a number and a unit
 With `:note-names yes`, a note shows its damped form (`:damped`) when it
 lasts no longer than one column of the grid, and its display form
 otherwise. Without a damped form, the display form is used for both.
+The test uses the note's written duration: strokes, which are to be
+drawn one column wide (04, **Planned**), still show `du` or `du'` as
+written.
 
 #### Rules
 
 - Score names are unique in a file. Group labels need not be.
+- A score name may not contain `_`, so that a file drawn from it,
+  `NAME_SCORE` (ADR 0040), can be split (**Planned**).
 - Every part a group names must exist, written or generated.
 - Within one score a part is in at most one group. A group's parts are
   either all pitched, on the same instrument (ADR 0011), or all on stroke
@@ -512,6 +549,15 @@ otherwise. Without a damped form, the display form is used for both.
 - `:from` must come before `:to`, and both must lie in the piece.
 - `:rows parts`, `:rows single` and `:fill none` need `:note-names yes`
   on the group, since without names those rows would not show pitch.
+- `:keys` (**Planned**): LOW and HIGH are keys of the group's
+  instrument, written as in a part, LOW not above HIGH; a range is an
+  error on a group of strokes, which has only `used` and `all`; `:keys`
+  on a `:rows parts` or `single` group is an error, and ignored when it
+  comes from the score. A note outside the keys shown is an error
+  naming the part, the note, its position and the range.
+- `:display` (**Planned**): each STROKE is a stroke of an instrument in
+  the group (on a score, of an instrument in one of its groups); it
+  changes only how the stroke is shown in that score.
 - With `:rows single`, two notes may not fall in one cell. With `:rows
   notes`, two parts may share a cell only as a unison: the same key,
   start and length, which is drawn once.
@@ -526,7 +572,9 @@ generated, in its own group, in source order, labelled with its name,
 with every option at its default.
 
 `notasi render FILE --score NAME` prints the score NAME. Without
-`--score`, the first score in the file is printed.
+`--score`, the first score in the file is printed. A file drawn from a
+chosen score is named `FILE_NAME.pdf` (**Planned**, ADR 0040; today
+`FILE.NAME.pdf`).
 
 ## Reading Gold's cipher in this notation
 
@@ -557,7 +605,8 @@ Later extensions of the notation are listed in the
 
 ## Open questions
 
-None for iteration 2. The three questions of v1 are answered: parts
+None for iteration 3: its design ideas' questions were settled before
+promotion. None for iteration 2. The three questions of v1 are answered: parts
 have equal length, and only colotomy parts shorter than their cycle
 repeat; a rest damps (ADR 0028); octave numbers are shared across
 instruments.

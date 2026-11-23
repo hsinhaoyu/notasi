@@ -1,6 +1,6 @@
 # 0027 A part names its instrument first
 
-Status: accepted (2026-11-21)
+Status: superseded by 0038
 
 Context: v1 parts are `(part NAME INSTRUMENT TOKEN ...)`. Most parts are the only part on their instrument, so the name repeats the instrument (`(part ugal ugal ...)`). Guessing whether the first symbol is a name or a note would turn a typo in the first note into a name.
 
