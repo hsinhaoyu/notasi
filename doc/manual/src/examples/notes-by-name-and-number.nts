@@ -10,5 +10,5 @@
 
 ;; The same melody twice: by note name, and by key number
 ;; (1 is the ugal's lowest key, o1).
-(part ugal :name by-name  a1 o2 i2 e2 / o2 a1 o2 i2)
-(part ugal :name by-number  4  6  5  7  / 6  4  6  5)
+(part :instrument ugal :name by-name  a1 o2 i2 e2 / o2 a1 o2 i2)
+(part :instrument ugal :name by-number  4  6  5  7  / 6  4  6  5)

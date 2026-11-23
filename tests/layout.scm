@@ -399,9 +399,9 @@ at its default: font_size null, cells \"2em\"."
    "(strokes gong-strokes G P)"
    "(instrument ugal selisir ding1 dong1 deng1 ding2)"
    "(instrument gong gong-strokes G P)"
-   "(part ugal :name polos    1:1/2 _ 2 _ _)"
-   "(part ugal :name sangsih  -:1/2 4 _ (1 3) -)"
-   "(part gong                2:1/2 - - 1 -)"
+   "(part :instrument ugal :name polos    1:1/2 _ 2 _ _)"
+   "(part :instrument ugal :name sangsih  -:1/2 4 _ (1 3) -)"
+   "(part :instrument gong                2:1/2 - - 1 -)"
    "(score tiny"
    "  (group \"Ugal\" :subtitle \"polos + sangsih\"  polos sangsih)"
    "  (group \"gong\"  gong))"
@@ -512,9 +512,9 @@ at its default: font_size null, cells \"2em\"."
          "(strokes k-strokes K)"
          "(instrument u s a1 b1)"
          "(instrument kajar k-strokes K)"
-         "(part u :name melody  1 2 1 2 1 2 1 2 1 2)"
-         "(part u :name rests   1 - - - - - - - - -)"
-         "(part kajar           K - K - K - K - K -)"
+         "(part :instrument u :name melody  1 2 1 2 1 2 1 2 1 2)"
+         "(part :instrument u :name rests   1 - - - - - - - - -)"
+         "(part :instrument kajar           K - K - K - K - K -)"
          more))
 
 (define (ten-score . options)
@@ -537,12 +537,12 @@ at its default: font_size null, cells \"2em\"."
            "(instrument ugal selisir o1 e1 u1 a1 i2 o2 e2)"
            "(instrument kempli kempli-strokes K)"
            "(instrument gong gong-strokes G P)"
-           "(part ugal :name melody   a1 o2 i2 e2)"
+           "(part :instrument ugal :name melody   a1 o2 i2 e2)"
            ;; kempli: the generated timekeeper, K on every pulse
-           "(part ugal :name polos    i2 -  e2 -)"
-           "(part ugal :name sangsih  -  u1 -  o2)"
-           "(part gong                P  -  G  -)"
-           "(part ugal :name silent   -  -  -  -)"
+           "(part :instrument ugal :name polos    i2 -  e2 -)"
+           "(part :instrument ugal :name sangsih  -  u1 -  o2)"
+           "(part :instrument gong                P  -  G  -)"
+           "(part :instrument ugal :name silent   -  -  -  -)"
            "(score groups"
            "  (group \"melody\" melody)"
            "  (group \"Colotomic\" gong kempli)"
@@ -600,9 +600,9 @@ at its default: font_size null, cells \"2em\"."
     (string? (json-string (layout (piece-of "(piece \"Empty\")")))))
   (test-equal "a score with its colour and size options at their defaults = the default score"
     (layout (piece-of "(piece \"P\")" "(scale s a b)" "(instrument u s a1 b1)"
-                      "(part u :name p 1 2 _ 1)"))
+                      "(part :instrument u :name p 1 2 _ 1)"))
     (layout (piece-of "(piece \"P\")" "(scale s a b)" "(instrument u s a1 b1)"
-                      "(part u :name p 1 2 _ 1)"
+                      "(part :instrument u :name p 1 2 _ 1)"
                       "(score s :note-names no :scheme by-degree :palette pastel1"
                       "  :cell-width \"2em\" :cell-height \"2em\""
                       "  (group \"p\" :note-names no :scheme by-degree :palette pastel1 p))"))))
@@ -613,8 +613,8 @@ at its default: font_size null, cells \"2em\"."
 (test-group "the score"
   (let ((pc (piece-of "(piece \"Piece title\")" "(scale s a b)"
                       "(instrument u s a1 b1)"
-                      "(part u :name p 1 2)"
-                      "(part u :name q 2 1)"
+                      "(part :instrument u :name p 1 2)"
+                      "(part :instrument u :name q 2 1)"
                       "(score first :title \"Score title\" (group \"P\" p))"
                       "(score second (group \"Q\" q) (group \"P\" p))")))
     (test-equal ":title is the figure's title" "Score title"
@@ -633,7 +633,7 @@ at its default: font_size null, cells \"2em\"."
       (events-of (layout-named pc 'second) 0 1 0))
     (test-equal ":title \"\" is kept as written" ""
       (field (layout (piece-of "(piece \"P\")" "(scale s a)"
-                               "(instrument u s a1)" "(part u :name p 1)"
+                               "(instrument u s a1)" "(part :instrument u :name p 1)"
                                "(score s :title \"\" (group \"p\" p))"))
              'title)))
   (test-equal "a score built by hand: its title"
@@ -651,7 +651,7 @@ at its default: font_size null, cells \"2em\"."
 (define (tiny-sizes . options)
   "The sizes of a one-part piece with a score with OPTIONS."
   (field (layout (piece-of "(piece \"P\")" "(scale s a)" "(instrument u s a1)"
-                           "(part u :name ab 1)"
+                           "(part :instrument u :name ab 1)"
                            (string-append "(score s " (string-join options " ")
                                           " (group \"ab\" ab))")))
          'sizes))
@@ -663,8 +663,8 @@ at its default: font_size null, cells \"2em\"."
      "(piece \"Reyong kotekan\")"
      "(scale reyong-4 nang ning nong neng)"
      "(instrument reyong reyong-4 nang1 ning1 nong1 neng1)"
-     "(part reyong :name polos    1 _ 1 2 / _ 1 2 _ / 2 1 _ 2)"
-     "(part reyong :name sangsih  4 3 4 _ / 3 4 _ 3 / _ 4 3 _)"
+     "(part :instrument reyong :name polos    1 _ 1 2 / _ 1 2 _ / 2 1 _ 2)"
+     "(part :instrument reyong :name sangsih  4 3 4 _ / 3 4 _ 3 / _ 4 3 _)"
      "(score s (group \"Reyong\" :subtitle \"polos + sangsih\" polos sangsih))"))
 
   (test-equal "no groups: 1.5em and 1.0em"
@@ -676,14 +676,14 @@ at its default: font_size null, cells \"2em\"."
     (sizes-of "(piece \"P\")"
               "(strokes k-strokes K)"
               "(instrument kajar k-strokes K)"
-              "(part kajar :name x K -)"))
+              "(part :instrument kajar :name x K -)"))
 
   (test-equal "lane label of 4 chars: 3.08 rounds up to 3.1em"
     "3.1em"
     (field (sizes-of "(piece \"P\")"
                      "(scale s (a :display \"abc\"))"
                      "(instrument u s a1)"
-                     "(part u :name x 1)")
+                     "(part :instrument u :name x 1)")
            'lane_width))
 
   (test-equal "lane label of 7 chars: 4.64 rounds down to 4.6em"
@@ -691,7 +691,7 @@ at its default: font_size null, cells \"2em\"."
     (field (sizes-of "(piece \"P\")"
                      "(scale s (a :display \"abcdef\"))"
                      "(instrument u s a1)"
-                     "(part u :name x 1)")
+                     "(part :instrument u :name x 1)")
            'lane_width))
 
   (test-equal "lane label of 9 chars: 5.68 rounds up to 5.7em"
@@ -699,7 +699,7 @@ at its default: font_size null, cells \"2em\"."
     (field (sizes-of "(piece \"P\")"
                      "(scale s (a :display \"abcdefgh\"))"
                      "(instrument u s a1)"
-                     "(part u :name x 1)")
+                     "(part :instrument u :name x 1)")
            'lane_width))
 
   (test-equal "degree name without display: \"dong2\" → 3.6em"
@@ -707,7 +707,7 @@ at its default: font_size null, cells \"2em\"."
     (field (sizes-of "(piece \"P\")"
                      "(scale s ding dong)"
                      "(instrument u s ding2 dong2)"
-                     "(part u :name x 2)")
+                     "(part :instrument u :name x 2)")
            'lane_width))
 
   ;; A one-row group: its subtitle follows the label, "Bb", two spaces
@@ -717,8 +717,8 @@ at its default: font_size null, cells \"2em\"."
     (field (sizes-of "(piece \"P\")"
                      "(strokes k-strokes K)"
                      "(instrument kempli k-strokes K)"
-                     "(part kempli :name a K)"
-                     "(part kempli :name b K)"
+                     "(part :instrument kempli :name a K)"
+                     "(part :instrument kempli :name b K)"
                      "(score s (group \"a\" a)"
                      "  (group \"Bb\" :subtitle \"twenty chars long xx\" b))")
            'label_width))
@@ -728,8 +728,8 @@ at its default: font_size null, cells \"2em\"."
     (field (sizes-of "(piece \"P\")"
                      "(strokes k-strokes K)"
                      "(instrument kempli k-strokes K)"
-                     "(part kempli :name a K)"
-                     "(part kempli :name b K)"
+                     "(part :instrument kempli :name a K)"
+                     "(part :instrument kempli :name b K)"
                      "(score s (group \"a\" a) (group \"Eight ch\" b))")
            'label_width))
 
@@ -738,8 +738,8 @@ at its default: font_size null, cells \"2em\"."
     (field (sizes-of "(piece \"P\")"
                      "(scale s a (b :display \"abcdef\"))"
                      "(instrument u s a1 b1)"
-                     "(part u :name x 1)"
-                     "(part u :name y 2)")
+                     "(part :instrument u :name x 1)"
+                     "(part :instrument u :name y 2)")
            'lane_width))
 
   (test-equal "characters, not bytes: \"Kempli · Gong\" → 9.3em"
@@ -747,7 +747,7 @@ at its default: font_size null, cells \"2em\"."
     (field (sizes-of "(piece \"P\")"
                      "(strokes k-strokes K)"
                      "(instrument kempli k-strokes K)"
-                     "(part kempli :name a K)"
+                     "(part :instrument kempli :name a K)"
                      "(score s (group \"Kempli · Gong\" a))")
            'label_width))
 
@@ -756,22 +756,22 @@ at its default: font_size null, cells \"2em\"."
     (sizes-of "(piece \"P\")"
               "(scale s a)"
               "(instrument u s a1)"
-              "(part u :name ab - -)"))
+              "(part :instrument u :name ab - -)"))
 
   (test-equal "only the score's groups count, not every part"
     "2.7em"                             ; "ab", not "a much longer name"
     (field (sizes-of "(piece \"P\")"
                      "(scale s a)"
                      "(instrument u s a1)"
-                     "(part u :name ab 1)"
-                     "(part u :name a-much-longer-name 1)"
+                     "(part :instrument u :name ab 1)"
+                     "(part :instrument u :name a-much-longer-name 1)"
                      "(score s (group \"ab\" ab))")
            'label_width))
 
   (test-equal "an empty label: 1.5em"
     "1.5em"
     (field (sizes-of "(piece \"P\")" "(scale s a)" "(instrument u s a1)"
-                     "(part u :name ab 1)"
+                     "(part :instrument u :name ab 1)"
                      "(score s (group \"\" ab))")
            'label_width))
 
@@ -836,7 +836,7 @@ at its default: font_size null, cells \"2em\"."
     (starts+steps (layout (piece-of "(piece \"Long\")"
                                     "(scale s a)"
                                     "(instrument u s a1)"
-                                    "(part u :name p 1:1/4 _ _ _ -:15)"))))
+                                    "(part :instrument u :name p 1:1/4 _ _ _ -:15)"))))
 
   (test-equal "a piece of length 0 (no parts) has no systems"
     #()
@@ -846,7 +846,7 @@ at its default: font_size null, cells \"2em\"."
     (field (layout (piece-of "(piece \"Zero\")"
                              "(scale s a)"
                              "(instrument u s a1)"
-                             "(part u :name p /)"))
+                             "(part :instrument u :name p /)"))
            'systems))
 
   (test-equal "every group in the system, in the score's order"
@@ -863,7 +863,7 @@ at its default: font_size null, cells \"2em\"."
                         (piece-of "(piece \"P\")"
                                   "(scale s a)"
                                   "(instrument u s a1)"
-                                  "(part u :name two - - - 1 _ _ _ _ _ - - - - - - -)"))
+                                  "(part :instrument u :name two - - - 1 _ _ _ _ _ - - - - - - -)"))
                        0 0 0))))
 
 ;;; :system-length (04, "The range and systems")
@@ -873,7 +873,7 @@ at its default: font_size null, cells \"2em\"."
   (piece-of "(piece \"P\")"
             "(scale s a b)"
             "(instrument u s a1 b1)"
-            "(part u :name p - - - 1 _ _ _ _ _ - - - - - - -)"
+            "(part :instrument u :name p - - - 1 _ _ _ _ _ - - - - - - -)"
             "(score four :system-length 4 (group \"p\" p))"
             "(score two :system-length 2 (group \"p\" p))"))
 
@@ -899,7 +899,7 @@ at its default: font_size null, cells \"2em\"."
   (test-equal "a piece of length 0 with a system length: no systems"
     #()
     (field (layout (piece-of "(piece \"Zero\")" "(scale s a)"
-                             "(instrument u s a1)" "(part u :name p /)"
+                             "(instrument u s a1)" "(part :instrument u :name p /)"
                              "(score s :system-length 4 (group \"p\" p))"))
            'systems))
 
@@ -967,14 +967,14 @@ at its default: font_size null, cells \"2em\"."
     '(((2 2 0 #f)) ())
     (let ((fig (layout (piece-of "(piece \"P\")" "(scale s a)"
                                  "(instrument u s a1)"
-                                 "(part u :name p - - 1 _ - - - -)"
+                                 "(part :instrument u :name p - - 1 _ - - - -)"
                                  "(score s :system-length 4 (group \"p\" p))"))))
       (map (lambda (s) (timing (events-of fig s 0 0))) '(0 1))))
   (test-equal "a note starting on a boundary is not cut"
     '(() ((0 2 0 #f)))
     (let ((fig (layout (piece-of "(piece \"P\")" "(scale s a)"
                                  "(instrument u s a1)"
-                                 "(part u :name p - - - - 1 _ - -)"
+                                 "(part :instrument u :name p - - - - 1 _ - -)"
                                  "(score s :system-length 4 (group \"p\" p))"))))
       (map (lambda (s) (timing (events-of fig s 0 0))) '(0 1))))
   (test-equal "a chord crossing a boundary is cut note by note"
@@ -982,7 +982,7 @@ at its default: font_size null, cells \"2em\"."
     '(((1 1 0 #f) (1 1 1 #f)) ((0 2 0 #t) (0 2 1 #t)))
     (let ((fig (layout (piece-of "(piece \"P\")" "(scale s a b)"
                                  "(instrument u s a1 b1)"
-                                 "(part u :name p - (1 2) _ _)"
+                                 "(part :instrument u :name p - (1 2) _ _)"
                                  "(score s :system-length 2 (group \"p\" p))"))))
       (map (lambda (s) (timing (events-of fig s 0 0))) '(0 1))))
   (test-equal "quarter pulses: a cut note in columns"
@@ -990,13 +990,13 @@ at its default: font_size null, cells \"2em\"."
     '((0 4) (4 4))
     (starts+steps (layout (piece-of "(piece \"P\")" "(scale s a)"
                                     "(instrument u s a1)"
-                                    "(part u :name p -:3/4 1:1/4 _ _ -:1/2)"
+                                    "(part :instrument u :name p -:3/4 1:1/4 _ _ -:1/2)"
                                     "(score s :system-length 1 (group \"p\" p))"))))
   (test-equal "quarter pulses: the note is cut at column 4"
     '(((3 1 0 #f)) ((0 2 0 #t)))
     (let ((fig (layout (piece-of "(piece \"P\")" "(scale s a)"
                                  "(instrument u s a1)"
-                                 "(part u :name p -:3/4 1:1/4 _ _ -:1/2)"
+                                 "(part :instrument u :name p -:3/4 1:1/4 _ _ -:1/2)"
                                  "(score s :system-length 1 (group \"p\" p))"))))
       (map (lambda (s) (timing (events-of fig s 0 0))) '(0 1))))
   (test-equal "the sizes do not depend on the systems"
@@ -1019,7 +1019,7 @@ at its default: font_size null, cells \"2em\"."
   (apply piece-of
          "(piece \"Step\")" "(scale s a b)" "(instrument u s a1 b1)"
          (map (lambda (t i)
-                (string-append "(part u :name p" (number->string i) " " t ")"))
+                (string-append "(part :instrument u :name p" (number->string i) " " t ")"))
               tokens (iota (length tokens)))))
 
 (define (step-of . tokens)
@@ -1186,7 +1186,7 @@ at its default: font_size null, cells \"2em\"."
                         (piece-of "(piece \"P\")"
                                   "(scale s a b)"
                                   "(instrument u s a1 b1)"
-                                  "(part u :name p 1 _ _ 2 1 _ -)"))
+                                  "(part :instrument u :name p 1 _ _ 2 1 _ -)"))
                        0 0 0)))
   (test-equal "a chord: one event per note, same start and dur, by lane"
     ;; lanes: b1 (0), a1 (1); chord (1 2) at 0 for 2, then 2 at 2
@@ -1195,7 +1195,7 @@ at its default: font_size null, cells \"2em\"."
                         (piece-of "(piece \"P\")"
                                   "(scale s a b)"
                                   "(instrument u s a1 b1)"
-                                  "(part u :name p (1 2) _ 2)"))
+                                  "(part :instrument u :name p (1 2) _ 2)"))
                        0 0 0)))
   (test-equal "a chord written high-to-low is still sorted by lane"
     '((0 1 0 #f) (0 1 1 #f) (0 1 2 #f))
@@ -1203,7 +1203,7 @@ at its default: font_size null, cells \"2em\"."
                         (piece-of "(piece \"P\")"
                                   "(scale s a b c)"
                                   "(instrument u s a1 b1 c1)"
-                                  "(part u :name p (c1 a1 b1))"))
+                                  "(part :instrument u :name p (c1 a1 b1))"))
                        0 0 0)))
   (test-equal "a stroke chord: lanes in instrument order"
     '((0 1 0 #f) (0 1 1 #f) (1 1 2 #f))
@@ -1211,14 +1211,14 @@ at its default: font_size null, cells \"2em\"."
                         (piece-of "(piece \"P\")"
                                   "(strokes k dag dug du)"
                                   "(instrument kendang k dag dug du)"
-                                  "(part kendang :name p (dug dag) du)"))
+                                  "(part :instrument kendang :name p (dug dag) du)"))
                        0 0 0)))
 
   (test-equal "the default score shows no names: text null, colours kept"
     (list (ev 0 1 0 'null dung-fill dark #f)
           (ev 1 1 1 'null dang-fill dark #f))
     (events-of (layout (selisir-piece "(instrument u selisir a1 u2)"
-                                      "(part u :name p u2 a1)"))
+                                      "(part :instrument u :name p u2 a1)"))
                0 0 0))
   (test-equal "strokes show no name by default either: grey boxes, text null"
     (list (ev 0 1 0 'null grey dark #f))
@@ -1226,7 +1226,7 @@ at its default: font_size null, cells \"2em\"."
                 (piece-of "(piece \"P\")"
                           "(strokes k dag)"
                           "(instrument kendang k dag)"
-                          "(part kendang :name p dag)"))
+                          "(part :instrument kendang :name p dag)"))
                0 0 0))
   (test-equal "default colours, hard-coded: selisir degrees in pastel1"
     (list (ev 0 1 0 'null dung-fill dark #f)
@@ -1235,14 +1235,14 @@ at its default: font_size null, cells \"2em\"."
           (ev 3 1 3 'null ding-fill dark #f)
           (ev 4 1 4 'null dang-fill dark #f))
     (events-of (layout (selisir-piece "(instrument u selisir a1 i2 o2 e2 u2)"
-                                      "(part u :name p u2 e2 o2 i2 a1)"))
+                                      "(part :instrument u :name p u2 e2 o2 i2 a1)"))
                0 0 0))
   (test-equal "degree without :display: the lane label is the degree name"
     #("dong1")
     (lanes-of (layout (piece-of "(piece \"P\")"
                                 "(scale s ding dong)"
                                 "(instrument u s ding1 dong1)"
-                                "(part u :name p 2)"))
+                                "(part :instrument u :name p 2)"))
               0 0))
   (test-equal "a selisir with :display \"i\" labels its lane \"i1\", not \"ding1\""
     #("i1")
@@ -1250,7 +1250,7 @@ at its default: font_size null, cells \"2em\"."
                (piece-of "(piece \"P\")"
                          "(scale selisir (ding :display \"i\") dong)"
                          "(instrument u selisir ding1 dong1)"
-                         "(part u :name p ding1)"))
+                         "(part :instrument u :name p ding1)"))
               0 0))
   (test-equal "strokes: grey, text null, text colour #222222 (ADR 0019)"
     (list (ev 0 1 0 'null grey dark #f)
@@ -1259,7 +1259,7 @@ at its default: font_size null, cells \"2em\"."
                 (piece-of "(piece \"P\")"
                           "(strokes k (dag :display \"D\") dug du)"
                           "(instrument kendang k dag dug du)"
-                          "(part kendang :name p dag dug)"))
+                          "(part :instrument kendang :name p dag dug)"))
                0 0 0))
   (test-equal "strokes: lanes show the display form"
     #("D" "dug")
@@ -1267,7 +1267,7 @@ at its default: font_size null, cells \"2em\"."
                (piece-of "(piece \"P\")"
                          "(strokes k (dag :display \"D\") dug du)"
                          "(instrument kendang k dag dug du)"
-                         "(part kendang :name p dag dug)"))
+                         "(part :instrument kendang :name p dag dug)"))
               0 0))
 
   (test-equal "tenzer1: one default group per part, in part order"
@@ -1315,8 +1315,8 @@ at its default: font_size null, cells \"2em\"."
   '("(instrument u selisir a1 i2 o2 e2 u2)"
     "(strokes k (dag :display \"D\") dug du)"
     "(instrument kendang k dag dug du)"
-    "(part u :name p u2 e2 o2 i2 a1)"
-    "(part kendang :name d dag dug - - -)"))
+    "(part :instrument u :name p u2 e2 o2 i2 a1)"
+    "(part :instrument kendang :name d dag dug - - -)"))
 
 (define (names-piece . score-lines)
   (apply selisir-piece (append names-lines score-lines)))
@@ -1371,7 +1371,7 @@ at its default: font_size null, cells \"2em\"."
     '("ding" "dong")
     (texts (layout (piece-of "(piece \"P\")" "(scale s ding dong)"
                              "(instrument u s ding1 dong2)"
-                             "(part u :name p 1 2)"
+                             "(part :instrument u :name p 1 2)"
                              "(score s :note-names yes (group \"p\" p))"))
            0 0 0))
   (test-equal "a held note shows its name once, on its one event"
@@ -1379,20 +1379,20 @@ at its default: font_size null, cells \"2em\"."
     (map (lambda (e) (list (field e 'start) (field e 'dur) (field e 'lane)
                            (field e 'continued) (field e 'text)))
          (events-of (layout (selisir-piece "(instrument u selisir u2)"
-                                           "(part u :name p u2 _ _)"
+                                           "(part :instrument u :name p u2 _ _)"
                                            "(score s :note-names yes (group \"p\" p))"))
                     0 0 0)))
   (test-equal "a cut note shows its name again in the next system"
     '(("u") ("u"))
     (let ((fig (layout (selisir-piece "(instrument u selisir u2)"
-                                      "(part u :name p - u2 _ -)"
+                                      "(part :instrument u :name p - u2 _ -)"
                                       "(score s :note-names yes :system-length 2"
                                       "  (group \"p\" p))"))))
       (list (texts fig 0 0 0) (texts fig 1 0 0))))
   (test-equal "a chord: each note shows its own name"
     '("o" "i")
     (texts (layout (selisir-piece "(instrument u selisir i2 o2)"
-                                  "(part u :name p (i2 o2))"
+                                  "(part :instrument u :name p (i2 o2))"
                                   "(score s :note-names yes (group \"p\" p))"))
            0 0 0))
   (test-equal "the text is the look's text (tenzer1, a group built by hand)"
@@ -1414,10 +1414,10 @@ at its default: font_size null, cells \"2em\"."
 
 (define colour-lines
   '("(instrument u selisir i2 o2)"
-    "(part u :name a i2 o2)"
-    "(part u :name b i2 o2)"
-    "(part u :name c i2 o2)"
-    "(part u :name d i2 o2)"))
+    "(part :instrument u :name a i2 o2)"
+    "(part :instrument u :name b i2 o2)"
+    "(part :instrument u :name c i2 o2)"
+    "(part :instrument u :name d i2 o2)"))
 
 (define (colour-piece . score-lines)
   (apply selisir-piece (append colour-lines score-lines)))
@@ -1544,9 +1544,9 @@ at its default: font_size null, cells \"2em\"."
                 "(instrument u s a1 b1)"
                 "(instrument gong gong-strokes G)"
                 (string-append "(colotomy c " (number->string cycle)
-                               " (gong gong -:" (number->string (- cycle 1))
+                               " (part :instrument gong -:" (number->string (- cycle 1))
                                " G:1))")
-                (string-append "(part u :name m " tokens ")"))
+                (string-append "(part :instrument u :name m " tokens ")"))
           (if score?
               (list (string-append "(score s " options " (group \"m\" m))"))
               '()))))
@@ -1946,11 +1946,11 @@ column's line is tested on its own, in \"lines: the first column\")."
     "(strokes k (dag :display \"D\" :damped \"d\") dug)"
     "(instrument u sel a1 i2 o2 e2 u2)"
     "(instrument kendang k dag dug)"
-    "(part u :name p i2:2 o2:1 e2 -)"
-    "(part u :name q - a1 _ (i2 o2) -)"
-    "(part u :name r - - - - -)"
-    "(part u :name s - - - - u2)"
-    "(part kendang :name d dag dug _ - -)"))
+    "(part :instrument u :name p i2:2 o2:1 e2 -)"
+    "(part :instrument u :name q - a1 _ (i2 o2) -)"
+    "(part :instrument u :name r - - - - -)"
+    "(part :instrument u :name s - - - - u2)"
+    "(part :instrument kendang :name d dag dug _ - -)"))
 
 (define (rows-piece . score-lines)
   (apply piece-of (append rows-lines score-lines)))
@@ -2044,7 +2044,7 @@ give."
     (let ((fig (layout-or-false
                 (layout (apply piece-of
                                (append (list-head rows-lines 6)
-                                       '("(part u :name f o2:1/2 i2 _ - -:1 - -)"
+                                       '("(part :instrument u :name f o2:1/2 i2 _ - -:1 - -)"
                                          "(score s :note-names yes (group \"f\" f))")))))))
       (and fig (map (lambda (e) (list (field e 'text) (field e 'dur)))
                     (events-of fig 0 0 0)))))
@@ -2053,7 +2053,7 @@ give."
     (let ((fig (layout-or-false
                 (layout (apply piece-of
                                (append (list-head rows-lines 6)
-                                       '("(part u :name h i2:2 - - -)"
+                                       '("(part :instrument u :name h i2:2 - - -)"
                                          "(score s :note-names yes :system-length 1"
                                          "  (group \"h\" h))")))))))
       (and fig (map (lambda (s)
@@ -2065,7 +2065,7 @@ give."
     (let ((fig (layout-or-false
                 (layout (apply piece-of
                                (append (list-head rows-lines 6)
-                                       '("(part u :name h - o2 - - -)"
+                                       '("(part :instrument u :name h - o2 - - -)"
                                          "(score s :note-names yes :system-length 2"
                                          "  (group \"h\" h))")))))))
       (and fig (texts fig 0 0 0)))))
@@ -2126,7 +2126,7 @@ give."
   (let ((fig (layout-or-false
               (layout (apply piece-of
                              (append (list-head rows-lines 6)
-                                     '("(part u :name h u2:3 - -:1)"
+                                     '("(part :instrument u :name h u2:3 - -:1)"
                                        "(score s :note-names yes :holds dash"
                                        "  :system-length 2 (group \"h\" :rows parts h))")))))))
     (test-equal "across a system break: dashes in each system, one column each"
@@ -2213,13 +2213,13 @@ give."
     "(pattern up :instrument u :short \"U\" :long \"Up\" i2 o2)"
     "(pattern down :instrument u :short \"D\" :long \"Down\" o2 i2)"
     "(pattern pair :instrument u :short \"P\" :long \"Pair\" @up @down)"
-    "(part u :name p @pair @up @down)"
-    "(part u :name q @pair @up e2 e2)"
-    "(part u :name r - - - - - - - -)"
-    "(part u :name t1 e2 e2 e2 e2 @up e2 e2)"
-    "(part u :name t2 @down e2 e2 e2 e2 e2 e2)"
-    "(part u :name t3 @pair (@ up :long \"Rise\") @down)"
-    "(part u :name t4 e2 e2 e2 e2 (@ up :short \"U'\") e2 e2)"))
+    "(part :instrument u :name p @pair @up @down)"
+    "(part :instrument u :name q @pair @up e2 e2)"
+    "(part :instrument u :name r - - - - - - - -)"
+    "(part :instrument u :name t1 e2 e2 e2 e2 @up e2 e2)"
+    "(part :instrument u :name t2 @down e2 e2 e2 e2 e2 e2)"
+    "(part :instrument u :name t3 @pair (@ up :long \"Rise\") @down)"
+    "(part :instrument u :name t4 e2 e2 e2 e2 (@ up :short \"U'\") e2 e2)"))
 
 (define (overlay-fig . score-lines)
   "The figure of the overlay piece with SCORE-LINES, or #f if it raises."
@@ -2346,7 +2346,7 @@ give."
                   (append (list-head overlay-lines 5)
                           '("(pattern rh :instrument u :short \"R\" i2:1 -:1/2)"
                             "(pattern outer :instrument u :short \"O\" @rh -:1/2)"
-                            "(part u :name h @outer o2:1)")
+                            "(part :instrument u :name h @outer o2:1)")
                           score-lines)))))
 
 (test-group "the step: pattern-span edges at the chosen level"
@@ -2412,7 +2412,7 @@ give."
   (piece-of "(piece \"P\")"
             "(scale s a b)"
             "(instrument u s a1 b1)"
-            "(part u :name p - - - 1 _ _ _ _ _ - - - - - - -)"
+            "(part :instrument u :name p - - - 1 _ _ _ _ _ - - - - - - -)"
             "(score inside :from 5 :to 8 (group \"p\" p))"
             "(score tail :from 1 :to 6 (group \"p\" p))"
             "(score both :from 5 :to 6 (group \"p\" p))"
@@ -2492,7 +2492,7 @@ give."
   (test-equal "a note crossing a break is cut there" '(((3 1 0 #f)) ((0 5 0 #t)))
     (let ((fig (layout (piece-of "(piece \"P\")" "(scale s a b)"
                                  "(instrument u s a1 b1)"
-                                 "(part u :name p - - - 1 _ _ _ _ _ - - - - - - -)"
+                                 "(part :instrument u :name p - - - 1 _ _ _ _ _ - - - - - - -)"
                                  "(score s :breaks (5) (group \"p\" p))"))))
       (map (lambda (s) (timing (events-of fig s 0 0))) '(0 1))))
   (test-equal "a score built by hand: its breaks (times)" '((0 3) (3 7))
@@ -2552,7 +2552,7 @@ give."
   (let ((fig (layout-or-false
               (layout (piece-of "(piece \"P\")" "(scale s a b)"
                                 "(instrument u s a1 b1)"
-                                "(part u :name p 1:1/2 2:1/2 1 2 1)"
+                                "(part :instrument u :name p 1:1/2 2:1/2 1 2 1)"
                                 "(score whole (group \"p\" p))"
                                 "(score late :from 2 (group \"p\" p))")))))
     (test-equal "the whole piece: half pulses, 2" 2
@@ -2561,7 +2561,7 @@ give."
               (layout-named (piece-of "(piece \"P\")" "(scale s a b)"
                                       "(instrument u s a1 b1)"
                                       ;; Durations carry over: 1:1 ends the half pulses.
-                                      "(part u :name p 1:1/2 2:1/2 1:1 2 1)"
+                                      "(part :instrument u :name p 1:1/2 2:1/2 1:1 2 1)"
                                       "(score whole (group \"p\" p))"
                                       "(score late :from 2 (group \"p\" p))")
                             'late))))
@@ -2685,8 +2685,8 @@ give."
   (let ((fig (layout-or-false
               (layout (piece-of "(piece \"P\")" "(scale s a b c)"
                                 "(instrument u s a1 b1 c1)"
-                                "(part u :name p 1 2 _ -)"
-                                "(part u :name q 1 3 _ -)"
+                                "(part :instrument u :name p 1 2 _ -)"
+                                "(part :instrument u :name q 1 3 _ -)"
                                 "(score s (group \"G\" p q))")))))
     (test-equal "the first part keeps it"
       '((0 1 2) (1 2 1))
@@ -2706,8 +2706,8 @@ give."
                  (let ((fig (layout-or-false
                              (layout (piece-of "(piece \"P\")" "(scale s a b)"
                                                "(instrument u s a1 b1)"
-                                               "(part u :name p 1 1 1)"
-                                               "(part u :name q 1 2 1)"
+                                               "(part :instrument u :name p 1 1 1)"
+                                               "(part :instrument u :name q 1 2 1)"
                                                score)))))
                    (and fig (field (field fig 'sizes) 'label_width))))))
     (test-equal "one row: \"Ugal\", two spaces, \"main\": 10 characters"

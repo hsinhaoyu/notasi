@@ -81,13 +81,24 @@ Each milestone, or each slice of one, is its own branch and PR into
 `dev`, started with `/start-milestone <branch>`. After each one,
 `make check` passes and the manual describes what the code does.
 
-1. **`feat/syntax`** (01, 02, 03), with no slices:
+1. **`feat/syntax`** (done) (01, 02, 03), with no slices:
    - parts written `(part :instrument I :name N ...)`, and colotomy
      parts as `part` forms (ADR 0038); the old forms are errors whose
      messages show the new one;
    - `gilak` and `bapang` in the `gong-kebyar` template (ADR 0046);
    - every `.nts` rewritten: examples, the manual's examples and
      mistakes, test fixtures.
+
+   Decided when it started:
+   - Iteration 2's `targets/` keep the old syntax, as that iteration's
+     record; `examples/` holds the living copies.
+   - Existing test fixtures are rewritten by a script during
+     implementation; the tests written first cover only the new cases
+     (03, **[parts]**) and the template's `gilak` and `bapang`.
+   - An old-form error is tested by its kind and by its message
+     containing the new form with the user's instrument
+     (`(part :instrument gong ...)`); the wording is the code's, and
+     the manual shows it as a mistake.
 2. **`feat/drawing`** (01–05), in four slices, see
    [04-layout.md](../../design/04-layout.md#slices-iteration-3):
    1. `feat/drawing-header`

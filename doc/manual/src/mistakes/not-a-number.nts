@@ -1,4 +1,4 @@
 (piece "Gilak")
 (scale selisir ding dong deng dung dang)
 (instrument ugal selisir dong1 deng1 dung1 dang1 ding2)
-(part ugal dang1:four ding2 dong1 dang1)
+(part :instrument ugal dang1:four ding2 dong1 dang1)

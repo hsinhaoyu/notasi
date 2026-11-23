@@ -1,4 +1,4 @@
 (piece "Gilak" :colotomy gilak)
 (use gong-kebyar)
-(colotomy gilak 8 (gong gong -:7 G:1))
-(part ugal a1 o2 i2 e2 o2 a1 o2)
+(colotomy gilak 8 (part :instrument gong -:7 G:1))
+(part :instrument ugal a1 o2 i2 e2 o2 a1 o2)

@@ -1,5 +1,5 @@
 (piece "Gilak")
 (scale selisir ding dong deng dung dang)
 (instrument reyong selisir deng2 dung2 dang2 ding3)
-(part reyong :name polos 1 2 3 4)
-(part reyong 4 3 2 1)
+(part :instrument reyong :name polos 1 2 3 4)
+(part :instrument reyong 4 3 2 1)

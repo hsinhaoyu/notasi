@@ -3,22 +3,39 @@
 Gamelan music goes round in **gong cycles**: the gong, kempur and
 kempli mark the same pattern of pulses again and again, and the gong
 falls on the last pulse of each cycle. In notasi this pattern is a
-**colotomy**. You write it once, and notasi plays the gong parts and
-the kempli for the whole piece:
+**colotomy**. Name one on the `piece` line, and notasi plays the gong
+parts and the kempli for the whole piece:
 
 ```scheme
 {{#include examples/gong-cycle.nts}}
 ```
 
-- `(colotomy gilak 8 …)` names a cycle of eight pulses. Inside it,
-  `(gong gong …)` is a part called `gong`, played on the instrument
-  `gong`, over one cycle: rests, the kempur on pulses 4 and 6, and the
-  gong on pulse 8.
-- `:colotomy gilak` on the `piece` line uses that cycle for the piece.
-  notasi writes out the `gong` part for every cycle.
+- `:colotomy gilak` on the `piece` line uses the gilak cycle for the
+  piece. The `gong-kebyar` template defines it: eight pulses, with the
+  gong lanang on pulse 4, the kempur on 5 and 7, and the gong on 8. It
+  also defines `bapang`, sixteen pulses with the kempur on 4 and 12,
+  the klentong on 8 and the gong on 16.
+- notasi writes out the `gong` part for every cycle.
 - The **kempli** is added for you, one stroke on every pulse. If the
   piece has no kempli instrument, notasi still keeps the beat but
   doesn't draw it.
+
+## A cycle of your own
+
+For a cycle the template doesn't have, or a different version of one,
+write a `colotomy`:
+
+```scheme
+{{#include examples/own-colotomy.nts}}
+```
+
+- `(colotomy gilak-kempur 8 …)` names a cycle of eight pulses.
+- Inside it, `(part :instrument gong …)` is the gong's part over one
+  cycle, written like any [part](notes-rests-and-holds.md): rests, the
+  kempur on pulses 4 and 6, and the gong on pulse 8. It is called
+  `gong`, after its instrument; give it another name with `:name`.
+- A colotomy in your piece with the same name as the template's, such
+  as `gilak`, replaces the template's.
 
 ## Starting on the gong
 
@@ -56,6 +73,7 @@ gong-first`; see [Scores](scores.md)).
   `:colotomy`.
 - A part you write can't be called `kempli`, or have the name of a part
   of the colotomy: notasi makes those.
+- Inside a `colotomy`, every part is a `part` form.
 - Colotomies can go in a template too, like scales and instruments
   (see [Templates](templates.md)).
 

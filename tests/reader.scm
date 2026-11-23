@@ -6,7 +6,7 @@
 ;;; (03-reader.md, "Slices (iteration 2)"), plus that slice's own cases:
 ;;; reading with `keywords` off, `:key value` options, degrees and
 ;;; strokes with `:alias`, `:display` and `:damped`, instruments without
-;;; options, `(part INSTRUMENT :name NAME TOKEN ...)`, `·` no longer a
+;;; options, `(part :instrument INSTRUMENT :name NAME TOKEN ...)`, `·` no longer a
 ;;; rest, `group-outside-score`, `text` gone, and `colotomy`, `pattern`
 ;;; and `score` raising `not-implemented`. Every part is in its own
 ;;; default group.
@@ -447,7 +447,7 @@ none (what v1 called piece-groups)."
                (piece-parts
                 (read-piece-string
                  (lines "(piece \"P\")" "(strokes k K)" "(instrument kempli k K)"
-                        "(part kempli :name p K)")))))
+                        "(part :instrument kempli :name p K)")))))
         (test-equal "the caller's keywords option is restored"
           'prefix
           (begin
@@ -510,7 +510,7 @@ none (what v1 called piece-groups)."
       (and (notasi-syntax-error? c) (notasi-syntax-error-line c))))
 
   (let* ((path (write-temp-file "unbalanced.nts"
-                                (lines "(piece \"P\")" "" "(part a 1 2")))
+                                (lines "(piece \"P\")" "" "(part :instrument a 1 2")))
          (c (catch-syntax-error (lambda () (read-piece-file path)))))
     (test-equal "read-error kind" 'read-error (kind-of c))
     (test-equal "read-error file is the path given" path
@@ -560,9 +560,9 @@ none (what v1 called piece-groups)."
                (valid-guile-line? (notasi-syntax-error-line c)))))))
    (list (list "missing close paren" "(piece \"P\"")
          (list "missing close paren on a later line"
-               (lines "(piece \"P\")" "" "(part a 1 2"))
+               (lines "(piece \"P\")" "" "(part :instrument a 1 2"))
          (list "extra close paren" (lines "(piece \"P\"))"))
-         (list "dot dot" (lines "(piece \"P\")" "(part a 1 . . 2)"))
+         (list "dot dot" (lines "(piece \"P\")" "(part :instrument a 1 . . 2)"))
          (list "unterminated string" "(piece \"P)")))
 
   (test-equal "read-error comes before missing-piece" 'read-error
@@ -571,9 +571,9 @@ none (what v1 called piece-groups)."
     (string-kind (lines "(foo)" "(piece \"P\")" "(bar")))
   (test-equal "read-error after a bad form still wins (all forms read first)"
     'read-error
-    (string-kind (lines "(piece 42)" "(part a 1 . 2)" "(")))
+    (string-kind (lines "(piece 42)" "(part :instrument a 1 . 2)" "(")))
   (test-equal "read-error comes before improper-form" 'read-error
-    (string-kind (lines "(piece \"P\")" "(part a 1 . 2)" "(part a . . b)")))
+    (string-kind (lines "(piece \"P\")" "(part :instrument a 1 . 2)" "(part :instrument a . . b)")))
   (test-equal "read-error comes before group-outside-score" 'read-error
     (string-kind (lines "(piece \"P\")" "(group \"G\" a)" "("))))
 
@@ -582,15 +582,15 @@ none (what v1 called piece-groups)."
 
 (test-group "improper-form"
   (test-equal "lone dot in a part, line 3" '(improper-form 3)
-    (string-error (lines "(piece \"P\")" "" "(part reyong :name polos 1 . 2)")))
+    (string-error (lines "(piece \"P\")" "" "(part :instrument reyong :name polos 1 . 2)")))
   (test-equal "improper piece form, line 1" '(improper-form 1)
     (string-error "(piece \"P\" . 4)"))
   (test-equal "improper form before piece: improper-form, not piece-not-first"
     '(improper-form 1)
-    (string-error (lines "(part a 1 . 2)" "(piece \"P\")")))
+    (string-error (lines "(part :instrument a 1 . 2)" "(piece \"P\")")))
   (test-equal "improper form with no piece: improper-form, not missing-piece"
     '(improper-form 2)
-    (string-error (lines ";; no piece" "(part a 1 . 2)")))
+    (string-error (lines ";; no piece" "(part :instrument a 1 . 2)")))
   (test-equal "improper form comes before bad-title" '(improper-form 2)
     (string-error (lines "(piece 1)" "(scale . \"x\")"))))
 
@@ -635,10 +635,10 @@ none (what v1 called piece-groups)."
     (string-error (lines "(piece \"P\" 4)" "" "" "(foo)")))
   (test-equal "first bad form in file order wins: improper then unknown"
     '(improper-form 2)
-    (string-error (lines "(piece \"P\")" "(part a 1 . 2)" "(foo)")))
+    (string-error (lines "(piece \"P\")" "(part :instrument a 1 . 2)" "(foo)")))
   (test-equal "first bad form in file order wins: unknown then improper"
     '(unknown-form 2)
-    (string-error (lines "(piece \"P\")" "(foo)" "(part a 1 . 2)"))))
+    (string-error (lines "(piece \"P\")" "(foo)" "(part :instrument a 1 . 2)"))))
 
 ;;; v1's `text` form is gone: it is an unknown form now (03, "Files and
 ;;; forms").
@@ -689,9 +689,9 @@ none (what v1 called piece-groups)."
     (list "file order: the group first" '(group-outside-score 2)
           (lines "(piece \"P\")" "(group \"G\" a)" "(foo)"))
     (list "file order: an improper form first" '(improper-form 2)
-          (lines "(piece \"P\")" "(part a 1 . 2)" "(group \"G\" a)"))
+          (lines "(piece \"P\")" "(part :instrument a 1 . 2)" "(group \"G\" a)"))
     (list "the first of two groups" '(group-outside-score 3)
-          (lines "(piece \"P\")" "(part reyong 1)" "(group \"A\" reyong)"
+          (lines "(piece \"P\")" "(part :instrument reyong 1)" "(group \"A\" reyong)"
                  "(group \"B\" reyong)"))
     (list "a group inside a score is not top-level" '(undefined-part 2)
           (lines "(piece \"P\")" "(score full (group \"G\" a))"))))
@@ -1688,11 +1688,11 @@ so a test using it fails rather than passing on #f."
           (lines "(piece \"P\")" "(strokes g G P)" "(instrument x g G G K)"))
     ;; Parts come after instruments.
     (list "unknown-note comes before a part's errors" '(unknown-note 4)
-          (lines "(piece \"P\")" "(part x 1)" "(scale s ding)"
+          (lines "(piece \"P\")" "(part :instrument x 1)" "(scale s ding)"
                  "(instrument x s foo1)"))
     (list "duplicate-note comes before a part's errors"
           '(duplicate-note 4)
-          (lines "(piece \"P\")" "(strokes g G)" "(part x 9)"
+          (lines "(piece \"P\")" "(strokes g G)" "(part :instrument x 9)"
                  "(instrument x g G G)")))))
 
 (test-group "definitions: cases decided at review"
@@ -1760,11 +1760,11 @@ so a test using it fails rather than passing on #f."
   (map event-triple (part-events (part-named pc name))))
 
 (define (part-p-form instrument tokens)
-  "(part INSTRUMENT :name p TOKENS) as a string."
-  (string-append "(part " instrument " :name p " tokens ")"))
+  "(part :instrument INSTRUMENT :name p TOKENS) as a string."
+  (string-append "(part :instrument " instrument " :name p " tokens ")"))
 
 (define (part-p-events instrument tokens)
-  "Read parts-defs plus (part INSTRUMENT :name p TOKENS), and return p's
+  "Read parts-defs plus (part :instrument INSTRUMENT :name p TOKENS), and return p's
 events as (START DURATION NOTES) triples."
   (part-triples (read-defs+ (part-p-form instrument tokens)) 'p))
 
@@ -1792,7 +1792,7 @@ or the raised object (or no-error) unchanged."
 
 (define (token-tests expected-kind cases)
   "CASES is a list of (NAME INSTRUMENT TOKENS TIME). Each reads
-parts-defs plus (part INSTRUMENT :name p TOKENS) on line 10, and expects
+parts-defs plus (part :instrument INSTRUMENT :name p TOKENS) on line 10, and expects
 EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
   (for-each
    (match-lambda
@@ -1866,7 +1866,7 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
           '((0 1 (0 1))))))
 
   (test-assert "events are event records"
-    (every event? (part-events (part-named (read-defs+ "(part reyong :name p 1 _ 2)")
+    (every event? (part-events (part-named (read-defs+ "(part :instrument reyong :name p 1 _ 2)")
                                            'p)))))
 
 (test-group "piece length"
@@ -1874,19 +1874,19 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
    (match-lambda
      ((name expected . forms)
       (test-equal name expected (piece-length (apply read-defs+ forms)))))
-   (list (list "one pulse per token" 3 "(part reyong 1 2 3)")
-         (list "holds count" 4 "(part reyong 1 _ _ 2)")
-         (list "trailing rests count" 4 "(part reyong 1 2 - -)")
-         (list "a part of only rests" 3 "(part gong - - -)")
-         (list "/ does not count" 2 "(part reyong / 1 / 2 /)")
-         (list "a chord is one pulse" 2 "(part reyong (1 2) (3 4))")
+   (list (list "one pulse per token" 3 "(part :instrument reyong 1 2 3)")
+         (list "holds count" 4 "(part :instrument reyong 1 _ _ 2)")
+         (list "trailing rests count" 4 "(part :instrument reyong 1 2 - -)")
+         (list "a part of only rests" 3 "(part :instrument gong - - -)")
+         (list "/ does not count" 2 "(part :instrument reyong / 1 / 2 /)")
+         (list "a chord is one pulse" 2 "(part :instrument reyong (1 2) (3 4))")
          (list "several parts of equal length" 4
-               "(part reyong 1 2 - -)" "(part gong G _ _ _)")))
+               "(part :instrument reyong 1 2 - -)" "(part :instrument gong G _ _ _)")))
   (let ((pc (read-defs+)))
     (test-equal "no parts: length 0" 0 (piece-length pc))
     (test-equal "no parts: only the timekeeper's group" '("kempli")
       (map group-label (default-groups pc))))
-  (let ((pc (read-defs+ "(part reyong 1 2 - -)" "(part gong G _ _ _)")))
+  (let ((pc (read-defs+ "(part :instrument reyong 1 2 - -)" "(part :instrument gong G _ _ _)")))
     (test-equal "part-end is the end of the last event (ADR 0012)" '(2 4 4)
       (map part-end (piece-parts pc)))
     (test-assert "part-end <= piece-length"
@@ -1897,11 +1897,11 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
 ;;; Successful reads: part fields and :name
 
 (test-group "part fields"
-  (let ((pc (read-defs+ "(part reyong :name polos 1 2 3 4)"    ; 10
-                        "(part ugal"                           ; 11
+  (let ((pc (read-defs+ "(part :instrument reyong :name polos 1 2 3 4)"    ; 10
+                        "(part :instrument ugal"                           ; 11
                         "  1 2 3 4)"                           ; 12
-                        "(part gong G - - -)"                  ; 13
-                        "(part reyong :name sangsih 4 3 2 1)"))) ; 14
+                        "(part :instrument gong G - - -)"                  ; 13
+                        "(part :instrument reyong :name sangsih 4 3 2 1)"))) ; 14
     (test-assert "reads into a piece" (piece? pc))
     (test-equal "parts in file order, named by :name or by their instrument"
       '(polos ugal gong sangsih kempli)
@@ -1932,7 +1932,7 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
     (test-equal "instruments still in file order" '(reyong ugal gong kempli)
       (map instrument-name (piece-instruments pc))))
 
-  (let ((pc (read-defs+ "(part ugal 1 2)")))
+  (let ((pc (read-defs+ "(part :instrument ugal 1 2)")))
     (test-equal "no :name: the part is named after its instrument" '(ugal kempli)
       (map part-name (piece-parts pc)))
     (test-assert "no :name: its instrument"
@@ -1940,7 +1940,7 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
     (test-equal "no :name: its default group" '("ugal" "kempli")
       (map group-label (default-groups pc))))
 
-  (let ((pc (read-defs+ "(part reyong"         ; 10
+  (let ((pc (read-defs+ "(part :instrument reyong"         ; 10
                         "  :name polos"        ; 11
                         "  1 2 3 4)")))        ; 12
     (test-equal ":name on its own line" '(polos kempli)
@@ -1951,32 +1951,32 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
     (test-equal ":name on its own line: the events" '((0 1 (0)) (1 1 (1)) (2 1 (2)) (3 1 (3)))
       (part-triples pc 'polos)))
 
-  (let ((pc (read-defs+ "(part reyong :name ugal 1 2)"
-                        "(part ugal :name reyong 1 2)")))
+  (let ((pc (read-defs+ "(part :instrument reyong :name ugal 1 2)"
+                        "(part :instrument ugal :name reyong 1 2)")))
     (test-equal "a :name may be another instrument's name" '(ugal reyong kempli)
       (map part-name (piece-parts pc)))
     (test-assert "a part named like another instrument plays its own"
       (and (eq? (part-instrument (part-named pc 'ugal)) (instrument-named pc 'reyong))
            (eq? (part-instrument (part-named pc 'reyong)) (instrument-named pc 'ugal)))))
 
-  (let ((pc (read-defs+ "(part reyong :name selisir 1)"
-                        "(part gong :name gong-strokes G)")))
+  (let ((pc (read-defs+ "(part :instrument reyong :name selisir 1)"
+                        "(part :instrument gong :name gong-strokes G)")))
     (test-equal "parts may share names with scales and stroke sets"
       '(selisir gong-strokes kempli)
       (map part-name (piece-parts pc))))
 
-  (let ((pc (read-defs+ "(part reyong :name polos 1 2)"
-                        "(part reyong :name sangsih 3 4)"
-                        "(part ugal 1 2)"
-                        "(part gong G P)")))
+  (let ((pc (read-defs+ "(part :instrument reyong :name polos 1 2)"
+                        "(part :instrument reyong :name sangsih 3 4)"
+                        "(part :instrument ugal 1 2)"
+                        "(part :instrument gong G P)")))
     (test-equal "several named parts on one instrument, one part on others"
       '(polos sangsih ugal gong kempli)
       (map part-name (piece-parts pc)))))
 
 (test-group "parts read from a file"
   (let* ((path (write-temp-file "parts.nts"
-                                (defs+ "(part reyong :name a 1 2)"     ; 10
-                                       "(part reyong :name b 3 4)")))  ; 11
+                                (defs+ "(part :instrument reyong :name a 1 2)"     ; 10
+                                       "(part :instrument reyong :name b 3 4)")))  ; 11
          (pc (try-read (lambda () (read-piece-file path)))))
     (test-equal "part files are the path given" (list path path)
       (map (lambda (p) (source-location-file (part-location p)))
@@ -1992,10 +1992,10 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
 ;;; group, in part order, labelled with its name (02, "group").
 
 (test-group "default groups"
-  (let ((pc (read-defs+ "(part ugal 1 2 3 4)"                    ; 10
-                        "(part reyong :name polos 1 2 3 4)"      ; 11
-                        "(part reyong :name sangsih 4 3 2 1)"    ; 12
-                        "(part gong G - - P)")))                 ; 13
+  (let ((pc (read-defs+ "(part :instrument ugal 1 2 3 4)"                    ; 10
+                        "(part :instrument reyong :name polos 1 2 3 4)"      ; 11
+                        "(part :instrument reyong :name sangsih 4 3 2 1)"    ; 12
+                        "(part :instrument gong G - - P)")))                 ; 13
     (test-equal "one group per part, in part order, labelled with its name"
       '("ugal" "polos" "sangsih" "gong" "kempli")
       (map group-label (default-groups pc)))
@@ -2014,8 +2014,8 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
       '(ugal polos sangsih gong kempli)
       (map part-name (piece-parts pc))))
 
-  (let ((pc (read-defs+ "(part reyong :name polos 1 2)"
-                        "(part reyong :name sangsih 3 4)")))
+  (let ((pc (read-defs+ "(part :instrument reyong :name polos 1 2)"
+                        "(part :instrument reyong :name sangsih 3 4)")))
     (test-equal "two parts on one instrument: two groups, then kempli"
       '("polos" "sangsih" "kempli")
       (map group-label (default-groups pc)))
@@ -2037,9 +2037,9 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
              "(instrument reyong reyong-4  nang1 ning1 nong1 neng1)"
              "(instrument gong gong-strokes G)"
              ""
-             "(part reyong :name polos    1:1/4 _ 1 2 | _ 1 2 _ | 2 1 _ 2)"
-             "(part reyong :name sangsih  4:1/4 3 4 _ | 3 4 _ 3 | _ 4 3 _)"
-             "(part gong                  1:1/4 - - - / - - - - / - - - -)")))
+             "(part :instrument reyong :name polos    1:1/4 _ 1 2 | _ 1 2 _ | 2 1 _ 2)"
+             "(part :instrument reyong :name sangsih  4:1/4 3 4 _ | 3 4 _ 3 | _ 4 3 _)"
+             "(part :instrument gong                  1:1/4 - - - / - - - - / - - - -)")))
     (test-assert "reads into a piece" (piece? pc))
     (test-equal "title" "Reyong kotekan" (piece-title pc))
     (test-equal "length: 3 pulses" 3 (piece-length pc))
@@ -2181,15 +2181,15 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
    (list (list "/ around a rest" "reyong" "1 / - / _" 2)))
   (test-equal "a part over several lines: the form's line"
     '(unknown-token 10 p 4)
-    (error-fields (defs+ "(part reyong :name p"
+    (error-fields (defs+ "(part :instrument reyong :name p"
                          "  1 2 3 4 /"
                          "  \"x\")")))
   (test-equal "a later part: its own line and name"
     '(note-out-of-range 11 q 1)
-    (error-fields (defs+ "(part reyong :name p 1 2)" "(part reyong :name q 1 9)")))
+    (error-fields (defs+ "(part :instrument reyong :name p 1 2)" "(part :instrument reyong :name q 1 9)")))
   (test-equal "a part without :name: the error names it after its instrument"
     '(note-out-of-range 10 ugal 1)
-    (error-fields (defs+ "(part ugal 1 9)"))))
+    (error-fields (defs+ "(part :instrument ugal 1 9)"))))
 
 ;;; ------------------------------------------------------------------
 ;;; Durations, holds, rests and checks through the reader (slice 2,
@@ -2226,14 +2226,14 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
    (match-lambda
      ((name expected . forms)
       (test-equal name expected (piece-length (apply read-defs+ forms)))))
-   (list (list "the length in pulses" 4 "(part reyong 1:2 2)")
-         (list "a length that is a fraction" 3/2 "(part reyong 1:1/2 2 3)")
-         (list "trailing rests with a duration count" 5 "(part reyong 1 -:4)")
+   (list (list "the length in pulses" 4 "(part :instrument reyong 1:2 2)")
+         (list "a length that is a fraction" 3/2 "(part :instrument reyong 1:1/2 2 3)")
+         (list "trailing rests with a duration count" 5 "(part :instrument reyong 1 -:4)")
          (list "parts of equal length with different durations" 2
-               "(part reyong :name a 1:1/2 2 3 4)" "(part reyong :name b 1:2)")
-         (list "a part of only rests" 3/2 "(part gong -:1/2 - -)")))
-  (let ((pc (read-defs+ "(part reyong :name a 1:1/4 2 3 4)"
-                        "(part reyong :name b 1:1/2 -)")))
+               "(part :instrument reyong :name a 1:1/2 2 3 4)" "(part :instrument reyong :name b 1:2)")
+         (list "a part of only rests" 3/2 "(part :instrument gong -:1/2 - -)")))
+  (let ((pc (read-defs+ "(part :instrument reyong :name a 1:1/4 2 3 4)"
+                        "(part :instrument reyong :name b 1:1/2 -)")))
     (test-equal "part-end leaves out trailing rests" '(1 1/2 1)
       (and pc (map part-end (piece-parts pc))))
     (test-equal "the piece's length includes them" 1
@@ -2263,7 +2263,7 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
          (list "after three quarters" "reyong" "1:1/4 2 3 | 4" 3/4)
          (list "after a rest" "gong" "-:1/2 | G" 1/2)
          (list "the second check" "reyong" "1 | 2:1/2 | 3" 3/2)))
-  (let ((pc (read-defs+ "(part reyong :name p | 1:1/2 2 | 3:2 | 4:1/3 5 6 |)")))
+  (let ((pc (read-defs+ "(part :instrument reyong :name p | 1:1/2 2 | 3:2 | 4:1/3 5 6 |)")))
     (test-equal "checks on whole pulses read" 4 (and pc (piece-length pc)))))
 
 (test-group "[durations] error fields"
@@ -2327,13 +2327,13 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
    (match-lambda
      ((name expected . forms)
       (test-equal name expected (piece-length (apply read-defs+ forms)))))
-   (list (list "the length of a rep" 6 "(part reyong (rep 3 1 -))")
+   (list (list "the length of a rep" 6 "(part :instrument reyong (rep 3 1 -))")
          (list "parts of equal length, one with a rep" 4
-               "(part reyong :name a (rep 4 1))" "(part reyong :name b 1 2 3 4)")))
+               "(part :instrument reyong :name a (rep 4 1))" "(part :instrument reyong :name b 1 2 3 4)")))
   (test-equal "a rep makes a part longer than its partner: unequal-length"
     '(unequal-length 11 b #f)
-    (error-fields (defs+ "(part reyong :name a 1 2 3)"
-                         "(part reyong :name b (rep 2 1 2))"))))
+    (error-fields (defs+ "(part :instrument reyong :name a 1 2 3)"
+                         "(part :instrument reyong :name b (rep 2 1 2))"))))
 
 (test-group "bad-rep"
   (for-each
@@ -2352,24 +2352,24 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
          (list "nested" "(rep 2 1 (rep 0 2))" 1)))
   (test-equal "a rep on its own line in a multi-line part: that line"
     '(bad-rep 12 p 2)
-    (error-fields (defs+ "(part reyong :name p"
+    (error-fields (defs+ "(part :instrument reyong :name p"
                          "  1 2"
                          "  (rep 0 3))")))
   (test-equal "a nested rep on its own line: the inner rep's line"
     '(bad-rep 12 p 2)
-    (error-fields (defs+ "(part reyong :name p (rep 2 1"
+    (error-fields (defs+ "(part :instrument reyong :name p (rep 2 1"
                          "  2"
                          "  (rep x 3)))")))
   (test-equal "a later part: its own name"
     '(bad-rep 11 q 0)
-    (error-fields (defs+ "(part reyong :name p 1)" "(part reyong :name q (rep 2))")))
+    (error-fields (defs+ "(part :instrument reyong :name p 1)" "(part :instrument reyong :name q (rep 2))")))
   (let ((c (catch-syntax-error
-            (lambda () (read-piece-string (defs+ "(part reyong :name p" "  (rep 0 1))"))))))
+            (lambda () (read-piece-string (defs+ "(part :instrument reyong :name p" "  (rep 0 1))"))))))
     (test-assert "a &notasi-syntax-error" (notasi-syntax-error? c))
     (test-equal "file #f" #f (and (notasi-syntax-error? c) (notasi-syntax-error-file c)))
     (test-equal "uses '()" '() (and (notasi-syntax-error? c) (notasi-syntax-error-uses c))))
   (let* ((path (write-temp-file "rep.nts"
-                                (defs+ "(part reyong :name p 1"
+                                (defs+ "(part :instrument reyong :name p 1"
                                        "  (rep 0 1))")))
          (c (catch-syntax-error (lambda () (read-piece-file path)))))
     (test-equal "from a file: kind and line" '(bad-rep 11)
@@ -2391,11 +2391,11 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
    (list (list "a suffix in the body" "reyong" "1 (rep 2 2:0)" 1)))
   (test-equal "a rep on its own line: still the part's line"
     '(note-out-of-range 10 p 2)
-    (error-fields (defs+ "(part reyong :name p 1"
+    (error-fields (defs+ "(part :instrument reyong :name p 1"
                          "  (rep 2 2 9))")))
   (test-equal "a | on a later line of a rep: the part's line"
     '(misplaced-pulse-check 10 p 3/4)
-    (error-fields (defs+ "(part reyong :name p"
+    (error-fields (defs+ "(part :instrument reyong :name p"
                          "  (rep 2"
                          "    | 1:1/4 2 3))"))))
 
@@ -2408,43 +2408,43 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
      ((name expected . forms)
       (test-equal name expected (error-fields (apply defs+ forms)))))
    (list (list "second part shorter" '(unequal-length 11 b #f)
-               "(part reyong :name a 1 2 3 4)" "(part reyong :name b 1 2 3)")
+               "(part :instrument reyong :name a 1 2 3 4)" "(part :instrument reyong :name b 1 2 3)")
          (list "second part longer" '(unequal-length 11 b #f)
-               "(part reyong :name a 1 2 3 4)" "(part reyong :name b 1 2 3 4 5)")
+               "(part :instrument reyong :name a 1 2 3 4)" "(part :instrument reyong :name b 1 2 3 4 5)")
          (list "third part differs" '(unequal-length 12 c #f)
-               "(part reyong :name a 1 2 3 4)" "(part gong :name b G - - -)"
-               "(part reyong :name c 1 2 3 4 5)")
+               "(part :instrument reyong :name a 1 2 3 4)" "(part :instrument gong :name b G - - -)"
+               "(part :instrument reyong :name c 1 2 3 4 5)")
          (list "second and third differ: the second" '(unequal-length 11 b #f)
-               "(part reyong :name a 1 2 3 4)" "(part reyong :name b 1 2 3 4 5)"
-               "(part reyong :name c 1 2 3 4 5)")
+               "(part :instrument reyong :name a 1 2 3 4)" "(part :instrument reyong :name b 1 2 3 4 5)"
+               "(part :instrument reyong :name c 1 2 3 4 5)")
          (list "compared with the first part, not the one before"
                '(unequal-length 11 b #f)
-               "(part reyong :name a 1 2 3 4)" "(part reyong :name b 1 2 3)"
-               "(part reyong :name c 1 2 3 4 5)")
+               "(part :instrument reyong :name a 1 2 3 4)" "(part :instrument reyong :name b 1 2 3)"
+               "(part :instrument reyong :name c 1 2 3 4 5)")
          (list "only trailing rests differ (ADR 0012)" '(unequal-length 11 b #f)
-               "(part reyong :name a 1 2 - -)" "(part reyong :name b 1 2 -)")
+               "(part :instrument reyong :name a 1 2 - -)" "(part :instrument reyong :name b 1 2 -)")
          (list "trailing rests make a part longer" '(unequal-length 11 b #f)
-               "(part gong :name a G)" "(part gong :name b G - - -)")
+               "(part :instrument gong :name a G)" "(part :instrument gong :name b G - - -)")
          (list "/ does not count towards length" '(unequal-length 11 b #f)
-               "(part reyong :name a 1 / 2 / 3)" "(part reyong :name b 1 / 2 3 / 4)")
+               "(part :instrument reyong :name a 1 / 2 / 3)" "(part :instrument reyong :name b 1 / 2 3 / 4)")
          (list "a part without :name: named after its instrument"
                '(unequal-length 11 gong #f)
-               "(part reyong 1 2 3 4)" "(part gong G)")
+               "(part :instrument reyong 1 2 3 4)" "(part :instrument gong G)")
          (list "multi-line part: the form's line" '(unequal-length 11 b #f)
-               "(part reyong :name a 1 2 3 4)" "(part reyong :name b" "  1 2 3)")
+               "(part :instrument reyong :name a 1 2 3 4)" "(part :instrument reyong :name b" "  1 2 3)")
          (list "lengths in pulses, not tokens: shorter" '(unequal-length 11 b #f)
-               "(part reyong :name a 1 2)" "(part reyong :name b 1:1/2 2 3)")
+               "(part :instrument reyong :name a 1 2)" "(part :instrument reyong :name b 1:1/2 2 3)")
          (list "lengths in pulses, not tokens: longer" '(unequal-length 11 b #f)
-               "(part reyong :name a 1 2 3 4)" "(part reyong :name b 1:3 2)")
+               "(part :instrument reyong :name a 1 2 3 4)" "(part :instrument reyong :name b 1:3 2)")
          (list "a quarter pulse short" '(unequal-length 11 b #f)
-               "(part reyong :name a 1 2)" "(part reyong :name b 1 2:1/4 3 4)")
+               "(part :instrument reyong :name a 1 2)" "(part :instrument reyong :name b 1 2:1/4 3 4)")
          (list "a trailing rest with a duration" '(unequal-length 11 b #f)
-               "(part reyong :name a 1 2)" "(part reyong :name b 1 2 -:1/2)")))
-  (let ((pc (read-defs+ "(part reyong :name a 1 2 3 4)" "(part reyong :name b 1:2 2)"
-                        "(part gong :name c G:1/4 - - - -:3)")))
+               "(part :instrument reyong :name a 1 2)" "(part :instrument reyong :name b 1 2 -:1/2)")))
+  (let ((pc (read-defs+ "(part :instrument reyong :name a 1 2 3 4)" "(part :instrument reyong :name b 1:2 2)"
+                        "(part :instrument gong :name c G:1/4 - - - -:3)")))
     (test-equal "equal lengths in pulses with different tokens read" 4
       (and pc (piece-length pc))))
-  (let ((pc (read-defs+ "(part reyong :name a 1 / 2)" "(part reyong :name b / 1 2 /)")))
+  (let ((pc (read-defs+ "(part :instrument reyong :name a 1 / 2)" "(part :instrument reyong :name b / 1 2 /)")))
     (test-equal "/ ignored: parts of equal length read" 2 (piece-length pc))))
 
 (test-group "undefined-instrument"
@@ -2453,105 +2453,112 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
      ((name expected . forms)
       (test-equal name expected (error-kind+line+part (apply defs+ forms)))))
    (list (list "nothing by that name" '(undefined-instrument 10 p)
-               "(part nowhere :name p 1)")
+               "(part :instrument nowhere :name p 1)")
          (list "no :name: the part is named after the instrument it names"
                '(undefined-instrument 10 nowhere)
-               "(part nowhere 1)")
+               "(part :instrument nowhere 1)")
          (list "names are case-sensitive" '(undefined-instrument 10 p)
-               "(part Reyong :name p 1)")
+               "(part :instrument Reyong :name p 1)")
          (list "a scale's name" '(undefined-instrument 10 p)
-               "(part selisir :name p 1)")
+               "(part :instrument selisir :name p 1)")
          (list "a stroke set's name" '(undefined-instrument 10 p)
-               "(part gong-strokes :name p G)")
+               "(part :instrument gong-strokes :name p G)")
          (list "another part's name" '(undefined-instrument 11 b)
-               "(part reyong :name a 1)" "(part a :name b 1)")
+               "(part :instrument reyong :name a 1)" "(part :instrument a :name b 1)")
          (list "multi-line part: the form's line" '(undefined-instrument 10 p)
-               "(part" "  nowhere :name p 1)"))))
+               "(part" "  :instrument nowhere :name p 1)"))))
 
 (test-group "duplicate-definition of a part"
   (table-tests 'duplicate-definition
    (list (list "part / part" 11
-               (defs+ "(part reyong :name a 1)" "(part reyong :name a 2)"))
+               (defs+ "(part :instrument reyong :name a 1)" "(part :instrument reyong :name a 2)"))
          (list "identical parts are still duplicates" 11
-               (defs+ "(part reyong :name a 1)" "(part reyong :name a 1)"))
+               (defs+ "(part :instrument reyong :name a 1)" "(part :instrument reyong :name a 1)"))
          (list "on different instruments" 12
-               (defs+ "(part reyong :name a 1)" "" "(part gong :name a G)"))
+               (defs+ "(part :instrument reyong :name a 1)" "" "(part :instrument gong :name a G)"))
          (list "a :name equal to another part's default name" 11
-               (defs+ "(part gong G)" "(part reyong :name gong 1)"))
+               (defs+ "(part :instrument gong G)" "(part :instrument reyong :name gong 1)"))
          (list "a default name equal to an earlier :name" 11
-               (defs+ "(part reyong :name gong 1)" "(part gong G)"))
+               (defs+ "(part :instrument reyong :name gong 1)" "(part :instrument gong G)"))
          (list "three definitions: the second is reported" 11
-               (defs+ "(part reyong :name a 1)" "(part reyong :name a 2)"
-                      "(part reyong :name a 3)")))))
+               (defs+ "(part :instrument reyong :name a 1)" "(part :instrument reyong :name a 2)"
+                      "(part :instrument reyong :name a 3)")))))
 
 ;;; ADR 0027: two parts on one instrument need names.
 (test-group "parts-need-names"
   (table-tests 'parts-need-names
    (list (list "two parts, neither with :name: the second's line" 11
-               (defs+ "(part reyong 1 2)" "(part reyong 3 4)"))
+               (defs+ "(part :instrument reyong 1 2)" "(part :instrument reyong 3 4)"))
          (list "the first with :name, the second without" 11
-               (defs+ "(part reyong :name polos 1 2)" "(part reyong 3 4)"))
+               (defs+ "(part :instrument reyong :name polos 1 2)" "(part :instrument reyong 3 4)"))
          (list "the first without :name, the second with" 11
-               (defs+ "(part reyong 1 2)" "(part reyong :name sangsih 3 4)"))
+               (defs+ "(part :instrument reyong 1 2)" "(part :instrument reyong :name sangsih 3 4)"))
          (list "other forms between the two parts" 12
-               (defs+ "(part reyong :name polos 1 2)" "(part gong G P)"
-                      "(part reyong 3 4)"))
+               (defs+ "(part :instrument reyong :name polos 1 2)" "(part :instrument gong G P)"
+                      "(part :instrument reyong 3 4)"))
          (list "a third part without :name" 12
-               (defs+ "(part reyong :name a 1 2)" "(part reyong :name b 3 4)"
-                      "(part reyong 1 2)"))
+               (defs+ "(part :instrument reyong :name a 1 2)" "(part :instrument reyong :name b 3 4)"
+                      "(part :instrument reyong 1 2)"))
          (list "multi-line second part: its form's line" 11
-               (defs+ "(part ugal 1 2)" "(part ugal" "  :name b 3 4)"))))
-  (let ((pc (read-defs+ "(part reyong 1 2)" "(part ugal 3 4)")))
+               (defs+ "(part :instrument ugal 1 2)" "(part :instrument ugal" "  :name b 3 4)"))))
+  (let ((pc (read-defs+ "(part :instrument reyong 1 2)" "(part :instrument ugal 3 4)")))
     (test-equal "parts on different instruments need no names" '(reyong ugal kempli)
       (and pc (map part-name (piece-parts pc)))))
-  (let ((pc (read-defs+ "(part reyong :name a 1 2)" "(part reyong :name b 3 4)")))
+  (let ((pc (read-defs+ "(part :instrument reyong :name a 1 2)" "(part :instrument reyong :name b 3 4)")))
     (test-equal "two named parts on one instrument" '(a b kempli)
       (and pc (map part-name (piece-parts pc))))))
 
-(test-group "bad-form for part"
-  (table-tests 'bad-form
+(test-group "missing-option for part (ADR 0038: no :instrument)"
+  ;; These were bad-form while the instrument came first; without
+  ;; :instrument they are missing-option (03, [parts]).
+  (table-tests 'missing-option
    (list (list "part with nothing in it" 10 (defs+ "(part)"))
          (list "part instrument is a string" 10 (defs+ "(part \"reyong\" 1)"))
          (list "part instrument is a number" 10 (defs+ "(part 5 1)"))
          (list "part instrument is a list" 10 (defs+ "(part (reyong) 1)"))
          (list "part with no instrument, a key first" 10 (defs+ "(part :name p 1 2)"))
-         (list "part with no tokens" 10 (defs+ "(part reyong)"))
-         (list "part with options but no tokens" 10 (defs+ "(part reyong :name p)"))
-         (list "multi-line part: the form's line" 10
+         (list "multi-line old form: the form's line" 10
                (defs+ "(part" "  reyong)")))))
+
+(test-group "bad-form for part"
+  (table-tests 'bad-form
+   (list (list "part with no tokens" 10 (defs+ "(part :instrument reyong)"))
+         (list "part with options but no tokens" 10 (defs+ "(part :instrument reyong :name p)"))
+         (list "multi-line part: the form's line" 10
+               (defs+ "(part" "  :instrument reyong)")))))
 
 (test-group "part options"
   (table-tests 'bad-option
-   (list (list ":name is a string" 10 (defs+ "(part reyong :name \"polos\" 1)"))
+   (list (list ":name is a string" 10 (defs+ "(part :instrument reyong :name \"polos\" 1)"))
          (list ":name is a number (the first token taken as its value)" 10
-               (defs+ "(part reyong :name 1 2)"))
-         (list ":name is a list" 10 (defs+ "(part reyong :name (p) 1)"))
+               (defs+ "(part :instrument reyong :name 1 2)"))
+         (list ":name is a list" 10 (defs+ "(part :instrument reyong :name (p) 1)"))
          (list ":name followed by another key" 10
-               (defs+ "(part reyong :name :colour red 1)"))
+               (defs+ "(part :instrument reyong :name :colour red 1)"))
          (list "an option on its own line: the form's line" 10
-               (defs+ "(part reyong" "  :name 5" "  1 2)"))))
+               (defs+ "(part :instrument reyong" "  :name 5" "  1 2)"))))
   (table-tests 'unknown-option
-   (list (list "unknown key" 10 (defs+ "(part reyong :colour red 1)"))
-         (list "keys are case-sensitive" 10 (defs+ "(part reyong :Name p 1)"))
+   (list (list "unknown key" 10 (defs+ "(part :instrument reyong :colour red 1)"))
+         (list "keys are case-sensitive" 10 (defs+ "(part :instrument reyong :Name p 1)"))
          (list "a piece key is not a part key" 10
-               (defs+ "(part reyong :pickup 1 1)"))
+               (defs+ "(part :instrument reyong :pickup 1 1)"))
          (list "unknown key after :name" 10
-               (defs+ "(part reyong :name p :colour red 1)"))))
+               (defs+ "(part :instrument reyong :name p :colour red 1)"))))
   (table-tests 'duplicate-option
-   (list (list ":name twice" 10 (defs+ "(part reyong :name a :name b 1)"))
+   (list (list ":name twice" 10 (defs+ "(part :instrument reyong :name a :name b 1)"))
          (list ":name twice with the same value" 10
-               (defs+ "(part reyong :name a :name a 1)"))))
+               (defs+ "(part :instrument reyong :name a :name a 1)"))))
   (table-tests 'option-after-body
-   (list (list ":name after the first token" 10 (defs+ "(part reyong 1 :name p 2)"))
-         (list ":name at the end" 10 (defs+ "(part reyong 1 2 :name p)"))
+   (list (list ":name after the first token" 10 (defs+ "(part :instrument reyong 1 :name p 2)"))
+         (list ":name at the end" 10 (defs+ "(part :instrument reyong 1 2 :name p)"))
          (list "an unknown key after the body has started" 10
-               (defs+ "(part reyong 1 2 :colour red)"))
+               (defs+ "(part :instrument reyong 1 2 :colour red)"))
          (list "a key on a later line: the form's line" 10
-               (defs+ "(part reyong :name p" "  1 2" "  :colour red)")))))
+               (defs+ "(part :instrument reyong :name p" "  1 2" "  :colour red)")))))
 
 (test-group "part error fields"
   (let ((c (catch-syntax-error
-            (lambda () (read-piece-string (defs+ "(part reyong :name p 1 9)"))))))
+            (lambda () (read-piece-string (defs+ "(part :instrument reyong :name p 1 9)"))))))
     (test-equal "token error: file #f from a string" #f
       (and (notasi-syntax-error? c) (notasi-syntax-error-file c))))
   (for-each
@@ -2567,17 +2574,17 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
         (test-equal (string-append name " from a file: file") path
           (and (notasi-syntax-error? c) (notasi-syntax-error-file c))))))
    (list (list "note-out-of-range" '(note-out-of-range 10 p 1)
-               (defs+ "(part reyong :name p 1 9)"))
+               (defs+ "(part :instrument reyong :name p 1 9)"))
          (list "unknown-note for ·" '(unknown-note 10 p 1)
-               (defs+ "(part reyong :name p 1 · 2)"))
+               (defs+ "(part :instrument reyong :name p 1 · 2)"))
          (list "hold-without-note" '(hold-without-note 10 p 0)
-               (defs+ "(part reyong :name p _)"))
+               (defs+ "(part :instrument reyong :name p _)"))
          (list "unequal-length" '(unequal-length 11 q #f)
-               (defs+ "(part reyong :name p 1)" "(part reyong :name q 1 2)"))
+               (defs+ "(part :instrument reyong :name p 1)" "(part :instrument reyong :name q 1 2)"))
          (list "bad-duration" '(bad-duration 10 p 1)
-               (defs+ "(part reyong :name p 1 2:x)"))
+               (defs+ "(part :instrument reyong :name p 1 2:x)"))
          (list "misplaced-pulse-check" '(misplaced-pulse-check 10 p 1/2)
-               (defs+ "(part reyong :name p 1:1/2 |)")))))
+               (defs+ "(part :instrument reyong :name p 1:1/2 |)")))))
 
 ;;; ------------------------------------------------------------------
 ;;; Check order for parts (03-reader.md, "Error reporting")
@@ -2594,7 +2601,7 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
    (list
     ;; Item 5: use.
     (list "use, then the piece's part errors" '(note-out-of-range 3)
-          (lines "(piece \"P\")" "(use gong-kebyar)" "(part ugal :name p 99)"))
+          (lines "(piece \"P\")" "(use gong-kebyar)" "(part :instrument ugal :name p 99)"))
     ;; Item 2: a top-level group before everything after it.
     (list "a group comes before a duplicate definition" '(group-outside-score 4)
           (lines "(piece \"P\")" "(strokes g G)" "(strokes g G)" "(group \"G\" a)"))
@@ -2602,102 +2609,102 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
           (lines "(piece \"P\")" "(part)" "(group \"G\" a)"))
     ;; Item 6: shape and options, in file order, before everything after.
     (list "a part's bad-form comes before a scale's bad-degree" '(bad-form 3)
-          (lines "(piece \"P\")" "(scale s (ding :display x))" "(part)"))
+          (lines "(piece \"P\")" "(scale s (ding :display x))" "(part :instrument reyong)"))
     (list "bad-form in file order: scale before part" '(bad-form 2)
-          (lines "(piece \"P\")" "(scale)" "(part)"))
+          (lines "(piece \"P\")" "(scale)" "(part :instrument reyong)"))
     (list "bad-form in file order: part before scale" '(bad-form 2)
-          (lines "(piece \"P\")" "(part)" "(scale)"))
+          (lines "(piece \"P\")" "(part :instrument reyong)" "(scale)"))
     (list "a part's option error comes before an earlier duplicate"
           '(unknown-option 4)
           (lines "(piece \"P\")" "(strokes g G)" "(strokes g G)"
-                 "(part x :colour red 1)"))
+                 "(part :instrument x :colour red 1)"))
     (list "a part's option-after-body comes before a bad degree"
           '(option-after-body 3)
-          (lines "(piece \"P\")" "(scale s (ding :display x))" "(part x 1 :name p)"))
+          (lines "(piece \"P\")" "(scale s (ding :display x))" "(part :instrument x 1 :name p)"))
     (list "a part's option comes before its undefined instrument" '(bad-option 2)
-          (lines "(piece \"P\")" "(part nowhere :name \"p\" 1)"))
+          (lines "(piece \"P\")" "(part :instrument nowhere :name \"p\" 1)"))
     ;; Item 7: duplicates, before scales and instruments.
     (list "a duplicate part comes before an instrument error"
           '(duplicate-definition 5)
           (lines "(piece \"P\")" "(scale s ding)" "(instrument x s foo1)"
-                 "(part x :name p 1)" "(part x :name p 1)"))
+                 "(part :instrument x :name p 1)" "(part :instrument x :name p 1)"))
     (list "a duplicate part comes before a bad degree" '(duplicate-definition 3)
-          (lines "(piece \"P\")" "(part x :name p 1)" "(part x :name p 1)"
+          (lines "(piece \"P\")" "(part :instrument x :name p 1)" "(part :instrument x :name p 1)"
                  "(scale s (ding :display x))"))
     (list "duplicates in file order: part before instrument"
           '(duplicate-definition 5)
-          (lines "(piece \"P\")" "(strokes g G)" "(part x :name p G)"
-                 "(instrument x g G)" "(part x :name p G)" "(instrument x g G)"))
+          (lines "(piece \"P\")" "(strokes g G)" "(part :instrument x :name p G)"
+                 "(instrument x g G)" "(part :instrument x :name p G)" "(instrument x g G)"))
     ;; Item 9 before 13.
     (list "an instrument error comes before an earlier part's error"
           '(unknown-note 4)
-          (lines "(piece \"P\")" "(strokes g G)" "(part x 9)"
+          (lines "(piece \"P\")" "(strokes g G)" "(part :instrument x 9)"
                  "(instrument x g K)"))
     (list "undefined-scale comes before undefined-instrument" '(undefined-scale 3)
-          (lines "(piece \"P\")" "(part nowhere 1)" "(instrument x s ding1)"))
+          (lines "(piece \"P\")" "(part :instrument nowhere 1)" "(instrument x s ding1)"))
     ;; Item 13: within a part, its instrument, parts-need-names, then
     ;; its tokens left to right.
     (list "undefined-instrument comes before the part's token errors"
           '(undefined-instrument 10 p)
-          (defs+ "(part nowhere :name p \"x\" _)"))
+          (defs+ "(part :instrument nowhere :name p \"x\" _)"))
     (list "parts-need-names comes before the second part's token errors"
           '(parts-need-names 11)
-          (defs+ "(part reyong 1 2)" "(part reyong :name b 9 foo1)"))
+          (defs+ "(part :instrument reyong 1 2)" "(part :instrument reyong :name b 9 foo1)"))
     (list "an earlier part's token error before a later parts-need-names"
           '(note-out-of-range 10 reyong 0)
-          (defs+ "(part reyong 9 2)" "(part reyong :name b 1 2)"))
+          (defs+ "(part :instrument reyong 9 2)" "(part :instrument reyong :name b 1 2)"))
     (list "parts-need-names comes before unequal-length" '(parts-need-names 11)
-          (defs+ "(part reyong 1 2)" "(part reyong :name b 1)"))
+          (defs+ "(part :instrument reyong 1 2)" "(part :instrument reyong :name b 1)"))
     (list "unknown-note before a later out-of-range"
           '(unknown-note 10 p 1)
-          (defs+ "(part reyong :name p 1 foo1 9 _)"))
+          (defs+ "(part :instrument reyong :name p 1 foo1 9 _)"))
     (list "out-of-range before a later unknown-note"
           '(note-out-of-range 10 p 1)
-          (defs+ "(part reyong :name p 1 9 foo1)"))
+          (defs+ "(part :instrument reyong :name p 1 9 foo1)"))
     (list "hold-without-note before a later unknown-token"
           '(hold-without-note 10 p 1)
-          (defs+ "(part reyong :name p - _ \"x\")"))
+          (defs+ "(part :instrument reyong :name p - _ \"x\")"))
     (list "unknown-token before a later bad-chord"
           '(unknown-token 10 p 1)
-          (defs+ "(part reyong :name p 1 \"x\" (1))"))
+          (defs+ "(part :instrument reyong :name p 1 \"x\" (1))"))
     (list "bad-chord before a later unknown-token"
           '(bad-chord 10 p 1)
-          (defs+ "(part reyong :name p 1 (1) \"x\")"))
+          (defs+ "(part :instrument reyong :name p 1 (1) \"x\")"))
     (list "bad-duration before a later unknown-note"
           '(bad-duration 10 p 1)
-          (defs+ "(part reyong :name p 1 2:0 foo1)"))
+          (defs+ "(part :instrument reyong :name p 1 2:0 foo1)"))
     (list "unknown-note before a later bad-duration"
           '(unknown-note 10 p 1)
-          (defs+ "(part reyong :name p 1 foo1 2:0)"))
+          (defs+ "(part :instrument reyong :name p 1 foo1 2:0)"))
     (list "misplaced-pulse-check before a later out-of-range note"
           '(misplaced-pulse-check 10 p 1/2)
-          (defs+ "(part reyong :name p 1:1/2 | 9)"))
+          (defs+ "(part :instrument reyong :name p 1:1/2 | 9)"))
     (list "an out-of-range note before a later misplaced-pulse-check"
           '(note-out-of-range 10 p 0)
-          (defs+ "(part reyong :name p 9:1/2 |)"))
+          (defs+ "(part :instrument reyong :name p 9:1/2 |)"))
     (list "a later part's misplaced-pulse-check before unequal-length"
           '(misplaced-pulse-check 12 c 1/2)
-          (defs+ "(part reyong :name a 1 2)" "(part reyong :name b 1)"
-                 "(part reyong :name c 1:1/2 | 2)"))
+          (defs+ "(part :instrument reyong :name a 1 2)" "(part :instrument reyong :name b 1)"
+                 "(part :instrument reyong :name c 1:1/2 | 2)"))
     ;; Item 13: parts in file order.
     (list "an earlier part's token error before a later part's"
           '(note-out-of-range 10 a 2)
-          (defs+ "(part reyong :name a 1 2 9)" "(part reyong :name b foo1 1 2)"))
+          (defs+ "(part :instrument reyong :name a 1 2 9)" "(part :instrument reyong :name b foo1 1 2)"))
     (list "an earlier part's undefined-instrument before a later token error"
           '(undefined-instrument 10 a)
-          (defs+ "(part nowhere :name a 1)" "(part reyong :name b 9)"))
+          (defs+ "(part :instrument nowhere :name a 1)" "(part :instrument reyong :name b 9)"))
     (list "an earlier part's token error before a later undefined-instrument"
           '(note-out-of-range 10 a 0)
-          (defs+ "(part reyong :name a 9)" "(part nowhere :name b 1)"))
+          (defs+ "(part :instrument reyong :name a 9)" "(part :instrument nowhere :name b 1)"))
     ;; Item 13 before 14.
     (list "all parts' token errors come before unequal-length"
           '(note-out-of-range 12 c 3)
-          (defs+ "(part reyong :name a 1 2 3 4)" "(part reyong :name b 1 2)"
-                 "(part reyong :name c 1 2 3 9)"))
+          (defs+ "(part :instrument reyong :name a 1 2 3 4)" "(part :instrument reyong :name b 1 2)"
+                 "(part :instrument reyong :name c 1 2 3 9)"))
     (list "a later undefined-instrument comes before unequal-length"
           '(undefined-instrument 12 c)
-          (defs+ "(part reyong :name a 1 2)" "(part reyong :name b 1)"
-                 "(part nowhere :name c 1 2)")))))
+          (defs+ "(part :instrument reyong :name a 1 2)" "(part :instrument reyong :name b 1)"
+                 "(part :instrument nowhere :name c 1 2)")))))
 
 (test-group "parts: cases decided at review"
   ;; reyong has 8 notes; ugal has 6.
@@ -2706,7 +2713,7 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
          (list "1.5 inside a chord" "reyong" "1 (2 1.5) 3 4" 1)
          (list "a chord with one out-of-range note: bad-chord first"
                "reyong" "1 (9) 3 4" 1)))
-  (let ((pc (read-defs+ "(part gong :name a / /)")))
+  (let ((pc (read-defs+ "(part :instrument gong :name a / /)")))
     (test-equal "a part of only / is allowed: length 0" 0
       (and pc (piece-length pc)))
     (test-equal "a part of only / has no events" '()
@@ -2914,7 +2921,7 @@ canonicalized, or the raised object (or no-error) unchanged."
                           "(piece \"P\")"                  ; 1
                           "(use \"defs.nts\")"             ; 2
                           "(instrument x sdefs a1 b1)"     ; 3
-                          "(part x :name p 1 2)"))         ; 4
+                          "(part :instrument x :name p 1 2)"))         ; 4
          (pc (read-file piece)))
     (test-equal "read-piece-file: string relative to the piece's folder"
       '(sdefs) (scale-names pc))
@@ -3139,7 +3146,7 @@ canonicalized, or the raised object (or no-error) unchanged."
   ;; The real gong-kebyar: replace ugal's range.
   (let ((pc (try-read-string "(piece \"P\")" "(use gong-kebyar)"
                              "(instrument ugal selisir i2 o2 e2)"   ; 3
-                             "(part ugal :name p 1 2 3)")))         ; 4
+                             "(part :instrument ugal :name p 1 2 3)")))         ; 4
     (test-equal "replacing ugal: it moves to the end"
       '(jegogan jublag calung panyacah pemade kantilan trompong reyong
         kempli gong kendang ugal)
@@ -3153,7 +3160,7 @@ canonicalized, or the raised object (or no-error) unchanged."
   (test-equal "replacing ugal: the template's 10 notes are gone"
     '(note-out-of-range 4 p 0)
     (error-fields (lines "(piece \"P\")" "(use gong-kebyar)"
-                         "(instrument ugal selisir i2 o2 e2)" "(part ugal :name p 4)")))
+                         "(instrument ugal selisir i2 o2 e2)" "(part :instrument ugal :name p 4)")))
 
   ;; A piece replaces the template's scale with one that has damped forms.
   (let ((pc (try-read-string "(piece \"P\")" "(use gong-kebyar)"
@@ -3322,15 +3329,15 @@ canonicalized, or the raised object (or no-error) unchanged."
                      (string-in dir "(piece \"P\")"
                                 (string-append "(use \"" name ".nts\")"))))))
           (list (list "piece" "(piece \"T\")" 'not-in-template)
-                (list "part" "(part x 1)" 'not-in-template)
+                (list "part" "(part :instrument x 1)" 'not-in-template)
                 (list "score" score-form 'not-in-template)
                 (list "group" "(group \"G\" p)" 'group-outside-score)
                 (list "text" "(text \"x\")" 'unknown-form))))
-    (let ((t (put-file dir "two.nts" "(scale s a)" score-form "(part x 1)")))
+    (let ((t (put-file dir "two.nts" "(scale s a)" score-form "(part :instrument x 1)")))
       (test-equal "not-in-template: the first such form in file order"
         (at 'not-in-template t 2)
         (err-at (string-in dir "(piece \"P\")" "(use \"two.nts\")"))))
-    (let ((t (put-file dir "grp.nts" "(part x 1)" "(group \"G\" p)")))
+    (let ((t (put-file dir "grp.nts" "(part :instrument x 1)" "(group \"G\" p)")))
       (test-equal "a later group comes before an earlier part's not-in-template"
         (at 'group-outside-score t 2)
         (err-at (string-in dir "(piece \"P\")" "(use \"grp.nts\")"))))
@@ -3353,7 +3360,7 @@ canonicalized, or the raised object (or no-error) unchanged."
             (string-in dir "(piece \"P\")" "(use \"t.nts\")"
                        "(instrument x ts a1)" "(use \"t.nts\")"))
       (list "after a part" (at 'use-not-first #f 3)
-            (string-in dir "(piece \"P\")" "(part x 1)" "(use \"t.nts\")"))
+            (string-in dir "(piece \"P\")" "(part :instrument x 1)" "(use \"t.nts\")"))
       (list "a group before a use: group-outside-score first"
             (at 'group-outside-score #f 2)
             (string-in dir "(piece \"P\")" "(group \"G\" p)" "(use \"t.nts\")"))
@@ -3498,11 +3505,11 @@ canonicalized, or the raised object (or no-error) unchanged."
          (q (t "q" "(instrument)"))                         ; bad-form at 1
          (m (t "m" "(use \"q.nts\")" "(scale)"))
          (late (t "late" "(use \"q.nts\")" "(scale s a)" "(use \"nope.nts\")"))
-         (nit (t "nit" "(use \"nope.nts\")" "(part x 1)"))
-         (nit2 (t "nit2" "(use)" "(part x 1)"))
+         (nit (t "nit" "(use \"nope.nts\")" "(part :instrument x 1)"))
+         (nit2 (t "nit2" "(use)" "(part :instrument x 1)"))
          (nit3 (t "nit3" "(scale)" score-form))
          (grp (t "grp" "(use)" "(group \"G\" p)"))
-         (unk (t "unk" "(part x 1)" "(foo)"))
+         (unk (t "unk" "(part :instrument x 1)" "(foo)"))
          (b (t "b" "(scale s a)"))
          (c (t "c" "(scale s b)"))
          (mc (t "mc" "(use \"b.nts\")" "(use \"c.nts\")"))
@@ -3585,10 +3592,10 @@ canonicalized, or the raised object (or no-error) unchanged."
             (string-in dir "(piece \"P\")" "(use \"bf.nts\")" "(scale s a)" "(scale s b)"))
       (list "a template error before the piece's part errors"
             (at 'bad-form bf 1)
-            (string-in dir "(piece \"P\")" "(use \"bf.nts\")" "(part nope :name p 1)"))
+            (string-in dir "(piece \"P\")" "(use \"bf.nts\")" "(part :instrument nope :name p 1)"))
       (list "a template error before the piece's part option errors"
             (at 'bad-form bf 1)
-            (string-in dir "(piece \"P\")" "(use \"bf.nts\")" "(part nope 1 :name p)"))
+            (string-in dir "(piece \"P\")" "(use \"bf.nts\")" "(part :instrument nope 1 :name p)"))
       (list "template-conflict before the piece's bad-form"
             (at 'template-conflict c 1)
             (string-in dir "(piece \"P\")" "(use \"b.nts\")" "(use \"c.nts\")" "(part)"))
@@ -3654,9 +3661,9 @@ canonicalized, or the raised object (or no-error) unchanged."
         "(instrument gong gong-strokes G GL P)"               ; 6
         "(instrument kempur gong-strokes P)"                  ; 7
         "(instrument kempli kempli-strokes K)"                ; 8
-        "(colotomy gilak 8 (gong gong -:3 GL:1 P - P G))"     ; 9
-        "(colotomy pair 4 (kempur kempur - P) (gong gong -:3 G:1))" ; 10
-        "(colotomy long 4 (gong gong -:2 P:2))"))             ; 11
+        "(colotomy gilak 8 (part :instrument gong -:3 GL:1 P - P G))"     ; 9
+        "(colotomy pair 4 (part :instrument kempur - P) (part :instrument gong -:3 G:1))" ; 10
+        "(colotomy long 4 (part :instrument gong -:2 P:2))"))             ; 11
 
 (define (piece-with options)
   "The piece form on line 1, with OPTIONS (a string) after its title."
@@ -3678,7 +3685,7 @@ line 12."
         "(strokes gong-strokes G GL P)"                       ; 3
         "(instrument u s a1 b1)"                              ; 4
         "(instrument gong gong-strokes G GL P)"               ; 5
-        "(colotomy gilak 8 (gong gong -:3 GL:1 P - P G))"))   ; 6
+        "(colotomy gilak 8 (part :instrument gong -:3 GL:1 P - P G))"))   ; 6
 
 (define (bare+ options . more)
   (apply lines (piece-with options) (append bare-lines more)))
@@ -3715,7 +3722,7 @@ line 12."
 ;;; Reading a colotomy
 
 (test-group "[colotomy] the colotomy record"
-  (let* ((pc (read-colo+ ":colotomy gilak" "(part ugal 1:16)"))
+  (let* ((pc (read-colo+ ":colotomy gilak" "(part :instrument ugal 1:16)"))
          (c (safe (lambda () (the-colotomy pc)))))
     (test-equal "piece-colotomies: one entry, starting at 0" '(0)
       (map car (piece-colotomies pc)))
@@ -3734,7 +3741,7 @@ line 12."
     (test-equal "its part's events over one cycle" gilak-gong-1
       (map event-triple (part-events (colotomy-part-named c 'gong)))))
 
-  (let* ((pc (read-colo+ ":colotomy pair" "(part ugal 1:8)"))
+  (let* ((pc (read-colo+ ":colotomy pair" "(part :instrument ugal 1:8)"))
          (c (safe (lambda () (the-colotomy pc)))))
     (test-equal "two parts, in the colotomy's order" '(kempur gong)
       (map part-name (colotomy-parts c)))
@@ -3745,8 +3752,8 @@ line 12."
       (map event-triple (part-events (colotomy-part-named c 'gong)))))
 
   (let ((pc (read-colo+ ":colotomy one"
-                        "(colotomy one 8 (gong gong G))"    ; 12
-                        "(part ugal 1:8)")))
+                        "(colotomy one 8 (part :instrument gong G))"    ; 12
+                        "(part :instrument ugal 1:8)")))
     (test-equal "a part of one pulse is written out on every pulse"
       (ones 0 8 0)
       (map event-triple
@@ -3755,8 +3762,8 @@ line 12."
       (part-triples pc 'gong)))
 
   (let ((pc (read-colo+ ":colotomy gilak"
-                        "(colotomy gong 4 (gong gong G:4))" ; 12
-                        "(part ugal 1:8)")))
+                        "(colotomy gong 4 (part :instrument gong G:4))" ; 12
+                        "(part :instrument ugal 1:8)")))
     (test-assert "a colotomy may share its name with an instrument" (piece? pc)))
 
   (for-each
@@ -3764,17 +3771,17 @@ line 12."
      ((name form)
       (test-assert name
         (piece? (read-colo+ "" form)))))
-   (list (list "a part as long as the cycle" "(colotomy c 8 (gong gong G:8))")
-         (list "a part of half the cycle" "(colotomy c 8 (gong gong G:4))")
-         (list "a part of a quarter of the cycle" "(colotomy c 8 (gong gong G -))")
-         (list "several parts" "(colotomy c 8 (gong gong G:8) (kempur kempur P:4))")
+   (list (list "a part as long as the cycle" "(colotomy c 8 (part :instrument gong G:8))")
+         (list "a part of half the cycle" "(colotomy c 8 (part :instrument gong G:4))")
+         (list "a part of a quarter of the cycle" "(colotomy c 8 (part :instrument gong G -))")
+         (list "several parts" "(colotomy c 8 (part :instrument gong G:8) (part :instrument kempur P:4))")
          (list "a colotomy on several lines"
-               "(colotomy c 8\n  (gong gong -:7 G:1)\n  (kempur kempur - P))")
+               "(colotomy c 8\n  (part :instrument gong -:7 G:1)\n  (part :instrument kempur - P))")
          (list "a part with rep and |"
-               "(colotomy c 8 (gong gong (rep 2 -:3 | G:1)))"))))
+               "(colotomy c 8 (part :instrument gong (rep 2 -:3 | G:1)))"))))
 
 (test-group "[colotomy] a colotomy that the piece does not use"
-  (let ((pc (read-colo+ "" "(part gong G - - -)" "(part kempur P - - -)")))
+  (let ((pc (read-colo+ "" "(part :instrument gong G - - -)" "(part :instrument kempur P - - -)")))
     (test-assert "reads" (piece? pc))
     (test-equal "no colotomies, pickup 0" '(() 0)
       (and pc (list (piece-colotomies pc) (piece-pickup pc))))
@@ -3789,7 +3796,7 @@ line 12."
 ;;; Generated parts
 
 (test-group "[colotomy] generated parts, no pickup"
-  (let ((pc (read-colo+ ":colotomy gilak" "(part ugal 1:16)")))  ; 12
+  (let ((pc (read-colo+ ":colotomy gilak" "(part :instrument ugal 1:16)")))  ; 12
     (test-equal "length: two cycles" 16 (piece-length pc))
     (test-equal "pickup 0" 0 (piece-pickup pc))
     (test-equal "written parts, then the colotomy's, then kempli"
@@ -3817,7 +3824,7 @@ line 12."
       (map group-label (default-groups pc)))
     (test-equal "part-end of each" '(16 16 16) (map part-end (piece-parts pc))))
 
-  (let ((pc (read-colo+ ":colotomy gilak :pickup 0" "(part ugal 1:16)")))
+  (let ((pc (read-colo+ ":colotomy gilak :pickup 0" "(part :instrument ugal 1:16)")))
     (test-equal ":pickup 0 is no pickup" '(0 16)
       (list (piece-pickup pc) (piece-length pc)))
     (test-equal ":pickup 0: the same gong"
@@ -3825,14 +3832,14 @@ line 12."
         (11 1 (1)) (12 1 (2)) (14 1 (2)) (15 1 (0)))
       (part-triples pc 'gong)))
 
-  (let ((pc (read-colo+ ":colotomy gilak" "(part ugal :name a 1:8)"
-                        "(part ugal :name b -:8)")))
+  (let ((pc (read-colo+ ":colotomy gilak" "(part :instrument ugal :name a 1:8)"
+                        "(part :instrument ugal :name b -:8)")))
     (test-equal "several written parts come first"
       '(a b gong kempli)
       (map part-name (piece-parts pc)))))
 
 (test-group "[colotomy] generated parts with a pickup"
-  (let ((pc (read-colo+ ":colotomy gilak :pickup 1" "(part ugal 1:17)")))
+  (let ((pc (read-colo+ ":colotomy gilak :pickup 1" "(part :instrument ugal 1:17)")))
     (test-equal "length: the pickup plus two cycles" 17 (piece-length pc))
     (test-equal "pickup" 1 (piece-pickup pc))
     (test-equal "gong: every cycle ends on the gong; the pickup is its last pulse"
@@ -3849,7 +3856,7 @@ line 12."
       (list (position->time pc 0 8) (position->time pc 1 1)
             (position->time pc 2 1))))
 
-  (let ((pc (read-colo+ ":colotomy gilak :pickup 8" "(part ugal 1:16)")))
+  (let ((pc (read-colo+ ":colotomy gilak :pickup 8" "(part :instrument ugal 1:16)")))
     (test-equal "a pickup of a whole cycle" '(8 16)
       (list (piece-pickup pc) (piece-length pc)))
     (test-equal "a pickup of a whole cycle: the gong as without one"
@@ -3857,13 +3864,13 @@ line 12."
         (11 1 (1)) (12 1 (2)) (14 1 (2)) (15 1 (0)))
       (part-triples pc 'gong)))
 
-  (let ((pc (read-colo+ ":colotomy gilak :pickup 3" "(part ugal 1:11)")))
+  (let ((pc (read-colo+ ":colotomy gilak :pickup 3" "(part :instrument ugal 1:11)")))
     (test-equal "a pickup of 3: strokes before time 0 are left out"
       '((1 1 (2)) (2 1 (0))
         (6 1 (1)) (7 1 (2)) (9 1 (2)) (10 1 (0)))
       (part-triples pc 'gong)))
 
-  (let ((pc (read-colo+ ":colotomy pair :pickup 1" "(part ugal 1:9)")))
+  (let ((pc (read-colo+ ":colotomy pair :pickup 1" "(part :instrument ugal 1:9)")))
     (test-equal "two colotomy parts, in the colotomy's order, then kempli"
       '(ugal kempur gong kempli)
       (map part-name (piece-parts pc)))
@@ -3880,14 +3887,14 @@ line 12."
     (test-equal "default groups" '("ugal" "kempur" "gong" "kempli")
       (map group-label (default-groups pc))))
 
-  (let ((pc (read-colo+ ":colotomy long :pickup 1" "(part ugal 1:5)")))
+  (let ((pc (read-colo+ ":colotomy long :pickup 1" "(part :instrument ugal 1:5)")))
     (test-equal "a stroke starting before time 0 is cut at 0"
       '((0 1 (2)) (3 2 (2)))
       (part-triples pc 'gong))))
 
 (test-group "[colotomy] 01's Gilak"
   (let ((pc (read-colo+ ":colotomy gilak :pickup 1"
-                        "(part ugal  a1 ||  o2 i2 e2 o2 | a1 o2 i2 a1 ||)")))
+                        "(part :instrument ugal  a1 ||  o2 i2 e2 o2 | a1 o2 i2 a1 ||)")))
     (test-assert "reads" (piece? pc))
     (test-equal "length 9" 9 (and pc (piece-length pc)))
     (test-equal "ugal events"
@@ -3901,7 +3908,7 @@ line 12."
 ;;; The timekeeper
 
 (test-group "[colotomy] the built-in kempli"
-  (let* ((pc (read-bare+ ":colotomy gilak" "(part u 1:8)"))   ; 7
+  (let* ((pc (read-bare+ ":colotomy gilak" "(part :instrument u 1:8)"))   ; 7
          (k (safe (lambda () (part-named pc 'kempli))))
          (inst (safe (lambda () (part-instrument k)))))
     (test-equal "parts: written, colotomy, timekeeper" '(u gong kempli)
@@ -3922,7 +3929,7 @@ line 12."
       (map group-label (default-groups pc)))
     (test-equal "location: the colotomy's" 6 (line-of-part pc 'kempli)))
 
-  (let* ((pc (read-bare+ "" "(part u 1 2 1)"))
+  (let* ((pc (read-bare+ "" "(part :instrument u 1 2 1)"))
          (k (safe (lambda () (part-named pc 'kempli)))))
     (test-equal "without a colotomy: still generated" '(u kempli)
       (map part-name (piece-parts pc)))
@@ -3937,7 +3944,7 @@ line 12."
       (map group-label (default-groups pc)))))
 
 (test-group "[colotomy] the piece's kempli"
-  (let* ((pc (read-defs+ "(part ugal 1 2 3)"))
+  (let* ((pc (read-defs+ "(part :instrument ugal 1 2 3)"))
          (k (safe (lambda () (part-named pc 'kempli)))))
     (test-equal "without a colotomy: after the written parts" '(ugal kempli)
       (map part-name (piece-parts pc)))
@@ -3954,17 +3961,17 @@ line 12."
      ((name part expected)
       (test-equal name expected
         (part-triples (read-bare+ "" part) 'kempli))))
-   (list (list "2 1/2 pulses: the last stroke cut at the end" "(part u 1:5/2)"
+   (list (list "2 1/2 pulses: the last stroke cut at the end" "(part :instrument u 1:5/2)"
                '((0 1 (0)) (1 1 (0)) (2 1/2 (0))))
-         (list "half a pulse" "(part u 1:1/2)"
+         (list "half a pulse" "(part :instrument u 1:1/2)"
                '((0 1/2 (0))))
-         (list "2 1/4 pulses, trailing rests counted" "(part u 1:7/4 -:1/2)"
+         (list "2 1/4 pulses, trailing rests counted" "(part :instrument u 1:7/4 -:1/2)"
                '((0 1 (0)) (1 1 (0)) (2 1/4 (0))))
-         (list "a whole number of pulses: no cut" "(part u 1:1/2 2:5/2)"
+         (list "a whole number of pulses: no cut" "(part :instrument u 1:1/2 2:5/2)"
                '((0 1 (0)) (1 1 (0)) (2 1 (0))))))
   (test-equal "on the piece's kempli too"
     '((0 1 (0)) (1 1/2 (0)))
-    (part-triples (read-defs+ "(part ugal 1:3/2)") 'kempli)))
+    (part-triples (read-defs+ "(part :instrument ugal 1:3/2)") 'kempli)))
 
 ;;; ------------------------------------------------------------------
 ;;; `||` checks
@@ -3976,21 +3983,21 @@ line 12."
       (test-equal name length
         (and=> (read-colo+ options part) piece-length))))
    (list (list "at the end of each cycle" ":colotomy gilak"
-               "(part ugal 1:8 || 2:8 ||)" 16)
+               "(part :instrument ugal 1:8 || 2:8 ||)" 16)
          (list "at time 0 with no pickup" ":colotomy gilak"
-               "(part ugal || 1:8 ||)" 8)
+               "(part :instrument ugal || 1:8 ||)" 8)
          (list "after the pickup" ":colotomy gilak :pickup 1"
-               "(part ugal 1 || 2:8 ||)" 9)
+               "(part :instrument ugal 1 || 2:8 ||)" 9)
          (list "with durations of a fraction" ":colotomy gilak"
-               "(part ugal 1:1/2 2 3:7 ||)" 8)
+               "(part :instrument ugal 1:1/2 2 3:7 ||)" 8)
          (list "in a rep, every repetition" ":colotomy gilak"
-               "(part ugal (rep 2 1:8 ||))" 16)
+               "(part :instrument ugal (rep 2 1:8 ||))" 16)
          (list "in a rep after a pickup" ":colotomy gilak :pickup 1"
-               "(part ugal 1 || (rep 2 2:8 ||))" 17)
+               "(part :instrument ugal 1 || (rep 2 2:8 ||))" 17)
          (list "a cycle of 4" ":colotomy pair"
-               "(part ugal 1:4 || 2:4 ||)" 8)
+               "(part :instrument ugal 1:4 || 2:4 ||)" 8)
          (list "with | checks too" ":colotomy pair"
-               "(part ugal 1 | 2 | 3 | 4 || 5:4 ||)" 8))))
+               "(part :instrument ugal 1 | 2 | 3 | 4 || 5:4 ||)" 8))))
 
 (test-group "misplaced-cycle-check"
   (for-each
@@ -3999,42 +4006,42 @@ line 12."
       (test-equal name (list 'misplaced-cycle-check 12 'p time)
         (error-fields (colo+ options part)))))
    (list (list "after three pulses" ":colotomy gilak"
-               "(part ugal :name p 1:3 || 2:5)" 3)
+               "(part :instrument ugal :name p 1:3 || 2:5)" 3)
          (list "after half a pulse" ":colotomy gilak"
-               "(part ugal :name p 1:1/2 || 2:1/2 3:7)" 1/2)
+               "(part :instrument ugal :name p 1:1/2 || 2:1/2 3:7)" 1/2)
          (list "a pulse after the cycle" ":colotomy gilak"
-               "(part ugal :name p 1:9 || 2:7)" 9)
+               "(part :instrument ugal :name p 1:9 || 2:7)" 9)
          (list "the second check" ":colotomy gilak"
-               "(part ugal :name p 1:8 || 2:4 || 3:4)" 12)
+               "(part :instrument ugal :name p 1:8 || 2:4 || 3:4)" 12)
          (list "in a rep: the first repetition" ":colotomy gilak"
-               "(part ugal :name p (rep 2 1:4 ||))" 4)
+               "(part :instrument ugal :name p (rep 2 1:4 ||))" 4)
          (list "in a rep: a later repetition" ":colotomy gilak"
-               "(part ugal :name p 1:4 (rep 2 2:4 ||))" 12)
+               "(part :instrument ugal :name p 1:4 (rep 2 2:4 ||))" 12)
          (list "with a pickup: the end of a cycle without it" ":colotomy gilak :pickup 1"
-               "(part ugal :name p 1:8 || 2:9)" 8)
+               "(part :instrument ugal :name p 1:8 || 2:9)" 8)
          (list "with a pickup: time 0" ":colotomy gilak :pickup 1"
-               "(part ugal :name p || 1:9)" 0)
+               "(part :instrument ugal :name p || 1:9)" 0)
          (list "a cycle of 4: after 2 pulses" ":colotomy pair"
-               "(part ugal :name p 1:2 || 2:2)" 2)))
+               "(part :instrument ugal :name p 1:2 || 2:2)" 2)))
   (test-equal "a multi-line part: the form's line" '(misplaced-cycle-check 12 p 3)
-    (error-fields (colo+ ":colotomy gilak" "(part ugal :name p" "  1:3 || 2:5)")))
+    (error-fields (colo+ ":colotomy gilak" "(part :instrument ugal :name p" "  1:3 || 2:5)")))
   (test-equal "without :name: part is the instrument's name"
     '(misplaced-cycle-check 12 ugal 3)
-    (error-fields (colo+ ":colotomy gilak" "(part ugal 1:3 || 2:5)"))))
+    (error-fields (colo+ ":colotomy gilak" "(part :instrument ugal 1:3 || 2:5)"))))
 
 (test-group "no-colotomy for ||"
   (for-each
    (match-lambda
      ((name text expected)
       (test-equal name expected (error-fields text))))
-   (list (list "after a pulse" (defs+ "(part reyong :name p 1 || 2)")
+   (list (list "after a pulse" (defs+ "(part :instrument reyong :name p 1 || 2)")
                '(no-colotomy 10 p 1))
-         (list "at time 0" (defs+ "(part reyong :name p || 1)")
+         (list "at time 0" (defs+ "(part :instrument reyong :name p || 1)")
                '(no-colotomy 10 p 0))
          (list "a colotomy defined but not the piece's"
-               (colo+ "" "(part ugal :name p 1:8 ||)")
+               (colo+ "" "(part :instrument ugal :name p 1:8 ||)")
                '(no-colotomy 12 p 8))
-         (list "in a rep" (defs+ "(part reyong :name p 1 (rep 2 2 ||))")
+         (list "in a rep" (defs+ "(part :instrument reyong :name p 1 (rep 2 2 ||))")
                '(no-colotomy 10 p 2)))))
 
 ;;; ------------------------------------------------------------------
@@ -4046,35 +4053,35 @@ line 12."
      ((name options line . parts)
       (test-equal name (list 'incomplete-cycle line)
         (string-error (apply colo+ options parts)))))
-   (list (list "a pulse short of a cycle" ":colotomy gilak" 12 "(part ugal 1:7)")
-         (list "a pulse more than a cycle" ":colotomy gilak" 12 "(part ugal 1:9)")
-         (list "half a pulse short" ":colotomy gilak" 12 "(part ugal 1:15/2)")
+   (list (list "a pulse short of a cycle" ":colotomy gilak" 12 "(part :instrument ugal 1:7)")
+         (list "a pulse more than a cycle" ":colotomy gilak" 12 "(part :instrument ugal 1:9)")
+         (list "half a pulse short" ":colotomy gilak" 12 "(part :instrument ugal 1:15/2)")
          (list "the first written part's line" ":colotomy gilak" 12
-               "(part ugal :name a 1:7)" "(part ugal :name b 1:7)")
+               "(part :instrument ugal :name a 1:7)" "(part :instrument ugal :name b 1:7)")
          (list "a multi-line first part" ":colotomy gilak" 12
-               "(part ugal" "  1:7)")
+               "(part :instrument ugal" "  1:7)")
          (list "with a pickup: whole cycles without it" ":colotomy gilak :pickup 1" 12
-               "(part ugal 1:16)")
+               "(part :instrument ugal 1:16)")
          (list "with a pickup: the pickup short" ":colotomy gilak :pickup 1" 12
-               "(part ugal 1:8)")
+               "(part :instrument ugal 1:8)")
          (list "a pickup of a whole cycle" ":colotomy gilak :pickup 8" 12
-               "(part ugal 1:9)")
-         (list "a cycle of 4" ":colotomy pair" 12 "(part ugal 1:6)")))
+               "(part :instrument ugal 1:9)")
+         (list "a cycle of 4" ":colotomy pair" 12 "(part :instrument ugal 1:6)")))
   (test-equal "the first written part's line, after other forms"
     '(incomplete-cycle 13)
-    (string-error (colo+ ":colotomy gilak" "" "(part ugal 1:7)")))
+    (string-error (colo+ ":colotomy gilak" "" "(part :instrument ugal 1:7)")))
   (for-each
    (match-lambda
      ((name options length . parts)
       (test-equal name length
         (and=> (apply read-colo+ options parts) piece-length))))
-   (list (list "one cycle" ":colotomy gilak" 8 "(part ugal 1:8)")
-         (list "three cycles" ":colotomy gilak" 24 "(part ugal 1:24)")
+   (list (list "one cycle" ":colotomy gilak" 8 "(part :instrument ugal 1:8)")
+         (list "three cycles" ":colotomy gilak" 24 "(part :instrument ugal 1:24)")
          (list "fractions adding up to a cycle" ":colotomy gilak" 8
-               "(part ugal 1:15/2 -:1/2)")
-         (list "pickup 1 plus one cycle" ":colotomy gilak :pickup 1" 9 "(part ugal 1:9)")
-         (list "pickup 3 plus one cycle" ":colotomy gilak :pickup 3" 11 "(part ugal 1:11)")
-         (list "a cycle of 4: three cycles" ":colotomy pair" 12 "(part ugal 1:12)"))))
+               "(part :instrument ugal 1:15/2 -:1/2)")
+         (list "pickup 1 plus one cycle" ":colotomy gilak :pickup 1" 9 "(part :instrument ugal 1:9)")
+         (list "pickup 3 plus one cycle" ":colotomy gilak :pickup 3" 11 "(part :instrument ugal 1:11)")
+         (list "a cycle of 4: three cycles" ":colotomy pair" 12 "(part :instrument ugal 1:12)"))))
 
 ;;; ------------------------------------------------------------------
 ;;; Colotomy forms: errors
@@ -4084,56 +4091,56 @@ line 12."
    (map (match-lambda
           ((name form) (list name 12 (colo+ "" form))))
         (list (list "no name" "(colotomy)")
-              (list "a name that is not a symbol" "(colotomy \"c\" 8 (gong gong G:8))")
-              (list "a number for a name" "(colotomy 8 (gong gong G:8))")
-              (list "no length" "(colotomy c (gong gong G:8))")
+              (list "a name that is not a symbol" "(colotomy \"c\" 8 (part :instrument gong G:8))")
+              (list "a number for a name" "(colotomy 8 (part :instrument gong G:8))")
+              (list "no length" "(colotomy c (part :instrument gong G:8))")
               (list "only a name" "(colotomy c)")
-              (list "length 0" "(colotomy c 0 (gong gong G))")
-              (list "a negative length" "(colotomy c -8 (gong gong G))")
-              (list "a fractional length" "(colotomy c 15/2 (gong gong G))")
-              (list "an inexact length" "(colotomy c 8.0 (gong gong G:8))")
-              (list "a symbol for a length" "(colotomy c x (gong gong G:8))")
-              (list "a string for a length" "(colotomy c \"8\" (gong gong G:8))")
+              (list "length 0" "(colotomy c 0 (part :instrument gong G))")
+              (list "a negative length" "(colotomy c -8 (part :instrument gong G))")
+              (list "a fractional length" "(colotomy c 15/2 (part :instrument gong G))")
+              (list "an inexact length" "(colotomy c 8.0 (part :instrument gong G:8))")
+              (list "a symbol for a length" "(colotomy c x (part :instrument gong G:8))")
+              (list "a string for a length" "(colotomy c \"8\" (part :instrument gong G:8))")
               (list "no parts" "(colotomy c 8)")
               (list "a part that is not a list" "(colotomy c 8 gong)")
               (list "a part with no instrument" "(colotomy c 8 (gong))")
-              (list "a part with no tokens" "(colotomy c 8 (gong gong))")
+              (list "a part with no tokens" "(colotomy c 8 (part :instrument gong))")
               (list "a part whose name is not a symbol" "(colotomy c 8 (\"gong\" gong G:8))")
               (list "a part whose instrument is not a symbol" "(colotomy c 8 (gong 3 G:8))")
               (list "an empty part" "(colotomy c 8 ())"))))
   (test-equal "a colotomy option that doesn't exist: unknown-option"
     '(unknown-option 12)
-    (string-error (colo+ "" "(colotomy c 8 :foo 1 (gong gong G:8))"))))
+    (string-error (colo+ "" "(colotomy c 8 :foo 1 (part :instrument gong G:8))"))))
 
 (test-group "duplicate-definition of a colotomy"
   (table-tests 'duplicate-definition
    (list (list "two colotomies of one name: the second" 12
-               (colo+ "" "(colotomy gilak 4 (gong gong G:4))"))
+               (colo+ "" "(colotomy gilak 4 (part :instrument gong G:4))"))
          (list "identical colotomies are still duplicates" 12
-               (colo+ "" "(colotomy pair 4 (kempur kempur - P) (gong gong -:3 G:1))"))))
+               (colo+ "" "(colotomy pair 4 (part :instrument kempur - P) (part :instrument gong -:3 G:1))"))))
   (test-assert "a colotomy may have a part's name"
-    (piece? (read-colo+ "" "(part ugal :name gilak 1)"))))
+    (piece? (read-colo+ "" "(part :instrument ugal :name gilak 1)"))))
 
 (test-group "token errors in a colotomy part"
   (for-each
    (match-lambda
      ((name form expected)
       (test-equal name expected (error-fields (colo+ "" form)))))
-   (list (list "unknown-note" "(colotomy c 8 (gong gong G:4 X))"
+   (list (list "unknown-note" "(colotomy c 8 (part :instrument gong G:4 X))"
                '(unknown-note 12 gong 4))
-         (list "a stroke of another instrument" "(colotomy c 8 (kempur kempur G:8))"
+         (list "a stroke of another instrument" "(colotomy c 8 (part :instrument kempur G:8))"
                '(unknown-note 12 kempur 0))
-         (list "note-out-of-range" "(colotomy c 8 (gong gong G 4 -:6))"
+         (list "note-out-of-range" "(colotomy c 8 (part :instrument gong G 4 -:6))"
                '(note-out-of-range 12 gong 1))
-         (list "hold-without-note" "(colotomy c 8 (gong gong _ G:7))"
+         (list "hold-without-note" "(colotomy c 8 (part :instrument gong _ G:7))"
                '(hold-without-note 12 gong 0))
-         (list "bad-duration" "(colotomy c 8 (gong gong G:0))"
+         (list "bad-duration" "(colotomy c 8 (part :instrument gong G:0))"
                '(bad-duration 12 gong 0))
-         (list "misplaced-pulse-check" "(colotomy c 8 (gong gong G:1/2 | G:15/2))"
+         (list "misplaced-pulse-check" "(colotomy c 8 (part :instrument gong G:1/2 | G:15/2))"
                '(misplaced-pulse-check 12 gong 1/2))
-         (list "unknown-token" "(colotomy c 8 (gong gong G:4 \"x\" -:3))"
+         (list "unknown-token" "(colotomy c 8 (part :instrument gong G:4 \"x\" -:3))"
                '(unknown-token 12 gong 4))
-         (list "in the second part" "(colotomy c 8 (gong gong G:8) (kempur kempur P:2 X))"
+         (list "in the second part" "(colotomy c 8 (part :instrument gong G:8) (part :instrument kempur P:2 X))"
                '(unknown-note 12 kempur 2)))))
 
 (test-group "undefined-instrument in a colotomy"
@@ -4141,11 +4148,11 @@ line 12."
    (match-lambda
      ((name form expected)
       (test-equal name expected (error-kind+line+part (colo+ "" form)))))
-   (list (list "nothing by that name" "(colotomy c 8 (gong nowhere G:8))"
+   (list (list "nothing by that name" "(colotomy c 8 (part :instrument nowhere :name gong G:8))"
                '(undefined-instrument 12 gong))
-         (list "a scale's name" "(colotomy c 8 (gong gong-strokes G:8))"
+         (list "a scale's name" "(colotomy c 8 (part :instrument gong-strokes :name gong G:8))"
                '(undefined-instrument 12 gong))
-         (list "the second part" "(colotomy c 8 (gong gong G:8) (kp nowhere P:8))"
+         (list "the second part" "(colotomy c 8 (part :instrument gong G:8) (part :instrument nowhere :name kp P:8))"
                '(undefined-instrument 12 kp)))))
 
 (test-group "colotomy-part-length"
@@ -4154,16 +4161,16 @@ line 12."
      ((name form part)
       (test-equal name (list 'colotomy-part-length 12 part)
         (error-kind+line+part (colo+ "" form)))))
-   (list (list "3 pulses in a cycle of 8" "(colotomy c 8 (gong gong G - -))" 'gong)
-         (list "longer than the cycle" "(colotomy c 8 (gong gong G:9))" 'gong)
-         (list "twice the cycle" "(colotomy c 8 (gong gong G:16))" 'gong)
-         (list "a fraction that does not divide" "(colotomy c 8 (gong gong G:5/2))" 'gong)
-         (list "6 pulses in a cycle of 8" "(colotomy c 8 (gong gong -:5 G:1))" 'gong)
-         (list "the second part" "(colotomy c 8 (gong gong G:8) (kempur kempur P:3))"
+   (list (list "3 pulses in a cycle of 8" "(colotomy c 8 (part :instrument gong G - -))" 'gong)
+         (list "longer than the cycle" "(colotomy c 8 (part :instrument gong G:9))" 'gong)
+         (list "twice the cycle" "(colotomy c 8 (part :instrument gong G:16))" 'gong)
+         (list "a fraction that does not divide" "(colotomy c 8 (part :instrument gong G:5/2))" 'gong)
+         (list "6 pulses in a cycle of 8" "(colotomy c 8 (part :instrument gong -:5 G:1))" 'gong)
+         (list "the second part" "(colotomy c 8 (part :instrument gong G:8) (part :instrument kempur P:3))"
                'kempur)))
   (test-equal "a multi-line colotomy: its form's line"
     '(colotomy-part-length 12 gong)
-    (error-kind+line+part (colo+ "" "(colotomy c 8" "  (gong gong G:3))"))))
+    (error-kind+line+part (colo+ "" "(colotomy c 8" "  (part :instrument gong G:3))"))))
 
 ;;; ------------------------------------------------------------------
 ;;; The piece's :colotomy and :pickup
@@ -4173,12 +4180,12 @@ line 12."
    (match-lambda
      ((name text)
       (test-equal name '(undefined-colotomy 1) (string-error text))))
-   (list (list "nothing by that name" (colo+ ":colotomy nowhere" "(part ugal 1:8)"))
-         (list "names are case-sensitive" (colo+ ":colotomy Gilak" "(part ugal 1:8)"))
-         (list "an instrument's name" (colo+ ":colotomy gong" "(part ugal 1:8)"))
-         (list "a part's name" (colo+ ":colotomy ugal" "(part ugal 1:8)"))
+   (list (list "nothing by that name" (colo+ ":colotomy nowhere" "(part :instrument ugal 1:8)"))
+         (list "names are case-sensitive" (colo+ ":colotomy Gilak" "(part :instrument ugal 1:8)"))
+         (list "an instrument's name" (colo+ ":colotomy gong" "(part :instrument ugal 1:8)"))
+         (list "a part's name" (colo+ ":colotomy ugal" "(part :instrument ugal 1:8)"))
          (list "no colotomies at all" "(piece \"P\" :colotomy gilak)")
-         (list "with a pickup" (colo+ ":colotomy nowhere :pickup 1" "(part ugal 1:9)"))))
+         (list "with a pickup" (colo+ ":colotomy nowhere :pickup 1" "(part :instrument ugal 1:9)"))))
   (test-equal "the piece form's line" '(undefined-colotomy 2)
     (string-error (lines ";; c" "(piece \"P\" :colotomy gilak)")))
   (let ((c (catch-syntax-error
@@ -4192,7 +4199,7 @@ line 12."
    (match-lambda
      ((name kind options)
       (test-equal name (list kind 1)
-        (string-error (colo+ options "(part ugal 1:9)")))))
+        (string-error (colo+ options "(part :instrument ugal 1:9)")))))
    (list (list ":colotomy with no value" 'bad-option ":colotomy")
          (list ":colotomy followed by a key" 'bad-option ":colotomy :pickup 1")
          (list ":colotomy a number" 'bad-option ":colotomy 8")
@@ -4207,7 +4214,7 @@ line 12."
    (match-lambda
      ((name options)
       (test-equal name '(bad-pickup 1)
-        (string-error (colo+ options "(part ugal 1:9)")))))
+        (string-error (colo+ options "(part :instrument ugal 1:9)")))))
    (list (list "more than a cycle" ":colotomy gilak :pickup 9")
          (list "two cycles" ":colotomy gilak :pickup 16")
          (list "negative" ":colotomy gilak :pickup -1")
@@ -4219,10 +4226,10 @@ line 12."
    (match-lambda
      ((name options part)
       (test-assert name (piece? (read-colo+ options part)))))
-   (list (list "pickup 0" ":colotomy gilak :pickup 0" "(part ugal 1:8)")
-         (list "pickup of one cycle" ":colotomy gilak :pickup 8" "(part ugal 1:16)")
-         (list "pickup of one cycle of 4" ":colotomy pair :pickup 4" "(part ugal 1:8)")
-         (list ":pickup before :colotomy" ":pickup 1 :colotomy gilak" "(part ugal 1:9)"))))
+   (list (list "pickup 0" ":colotomy gilak :pickup 0" "(part :instrument ugal 1:8)")
+         (list "pickup of one cycle" ":colotomy gilak :pickup 8" "(part :instrument ugal 1:16)")
+         (list "pickup of one cycle of 4" ":colotomy pair :pickup 4" "(part :instrument ugal 1:8)")
+         (list ":pickup before :colotomy" ":pickup 1 :colotomy gilak" "(part :instrument ugal 1:9)"))))
 
 (test-group "no-colotomy for :pickup"
   (for-each
@@ -4231,7 +4238,7 @@ line 12."
       (test-equal name '(no-colotomy 1) (string-error text))))
    (list (list ":pickup 1 alone" "(piece \"P\" :pickup 1)")
          (list ":pickup 0 alone" "(piece \"P\" :pickup 0)")
-         (list "colotomies defined, none named" (colo+ ":pickup 1" "(part ugal 1:9)"))))
+         (list "colotomies defined, none named" (colo+ ":pickup 1" "(part :instrument ugal 1:9)"))))
   (let ((c (catch-syntax-error
             (lambda () (read-piece-string "(piece \"P\" :pickup 1)")))))
     (test-equal "part and time #f" '(#f #f)
@@ -4247,25 +4254,25 @@ line 12."
      ((name expected text)
       (test-equal name expected (string-error text))))
    (list (list "a written gong with gilak" '(duplicate-definition 12)
-               (colo+ ":colotomy gilak" "(part gong G:8)"))
+               (colo+ ":colotomy gilak" "(part :instrument gong G:8)"))
          (list "a written kempli with a colotomy" '(duplicate-definition 13)
-               (colo+ ":colotomy gilak" "(part ugal 1:8)" "(part kempli K:8)"))
+               (colo+ ":colotomy gilak" "(part :instrument ugal 1:8)" "(part :instrument kempli K:8)"))
          (list "a :name of kempli" '(duplicate-definition 12)
-               (colo+ ":colotomy gilak" "(part ugal :name kempli 1:8)"))
+               (colo+ ":colotomy gilak" "(part :instrument ugal :name kempli 1:8)"))
          (list "a :name of a colotomy part" '(duplicate-definition 12)
-               (colo+ ":colotomy gilak" "(part ugal :name gong 1:8)"))
+               (colo+ ":colotomy gilak" "(part :instrument ugal :name gong 1:8)"))
          (list "the second part of a colotomy" '(duplicate-definition 13)
-               (colo+ ":colotomy pair" "(part ugal :name a 1:4)"
-                      "(part ugal :name kempur 1:4)"))
+               (colo+ ":colotomy pair" "(part :instrument ugal :name a 1:4)"
+                      "(part :instrument ugal :name kempur 1:4)"))
          (list "a written kempli without a colotomy" '(duplicate-definition 10)
-               (defs+ "(part kempli K)"))
+               (defs+ "(part :instrument kempli K)"))
          (list "a :name of kempli without a colotomy" '(duplicate-definition 10)
-               (defs+ "(part reyong :name kempli 1)"))
+               (defs+ "(part :instrument reyong :name kempli 1)"))
          (list "kempli with the built-in timekeeper" '(duplicate-definition 7)
-               (bare+ "" "(part u :name kempli 1)"))
+               (bare+ "" "(part :instrument u :name kempli 1)"))
          (list "the first such part" '(duplicate-definition 12)
-               (colo+ ":colotomy gilak" "(part ugal :name kempli 1:8)"
-                      "(part ugal :name gong 1:8)")))))
+               (colo+ ":colotomy gilak" "(part :instrument ugal :name kempli 1:8)"
+                      "(part :instrument ugal :name gong 1:8)")))))
 
 ;;; ------------------------------------------------------------------
 ;;; Check order (03, "Error reporting", items 4, 7, 9, 10, 12 to 15)
@@ -4277,43 +4284,43 @@ line 12."
       (test-equal name expected (string-error text))))
    (list
     (list "4 before 10: a piece option before a colotomy" '(bad-option 1)
-          (colo+ ":colotomy gilak :pickup 1.5" "(colotomy c 8 (gong gong G:3))"))
+          (colo+ ":colotomy gilak :pickup 1.5" "(colotomy c 8 (part :instrument gong G:3))"))
     (list "6 before 10: a colotomy's shape before another's tokens" '(bad-form 13)
-          (colo+ "" "(colotomy c 8 (gong gong X:8))" "(colotomy d 0 (gong gong G))"))
+          (colo+ "" "(colotomy c 8 (part :instrument gong X:8))" "(colotomy d 0 (part :instrument gong G))"))
     (list "7 before 10: duplicate parts before a colotomy's tokens"
           '(duplicate-definition 14)
-          (colo+ "" "(colotomy c 8 (gong gong X:8))"
-                 "(part ugal :name a 1)" "(part ugal :name a 1)"))
+          (colo+ "" "(colotomy c 8 (part :instrument gong X:8))"
+                 "(part :instrument ugal :name a 1)" "(part :instrument ugal :name a 1)"))
     (list "9 before 10: an instrument before a colotomy" '(unknown-note 13)
-          (colo+ "" "(colotomy c 8 (gong gong X:8))" "(instrument bad gong-strokes X)"))
+          (colo+ "" "(colotomy c 8 (part :instrument gong X:8))" "(instrument bad gong-strokes X)"))
     (list "10: colotomies in file order" '(colotomy-part-length 12)
-          (colo+ "" "(colotomy c 8 (gong gong G:3))" "(colotomy d 8 (gong gong X:8))"))
+          (colo+ "" "(colotomy c 8 (part :instrument gong G:3))" "(colotomy d 8 (part :instrument gong X:8))"))
     (list "10: a part's tokens before its length" '(note-out-of-range 12)
-          (colo+ "" "(colotomy c 8 (gong gong G 9 -))"))
+          (colo+ "" "(colotomy c 8 (part :instrument gong G 9 -))"))
     (list "10 before 12: a colotomy before the piece's" '(colotomy-part-length 12)
-          (colo+ ":colotomy nowhere" "(colotomy c 8 (gong gong G:3))"))
+          (colo+ ":colotomy nowhere" "(colotomy c 8 (part :instrument gong G:3))"))
     (list "10 before 12: an unused colotomy is checked" '(colotomy-part-length 12)
-          (colo+ ":colotomy gilak" "(colotomy c 8 (gong gong G:3))" "(part ugal 1:8)"))
+          (colo+ ":colotomy gilak" "(colotomy c 8 (part :instrument gong G:3))" "(part :instrument ugal 1:8)"))
     (list "12: undefined-colotomy before bad-pickup" '(undefined-colotomy 1)
-          (colo+ ":colotomy nowhere :pickup 99" "(part ugal 1:8)"))
+          (colo+ ":colotomy nowhere :pickup 99" "(part :instrument ugal 1:8)"))
     (list "12 before 13: undefined-colotomy before a part" '(undefined-colotomy 1)
-          (colo+ ":colotomy nowhere" "(part ugal 99)"))
+          (colo+ ":colotomy nowhere" "(part :instrument ugal 99)"))
     (list "12 before 13: bad-pickup before a part" '(bad-pickup 1)
-          (colo+ ":colotomy gilak :pickup 9" "(part nowhere 1)"))
+          (colo+ ":colotomy gilak :pickup 9" "(part :instrument nowhere 1)"))
     (list "12 before 13: no-colotomy before a part" '(no-colotomy 1)
-          (colo+ ":pickup 1" "(part ugal 99)"))
+          (colo+ ":pickup 1" "(part :instrument ugal 99)"))
     (list "13: a misplaced || before the length" '(misplaced-cycle-check 12)
-          (colo+ ":colotomy gilak" "(part ugal 1:3 || 2)"))
+          (colo+ ":colotomy gilak" "(part :instrument ugal 1:3 || 2)"))
     (list "13 before 14: a later part's token before the length" '(note-out-of-range 13)
-          (colo+ ":colotomy gilak" "(part ugal :name a 1:7)" "(part ugal :name b 99)"))
+          (colo+ ":colotomy gilak" "(part :instrument ugal :name a 1:7)" "(part :instrument ugal :name b 99)"))
     (list "14: unequal-length before incomplete-cycle" '(unequal-length 13)
-          (colo+ ":colotomy gilak" "(part ugal :name a 1:7)" "(part ugal :name b 1:8)"))
+          (colo+ ":colotomy gilak" "(part :instrument ugal :name a 1:7)" "(part :instrument ugal :name b 1:8)"))
     (list "14 before 15: the length before a generated name" '(incomplete-cycle 12)
-          (colo+ ":colotomy gilak" "(part gong G:7)"))
+          (colo+ ":colotomy gilak" "(part :instrument gong G:7)"))
     (list "14 before 15: unequal-length before a generated name" '(unequal-length 13)
-          (colo+ ":colotomy gilak" "(part kempli K:8)" "(part ugal 1:7)"))
+          (colo+ ":colotomy gilak" "(part :instrument kempli K:8)" "(part :instrument ugal 1:7)"))
     (list "7 before 15: written duplicates first" '(duplicate-definition 13)
-          (colo+ ":colotomy gilak" "(part ugal :name gong 1:8)" "(part ugal :name gong 1:8)")))))
+          (colo+ ":colotomy gilak" "(part :instrument ugal :name gong 1:8)" "(part :instrument ugal :name gong 1:8)")))))
 
 ;;; ------------------------------------------------------------------
 ;;; Colotomies in templates (03, step 3)
@@ -4323,13 +4330,13 @@ line 12."
          (tpl (put-file dir "colo.nts"
                         "(strokes gs G P)"                       ; 1
                         "(instrument gong gs G P)"               ; 2
-                        "(colotomy gilak 4 (gong gong -:3 G:1))")) ; 3
+                        "(colotomy gilak 4 (part :instrument gong -:3 G:1))")) ; 3
          (pc (read-in dir
                       "(piece \"P\" :colotomy gilak)"            ; 1
                       "(use \"colo.nts\")"                       ; 2
                       "(scale s a)"                              ; 3
                       "(instrument u s a1)"                      ; 4
-                      "(part u 1:8)")))                          ; 5
+                      "(part :instrument u 1:8)")))                          ; 5
     (test-assert "reads" (piece? pc))
     (test-equal "the template's colotomy: file and line" (list (canon tpl) 3)
       (and pc (let ((loc (colotomy-location (the-colotomy pc))))
@@ -4348,14 +4355,14 @@ line 12."
          (tpl (put-file dir "colo.nts"
                         "(strokes gs G P)"
                         "(instrument gong gs G P)"
-                        "(colotomy gilak 4 (gong gong -:3 G:1))"))
+                        "(colotomy gilak 4 (part :instrument gong -:3 G:1))"))
          (pc (read-in dir
                       "(piece \"P\" :colotomy gilak)"            ; 1
                       "(use \"colo.nts\")"                       ; 2
-                      "(colotomy gilak 2 (gong gong - P))"       ; 3
+                      "(colotomy gilak 2 (part :instrument gong - P))"       ; 3
                       "(scale s a)"
                       "(instrument u s a1)"
-                      "(part u 1:4)")))
+                      "(part :instrument u 1:4)")))
     (test-equal "the piece's colotomy replaces the template's" '(2 #f 3)
       (and pc (let* ((c (the-colotomy pc)) (loc (colotomy-location c)))
                 (list (colotomy-length c) (source-location-file loc)
@@ -4365,8 +4372,8 @@ line 12."
 
   (let* ((dir (fresh-dir))
          (a (put-file dir "a.nts" "(strokes gs G)" "(instrument gong gs G)"
-                      "(colotomy c 4 (gong gong -:3 G:1))"))
-         (b (put-file dir "b.nts" "(colotomy c 2 (gong gong - G))")))
+                      "(colotomy c 4 (part :instrument gong -:3 G:1))"))
+         (b (put-file dir "b.nts" "(colotomy c 2 (part :instrument gong - G))")))
     (error-tests
      (list (list "the same colotomy from two templates: template-conflict"
                  (at 'template-conflict b 1)
@@ -4374,7 +4381,7 @@ line 12."
 
   (let* ((dir (fresh-dir))
          (t (put-file dir "bad.nts" "(strokes gs G)" "(instrument gong gs G)"
-                      "(colotomy c 4 (gong gong G - -))")))
+                      "(colotomy c 4 (part :instrument gong G - -))")))
     (error-tests
      (list (list "an error in a template's colotomy: the template's file and line"
                  (at 'colotomy-part-length t 3)
@@ -4444,7 +4451,7 @@ line 12."
     (test-equal "parts' files are tenzer1.nts, with their lines"
       (map (lambda (name)
              (list "tenzer1.nts"
-                   (line-in tenzer-file (string-append "(part " name " "))))
+                   (line-in tenzer-file (string-append "(part :instrument " name " "))))
            '("ugal"))
       (map (lambda (p)
              (let ((loc (part-location p)))
@@ -4512,7 +4519,7 @@ STR, or the raised object (or no-error) unchanged."
 ;;; Reading patterns
 
 (test-group "[patterns] the pattern records"
-  (let ((pc (read-pat+ "(part reyong :name p 1 2)")))
+  (let ((pc (read-pat+ "(part :instrument reyong :name p 1 2)")))
     (test-assert "reads" (piece? pc))
     (test-equal "piece-patterns, in file order"
       '(two named short-only outer hold checked top g a1)
@@ -4541,18 +4548,18 @@ STR, or the raised object (or no-error) unchanged."
       (and pc (part-spans (part-named pc 'p))))
     (test-equal "the generated kempli has no spans" '()
       (and pc (part-spans (part-named pc 'kempli)))))
-  (let ((pc (try-read-string (defs+ "(part reyong 1)"))))
+  (let ((pc (try-read-string (defs+ "(part :instrument reyong 1)"))))
     (test-equal "a piece without patterns: piece-patterns is '()" '()
       (and pc (piece-patterns pc))))
   (let* ((path (write-temp-file "patterns.nts"
-                                (pat+ "(part reyong :name p 1)")))
+                                (pat+ "(part :instrument reyong :name p 1)")))
          (pc (read-file path)))
     (test-equal "read from a file: the file and line" (list (canon path) 11)
       (and pc (pattern-file+line (pattern-named pc 'named))))))
 
 (test-group "[patterns] using patterns in a part"
   (let ((pc (read-pat+
-             "(part reyong :name p 1 @two (@ named :step 1 :short \"x\" :long \"y\") 2)")))
+             "(part :instrument reyong :name p 1 @two (@ named :step 1 :short \"x\" :long \"y\") 2)")))
     (test-assert "reads" (piece? pc))
     (test-equal "events"
       '((0 1 (0)) (1 1 (2)) (2 1 (3)) (3 1 (3)) (4 1 (4)) (5 1 (1)))
@@ -4573,33 +4580,33 @@ STR, or the raised object (or no-error) unchanged."
         (test-equal (string-append name ": spans") spans
           (and pc (part-span-rows pc 'p))))))
    (list
-    (list "a pattern's names" "(part reyong :name p @named)"
+    (list "a pattern's names" "(part :instrument reyong :name p @named)"
           '((0 1 (2)) (1 1 (3))) '((named "1" "Norot on 1" 0 2 0)))
-    (list "nested: the inner span at depth 1" "(part reyong :name p 1 @outer)"
+    (list "nested: the inner span at depth 1" "(part :instrument reyong :name p 1 @outer)"
           '((0 1 (0)) (1 1/2 (0)) (3/2 1 (2)) (5/2 1 (3)) (7/2 1/2 (1)))
           '((outer "outer" "outer" 1 4 0) (two "two" "two" 3/2 7/2 1)))
     (list "the pattern starts at 1 pulse; the part's duration comes back"
-          "(part reyong :name p 1:1/4 @two 2)"
+          "(part :instrument reyong :name p 1:1/4 @two 2)"
           '((0 1/4 (0)) (1/4 1 (2)) (5/4 1 (3)) (9/4 1/4 (1)))
           '((two "two" "two" 1/4 9/4 0)))
     (list "a leading _ holds the note before"
-          "(part reyong :name p 1 @hold 2)"
+          "(part :instrument reyong :name p 1 @hold 2)"
           '((0 2 (0)) (2 1 (2)) (3 1 (1)))
           '((hold "hold" "hold" 1 3 0)))
-    (list "a rep: one span per repetition" "(part reyong :name p (rep 2 @two))"
+    (list "a rep: one span per repetition" "(part :instrument reyong :name p (rep 2 @two))"
           '((0 1 (2)) (1 1 (3)) (2 1 (2)) (3 1 (3)))
           '((two "two" "two" 0 2 0) (two "two" "two" 2 4 0)))
     (list "| in a pattern, on the pulse where it is used"
-          "(part reyong :name p @checked 2)"
+          "(part :instrument reyong :name p @checked 2)"
           '((0 1 (0)) (1 1 (1)))
           '((checked "checked" "checked" 0 1 0)))
-    (list ":step by name" "(part reyong :name p (@ top :step -1))"
+    (list ":step by name" "(part :instrument reyong :name p (@ top :step -1))"
           '((0 1 (6))) '((top "top" "top" 0 1 0)))))
-  (let ((pc (read-pat+ "(part ugal a1 @a1)")))
+  (let ((pc (read-pat+ "(part :instrument ugal a1 @a1)")))
     (test-equal "a pattern named like a note: a1 is the note, @a1 the pattern"
       '((0 1 (3)) (1 1 (1)))
       (and pc (part-triples pc 'ugal))))
-  (let ((pc (try-read-string (defs+ "(part reyong :name p @late)"          ; 10
+  (let ((pc (try-read-string (defs+ "(part :instrument reyong :name p @late)"          ; 10
                                     "(pattern late :instrument reyong 1)")))) ; 11
     (test-equal "a pattern defined after the part that uses it"
       '((0 1 (0)))
@@ -4607,7 +4614,7 @@ STR, or the raised object (or no-error) unchanged."
     (test-equal "its span" '((late "late" "late" 0 1 0))
       (and pc (part-span-rows pc 'p))))
   (let ((pc (try-read-string (defs+ "(pattern reyong :instrument reyong 1)"
-                                    "(part reyong @reyong)"))))
+                                    "(part :instrument reyong @reyong)"))))
     (test-equal "patterns have their own names: a pattern called reyong"
       '((0 1 (0)))
       (and pc (part-triples pc 'reyong)))))
@@ -4678,11 +4685,11 @@ STR, or the raised object (or no-error) unchanged."
    (list (list "two patterns with one name: the second" '(duplicate-definition 11)
                "(pattern a :instrument reyong 1)" "(pattern a :instrument reyong 2)")
          (list "on different instruments" '(duplicate-definition 12)
-               "(pattern a :instrument reyong 1)" "(part reyong 1)"
+               "(pattern a :instrument reyong 1)" "(part :instrument reyong 1)"
                "(pattern a :instrument gong G)")))
   (test-assert "a pattern may share a name with an instrument and a part"
     (piece? (try-read-string (defs+ "(pattern gong :instrument gong G)"
-                                    "(part gong G)")))))
+                                    "(part :instrument gong G)")))))
 
 (test-group "[patterns] token errors where a pattern is defined"
   ;; part #f, time within the pattern, at the pattern's line
@@ -4712,7 +4719,7 @@ STR, or the raised object (or no-error) unchanged."
                '(wrong-instrument 11 #f 1)
                "(pattern g :instrument gong G)" "(pattern a :instrument reyong 1 @g)")
          (list "an unused pattern is checked" '(note-out-of-range 10 #f 0)
-               "(pattern a :instrument reyong 9)" "(part reyong 1)")))
+               "(pattern a :instrument reyong 9)" "(part :instrument reyong 1)")))
   (let* ((path (write-temp-file "pattern-error.nts"
                                 (defs+ "(pattern a :instrument reyong 1 9)")))
          (c (catch-syntax-error (lambda () (read-piece-file path)))))
@@ -4727,7 +4734,7 @@ STR, or the raised object (or no-error) unchanged."
   (for-each
    (match-lambda
      ((name form)
-      (test-assert name (piece? (try-read-string (defs+ form "(part reyong 1)"))))))
+      (test-assert name (piece? (try-read-string (defs+ form "(part :instrument reyong 1)"))))))
    (list (list "| off the pulse: checked where used" "(pattern a :instrument reyong 1:1/2 |)")
          (list "a leading _" "(pattern a :instrument reyong _ 1)")
          (list "a pattern for the same instrument inside it"
@@ -4746,35 +4753,35 @@ STR, or the raised object (or no-error) unchanged."
    (list
     (list "misplaced-pulse-check: | checked where used"
           '(misplaced-pulse-check 19 p 3/2 ((checked . 15)))
-          "(part reyong :name p 1:1/2 @checked 2:1/2)")
+          "(part :instrument reyong :name p 1:1/2 @checked 2:1/2)")
     (list "hold-without-note: a pattern starting with _ first in the part"
           '(hold-without-note 19 p 0 ((hold . 14)))
-          "(part reyong :name p @hold)")
+          "(part :instrument reyong :name p @hold)")
     (list "hold-without-note: after a rest"
           '(hold-without-note 19 p 1 ((hold . 14)))
-          "(part reyong :name p - @hold)")
+          "(part :instrument reyong :name p - @hold)")
     (list "moved-note-out-of-range: a name moved off the top"
           '(moved-note-out-of-range 19 p 1 ((top . 16)))
-          "(part reyong :name p 1 (@ top :step 1))")
+          "(part :instrument reyong :name p 1 (@ top :step 1))")
     (list "moved-note-out-of-range: keys in a nested pattern"
           '(moved-note-out-of-range 19 p 1/2 ((two . 10) (outer . 13)))
-          "(part reyong :name p (@ outer :step 7))")
+          "(part :instrument reyong :name p (@ outer :step 7))")
     (list "moved-note-out-of-range: a multi-line part, the part's line"
           '(moved-note-out-of-range 19 p 1 ((top . 16)))
-          "(part reyong :name p 1" "  (@ top :step 1))")
+          "(part :instrument reyong :name p 1" "  (@ top :step 1))")
     (list "undefined-pattern" '(undefined-pattern 19 p 1 ())
-          "(part reyong :name p 1 @nope)")
+          "(part :instrument reyong :name p 1 @nope)")
     (list "undefined-pattern in the list form" '(undefined-pattern 19 p 0 ())
-          "(part reyong :name p (@ nope :step 1))")
+          "(part :instrument reyong :name p (@ nope :step 1))")
     (list "wrong-instrument: a gong pattern on the reyong"
           '(wrong-instrument 19 p 1 ())
-          "(part reyong :name p 1 @g)")
+          "(part :instrument reyong :name p 1 @g)")
     (list "wrong-instrument: a reyong pattern on the gong"
           '(wrong-instrument 19 p 1 ())
-          "(part gong :name p G @two)")
+          "(part :instrument gong :name p G @two)")
     (list "without :name: the part is the instrument's name"
           '(undefined-pattern 19 reyong 0 ())
-          "(part reyong @nope)")))
+          "(part :instrument reyong @nope)")))
   (for-each
    (match-lambda
      ((name expected . forms)
@@ -4783,23 +4790,23 @@ STR, or the raised object (or no-error) unchanged."
     (list "pattern-cycle: a pattern that uses itself"
           '(pattern-cycle 11 p 1 ((self . 10)))
           "(pattern self :instrument reyong 1 @self)"           ; 10
-          "(part reyong :name p @self)")                        ; 11
+          "(part :instrument reyong :name p @self)")                        ; 11
     (list "pattern-cycle: through another pattern"
           '(pattern-cycle 12 p 3 ((pong . 11) (ping . 10)))
           "(pattern ping :instrument reyong 1 @pong)"           ; 10
           "(pattern pong :instrument reyong 2 @ping)"           ; 11
-          "(part reyong :name p 1 @ping)")                      ; 12
+          "(part :instrument reyong :name p 1 @ping)")                      ; 12
     (list "undefined-pattern inside a pattern: that pattern's use"
           '(undefined-pattern 11 p 1 ((a . 10)))
           "(pattern a :instrument reyong 1 @nope)"              ; 10
-          "(part reyong :name p @a)"))))                        ; 11
+          "(part :instrument reyong :name p @a)"))))                        ; 11
 
 (test-group "[patterns] bad-pattern-use, at its own line"
   (for-each
    (match-lambda
      ((name use time)
       (test-equal name (list 'bad-pattern-use 20 'p time '())
-        (use-error (pat+ "(part reyong :name p 1"              ; 19
+        (use-error (pat+ "(part :instrument reyong :name p 1"              ; 19
                          (string-append "  " use ")"))))))      ; 20
    (list (list "no name" "(@)" 1)
          (list "a number as the name" "(@ 3)" 1)
@@ -4808,14 +4815,14 @@ STR, or the raised object (or no-error) unchanged."
          (list "a token after the name" "(@ two 1)" 1)
          (list "at its time" "2:1/2 (@)" 3/2)))
   (test-equal "on the part's line when written there" '(bad-pattern-use 19 p 1 ())
-    (use-error (pat+ "(part reyong :name p 1 (@))"))))
+    (use-error (pat+ "(part :instrument reyong :name p 1 (@))"))))
 
 (test-group "[patterns] operators: option kinds at the (@ ...) line"
   (for-each
    (match-lambda
      ((name kind use)
       (test-equal name (list kind 20 'p 1 '())
-        (use-error (pat+ "(part reyong :name p 1"               ; 19
+        (use-error (pat+ "(part :instrument reyong :name p 1"               ; 19
                          (string-append "  " use ")"))))))       ; 20
    (list (list ":step a fraction" 'bad-option "(@ two :step 1/2)")
          (list ":step inexact" 'bad-option "(@ two :step 1.0)")
@@ -4834,14 +4841,14 @@ STR, or the raised object (or no-error) unchanged."
 (test-group "[patterns] || in a pattern"
   (let ((pc (read-colo+ ":colotomy gilak"
                         "(pattern cyc :instrument ugal 1:8 ||)"  ; 12
-                        "(part ugal :name p @cyc)")))            ; 13
+                        "(part :instrument ugal :name p @cyc)")))            ; 13
     (test-assert "on a cycle boundary where used: reads" (piece? pc))
     (test-equal "events" '((0 8 (0))) (and pc (part-triples pc 'p))))
   (test-equal "off the boundary where used"
     '(misplaced-cycle-check 13 p 9 ((cyc . 12)))
     (use-error (colo+ ":colotomy gilak"
                       "(pattern cyc :instrument ugal 1:8 ||)"     ; 12
-                      "(part ugal :name p 1 @cyc 2:7)"))))       ; 13
+                      "(part :instrument ugal :name p 1 @cyc 2:7)"))))       ; 13
 
 ;;; ------------------------------------------------------------------
 ;;; Patterns in templates (03, step 3)
@@ -4856,7 +4863,7 @@ STR, or the raised object (or no-error) unchanged."
                       "(piece \"P\")"                                  ; 1
                       "(use \"pat.nts\")"                              ; 2
                       "(pattern mine :instrument u 3)"                 ; 3
-                      "(part u @up (@ up :step 1) @mine)")))           ; 4
+                      "(part :instrument u @up (@ up :step 1) @mine)")))           ; 4
     (test-assert "reads" (piece? pc))
     (test-equal "merged order: the template's patterns, then the piece's"
       '(up mine)
@@ -4883,7 +4890,7 @@ STR, or the raised object (or no-error) unchanged."
                       "(piece \"P\")"
                       "(use \"pat.nts\")"
                       "(pattern up :instrument u 3)"                   ; 3
-                      "(part u @up)")))
+                      "(part :instrument u @up)")))
     (test-equal "the piece's pattern replaces the template's" '((0 1 (2)))
       (and pc (part-triples pc 'u)))
     (test-equal "the replacement's location" '(#f 3)
@@ -4900,7 +4907,7 @@ STR, or the raised object (or no-error) unchanged."
              (string-in dir
                         "(piece \"P\")"
                         "(use \"pat.nts\")"
-                        "(part u 1 (@ up :step 2))"))))                ; 3
+                        "(part :instrument u 1 (@ up :step 2))"))))                ; 3
     (test-equal "an error at a use of a template's pattern: the piece's part line, the template's pattern line in uses"
       '(moved-note-out-of-range #f 3 u 2 ((up . 3)))
       (and (notasi-syntax-error? c)
@@ -4958,7 +4965,7 @@ STR, or the raised object (or no-error) unchanged."
     (list "9 before 11: an instrument before a pattern" '(unknown-note 11)
           (defs+ "(pattern a :instrument reyong 9)" "(instrument bad selisir x1)"))
     (list "10 before 11: a colotomy before a pattern" '(colotomy-part-length 13)
-          (colo+ "" "(pattern a :instrument ugal 99)" "(colotomy c 8 (gong gong G:3))"))
+          (colo+ "" "(pattern a :instrument ugal 99)" "(colotomy c 8 (part :instrument gong G:3))"))
     (list "11: missing-option before the tokens" '(missing-option 10)
           (defs+ "(pattern a 9)"))
     (list "11: undefined-instrument before the tokens" '(undefined-instrument 10)
@@ -4975,15 +4982,15 @@ STR, or the raised object (or no-error) unchanged."
     (list "11 before 12: a pattern before the piece's colotomy" '(note-out-of-range 12)
           (colo+ ":colotomy nowhere" "(pattern a :instrument ugal 99)"))
     (list "11 before 13: a pattern after a part is checked first" '(note-out-of-range 11)
-          (defs+ "(part reyong :name p 9)" "(pattern a :instrument reyong 99)"))
+          (defs+ "(part :instrument reyong :name p 9)" "(pattern a :instrument reyong 99)"))
     (list "13: tokens and uses left to right: a note first" '(note-out-of-range 10)
-          (defs+ "(part reyong :name p 9 @nope)"))
+          (defs+ "(part :instrument reyong :name p 9 @nope)"))
     (list "13: tokens and uses left to right: a use first" '(undefined-pattern 10)
-          (defs+ "(part reyong :name p @nope 9)"))
+          (defs+ "(part :instrument reyong :name p @nope 9)"))
     (list "13: parts in file order" '(note-out-of-range 10)
-          (defs+ "(part reyong :name a 9 1)" "(part reyong :name b @nope 1)"))
+          (defs+ "(part :instrument reyong :name a 9 1)" "(part :instrument reyong :name b @nope 1)"))
     (list "13 before 14: a use before unequal-length" '(undefined-pattern 11)
-          (defs+ "(part reyong :name a 1 2)" "(part reyong :name b @nope)")))))
+          (defs+ "(part :instrument reyong :name a 1 2)" "(part :instrument reyong :name b @nope)")))))
 
 ;;; ==================================================================
 ;;; [scores] Scores and groups (slice feat/scores-form)
@@ -4996,10 +5003,10 @@ STR, or the raised object (or no-error) unchanged."
 ;;; The parts: ugal, polos and sangsih (both on reyong), gong, and the
 ;;; generated kempli (on the piece's kempli instrument).
 (define scores-parts
-  (list "(part ugal 1 2 3 4)"                    ; 10
-        "(part reyong :name polos 1 2 3 4)"      ; 11
-        "(part reyong :name sangsih 4 3 2 1)"    ; 12
-        "(part gong G - - P)"))                  ; 13
+  (list "(part :instrument ugal 1 2 3 4)"                    ; 10
+        "(part :instrument reyong :name polos 1 2 3 4)"      ; 11
+        "(part :instrument reyong :name sangsih 4 3 2 1)"    ; 12
+        "(part :instrument gong G - - P)"))                  ; 13
 
 (define (scores+ . more)
   "parts-defs, the four parts, then the lines MORE from line 14."
@@ -5214,7 +5221,7 @@ STR, or the raised object (or no-error) unchanged."
                       (source-location-line
                        (group-location (car (score-groups sc)))))))))
 
-  (let ((pc (read-colo+ ":colotomy gilak :pickup 1" "(part ugal 1:17)"    ; 12
+  (let ((pc (read-colo+ ":colotomy gilak :pickup 1" "(part :instrument ugal 1:17)"    ; 12
                         "(score s (group \"U\" ugal) (group \"G\" gong kempli))")))
     (test-equal "a colotomy's generated parts in a score"
       '(((ugal "ugal")) ((gong "gong") (kempli "kempli")))
@@ -5267,11 +5274,11 @@ STR, or the raised object (or no-error) unchanged."
              (score-groups (score-named pc 'default))
              (piece-parts pc))))
 
-  (let ((pc (read-bare+ "" "(part u 1 2 1)")))
+  (let ((pc (read-bare+ "" "(part :instrument u 1 2 1)")))
     (test-equal "the built-in kempli is left out" '("u")
       (and pc (score-group-labels (score-named pc 'default)))))
 
-  (let ((pc (read-colo+ ":colotomy gilak" "(part ugal 1:16)")))
+  (let ((pc (read-colo+ ":colotomy gilak" "(part :instrument ugal 1:16)")))
     (test-equal "a colotomy's generated parts are in it"
       '("ugal" "gong" "kempli")
       (and pc (score-group-labels (score-named pc 'default))))
@@ -5304,7 +5311,7 @@ STR, or the raised object (or no-error) unchanged."
     (list "a body item that is not a group: a symbol" 14
           (scores+ "(score full (group \"U\" ugal) foo)"))
     (list "a body item that is not a group: a part form" 14
-          (scores+ "(score full (part ugal 1 2 3 4))"))
+          (scores+ "(score full (part :instrument ugal 1 2 3 4))"))
     (list "a group label that is a symbol: the group's line" 15
           (one-group "(group ugal ugal)"))
     (list "a group label that is a number" 15 (one-group "(group 3 ugal)"))
@@ -5444,7 +5451,7 @@ colotomy, 4 pulses."
 ;;; gilak (8 pulses) with a one-pulse pickup: 17 pulses; the pickup is
 ;;; time 0, cycle 1 is 1-9, cycle 2 is 9-17. The score is on line 13.
 (define (gilak-score options)
-  (colo+ ":colotomy gilak :pickup 1" "(part ugal 1:17)"
+  (colo+ ":colotomy gilak :pickup 1" "(part :instrument ugal 1:17)"
          (string-append "(score s " options " (group \"U\" ugal))")))
 
 (define (gilak-range options)
@@ -5452,7 +5459,7 @@ colotomy, 4 pulses."
 
 ;;; gilak without a pickup: 16 pulses, cycle 1 is 0-8, cycle 2 is 8-16.
 (define (gilak0-score options)
-  (colo+ ":colotomy gilak" "(part ugal 1:16)"
+  (colo+ ":colotomy gilak" "(part :instrument ugal 1:16)"
          (string-append "(score s " options " (group \"U\" ugal))")))
 
 (define (gilak0-range options)
@@ -5460,7 +5467,7 @@ colotomy, 4 pulses."
 
 (test-group "[scores] every option reads"
   (let ((pc (read-colo+
-             ":colotomy gilak :pickup 1" "(part ugal 1:17)"          ; 12
+             ":colotomy gilak :pickup 1" "(part :instrument ugal 1:17)"          ; 12
              "(score s :title \"T\" :subtitle \"S\" :caption \"C\""   ; 13
              "  :from (1 1) :to (2 8) :system-length 4 :breaks ((2 1))"
              "  :cycle-numbers yes :pulse-numbers yes :numbering gong-last"
@@ -5703,11 +5710,11 @@ colotomy, 4 pulses."
       '(#t gong-last)
       (and pc (let ((sc (score-named pc 's)))
                 (list (score-pulse-numbers? sc) (score-numbering sc))))))
-  (let ((pc (read-colo+ ":colotomy gilak" "(part ugal 1:16)"           ; 12
+  (let ((pc (read-colo+ ":colotomy gilak" "(part :instrument ugal 1:16)"           ; 12
                         "(score s :cycle-numbers no (group \"U\" ugal))")))
     (test-equal "with a colotomy, :cycle-numbers no: #f" '(#f)
       (and pc (list (score-cycle-numbers? (score-named pc 's))))))
-  (let ((pc (read-colo+ ":colotomy gilak" "(part ugal 1:16)"
+  (let ((pc (read-colo+ ":colotomy gilak" "(part :instrument ugal 1:16)"
                         "(score s (group \"U\" ugal))")))
     (test-equal "with a colotomy, by default: #t" #t
       (and pc (score-cycle-numbers? (score-named pc 's)))))
@@ -5785,7 +5792,7 @@ colotomy, 4 pulses."
           "(score s" "  (group \"U\" ugal)" "  (group \"N\" nope))")))
   (test-equal "the built-in kempli is never printed: undefined-part"
     '(undefined-part 8 kempli)
-    (error-kind+line+part (bare+ "" "(part u 1 2 1)"            ; 7
+    (error-kind+line+part (bare+ "" "(part :instrument u 1 2 1)"            ; 7
                                  "(score s (group \"K\" kempli))")))  ; 8
   (test-equal "the piece's kempli may be printed"
     '(("kempli"))
@@ -5866,16 +5873,16 @@ colotomy, 4 pulses."
       (test-equal name expected (apply score-error more))))
    (list
     (list "6 before 13: a score's shape before a part's tokens" '(bad-form 15)
-          "(part reyong :name bad 99 1 1 1)" "(score)")
+          "(part :instrument reyong :name bad 99 1 1 1)" "(score)")
     (list "7 before 16: a duplicate score before a group's part"
           '(duplicate-definition 15)
           "(score a (group \"A\" nope))" "(score a (group \"B\" ugal))")
     (list "13 before 16: a part's tokens before a score written first"
           '(note-out-of-range 15)
-          "(score a (group \"A\" nope))" "(part reyong :name bad 99 1 1 1)")
+          "(score a (group \"A\" nope))" "(part :instrument reyong :name bad 99 1 1 1)")
     (list "14 before 16: lengths before a score written first"
           '(unequal-length 15)
-          "(score a (group \"A\" nope))" "(part reyong :name short 1)")
+          "(score a (group \"A\" nope))" "(part :instrument reyong :name short 1)")
     (list "16: a score's options before its groups" '(unknown-option 14)
           "(score a :tempo 1 (group \"A\" nope))")
     (list "16: a score's bad-position before its groups" '(bad-position 14)
@@ -6053,28 +6060,28 @@ colotomy, 4 pulses."
           "(score s :note-names yes" "  (group \"R\" :rows single polos sangsih))")
     (list "a note struck while another is held"
           '(notes-collide 17 b 1)
-          "(part reyong :name a 1 _ - -)"                         ; 14
-          "(part reyong :name b - 2 - -)"                         ; 15
+          "(part :instrument reyong :name a 1 _ - -)"                         ; 14
+          "(part :instrument reyong :name b - 2 - -)"                         ; 15
           "(score s :note-names yes" "  (group \"R\" :rows single a b))") ; 16, 17
     (list "two held notes overlapping: the first shared column"
           '(notes-collide 17 b 2)
-          "(part reyong :name a 1 _ _ -)"
-          "(part reyong :name b - - 2 _)"
+          "(part :instrument reyong :name a 1 _ _ -)"
+          "(part :instrument reyong :name b - - 2 _)"
           "(score s :note-names yes" "  (group \"R\" :rows single a b))")
     (list "half pulses: the time of the shared column"
           '(notes-collide 17 b 1/2)
-          "(part reyong :name a 1:1/2 _ - - - - - -)"
-          "(part reyong :name b -:1/2 2 - - - - - -)"
+          "(part :instrument reyong :name a 1:1/2 _ - - - - - -)"
+          "(part :instrument reyong :name b -:1/2 2 - - - - - -)"
           "(score s :note-names yes" "  (group \"R\" :rows single a b))")
     (list "three parts: the earliest collision decides"
           '(notes-collide 18 c 1)
-          "(part reyong :name a - - 1 -)"                         ; 14
-          "(part reyong :name b - 2 _ -)"                         ; 15
-          "(part reyong :name c 3 _ _ -)"                         ; 16
+          "(part :instrument reyong :name a - - 1 -)"                         ; 14
+          "(part :instrument reyong :name b - 2 _ -)"                         ; 15
+          "(part :instrument reyong :name c 3 _ _ -)"                         ; 16
           "(score s :note-names yes" "  (group \"R\" :rows single a b c))") ; 17, 18
     (list "the score's :rows single" '(notes-collide 18 b 1)
-          "(part reyong :name a 1 _ - -)"
-          "(part reyong :name b - 2 - -)"
+          "(part :instrument reyong :name a 1 _ - -)"
+          "(part :instrument reyong :name b - 2 - -)"
           "(score s :rows single :note-names yes"                 ; 16
           "  (group \"U\" ugal)"                                  ; 17
           "  (group \"R\" a b))")                                 ; 18
@@ -6088,19 +6095,19 @@ colotomy, 4 pulses."
       (test-assert name (piece? (apply read-scores+ more)))))
    (list
     (list "notes one after the other do not collide"
-          "(part reyong :name a 1 - - -)"
-          "(part reyong :name b - 2 - 3)"
+          "(part :instrument reyong :name a 1 - - -)"
+          "(part :instrument reyong :name b - 2 - 3)"
           "(score s :note-names yes" "  (group \"R\" :rows single a b))")
     (list "a held note ending where the next starts"
-          "(part reyong :name a 1 _ - -)"
-          "(part reyong :name b - - 2 _)"
+          "(part :instrument reyong :name a 1 _ - -)"
+          "(part :instrument reyong :name b - - 2 _)"
           "(score s :note-names yes" "  (group \"R\" :rows single a b))")
     (list "half pulses that interleave"
-          "(part reyong :name a 1:1/2 - 1 - 1 - 1 -)"
-          "(part reyong :name b -:1/2 2 - 2 - 2 - 2)"
+          "(part :instrument reyong :name a 1:1/2 - 1 - 1 - 1 -)"
+          "(part :instrument reyong :name b -:1/2 2 - 2 - 2 - 2)"
           "(score s :note-names yes" "  (group \"R\" :rows single a b))")
     (list "a chord in one part is one event on its row"
-          "(part reyong :name a (1 3) - - -)"
+          "(part :instrument reyong :name a (1 3) - - -)"
           "(score s :note-names yes" "  (group \"R\" :rows single a))")
     (list "the same parts on :rows parts"
           "(score s :note-names yes" "  (group \"R\" :rows parts polos sangsih))")
@@ -6123,18 +6130,18 @@ colotomy, 4 pulses."
    (list
     (list "a key struck while the other part holds it"
           '(notes-collide 17 b 1)
-          "(part reyong :name a 1 _ - -)"                         ; 14
-          "(part reyong :name b - 1 - -)"                         ; 15
+          "(part :instrument reyong :name a 1 _ - -)"                         ; 14
+          "(part :instrument reyong :name b - 1 - -)"                         ; 15
           "(score s" "  (group \"R\" a b))")                    ; 16, 17
     (list "the same key, the same start, different lengths"
           '(notes-collide 17 b 0)
-          "(part reyong :name a 1 _ - -)"
-          "(part reyong :name b 1 - - -)"
+          "(part :instrument reyong :name a 1 _ - -)"
+          "(part :instrument reyong :name b 1 - - -)"
           "(score s" "  (group \"R\" a b))")
     (list "one note of a chord against a held note"
           '(notes-collide 17 b 1)
-          "(part reyong :name a 3 _ - -)"
-          "(part reyong :name b - (1 3) - -)"
+          "(part :instrument reyong :name a 3 _ - -)"
+          "(part :instrument reyong :name b - (1 3) - -)"
           "(score s" "  (group \"R\" a b))")))
   (for-each
    (match-lambda
@@ -6142,24 +6149,24 @@ colotomy, 4 pulses."
       (test-assert name (piece? (apply read-scores+ more)))))
    (list
     (list "a unison: the same key, start and length"
-          "(part reyong :name a 1 2 - -)"
-          "(part reyong :name b 1 3 - -)"
+          "(part :instrument reyong :name a 1 2 - -)"
+          "(part :instrument reyong :name b 1 3 - -)"
           "(score s" "  (group \"R\" a b))")
     (list "a unison of held notes"
-          "(part reyong :name a 1 _ 2 -)"
-          "(part reyong :name b 1 _ - 3)"
+          "(part :instrument reyong :name a 1 _ 2 -)"
+          "(part :instrument reyong :name b 1 _ - 3)"
           "(score s" "  (group \"R\" a b))")
     (list "different keys at once"
-          "(part reyong :name a 1 _ - -)"
-          "(part reyong :name b 2 _ - -)"
+          "(part :instrument reyong :name a 1 _ - -)"
+          "(part :instrument reyong :name b 2 _ - -)"
           "(score s" "  (group \"R\" a b))")
     (list "the same key in separate groups"
-          "(part reyong :name a 1 _ - -)"
-          "(part reyong :name b - 1 - -)"
+          "(part :instrument reyong :name a 1 _ - -)"
+          "(part :instrument reyong :name b - 1 - -)"
           "(score s" "  (group \"R\" a)" "  (group \"S\" b))")
     (list "the same key on :rows parts"
-          "(part reyong :name a 1 _ - -)"
-          "(part reyong :name b - 1 - -)"
+          "(part :instrument reyong :name a 1 _ - -)"
+          "(part :instrument reyong :name b - 1 - -)"
           "(score s :note-names yes" "  (group \"R\" :rows parts a b))"))))
   (test-assert "notes-collide is a &notasi-syntax-error with file #f"
     (let ((c (catch-syntax-error
@@ -6174,8 +6181,8 @@ colotomy, 4 pulses."
   (let ((t (let ((c (catch-syntax-error
                      (lambda ()
                        (read-piece-string
-                        (scores+ "(part reyong :name a 1:1/2 _ - - - - - -)"
-                                 "(part reyong :name b -:1/2 2 - - - - - -)"
+                        (scores+ "(part :instrument reyong :name a 1:1/2 _ - - - - - -)"
+                                 "(part :instrument reyong :name b -:1/2 2 - - - - - -)"
                                  "(score s :note-names yes"
                                  "  (group \"R\" :rows single a b))"))))))
              (and (notasi-syntax-error? c) (notasi-syntax-error-time c)))))
@@ -6335,70 +6342,70 @@ colotomy, 4 pulses."
    (list
     (list "two patterns at the same time: the later part, the first shared time"
           '(pattern-names-overlap 23 b 0)
-          "(part reyong :name a @alpha @beta)"                     ; 20
-          "(part reyong :name b @beta @alpha)"                     ; 21
+          "(part :instrument reyong :name a @alpha @beta)"                     ; 20
+          "(part :instrument reyong :name b @beta @alpha)"                     ; 21
           "(score s :pattern-names short"                          ; 22
           "  (group \"R\" a b))")                                  ; 23
     (list "the same name, shifted: not identical"
           '(pattern-names-overlap 23 b 1)
-          "(part reyong :name a @alpha 1 2)"
-          "(part reyong :name b 1 @alpha 2)"
+          "(part :instrument reyong :name a @alpha 1 2)"
+          "(part :instrument reyong :name b 1 @alpha 2)"
           "(score s :pattern-names short" "  (group \"R\" a b))")
     (list "the same pattern and time, renamed at a use"
           '(pattern-names-overlap 23 b 0)
-          "(part reyong :name a @alpha 1 2)"
-          "(part reyong :name b (@ alpha :short \"Z\") 1 2)"
+          "(part :instrument reyong :name a @alpha 1 2)"
+          "(part :instrument reyong :name b (@ alpha :short \"Z\") 1 2)"
           "(score s :pattern-names short" "  (group \"R\" a b))")
     (list ":pattern-names long: one short name, two long ones"
           '(pattern-names-overlap 23 b 0)
-          "(part reyong :name a @alpha 1 2)"
-          "(part reyong :name b @other 1 2)"
+          "(part :instrument reyong :name a @alpha 1 2)"
+          "(part :instrument reyong :name b @other 1 2)"
           "(score s :pattern-names long" "  (group \"R\" a b))")
     (list "half pulses: the time where they start to share"
           '(pattern-names-overlap 23 b 1/2)
-          "(part reyong :name a 1:1/2 @alpha 1 2 3)"
+          "(part :instrument reyong :name a 1:1/2 @alpha 1 2 3)"
           ;; Keys 5 and 6, so that no key is shared (notes-collide).
-          "(part reyong :name b @beta 5 6)"
+          "(part :instrument reyong :name b @beta 5 6)"
           "(score s :pattern-names short" "  (group \"R\" a b))")
     (list "the later part in member order, not file order"
           '(pattern-names-overlap 23 a 0)
-          "(part reyong :name a @alpha @beta)"
-          "(part reyong :name b @beta @alpha)"
+          "(part :instrument reyong :name a @alpha @beta)"
+          "(part :instrument reyong :name b @beta @alpha)"
           "(score s :pattern-names short" "  (group \"R\" b a))")
     (list "three parts: the earliest shared time decides"
           '(pattern-names-overlap 24 c 1)
-          "(part reyong :name a 1 2 @alpha)"                       ; 20: A 2-4
-          "(part reyong :name b 1 @beta 2)"                        ; 21: B 1-3
-          "(part reyong :name c 1 @one 2 3)"                       ; 22: C 1-2
+          "(part :instrument reyong :name a 1 2 @alpha)"                       ; 20: A 2-4
+          "(part :instrument reyong :name b 1 @beta 2)"                        ; 21: B 1-3
+          "(part :instrument reyong :name c 1 @one 2 3)"                       ; 22: C 1-2
           "(score s :pattern-names short" "  (group \"R\" a b c))") ; 23, 24
     (list ":pattern-level 1: the spans inside"
           '(pattern-names-overlap 23 b 0)
-          "(part reyong :name a @outer 1 2)"
-          "(part reyong :name b @outer-a 1 2)"
+          "(part :instrument reyong :name a @outer 1 2)"
+          "(part :instrument reyong :name b @outer-a 1 2)"
           "(score s :pattern-names short :pattern-level 1" "  (group \"R\" a b))")
     (list "the score's :pattern-names: at the group's line"
           '(pattern-names-overlap 24 b 0)
-          "(part reyong :name a @alpha @beta)"
-          "(part reyong :name b @beta @alpha)"
+          "(part :instrument reyong :name a @alpha @beta)"
+          "(part :instrument reyong :name b @beta @alpha)"
           "(score s :pattern-names short"                          ; 22
           "  (group \"U\" ugal)"                                   ; 23
           "  (group \"R\" a b))")                                  ; 24
     (list "a group's own :pattern-names"
           '(pattern-names-overlap 23 b 0)
-          "(part reyong :name a @alpha @beta)"
-          "(part reyong :name b @beta @alpha)"
+          "(part :instrument reyong :name a @alpha @beta)"
+          "(part :instrument reyong :name b @beta @alpha)"
           "(score s" "  (group \"R\" :pattern-names long a b))")
     (list "a group's :pattern-level over the score's"
           '(pattern-names-overlap 23 b 0)
-          "(part reyong :name a @outer 1 2)"
-          "(part reyong :name b @outer-a 1 2)"
+          "(part :instrument reyong :name a @outer 1 2)"
+          "(part :instrument reyong :name b @outer-a 1 2)"
           "(score s :pattern-names short :pattern-level 0"
           "  (group \"R\" :pattern-level 1 a b))")
     (list "the second group's line, the first group's own spans fine"
           '(pattern-names-overlap 25 c 0)
-          "(part reyong :name a @alpha @beta)"                     ; 20
-          "(part reyong :name b @beta @alpha)"                     ; 21
-          "(part reyong :name c @alpha @alpha)"                    ; 22
+          "(part :instrument reyong :name a @alpha @beta)"                     ; 20
+          "(part :instrument reyong :name b @beta @alpha)"                     ; 21
+          "(part :instrument reyong :name c @alpha @alpha)"                    ; 22
           "(score s :pattern-names short"                          ; 23
           "  (group \"A\" a)"                                    ; 24
           "  (group \"R\" b c))")))                              ; 25
@@ -6408,53 +6415,53 @@ colotomy, 4 pulses."
       (test-assert name (piece? (apply overlap-reads more)))))
    (list
     (list "identical spans from two parts are merged"
-          "(part reyong :name a @alpha @beta)"
-          "(part reyong :name b @alpha @beta)"
+          "(part :instrument reyong :name a @alpha @beta)"
+          "(part :instrument reyong :name b @alpha @beta)"
           "(score s :pattern-names short" "  (group \"R\" a b))")
     (list ":pattern-names short: the same short name, different long names"
-          "(part reyong :name a @alpha 1 2)"
-          "(part reyong :name b @other 1 2)"
+          "(part :instrument reyong :name a @alpha 1 2)"
+          "(part :instrument reyong :name b @other 1 2)"
           "(score s :pattern-names short" "  (group \"R\" a b))")
     (list "a name given at a use, identical to the other part's"
-          "(part reyong :name a @alpha 1 2)"
-          "(part reyong :name b (@ beta :short \"A\") 1 2)"
+          "(part :instrument reyong :name a @alpha 1 2)"
+          "(part :instrument reyong :name b (@ beta :short \"A\") 1 2)"
           "(score s :pattern-names short" "  (group \"R\" a b))")
     (list "spans that only touch share no time"
-          "(part reyong :name a @alpha 1 2)"
-          "(part reyong :name b 1 2 @beta)"
+          "(part :instrument reyong :name a @alpha 1 2)"
+          "(part :instrument reyong :name b 1 2 @beta)"
           "(score s :pattern-names short" "  (group \"R\" a b))")
     (list ":pattern-names none: overlapping spans are not checked"
-          "(part reyong :name a @alpha @beta)"
-          "(part reyong :name b @beta @alpha)"
+          "(part :instrument reyong :name a @alpha @beta)"
+          "(part :instrument reyong :name b @beta @alpha)"
           "(score s" "  (group \"R\" a b))")
     (list "a group's :pattern-names none over the score's short"
-          "(part reyong :name a @alpha @beta)"
-          "(part reyong :name b @beta @alpha)"
+          "(part :instrument reyong :name a @alpha @beta)"
+          "(part :instrument reyong :name b @beta @alpha)"
           "(score s :pattern-names short" "  (group \"R\" :pattern-names none a b))")
     (list "level 0: different spans inside identical ones"
-          "(part reyong :name a @outer 1 2)"
-          "(part reyong :name b @outer-a 1 2)"
+          "(part :instrument reyong :name a @outer 1 2)"
+          "(part :instrument reyong :name b @outer-a 1 2)"
           "(score s :pattern-names short" "  (group \"R\" a b))")
     (list "level 1: different spans at depth 0 are not checked"
-          "(part reyong :name a @alpha 1 2)"
-          "(part reyong :name b @beta 1 2)"
+          "(part :instrument reyong :name a @alpha 1 2)"
+          "(part :instrument reyong :name b @beta 1 2)"
           "(score s :pattern-names short :pattern-level 1" "  (group \"R\" a b))")
     (list "the parts in different groups"
-          "(part reyong :name a @alpha @beta)"
-          "(part reyong :name b @beta @alpha)"
+          "(part :instrument reyong :name a @alpha @beta)"
+          "(part :instrument reyong :name b @beta @alpha)"
           "(score s :pattern-names short" "  (group \"R\" a) (group \"S\" b))")
     (list "a part without patterns beside one with them"
-          "(part reyong :name a @alpha @beta)"
+          "(part :instrument reyong :name a @alpha @beta)"
           "(score s :pattern-names short" "  (group \"R\" polos a))")
     (list "one part: its own spans follow one another"
-          "(part reyong :name a @alpha @beta)"
+          "(part :instrument reyong :name a @alpha @beta)"
           "(score s :pattern-names long" "  (group \"R\" a))")))
   (test-assert "pattern-names-overlap is a &notasi-syntax-error with file #f"
     (let ((c (catch-syntax-error
               (lambda ()
                 (read-piece-string
-                 (overlap+ "(part reyong :name a @alpha @beta)"
-                           "(part reyong :name b @beta @alpha)"
+                 (overlap+ "(part :instrument reyong :name a @alpha @beta)"
+                           "(part :instrument reyong :name b @beta @alpha)"
                            "(score s :pattern-names short" "  (group \"R\" a b))"))))))
       (and (notasi-syntax-error? c)
            (eq? 'pattern-names-overlap (notasi-syntax-error-kind c))
@@ -6463,16 +6470,16 @@ colotomy, 4 pulses."
   (let ((t (let ((c (catch-syntax-error
                      (lambda ()
                        (read-piece-string
-                        (overlap+ "(part reyong :name a 1:1/2 @alpha 1 2 3)"
-                                  "(part reyong :name b @beta 1 2)"
+                        (overlap+ "(part :instrument reyong :name a 1:1/2 @alpha 1 2 3)"
+                                  "(part :instrument reyong :name b @beta 1 2)"
                                   "(score s :pattern-names short"
                                   "  (group \"R\" a b))"))))))
              (and (notasi-syntax-error? c) (notasi-syntax-error-time c)))))
     (test-assert "the time is an exact rational"
       (and (rational? t) (exact? t))))
   (let* ((path (write-temp-file "overlap.nts"
-                                (overlap+ "(part reyong :name a @alpha @beta)"
-                                          "(part reyong :name b @beta @alpha)"
+                                (overlap+ "(part :instrument reyong :name a @alpha @beta)"
+                                          "(part :instrument reyong :name b @beta @alpha)"
                                           "(score s :pattern-names short"
                                           "  (group \"R\" a b))")))
          (c (catch-syntax-error (lambda () (read-piece-file path)))))
@@ -6491,27 +6498,27 @@ colotomy, 4 pulses."
    (list
     (list "a bad :pattern-level before the overlap, in one group"
           '(bad-option 23)
-          "(part reyong :name a @alpha @beta)"
-          "(part reyong :name b @beta @alpha)"
+          "(part :instrument reyong :name a @alpha @beta)"
+          "(part :instrument reyong :name b @beta @alpha)"
           "(score s :pattern-names short"
           "  (group \"R\" :pattern-level -1 a b))")
     (list "needs-note-names before the overlap, in one group"
           '(needs-note-names 23)
-          "(part reyong :name a @alpha @beta)"
-          "(part reyong :name b @beta @alpha)"
+          "(part :instrument reyong :name a @alpha @beta)"
+          "(part :instrument reyong :name b @beta @alpha)"
           "(score s :pattern-names short"
           "  (group \"R\" :rows parts a b))")
     (list "a later group's member before an earlier overlap"
           '(undefined-part 24)
-          "(part reyong :name a @alpha @beta)"
-          "(part reyong :name b @beta @alpha)"
+          "(part :instrument reyong :name a @alpha @beta)"
+          "(part :instrument reyong :name b @beta @alpha)"
           "(score s :pattern-names short"
           "  (group \"R\" a b)"
           "  (group \"U\" nope))")
     (list "a score's overlap before a later score's errors"
           '(pattern-names-overlap 23)
-          "(part reyong :name a @alpha @beta)"
-          "(part reyong :name b @beta @alpha)"
+          "(part :instrument reyong :name a @alpha @beta)"
+          "(part :instrument reyong :name b @beta @alpha)"
           "(score x :pattern-names short"
           "  (group \"R\" a b))"
           "(score y (group \"U\" nope))"))))
@@ -6592,19 +6599,19 @@ colotomy, 4 pulses."
       (and pc (piece-colotomies pc))))
   ;; The reyong's lowest key is e2, its highest u4.
   (let ((pc (try-read-string "(piece \"P\")" "(use gong-kebyar)"
-                             "(part reyong 1 12 e2 u4)")))
+                             "(part :instrument reyong 1 12 e2 u4)")))
     (test-equal "reyong: key 1 is e2 and key 12 is u4"
       '((0 1 (0)) (1 1 (11)) (2 1 (0)) (3 1 (11)))
       (and pc (part-triples pc 'reyong))))
-  ;; Colotomies stay in the pieces.
+  ;; gilak comes from the template (ADR 0046); pangecet-16 doesn't.
   (test-equal "a piece's :colotomy gilak with no colotomy of its own"
-    '(undefined-colotomy 1)
+    'no-error
     (string-error (lines "(piece \"P\" :colotomy gilak)" "(use gong-kebyar)"
-                         "(part ugal 1:8)")))
+                         "(part :instrument ugal 1:8)")))
   (test-equal "a piece's :colotomy pangecet-16 with no colotomy of its own"
     '(undefined-colotomy 1)
     (string-error (lines "(piece \"P\" :colotomy pangecet-16 :pickup 1)"
-                         "(use gong-kebyar)" "(part ugal 1:17)"))))
+                         "(use gong-kebyar)" "(part :instrument ugal 1:17)"))))
 
 (define runner (test-runner-current))
 (test-end "reader")

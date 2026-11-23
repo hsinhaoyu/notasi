@@ -6,7 +6,7 @@
   o3:1/4 i3 i3 - | i3 - i3 -)
 
 ;; Each use is named after the tone it plays.
-(part reyong
+(part :instrument reyong
   @norot
   (@ norot :step -1 :short "a" :long "Norot on a")
   (@ norot :step 1 :short "o" :long "Norot on o")

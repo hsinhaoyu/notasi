@@ -3,5 +3,5 @@
 (use gong-kebyar)
 
 ;; The kempli, one stroke per pulse, is added by notasi.
-(part ugal    a1 o2 i2 e2 o2 a1 o2 i2)
-(part gong    G  -  -  -  P  -  -  G)
+(part :instrument ugal    a1 o2 i2 e2 o2 a1 o2 i2)
+(part :instrument gong    G  -  -  -  P  -  -  G)

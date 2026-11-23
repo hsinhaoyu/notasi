@@ -3,6 +3,6 @@
 (use gong-kebyar)
 
 ;; pulse:  1                 2                 3                 4
-(part ugal    a1                o2                i2                e2)
-(part reyong  i3:1/4 _  i3 o3 | _  i3 o3 _  | o3 i3 _  o3 | i3 o3 _  i3)
-(part gong    G:1               -:3)
+(part :instrument ugal    a1                o2                i2                e2)
+(part :instrument reyong  i3:1/4 _  i3 o3 | _  i3 o3 _  | o3 i3 _  o3 | i3 o3 _  i3)
+(part :instrument gong    G:1               -:3)

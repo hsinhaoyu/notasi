@@ -14,10 +14,8 @@
 
 (use gong-kebyar)
 
-;; Gong lanang on pulse 4, kempur on 5 and 7, and the gong (wadon) on 8,
-;; ending the cycle.
-(colotomy gilak 8
-  (gong gong  -:3 GL:1 P - P G))
+;; The gongs come from gilak, in the template: gong lanang on pulse 4,
+;; kempur on 5 and 7, and the gong (wadon) on 8, ending the cycle.
 
 ;; pulse:   8 || 1  2  3  4  5  6  7  8
-(part ugal  a1 || o2 i2 e2 o2 a1 o2 i2 a1 ||)
+(part :instrument ugal  a1 || o2 i2 e2 o2 a1 o2 i2 a1 ||)

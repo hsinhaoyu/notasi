@@ -63,7 +63,7 @@ See [its README](../iterations/02-gold-and-tenzer/README.md).
 
 See [its README](../iterations/03-refining-the-examples/README.md).
 
-1. `feat/syntax`: parts with `:instrument`, colotomy parts as `part`
+1. **Implemented.** `feat/syntax`: parts with `:instrument`, colotomy parts as `part`
    forms, `gilak` and `bapang` in the template
 2. `feat/drawing`: the drawing; four slices, see
    [04-layout.md](04-layout.md#slices-iteration-3)

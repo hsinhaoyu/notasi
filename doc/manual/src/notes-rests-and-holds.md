@@ -1,7 +1,7 @@
 # Notes, rests and holds
 
-A **part** is the line of music one player plays. It names the
-instrument, then gives the music, note by note. Here two parts
+A **part** is the line of music one player plays. It names its
+instrument with `:instrument`, then gives the music, note by note. Here two parts
 play the ugal, so each also has a name, given with `:name` (see
 [Several parts on one instrument](parts.md)):
 

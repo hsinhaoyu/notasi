@@ -389,7 +389,7 @@ too short, or one is missing, somewhere before the `|`.
 ```
 
 When an instrument has two parts, give each a name with `:name`, as in
-`(part reyong :name sangsih 4 3 2 1)` (see
+`(part :instrument reyong :name sangsih 4 3 2 1)` (see
 [Several parts on one instrument](parts.md)).
 
 ### A setting after the music
@@ -402,8 +402,21 @@ When an instrument has two parts, give each a name with `:name`, as in
 {{#include mistakes/option-after-music.txt}}
 ```
 
-Settings such as `:name` come right after the instrument, before the
-first note: `(part ugal :name melody 1 2 3 4)`.
+Settings such as `:name` come before the first note:
+`(part :instrument ugal :name melody 1 2 3 4)`.
+
+### A part without its instrument
+
+```scheme
+{{#include mistakes/part-without-instrument.nts}}
+```
+
+```text
+{{#include mistakes/part-without-instrument.txt}}
+```
+
+A part names its instrument with `:instrument`. The same goes for the
+parts inside a `colotomy`.
 
 ## Mistakes with templates
 

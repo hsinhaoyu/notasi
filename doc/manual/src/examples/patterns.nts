@@ -8,7 +8,7 @@
 
 ;; The figure on i, moved down a degree (to a), up a degree (to o),
 ;; and on i again: eight pulses.
-(part reyong
+(part :instrument reyong
   @norot
   (@ norot :step -1)
   (@ norot :step 1)

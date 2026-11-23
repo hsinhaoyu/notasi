@@ -1,7 +1,7 @@
 (piece "Gilak")
 (use gong-kebyar)
-(part reyong :name polos 1 2 3 4)
-(part reyong :name sangsih 4 3 2 1)
+(part :instrument reyong :name polos 1 2 3 4)
+(part :instrument reyong :name sangsih 4 3 2 1)
 (score full
   (group "Kotekan" polos sangsih)
   (group "Polos" polos))

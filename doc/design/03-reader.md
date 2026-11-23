@@ -4,9 +4,10 @@ Status: implemented (iteration 2): milestone 1 (`feat/music`), all
 five slices (see "Slices (iteration 2)"), and the **[scores]** cases
 and step 12 with milestone 2 (`feat/scores`, 04 "Slices (iteration
 2)"). No form or option raises `not-implemented` any more; the kind is
-kept for later iterations. Tests in `tests/reader.scm`. Planned for
-iteration 3: the **[parts]** and **[score-options]** cases below (ADRs
-0038–0041), and the new settings in step 12.
+kept for later iterations. Tests in `tests/reader.scm`. The **[parts]**
+cases (ADR 0038) since iteration 3's `feat/syntax`, tests in
+`tests/syntax.scm`. Planned for iteration 3: the **[score-options]**
+cases below (ADRs 0039–0041), and the new settings in step 12.
 
 Everything in this document is **Implemented** unless it says
 otherwise. Since slices 1 and 2: steps 1, 2, 3 to 7, step 9 for
@@ -112,9 +113,9 @@ Finding templates (**Implemented**):
 
    Errors in a template report the template's file and line.
 4. **Split options.** For each form, take its positional arguments,
-   then the `:key value` pairs (ADR 0026), then the body. **Planned**
-   (ADR 0038): `part` has no positional arguments, at the top level and
-   inside a `colotomy`, whose parts are read by the same code. A key is a
+   then the `:key value` pairs (ADR 0026), then the body. `part` has no
+   positional arguments, at the top level and inside a `colotomy`,
+   whose parts are read by the same code (ADR 0038). A key is a
    symbol of `:` followed by a letter. Each form has its own keys; an
    unknown key, a key twice, a key with no value, or a key after the
    body has started is an error.
@@ -278,9 +279,9 @@ Each case is tagged with the feature it belongs to, which iteration 2's
 build order maps to a slice: **[v1]** for cases that are implemented and
 keep their meaning, **[syntax]** (the `:key value` forms, `part`,
 degrees), **[durations]**, **[rep]**, **[colotomy]**, **[patterns]** and
-**[scores]**; iteration 3 adds **[parts]** (the forms of ADR 0038) and
-**[score-options]** (the score options of ADRs 0039–0041, `:keys` and
-`:display`), both **Planned**. Each case is followed by its `kind`.
+**[scores]**; iteration 3 adds **[parts]** (the forms of ADR 0038,
+**Implemented**) and **[score-options]** (the score options of ADRs
+0039–0041, `:keys` and `:display`, **Planned**). Each case is followed by its `kind`.
 
 ### Files and forms
 
@@ -355,14 +356,12 @@ All at the line of the list that holds the option.
 
 All at the part's line, with `part` and `time` set.
 
-- [syntax] A `part` form with no instrument, an instrument that is not a
-  symbol, or no tokens: `bad-form`. An instrument that isn't defined:
-  `undefined-instrument`.
 - [parts] A `part` without `:instrument`: `missing-option`. When its
   first token names an instrument (the old form, `(part gong ...)`),
   the message shows the new one: "write `(part :instrument gong ...)`".
-  `:instrument` that is not a symbol: `bad-option`. This replaces the
-  first case above when it is built.
+  `:instrument` that is not a symbol: `bad-option`. A part with no
+  tokens: `bad-form`. An instrument that isn't defined:
+  `undefined-instrument`.
 - [syntax] Two parts on one instrument where either has no `:name`:
   `parts-need-names`, at the second part's line.
 - [v1] A key number outside 1 to the number of keys:
@@ -393,15 +392,15 @@ All at the part's line, with `part` and `time` set.
 ### Colotomies
 
 - [colotomy] A `colotomy` form of the wrong shape (no name, a LENGTH
-  that is not an exact positive integer, no parts, a part that is not
-  `(PART INSTRUMENT TOKEN ...)`): `bad-form`. A part's tokens give the
-  token kinds, with `part` set to the colotomy part's name.
+  that is not an exact positive integer, no parts): `bad-form`. A
+  part's tokens give the token kinds, with `part` set to the colotomy
+  part's name.
 - [parts] Inside a `colotomy`, anything but a `part` form: `bad-form`;
   for the old form `(gong gong ...)` the message shows the new one,
   "write `(part :instrument gong ...)`". A colotomy part without
   `:instrument`: `missing-option`. Two colotomy parts on one instrument
-  where either has no `:name`: `parts-need-names`. These replace the
-  `(PART INSTRUMENT TOKEN ...)` shape above when they are built.
+  where either has no `:name`: `parts-need-names`. Errors in a
+  colotomy part's form are at the part's own line.
 - [colotomy] A colotomy part whose length does not divide the cycle:
   `colotomy-part-length` (the colotomy's line, `part` set).
 - [colotomy] `:colotomy` naming a colotomy that isn't defined:

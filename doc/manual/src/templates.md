@@ -34,10 +34,9 @@ notasi comes with a `gong-kebyar` template:
 - a **kempli** that plays `K`;
 - a **gong** that plays `G` (gong wadon), `GL` (gong lanang), `P`
   (kempur) and `T` (klentong);
-- a **kendang** that plays `dag`, `dug` and `du`.
-
-It has no gong cycles: a piece defines its own `colotomy` (see
-[Gong cycles](gong-cycles.md)).
+- a **kendang** that plays `dag`, `dug` and `du`;
+- the gong cycles `gilak` and `bapang` (see
+  [Gong cycles](gong-cycles.md)).
 
 You can read the whole template on
 [GitHub](https://github.com/hsinhaoyu/notasi/blob/dev/templates/gong-kebyar.nts).

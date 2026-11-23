@@ -7,10 +7,7 @@
 
 (use gong-kebyar)
 
-(colotomy gilak 8
-  (gong gong  -:3 GL:1 P - P G))
-
-(part ugal  a1 || o2 i2 e2 o2 | a1 o2 i2 a1
+(part :instrument ugal  a1 || o2 i2 e2 o2 | a1 o2 i2 a1
              || e2 u2 e2 o2 | i2 o2 e2 a1
              || o2 i2 e2 o2 | a1 o2 i2 a1 ||)
 

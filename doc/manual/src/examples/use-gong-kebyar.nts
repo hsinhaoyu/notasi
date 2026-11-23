@@ -4,5 +4,5 @@
 ;; and the kempli, gong and kendang.
 (use gong-kebyar)
 
-(part ugal  a1 o2 i2 e2 o2 a1 o2 i2)
-(part gong  G  -  -  -  G  P  -  P)
+(part :instrument ugal  a1 o2 i2 e2 o2 a1 o2 i2)
+(part :instrument gong  G  -  -  -  G  P  -  P)
