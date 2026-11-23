@@ -465,6 +465,28 @@ examples, golden files and manual pages it affects.
    - `examples/gilak.nts` has two scores, so its golden files are
      `gilak.full.json` and `gilak.second-cycle.json`.
 
+## Slices (iteration 3)
+
+**Planned.** Milestone 2 of iteration 3 (`feat/drawing`) is built in
+four slices, each its own branch and PR into `dev`, started with
+`/start-milestone <branch>`, after milestone 1 (`feat/syntax`). Each
+changes the reader's checks (03, **[score-options]**), the records
+(02), layout, and the template and commands (05) as far as it needs,
+with the examples, golden files and manual pages it affects.
+
+1. `feat/drawing-header`: contract version 3 (ADR 0043);
+   `:cycle-label` and the `"Pulse"` default (ADR 0039); the pickup's
+   cycle mark `0`; header numbers centred over their pulse, without the
+   `·` (ADR 0044).
+2. `feat/drawing-lines`: `:background` (row lines, pulse lines by
+   group, ADR 0041); the frame line (ADR 0044); grey note borders and
+   the lighter stroke grey (ADR 0041).
+3. `feat/drawing-rows`: `:keys` and `outside-keys`; `:octave-numbers`;
+   `:display`; `:key-numbers` and `:row-labels` (ADR 0047); strokes one
+   column wide (ADR 0042).
+4. `feat/drawing-output`: `NAME_SCORE` file names and no `_` in score
+   names (ADR 0040); the sans-serif font (ADR 0045).
+
 ## Golden tests
 
 Each example has one saved figure per score, in `tests/golden/`: a file

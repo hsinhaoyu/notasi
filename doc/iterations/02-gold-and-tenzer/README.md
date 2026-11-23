@@ -1,6 +1,9 @@
 # Iteration 2: Gold's Jaya Semara and Tenzer's Baris
 
-Status: building
+Status: done
+
+Accepted on 2026-11-23 and tagged `v0.2.0-dev` on `dev`. Not released:
+`/release` (v0.2.0 on `main`) was skipped, and can still be run.
 
 ## Goal
 
