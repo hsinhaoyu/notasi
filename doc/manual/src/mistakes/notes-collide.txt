@@ -1,0 +1,1 @@
+notes-collide.nts:6: part `sangsih', pulse 2: on a single row, two notes sound in one column

@@ -40,6 +40,32 @@ own instead.
 | `:colors ((ding "#000000"))` | score or group | A colour for one degree, in every octave. |
 | `:cell-width "2em"`, `:cell-height "2em"` | score | The size of a square. |
 
+## Rows of names
+
+A score can also print music the way it is sung, with names instead of
+colours:
+
+```scheme
+{{#include examples/scores-rows.nts}}
+```
+
+![The sung lines above](figures/scores-rows.svg)
+
+| Setting | Where | What it does |
+|---|---|---|
+| `:rows parts` | score or group | One row for each part, instead of one for each note. Give a row its label with `(polos :label "Polos")`. |
+| `:rows single` | score or group | All the group's parts on one row, such as the strokes of two drums played by one person. Two notes can't sound in the same column. |
+| `:fill none` | score or group | Names only, without coloured squares. |
+| `:holds dash` | score or group | A `-` in every column a note is held, as in a sung line. |
+
+Rows of parts or one row, and `:fill none`, show the notes only by
+their names, so the group needs `:note-names yes`.
+
+A note that lasts one column shows its **damped** name, if its degree
+has one (`:damped "na'"`; see [Scales and stroke sets](scales-and-strokes.md));
+a longer note shows its usual name. In the drawing above, `nang` rings
+and `na'` is cut short.
+
 ## The rules
 
 - A group holds parts on one pitched instrument, or gongs and drums, not

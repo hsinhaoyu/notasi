@@ -33,7 +33,12 @@ no octave and no order:
 ```
 
 `:display "D"` sets how a stroke or degree is shown in the score's row
-labels. Without it, notasi shows the name itself.
+labels and, with `:note-names yes`, in its squares. Without it, notasi
+shows the name itself.
+
+`:damped "na'"` gives a second name, for a note that is cut short: a
+score shows it for a note that lasts one column, and the usual name for
+a longer one (see [Scores](scores.md#rows-of-names)).
 
 ## The rules
 

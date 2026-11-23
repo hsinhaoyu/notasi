@@ -1,9 +1,10 @@
 # 04 — Layout
 
-Status: partly implemented (iteration 2): milestone 2, slices 1–2 of 5
-(`feat/scores-form`, `feat/scores-contract`, see "Slices (iteration
-2)"). `layout-score` lays out a score as contract version 2, with
-`notes` rows, `:note-names`, one style per group, the sizes,
+Status: partly implemented (iteration 2): milestone 2, slices 1–3 of 5
+(`feat/scores-form`, `feat/scores-contract`, `feat/scores-rows`, see
+"Slices (iteration 2)"). `layout-score` lays out a score as contract
+version 2, with `notes`, `parts` and `single` rows, note names with
+their damped forms, `:fill`, `:holds`, one style per group, the sizes,
 `:system-length`, and the header rows and lines; the rest is planned.
 "What layout does today" lists what differs.
 "Note style" is **Implemented** and stays, with the style now built from
@@ -367,7 +368,7 @@ examples, golden files and manual pages it affects.
      event's `start`; a system in which no cycle starts has an empty
      `cycles` list, and the pickup has no mark. Hiding one header row
      leaves the other and the lines.
-3. `feat/scores-rows`: `:rows parts` and `single`, row labels, `:fill
+3. **Implemented.** `feat/scores-rows`: `:rows parts` and `single`, row labels, `:fill
    none`, `:holds dash`, the damped and open names, and
    `needs-note-names` and `notes-collide`. Decided for this slice:
    - The reader now reads `:rows`, `:fill` and `:holds` on a score and
@@ -401,9 +402,7 @@ iteration 2 is built:
   the events of the score's parts; there is no range (`:from`, `:to`)
   or `:breaks`, and systems start every `:system-length` pulses from
   the start of the piece.
-- Rows are `notes` only; a group's label is always its long label; note
-  names are the display form (no damped form); there are no holds,
-  `fill none` or overlays.
+- A group's label is always its long label; there are no overlays.
 - Golden tests: each `examples/NAME.nts` has the figure of its first
   score in `tests/golden/NAME.json`.
 
