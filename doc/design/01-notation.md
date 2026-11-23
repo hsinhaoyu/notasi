@@ -8,7 +8,8 @@ milestone 2 (`feat/scores`). Planned for iteration 3: parts written
 with `:instrument`, also inside a colotomy (ADR 0038); labelled number
 rows (ADR 0039); `:keys`, `:octave-numbers`, `:background` (ADR 0041)
 and a group's own stroke names (`:display`); no `_` in score names
-(ADR 0040).
+(ADR 0040); `:key-numbers` and `:row-labels`; `gilak` and `bapang` in
+the `gong-kebyar` template (ADR 0046).
 
 Everything in this document is **Implemented** unless it says otherwise.
 Where iteration 3 changes a form, the section shows the planned form
@@ -98,14 +99,16 @@ A short piece:
   (group "Gong, kempli" :note-names yes  gong kempli))
 ```
 
-The gong and kempli parts are generated from the colotomy `gilak`.
+The gong and kempli parts are generated from the colotomy `gilak`,
+which comes from the template (**Planned**, ADR 0046; until then the
+piece defines it, see `colotomy`).
 
 ## Options
 
 Optional settings are written as `:key value` pairs (ADR 0026):
 
 ```scheme
-(piece "Jaya Semara: pangecet" :colotomy pangecet-16 :pickup 1)
+(piece "Jaya Semara: pangecet" :colotomy bapang :pickup 1)
 (part :instrument pemade :name polos  o3:1/4 - o3 - || ...)
 ```
 
@@ -241,7 +244,12 @@ about how it is played or printed. It has no options.
   the strokes `G GL P T`, each shown by its name, so the two gongs are
   told apart; a piece that prints both as "G", as Tenzer does,
   redefines the strokes. Colotomies are not in the template: a piece
-  defines its own (`gilak`, `pangecet-16`).
+  defines its own (`gilak`, `pangecet-16`). **Planned** (ADR 0046): the
+  template defines the common colotomies, `gilak` (8 pulses: gong
+  lanang on 4, kempur on 5 and 7, gong on 8) and `bapang` (16 pulses:
+  kempur on 4 and 12, klentong on 8, gong on 16); a piece names one
+  with `:colotomy` and writes no `colotomy` form, or defines its own,
+  or replaces the template's with one of the same name.
 
 - With a stroke set, each NOTE is a stroke from that set (`G`, `dag`),
   in any order. The order sets the note indices and the order of the
@@ -251,7 +259,9 @@ about how it is played or printed. It has no options.
 ### `(colotomy NAME LENGTH :key value ... (part ...) ...)`
 
 A colotomic meter (ADRs 0030, 0038): a cycle of LENGTH pulses and the
-gong parts that mark it.
+gong parts that mark it. The common ones come from the `gong-kebyar`
+template (**Planned**, ADR 0046); a piece writes a `colotomy` form for a
+meter the template lacks, or to change one. The template's `gilak`:
 
 ```scheme
 (colotomy gilak 8
@@ -509,6 +519,8 @@ In the grid:
 | `:rows notes/parts/single` | score, group | `notes` | `notes`: one row per key or stroke used. `parts`: one row per part, labelled. `single`: all the group's parts on one row. |
 | `:keys used/all/(LOW HIGH)` | score, group | `used` | With `:rows notes`, which rows a group has: the keys or strokes played in the score's range, every key or stroke of the instrument, or the keys from LOW up to HIGH, both included (`:keys (a1 u2)`). **Planned** (iteration 3). |
 | `:octave-numbers yes/no` | score, group | `yes` | Write the octave number after each row label (`i2`), or the display form alone (`i`). Only rows of pitched keys change. **Planned** (iteration 3). |
+| `:key-numbers yes/no` | score, group | `no` | A column of key numbers to the left of the row labels: each row's key on its instrument, from 1 (on the ugal, `a1` is key 4). Pitched keys only. **Planned** (iteration 3). |
+| `:row-labels yes/no` | score, group | `yes` | The column of row labels (note names, stroke names or parts' labels); with `no` the column is left out. **Planned** (iteration 3). |
 | `:display ((STROKE STRING) ...)` | score, group | none | Show these strokes with these forms in this score, in row labels and note names, instead of their own display forms: `:display ((GL "G"))`. **Planned** (iteration 3). |
 | `:background grid/vertical/horizontal/empty` | score, group | `grid` | The lines behind the notes: pulse lines and a line between every two rows (`grid`), pulse lines only (`vertical`), row lines only (`horizontal`), or neither (`empty`). The lines between groups and the cycle lines are always drawn. **Planned** (ADR 0041); today every score is drawn as `vertical`. |
 
@@ -555,6 +567,9 @@ written.
   on a `:rows parts` or `single` group is an error, and ignored when it
   comes from the score. A note outside the keys shown is an error
   naming the part, the note, its position and the range.
+- `:key-numbers yes` (**Planned**) written on a group of strokes, or on
+  a `:rows parts` or `single` group, is an error; coming from the score,
+  it is ignored there.
 - `:display` (**Planned**): each STROKE is a stroke of an instrument in
   the group (on a score, of an instrument in one of its groups); it
   changes only how the stroke is shown in that score.
