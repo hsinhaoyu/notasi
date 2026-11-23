@@ -1,0 +1,1 @@
+cycle-check.nts:4: part `ugal', cycle 1, pulse 5: `||' is not at the end of a gong cycle

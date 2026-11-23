@@ -14,6 +14,7 @@
 # Writing music
 
 - [Pulses and durations](pulses-and-durations.md)
+- [Gong cycles](gong-cycles.md)
 - [Notes, rests and holds](notes-rests-and-holds.md)
 - [Chords](chords.md)
 - [Several parts on one instrument](parts.md)

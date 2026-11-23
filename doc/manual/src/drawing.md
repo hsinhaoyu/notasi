@@ -48,6 +48,8 @@ This is what you get:
   octave and on every instrument, so you can follow a melody by colour.
 - **Gongs and drums** are grey squares. Their row labels say which
   stroke each row is.
+- The **kempli** block is added by notasi, one stroke on every pulse
+  (see [Gong cycles](gong-cycles.md)).
 
 ## PNG and SVG
 

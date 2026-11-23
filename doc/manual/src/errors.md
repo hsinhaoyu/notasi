@@ -214,6 +214,33 @@ shorter part.
 A `rep` needs the number of times first, then the notes:
 `(rep 2 dang1 ding2)`. The line is the line of the `rep` itself.
 
+### A cycle check out of place
+
+```scheme
+{{#include mistakes/cycle-check.nts}}
+```
+
+```text
+{{#include mistakes/cycle-check.txt}}
+```
+
+`||` must fall at the end of a gong cycle. Here the cycle has eight
+pulses, but the first `||` comes after four. Move it, or check the notes
+before it (see [Gong cycles](gong-cycles.md)).
+
+### A piece that isn't whole cycles
+
+```scheme
+{{#include mistakes/incomplete-cycle.nts}}
+```
+
+```text
+{{#include mistakes/incomplete-cycle.txt}}
+```
+
+With a colotomy, a piece is its pickup plus whole cycles. This ugal part
+lasts 7 pulses, one short of the eight-pulse cycle.
+
 ### A pulse check out of place
 
 ```scheme

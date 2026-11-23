@@ -891,11 +891,17 @@ COLOTOMY #f without one."
              (not (integer? (/ (- length pickup)
                                (colotomy-length colotomy)))))
     (let ((first (car parts)))
-      (part-error 'incomplete-cycle
-                  (source-location-line (part-location first))
-                  (part-name first) #f
-                  "the piece lasts ~a pulses, which is not the pickup (~a) plus whole cycles of ~a"
-                  length pickup (colotomy-length colotomy)))))
+      (if (zero? pickup)
+          (part-error 'incomplete-cycle
+                      (source-location-line (part-location first))
+                      (part-name first) #f
+                      "the piece lasts ~a pulses, which is not a whole number of ~a-pulse cycles"
+                      length (colotomy-length colotomy))
+          (part-error 'incomplete-cycle
+                      (source-location-line (part-location first))
+                      (part-name first) #f
+                      "the piece lasts ~a pulses, which is not the pickup of ~a plus whole ~a-pulse cycles"
+                      length pickup (colotomy-length colotomy))))))
 
 (define (check-equal-lengths parts+lengths)
   "PARTS+STEPS is a list of (PART . STEPS) in file order.  Return the
