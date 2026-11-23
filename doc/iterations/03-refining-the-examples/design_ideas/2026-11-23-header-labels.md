@@ -56,3 +56,11 @@ cycle row can't be labelled at all.
   contract changes (ADR 0036, version 2 → 3).
 - 05-typst-backend: drawing the second label.
 - Manual: the scores page options table, and the figures.
+
+## Settled (2026-11-23)
+
+The open questions above, answered before promotion:
+
+- One form of each label: no long and short forms.
+- The labels sit in the group-label column, where `:pulse-label` is
+  today.

@@ -43,3 +43,16 @@ not the decision.
   refine the Jaya Semara and Baris examples (see the README).
 - It will show other ideas from today: one-column strokes
   (`2026-11-23-stroke-width.md`), number-row labels, background lines.
+
+## Settled (2026-11-23)
+
+The open questions above, answered before promotion:
+
+- Name: `colour`, drawn as `baris_colour.png`.
+- The gongs: the piece keeps the template's stroke names (`GL` for gong
+  lanang). A score or group can rename strokes for itself, with an
+  option such as `:display ((GL "G"))`, so Tenzer's scores still print
+  both gongs as "G" and the colour score shows `G` and `GL`. The
+  option's exact name and form are settled when 01 is promoted.
+- The kendang: two groups, "Kendang lanang" and "Kendang wadon", as in
+  the Tenzer score.

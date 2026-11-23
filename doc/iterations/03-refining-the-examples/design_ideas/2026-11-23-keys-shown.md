@@ -57,3 +57,13 @@ and an excerpt's rows change with what happens to be played in it.
   expansion, like `notes-collide`.
 - JSON: unchanged in shape (`lanes` is already a list).
 - Manual: the scores page, and the errors page for the new message.
+
+## Settled (2026-11-23)
+
+The open questions above, answered before promotion:
+
+- Stroke groups take `used` and `all` only; a range is an error there.
+- `:keys` on a `:rows parts` or `single` group is an error, and ignored
+  when inherited from the score.
+- The default stays `used`; revisited after seeing `all` on the
+  examples.

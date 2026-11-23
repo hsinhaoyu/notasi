@@ -44,3 +44,13 @@ has no mark". The change below reverses that.
 - Golden JSON for `gilak_full` changes (the header's `cycles`).
 - The manual's gong-cycles page describes the numbering: "the pickup
   as the last pulse of cycle 0".
+
+## Settled (2026-11-23)
+
+The open questions above, answered before promotion:
+
+- A pickup at the start of a longer system (no `(1 1)` break) also gets
+  cycle number `0`: wherever a pickup is shown, it is cycle 0.
+- With `:numbering gong-first` the pickup is numbered pulse `1`, cycle
+  `0`; an excerpt starting inside the pickup also shows `0` (as the
+  Open section says).

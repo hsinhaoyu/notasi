@@ -54,3 +54,10 @@ The rule appears in four places:
   same change.
 - The user sees the new default name from `notasi render`, so the
   manual changes with it.
+
+## Settled (2026-11-23)
+
+The open questions above, answered before promotion:
+
+- Score names may not contain `_` (the reader checks); for piece file
+  names it is a convention only.

@@ -57,8 +57,9 @@ Examples:
 
 - [Baris gets a full score in colour](design_ideas/2026-11-23-baris-colour-score.md).
 
-Several ideas leave questions open, each with a leaning; they are
-settled before or during promotion. Several also reverse iteration 2
+Several ideas left questions open; they were settled on 2026-11-23,
+before promotion, in each idea's "Settled" section. The greys, widths
+and fonts are left to be judged by eye while building. Several also reverse iteration 2
 decisions (ADRs 0020, 0027, 0030, and choices recorded in 04-layout
 and 05-typst-backend), so promotion adds new ADRs.
 

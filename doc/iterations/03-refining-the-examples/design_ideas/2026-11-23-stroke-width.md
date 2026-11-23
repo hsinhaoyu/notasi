@@ -54,3 +54,14 @@ never damped (Gold), so the length of a gong box says nothing anyway.
 - Golden JSON for every score with gongs, kempli or kendang changes.
 - Manual, "Drawing": "Gongs and drums are grey squares", with the new
   width; figures change.
+
+## Settled (2026-11-23)
+
+The open questions above, answered before promotion:
+
+- No dashes after strokes with `:holds dash`; only pitched notes are
+  held.
+- The damped form is chosen by the written duration, so `du` and `du'`
+  still differ.
+- No option to turn it off.
+- Tenzer's Baris is checked by eye that it still matches the source.

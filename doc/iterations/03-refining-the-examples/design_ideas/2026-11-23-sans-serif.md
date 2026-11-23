@@ -66,3 +66,10 @@ everywhere, but font files in the repository and the package.
 - `notasi/typst.scm` (`write-entry-file`) and `tests/typst.scm`.
 - Manual: the drawing page, if it mentions the font; every figure
   changes.
+
+## Settled (2026-11-23)
+
+The open questions above, answered before promotion:
+
+- No font option for now (later, if asked for).
+- The exact list and order of fonts is chosen by eye while building.

@@ -49,3 +49,11 @@ columns show a grey `·`.
 - 05-typst-backend: the header drawing. 04-layout: what `null` entries
   in `header.pulses` mean if the `·` goes.
 - Golden JSON unchanged; every drawing changes slightly.
+
+## Settled (2026-11-23)
+
+The open questions above, answered before promotion:
+
+- The grey `·` in the other columns of a pulse is dropped; the lines
+  show the steps.
+- Positions stay whole pulses, so every pulse in a system is whole.

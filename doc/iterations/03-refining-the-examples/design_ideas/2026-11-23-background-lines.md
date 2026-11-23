@@ -57,3 +57,15 @@ There's no way to change this.
 - 05-typst-backend: drawing row lines.
 - Golden JSON and every figure change, since the default draws row
   lines.
+
+## Settled (2026-11-23)
+
+The open questions above, answered before promotion:
+
+- `:background` is allowed on a group; the score sets the default, and
+  each group's block gets its own vertical lines.
+- Row lines are drawn between the rows of `:rows parts` and `single`
+  groups too.
+- The name is `:background`.
+- Whether `grid` gets busy with grey note borders and the frame line is
+  judged by eye with `make preview` while building.

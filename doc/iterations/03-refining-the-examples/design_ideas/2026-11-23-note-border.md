@@ -60,3 +60,15 @@ pastel notes are hard to see, and a note's size is hard to judge.
   golden files with strokes change. 04-layout, "Note style".
 - Manual: every figure changes; the drawing page if it describes the
   white border.
+
+## Settled (2026-11-23)
+
+The open questions above, answered before promotion:
+
+- A note cut across two systems has a border all round each piece; a
+  continuation is shown only by having no text (ADR 0020).
+- Notes with `:fill none` have no rectangle and no border.
+- No option for the border colour.
+- The greys, the border width and the stroke grey are judged by eye
+  with `make preview` while building, within the limits in Open (not
+  white, not a palette colour).
