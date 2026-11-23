@@ -12,8 +12,9 @@ iteration 2's `feat/scores-contract`, and overlays since
 template), `scripts/notasi` (the command). Planned for iteration 3:
 contract version 3 (ADR 0043); the template's labels, centred header
 and frame (ADR 0044), row lines, pulse lines by group and grey note
-borders (ADR 0041); a sans-serif font for standalone figures (ADR
-0045); file names `NAME_SCORE` (ADR 0040).
+borders (ADR 0041); the key-number column and row labels left out
+(ADR 0047); a sans-serif font for standalone figures (ADR 0045); file
+names `NAME_SCORE` (ADR 0040).
 
 ## Responsibility
 
@@ -36,6 +37,9 @@ keys in order):
   pulse lines run through the header rows.
 - Each group gets `pulse_lines` and `row_lines` (booleans): whether its
   rows show pulse lines, and lines between its rows.
+- Each group gets `key_numbers`, one string per lane or `null`, and
+  `sizes` gets `key_width` (ADR 0047). A group whose row labels are left
+  out has `""` in `lanes`; an unused column is `"0.0em"` wide.
 - `header.cycles` has a mark `"0"` at the pickup's first column when a
   system shows the pickup.
 - A stroke's event is one column wide (ADR 0042), and strokes are a
@@ -319,6 +323,13 @@ above:
   true, and through a group's rows when its `pulse_lines` is. When a
   group's `row_lines` is true, a thin line (`0.5pt`, `luma(170)`, like
   a pulse line) runs between each two of its rows.
+- **Columns** (ADR 0047): `label_width`, then `key_width` (key
+  numbers), then `lane_width` (row labels), then the grid. A key number
+  is right-aligned in its column, the same size as a row label, in a
+  lighter grey (`luma(170)`, judged by eye); a group whose
+  `key_numbers` is `null` leaves the column empty. A column of width
+  `"0.0em"` takes no space, so with neither column the group label sits
+  next to the grid.
 - **Frame:** a vertical line at the left edge of the grid, between the
   lane labels and the first column, like the rules between groups
   (`0.8pt`, `luma(120)`), from the first group's rule to the last, in
