@@ -1,6 +1,6 @@
 # 0036 The JSON contract is version 2
 
-Status: accepted (2026-11-21)
+Status: superseded by 0043
 
 Context: Version 1 of the figure (05) has no place for what scores print: cycle numbers, pulse numbers in Tenzer's numbering, a pulse label, lines at cycle boundaries, pattern names over the notes, subtitles, captions, font and cell sizes, and rows per part. The template also computes pulse numbers itself, which breaks with pickups and cycles.
 
