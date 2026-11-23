@@ -9,7 +9,11 @@ iteration 2's `feat/scores-contract`, and overlays since
 `feat/scores-overlays`, and choosing a score (`--score`, `render-piece
 #:score`) since `feat/scores-range`. Modules: `(notasi json)`,
 `(notasi typst)`, `(notasi command)` (Guile), `typst/notasi.typ` (Typst
-template), `scripts/notasi` (the command).
+template), `scripts/notasi` (the command). Planned for iteration 3:
+contract version 3 (ADR 0043); the template's labels, centred header
+and frame (ADR 0044), row lines, pulse lines by group and grey note
+borders (ADR 0041); a sans-serif font for standalone figures (ADR
+0045); file names `NAME_SCORE` (ADR 0040).
 
 ## Responsibility
 
@@ -21,9 +25,25 @@ The same template draws scores inside Typst documents, where the figure
 JSON arrives inside a side file instead (06, ADR 0016, proposed). So the template
 must work in both places; see "Typst template design", points 6 and 7.
 
+## JSON contract (version 3)
+
+**Planned** (ADR 0043). Version 2 below, with these changes (04 lists the
+keys in order):
+
+- `version` is 3.
+- `header.label` becomes `header.cycle_label` and `header.pulse_label`,
+  each a string or `null`; `header.pulse_lines` (boolean) says whether
+  pulse lines run through the header rows.
+- Each group gets `pulse_lines` and `row_lines` (booleans): whether its
+  rows show pulse lines, and lines between its rows.
+- `header.cycles` has a mark `"0"` at the pickup's first column when a
+  system shows the pickup.
+- A stroke's event is one column wide (ADR 0042), and strokes are a
+  lighter grey (ADR 0041); the shape of an event is unchanged.
+
 ## JSON contract (version 2)
 
-**Implemented** (ADR 0036). Layout writes it (04, where the keys are listed
+**Implemented** (ADR 0036; superseded by version 3, ADR 0043). Layout writes it (04, where the keys are listed
 in order). An excerpt, for Jaya Semara's full score (arrays shortened):
 
 ```json
@@ -284,6 +304,33 @@ third layer over the notes, since a grid can't overlap its cells:
   event whose `fill` is `null` (`:fill none`) is its text alone, which
   also draws the `"-"` of `:holds dash`.
 
+**Planned** for version 3 (ADRs 0039, 0041, 0043, 0044), changing the
+above:
+
+- **Header labels:** `cycle_label` at the left of the cycle row and
+  `pulse_label` at the left of the pulse row, each in the group-label
+  column, when not `null`.
+- **Header numbers** are centred over their pulse: a pulse number spans
+  `steps_per_pulse` columns from its entry, and a cycle number spans the
+  first pulse of its cycle, so the two line up. No `·` in the other
+  columns.
+- **Lines:** cycle lines and the rules between groups are always drawn.
+  Pulse lines are drawn through the header when `header.pulse_lines` is
+  true, and through a group's rows when its `pulse_lines` is. When a
+  group's `row_lines` is true, a thin line (`0.5pt`, `luma(170)`, like
+  a pulse line) runs between each two of its rows.
+- **Frame:** a vertical line at the left edge of the grid, between the
+  lane labels and the first column, like the rules between groups
+  (`0.8pt`, `luma(120)`), from the first group's rule to the last, in
+  every system. The template draws it; `lines[0]` stays `none`.
+- **Note borders:** each block has a thin grey border (starting point
+  `0.5pt`, `luma(150)`, judged by eye), the same on every edge: drawn
+  centred on the block's edge, as Typst draws a stroke, so two touching
+  blocks share one line. A cut note's pieces have a border all round;
+  a continuation is still shown only by having no text. An event whose
+  `fill` is `null` has no block and no border. There is no option for
+  the border.
+
 Tests (slice 1): `tests/template.scm` compiles every
 `tests/golden/*.json` with `score` (from an entry file made in a
 temporary folder) and fails if `typst compile` fails or prints a
@@ -315,7 +362,7 @@ folder), exactly:
 ```typst
 #import "notasi.typ": score
 #set page(width: auto, height: auto, margin: 14pt, fill: white)
-#set text(font: "Libertinus Serif", size: 8pt)
+#set text(font: "Libertinus Serif", size: 8pt)   // Planned: FONT, see below
 #let data = json("JSON-NAME")
 #if data.title != "" {
   block(below: 1em, text(weight: "bold", size: 1.2em, data.title))
@@ -326,6 +373,14 @@ folder), exactly:
 - The title is shown in bold above the score, without "Figure 1:"
   numbering: a piece on its own page isn't a numbered figure. An empty
   title shows nothing. (`caption`, `null` for now, is not used.)
+- **Planned** (ADR 0045): the font is a sans serif found on the machine,
+  the first of Helvetica, Arial, DejaVu Sans and Liberation Sans (the
+  list is settled by eye), or Libertinus Serif when none is installed.
+  `(notasi typst)` asks `typst fonts` once and passes the family found
+  to `write-entry-file` (`#:font`, default Libertinus Serif), which
+  writes only that family, so Typst never warns about a missing one.
+  A figure may look a little different from machine to machine.
+  Until then:
 - The font is Libertinus Serif, which is built into Typst, so a figure
   looks the same on every machine; 8pt keeps labels small next to the
   2em squares.
@@ -411,9 +466,9 @@ notasi render --help
 the file (or the default score) is drawn. `--score` without a value is a
 usage error (status 2); a score the piece doesn't have prints `notasi: `
 and the message, and exits with status 1. OUT defaults to
-`PIECE.pdf` for the first score and `PIECE.NAME.pdf` with `--score`,
-so drawing several scores of one file doesn't overwrite one picture
-with another.
+`PIECE.pdf` for the first score and `PIECE.NAME.pdf` with `--score`
+(**Planned**, ADR 0040: `PIECE_NAME.pdf`), so drawing several scores of
+one file doesn't overwrite one picture with another.
 
 The logic is in the module `(notasi command)`:
 `(run-notasi args)` takes the arguments after the program name (a list
@@ -431,8 +486,8 @@ The user manual shows drawn scores: `make manual` first draws each
 (`![…](figures/NAME.svg)`) to `doc/manual/src/figures/NAME.svg` with
 `notasi render`, then builds the book. `figures/` is generated, not
 committed, so pictures never go stale. A page can show
-another score of the example as `figures/NAME.SCORE.svg`, drawn with
-`--score SCORE`. The manual's CI job installs
+another score of the example as `figures/NAME.SCORE.svg` (**Planned**,
+ADR 0040: `figures/NAME_SCORE.svg`), drawn with `--score SCORE`. The manual's CI job installs
 Guile and Typst 0.15.1 for this; `tests/manual.scm` checks that every
 image a page shows has an example to draw it from.
 
@@ -445,8 +500,9 @@ compiles the examples with it; upgrading Typst is a deliberate change
 to the pin, with the golden figures and template checked again.
 
 `make preview` (`scripts/preview.scm`) draws each example's every score
-to `build/preview/NAME.png`, or `NAME.SCORE.png` for a file with scores,
-matching the golden files (04).
+to `build/preview/NAME.png`, or `NAME.SCORE.png` for a file with scores
+(**Planned**, ADR 0040: `NAME_SCORE.png`), matching the golden files
+(04).
 
 ## Slices
 
