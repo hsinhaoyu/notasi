@@ -60,7 +60,7 @@ the manual describes what the code does.
    3. `feat/music-rep`
    4. `feat/music-colotomy`
    5. `feat/music-patterns`
-2. **`feat/scores`**: scores (01, 02, 04, 05), in five slices, see
+2. **`feat/scores`** (done): scores (01, 02, 04, 05), in five slices, see
    [04-layout.md](../../design/04-layout.md#slices-iteration-2):
    1. `feat/scores-form`
    2. `feat/scores-contract`

@@ -35,7 +35,7 @@ own instead.
 | `:numbering gong-last` / `gong-first` | score | Count the pulses of a cycle with the gong last (1 to 8, the gong on 8; the default) or first (the gong on 1). |
 | `:pulse-label "…"` | score | A label at the left of the pulse numbers, such as `"Beats"`. |
 | `:font-size "8pt"` | score | The size of the text (8pt unless you say). |
-| `:system-length N` | score | N pulses on each line of the score. Without it, the whole piece is one line. |
+| `:system-length N` | score | N pulses on each line of the score. Without it (or [breaks](#excerpts-and-lines)), the whole piece, or the whole excerpt, is one line. |
 | `:short "…"` | group | A short label, such as `"U."` for `"Ugal"`. |
 | `:labels first-long` / `long` / `short` | score or group | Which label to print: the long one on the first line and the short one after (the default), always the long one, or always the short one. |
 | `:note-names yes` | score or group | Write each note's name in its square. The gongs above show `G`, `P` and `K`. |

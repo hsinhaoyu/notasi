@@ -214,8 +214,10 @@ group                                  every setting filled in (ADR 0033)
 - `(time->position piece time)` (**Implemented**): `(CYCLE PULSE)`, PULSE a rational from
   1. With a pickup P and a cycle of N pulses, TIME is cycle
   `floor((TIME − P) / N) + 1`, pulse `(TIME − P) mod N + 1`; the pickup
-  is cycle 0. Without a colotomy, the pulse number `TIME + 1`. Used by
-  error messages and by layout's cycle and pulse numbers.
+  is cycle 0. Without a colotomy, the pulse number `TIME + 1`, always
+  counted gong-last. Layout prints its own numbers, in the score's
+  `numbering`, and the reader reads a score's positions in that
+  numbering too (03, step 12), so neither calls these.
 - `(position->time piece cycle pulse)`, or `(position->time piece pulse)`
   without a colotomy: the inverse (**Implemented**).
 - `(piece-score piece name)`: the score called NAME, or `#f`.
@@ -240,14 +242,16 @@ construction, since events are built from the tokens.
 8. Part names are unique in the piece, generated parts included, and
    score names are unique.
 
-## Open questions
+## Decided
 
-- Two stroke instruments in one group may have strokes with the same
-  name (e.g. two kendang both playing `dag`). Do they share a lane or
-  get one each? The prototype's kendang group draws one lane per drum,
-  and the code gives each instrument its own lanes.
-- Is a chord one event with several notes (the current choice) or
-  several simultaneous events? One event is simpler for layout.
+- Two stroke instruments in one group whose strokes share a name (two
+  kendang both playing `dag`) get a lane each: each instrument's lanes
+  come as a block (`group-lanes`), as the prototype's kendang group
+  draws one lane per drum.
+- A chord is one event with several notes; 04 says how each kind of
+  row draws it.
+
+## Open questions
 
 How a note ends (an `ending` field on events) and sections are in the
 [backlog](../iterations/backlog.md).
