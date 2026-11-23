@@ -10,6 +10,7 @@
 
 (define-module (notasi reader)
   #:use-module (notasi piece)
+  #:use-module (notasi expand)
   #:use-module (ice-9 exceptions)
   #:use-module (ice-9 format)
   #:use-module (ice-9 match)
@@ -24,14 +25,15 @@
             notasi-syntax-error-file
             notasi-syntax-error-line
             notasi-syntax-error-part
-            notasi-syntax-error-step))
+            notasi-syntax-error-time
+            notasi-syntax-error-uses))
 
 ;;; ------------------------------------------------------------------
 ;;; The condition type
 
 (define &notasi-syntax-error
   (make-exception-type '&notasi-syntax-error &error
-                       '(kind file line part step)))
+                       '(kind file line part time uses)))
 
 (define make-notasi-syntax-error
   (record-constructor &notasi-syntax-error))
@@ -51,33 +53,43 @@
   (notasi-syntax-error-file file)
   (notasi-syntax-error-line line)
   (notasi-syntax-error-part part)
-  (notasi-syntax-error-step step))
+  (notasi-syntax-error-time time)
+  (notasi-syntax-error-uses uses))
 
 ;;; The file being read, or #f for a string or port.  Set once per read,
 ;;; so error reports don't need it passed through every check.
 (define current-source-file (make-parameter #f))
 
-(define (raise-syntax-error kind line part step fmt args)
+(define (raise-syntax-error kind line part time uses fmt args)
   "Raise a &notasi-syntax-error of KIND at LINE (1-based, or #f) in the
-current source file, for PART and STEP (or #f), with a message built
-from FMT and ARGS."
+current source file, for PART at TIME (pulses, or #f) through the
+pattern USES, with a message built from FMT and ARGS."
   (let ((file (current-source-file)))
     (raise-exception
      (make-exception
-      (make-notasi-syntax-error kind file line part step)
+      (make-notasi-syntax-error kind file line part time uses)
       (make-exception-with-message
        (format #f "~a~@[:~a~]: ~?" (or file "<string>") line fmt args))))))
 
 (define (syntax-error kind line fmt . args)
   "Raise a &notasi-syntax-error of KIND at LINE, not tied to a part."
-  (raise-syntax-error kind line #f #f fmt args))
+  (raise-syntax-error kind line #f #f '() fmt args))
 
-(define (part-error kind line part step fmt . args)
-  "Raise a &notasi-syntax-error of KIND about PART at STEP (0-based, or
-#f).  The message names the part and, when given, the step (1-based)."
-  (raise-syntax-error kind line part step
-                      (string-append "part `~a'~@[, step ~a~]: " fmt)
-                      (cons* part (and step (1+ step)) args)))
+(define (time->text time)
+  "The pulse at TIME, as a musician counts it (TIME 0 is pulse 1), with
+a fraction as a mixed number: 3/2 is \"pulse 2 1/2\"."
+  (let* ((pulse (+ time 1))
+         (whole (floor pulse))
+         (rest (- pulse whole)))
+    (string-append "pulse " (number->string whole)
+                   (if (zero? rest) "" (string-append " " (number->string rest))))))
+
+(define (part-error kind line part time fmt . args)
+  "Raise a &notasi-syntax-error of KIND about PART at TIME (pulses, or
+#f).  The message names the part and, when given, the pulse."
+  (raise-syntax-error kind line part time '()
+                      (string-append "part `~a'~@[, ~a~]: " fmt)
+                      (cons* part (and time (time->text time)) args)))
 
 ;;; ------------------------------------------------------------------
 ;;; Step 1: read forms
@@ -250,12 +262,9 @@ BAD, when given, is called instead of `bad-option' for a wrong value."
 (define (positive-whole-number? x)
   (and (exact-integer? x) (positive? x)))
 
-;;; The options a form accepts: (NAME VALID? . WHAT-IT-MUST-BE).
-;;; `steps-per-pulse' and `steps-per-system' are transitional: time is
-;;; in integer steps until slice 2 (feat/music-durations).
-(define piece-options
-  `((steps-per-pulse ,positive-whole-number? . "a positive whole number")
-    (steps-per-system ,positive-whole-number? . "a positive whole number")))
+;;; The options a form accepts: (NAME VALID? . WHAT-IT-MUST-BE).  The
+;;; piece takes none until colotomies (iteration 2, slice 4).
+(define piece-options '())
 
 (define part-options
   `((name ,(lambda (v) (and (symbol? v) (not (key? v)))) . "a name")))
@@ -267,13 +276,10 @@ BAD, when given, is called instead of `bad-option' for a wrong value."
      (match (split-options items line)
        ((options . ())
         (let ((opts (check-options options piece-options "a piece" line)))
-          (make-piece title
-                      (or (assq-ref opts 'steps-per-pulse) 4)
-                      (assq-ref opts 'steps-per-system)
-                      0 '() '() '() '())))
+          (make-piece title 0 '() '() '() '())))
        ((_ . (item . _))
         (syntax-error 'bad-option line
-                      "after the title, a piece takes only options such as :steps-per-pulse 4, not ~s"
+                      "after the title, a piece takes only options, not ~s"
                       item))))
     ((_ . line)
      (syntax-error 'bad-title line
@@ -615,9 +621,6 @@ bare name has no position, so it takes SET-LINE, its scale's line."
                datum))))
       (_ (bad "a degree must be a name or (NAME :key value ...), not ~s" datum)))))
 
-(define (degree-names degree)
-  (cons (degree-name degree) (degree-aliases degree)))
-
 (define (build-scale form)
   "Build a scale record from a `scale' or `strokes' FORM."
   (match form
@@ -664,20 +667,6 @@ bare name has no position, so it takes SET-LINE, its scale's line."
                 (map (lambda (n) (cons n i)) (degree-names degree)))
               (scale-degrees scale)
               (iota (length (scale-degrees scale)))))
-
-(define (split-octave name)
-  "Split NAME, e.g. ding2, into (ding . 2).  Return #f if NAME has no
-octave number, or one with a leading zero (only 0 itself may start
-with 0)."
-  (let* ((s (symbol->string name))
-         (end (string-index-right s (lambda (c) (not (ascii-digit? c)))))
-         (digits (if end (substring s (1+ end)) "")))
-    (and end
-         (not (string-null? digits))
-         (or (string=? digits "0")
-             (not (char=? (string-ref digits 0) #\0)))
-         (cons (string->symbol (substring s 0 (1+ end)))
-               (string->number digits)))))
 
 (define (resolve-note name scale table instrument line)
   "The note record for NAME on INSTRUMENT, whose scale is SCALE."
@@ -749,111 +738,6 @@ scale record."
 ;;; ------------------------------------------------------------------
 ;;; Item 10: parts
 
-(define (note-name-table instrument)
-  "An alist from every way to write a note of INSTRUMENT to the note's
-index: for a pitched note, each name and alias of its degree with the
-octave (ding2, i2); for a stroke, each name and alias."
-  (let ((degrees (list->vector (scale-degrees (instrument-scale instrument)))))
-    (append-map
-     (lambda (note i)
-       (map (lambda (name)
-              (cons (match (note-octave note)
-                      (#f name)
-                      (octave (symbol-append
-                               name (string->symbol (number->string octave)))))
-                    i))
-            (degree-names (vector-ref degrees (note-degree note)))))
-     (vector->list (instrument-notes instrument))
-     (iota (vector-length (instrument-notes instrument))))))
-
-(define (rest-token? token)
-  (eq? token '-))
-
-(define (structural-token? token)
-  "A token that marks time or layout rather than naming a note."
-  (memq token '(_ - /)))
-
-(define (resolve-token-note token instrument table fail)
-  "The 0-based index of the note TOKEN (a number or name) on INSTRUMENT.
-FAIL is called with a kind and a message format and arguments."
-  (let ((size (vector-length (instrument-notes instrument))))
-    (match token
-      ((? exact-integer? n)
-       (unless (<= 1 n size)
-         (fail 'note-out-of-range
-               "note ~a does not exist on instrument `~a' (it has ~a notes)"
-               n (instrument-name instrument) size))
-       (1- n))
-      ((? symbol? name)
-       (match (assq name table)
-         ((_ . i) i)
-         (#f (fail 'unknown-note
-                   (if (and (scale-pitched? (instrument-scale instrument))
-                            (not (split-octave name)))
-                       "`~a' is not a note of instrument `~a'; pitched notes need an octave number, e.g. ~a1"
-                       "`~a' is not a note of instrument `~a'")
-                   name (instrument-name instrument) name)))))))
-
-(define (chord-member? x)
-  (or (exact-integer? x)
-      (and (symbol? x) (not (structural-token? x)))))
-
-(define (resolve-chord members instrument table fail)
-  "The sorted note indices of the chord MEMBERS."
-  (unless (and (list? members) (>= (length members) 2)
-               (every chord-member? members))
-    (fail 'bad-chord
-          "a chord needs two or more notes, each a number or a note name: ~s"
-          members))
-  (let ((notes (map (lambda (m) (resolve-token-note m instrument table fail))
-                    members)))
-    (unless (= (length notes) (length (delete-duplicates notes)))
-      (fail 'bad-chord "a chord has the same note twice: ~s" members))
-    (sort notes <)))
-
-(define (read-tokens tokens instrument name line)
-  "Turn the TOKENS of part NAME into events.  Return (EVENTS . STEPS)."
-  (let ((table (note-name-table instrument)))
-    (let loop ((tokens tokens)
-               (step 0)
-               (previous 'start)     ; start, note or rest
-               (events '()))         ; (START DURATION NOTES), newest first
-      (define (fail kind fmt . args)
-        (apply part-error kind line name step fmt args))
-      (define (strike notes)
-        (loop (cdr tokens) (1+ step) 'note
-              (cons (list step 1 notes) events)))
-      (match tokens
-        (()
-         (cons (reverse-map (match-lambda
-                              ((start duration notes)
-                               (make-event start duration notes)))
-                            events)
-               step))
-        ((token . rest)
-         (match token
-           ('/ (loop rest step previous events))
-           ((? rest-token?) (loop rest (1+ step) 'rest events))
-           ('_
-            (match (cons previous events)
-              (('note (start duration notes) . earlier)
-               (loop rest (1+ step) 'note
-                     (cons (list start (1+ duration) notes) earlier)))
-              (_ (fail 'hold-without-note
-                       (if (eq? previous 'start)
-                           "a part cannot start with `_' (hold): there is no note to hold"
-                           "`_' (hold) after a rest: there is no note to hold")))))
-           ((or (? exact-integer?) (? symbol?))
-            (strike (list (resolve-token-note token instrument table fail))))
-           ((or (? pair?) ())               ; a chord, perhaps an empty one
-            (strike (resolve-chord token instrument table fail)))
-           (_ (fail 'unknown-token
-                    "~s is not a note, a chord, `_', `-' or `/'"
-                    token))))))))
-
-(define (reverse-map f lst)
-  (fold (lambda (x acc) (cons (f x) acc)) '() lst))
-
 (define (build-part form instruments check-name)
   "Build a part record from FORM.  INSTRUMENTS is an alist from name to
 instrument record; CHECK-NAME checks the part's name against the parts
@@ -870,29 +754,38 @@ before it, after its instrument and before its tokens.  Return
                 (part-error 'undefined-instrument line name #f
                             "no instrument called `~a'" instrument-name))))
        (check-name)
-       (match (read-tokens tokens instrument name line)
-         ((events . steps)
+       (match (guard (e ((expansion-error? e)
+                         (raise-syntax-error
+                          (expansion-error-kind e) line name
+                          (expansion-error-time e) (expansion-error-uses e)
+                          (string-append "part `~a'~@[, ~a~]: ~a")
+                          (list name
+                                (and (expansion-error-time e)
+                                     (time->text (expansion-error-time e)))
+                                (exception-message e)))))
+                (expand-tokens tokens instrument))
+         ((events . written)
           (cons (make-part name instrument events (location line))
-                steps)))))))
+                written)))))))
 
 ;;; ------------------------------------------------------------------
 ;;; Item 11: parts have equal length
 
-(define (check-equal-lengths parts+steps)
+(define (check-equal-lengths parts+lengths)
   "PARTS+STEPS is a list of (PART . STEPS) in file order.  Return the
 piece length: the common step count, or 0 with no parts."
-  (match parts+steps
+  (match parts+lengths
     (() 0)
     (((first . length) . others)
      (for-each
       (match-lambda
-        ((part . steps)
-         (unless (= steps length)
+        ((part . written)
+         (unless (= written length)
            (part-error 'unequal-length
                        (source-location-line (part-location part))
                        (part-name part) #f
-                       "has ~a steps, but part `~a' has ~a; every part must have the same number of steps"
-                       steps (part-name first) length))))
+                       "lasts ~a pulses, but part `~a' lasts ~a; every part must have the same length"
+                       written (part-name first) length))))
       others)
      length)))
 
@@ -937,21 +830,19 @@ so a file with several problems always reports the same one."
                            (build-instrument form (named scales scale-name)))
                          (with-heads '(instrument) definitions)))
            (part-forms (forms-with-heads forms '(part)))
-           (parts+steps
+           (parts+lengths
             (let loop ((todo part-forms) (done '()) (built '()))
               (match todo
                 (() (reverse built))
                 ((form . rest)
-                 (let ((part+steps
+                 (let ((part+length
                         (build-part form (named instruments instrument-name)
                                     (lambda () (check-part-names form done)))))
-                   (loop rest (cons form done) (cons part+steps built)))))))
-           (length (check-equal-lengths parts+steps))
-           (parts (map car parts+steps))
+                   (loop rest (cons form done) (cons part+length built)))))))
+           (length (check-equal-lengths parts+lengths))
+           (parts (map car parts+lengths))
            (groups (default-groups parts)))
       (make-piece (piece-title piece)
-                  (piece-steps-per-pulse piece)
-                  (piece-steps-per-system piece)
                   length scales instruments parts groups))))
 
 (define (read-port port dir chain)

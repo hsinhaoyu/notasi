@@ -1,0 +1,1 @@
+pulse-check.nts:4: part `ugal', pulse 2 1/2: `|' is not at the start of a pulse

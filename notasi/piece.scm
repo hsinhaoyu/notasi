@@ -10,13 +10,13 @@
   #:use-module (ice-9 exceptions)
   #:use-module (ice-9 match)
   #:export (note-pitch-index note-display note-label
-            group-lanes part-steps events-at
+            group-lanes part-end events-at
 
 make-source-location source-location?
             source-location-file source-location-line
 
             make-piece piece?
-            piece-title piece-steps-per-pulse piece-steps-per-system
+            piece-title
             piece-length piece-scales piece-instruments piece-parts
             piece-groups
 
@@ -53,13 +53,10 @@ make-source-location source-location?
 
 ;;; A whole piece after reading, with templates merged.
 (define-record-type <piece>
-  (make-piece title steps-per-pulse steps-per-system length
-              scales instruments parts groups)
+  (make-piece title length scales instruments parts groups)
   piece?
   (title            piece-title)
-  (steps-per-pulse  piece-steps-per-pulse)
-  (steps-per-system piece-steps-per-system) ; #f = one system
-  (length           piece-length)           ; total steps
+  (length           piece-length)           ; pulses, an exact rational
   (scales           piece-scales)           ; includes stroke sets
   (instruments      piece-instruments)
   (parts            piece-parts)
@@ -191,21 +188,23 @@ follow in the order its first part appears in GROUP."
               (delete-duplicates (map part-instrument (group-parts group))
                                  eq?)))
 
-(define (part-steps part)
-  "Return the step after PART's last event ends, or 0 if it has none."
+(define (part-end part)
+  "Return the time (in pulses) when PART's last event ends, or 0 if it
+has none."
   (match (part-events part)
     (() 0)
     (events (let ((e (last events)))
               (+ (event-start e) (event-duration e))))))
 
-(define (events-at piece step)
-  "Return everything sounding at STEP in PIECE, as (part . event) pairs in
-the piece's part order.  An event sounds from its start through its holds."
+(define (events-at piece time)
+  "Return everything sounding at TIME (in pulses) in PIECE, as
+(part . event) pairs in the piece's part order.  An event sounds from its
+start through its holds."
   (append-map
    (lambda (part)
      (filter-map (lambda (e)
-                   (and (<= (event-start e) step)
-                        (< step (+ (event-start e) (event-duration e)))
+                   (and (<= (event-start e) time)
+                        (< time (+ (event-start e) (event-duration e)))
                         (cons part e)))
                  (part-events part)))
    (piece-parts piece)))

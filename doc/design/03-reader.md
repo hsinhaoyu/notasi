@@ -1,15 +1,17 @@
 # 03 — Reader and validation
 
-Status: partly implemented (iteration 2): milestone 1, slice 1 of 5
-(`feat/music-syntax`, see "Slices (iteration 2)"); the rest is planned.
+Status: partly implemented (iteration 2): milestone 1, slices 1–2 of 5
+(`feat/music-syntax`, `feat/music-durations`, see "Slices (iteration
+2)"); the rest is planned.
 "What the reader reads today" says what `(notasi reader)` does in the
 meantime. Tests in `tests/reader.scm`.
 
 Everything in this document is **Planned** unless it says otherwise.
-**Implemented** since slice 1: steps 1, 2 (with `colotomy`, `pattern`
-and `score` raising `not-implemented`), 3, 4, 5, 6 and 7 as far as
-scales, stroke sets, instruments and parts go, and every **[syntax]**
-case.
+**Implemented** since slices 1 and 2: steps 1, 2 (with `colotomy`,
+`pattern` and `score` raising `not-implemented`), 3 to 7, step 9 for
+tokens (durations, `_`, `-`, `/` and `|`, without `rep`, patterns or
+spans) in `(notasi expand)`, step 10 without colotomies, the condition's
+`time` and `uses`, and every **[syntax]** and **[durations]** case.
 
 ## Responsibility
 
@@ -467,13 +469,35 @@ error cases tagged with its feature, and the steps above that they need.
    - Tests written in the v1 syntax are translated to the new syntax,
      keeping what they check; tests of what this slice removes are
      deleted or turned into the new errors.
-2. `feat/music-durations` **[durations]**: `(notasi expand)` (ADR 0035)
+2. **Implemented.** `feat/music-durations` **[durations]**: `(notasi expand)` (ADR 0035)
    and step 9 for tokens: times as exact rationals in pulses (02),
    duration suffixes and the current duration, `_` and `-`, `|` checks,
    `/`; the condition's `time` and `uses` fields, with positions as
    `pulse P`; `steps-per-pulse` and `steps-per-system` gone, and layout
    deriving the step (04, "The step"), with systems one per piece until
-   scores.
+   scores. Decided for this slice:
+   - `piece` gains only what this slice needs:
+     `(make-piece title length scales instruments parts groups)`, with
+     `length` an exact rational in pulses; `steps-per-pulse` and
+     `steps-per-system` go. Later slices add their own fields, and
+     milestone 2 replaces `groups` with `scores`.
+   - `(notasi expand)` resolves note names (step 7 for tokens moves
+     into it) and exports `(expand-tokens tokens instrument)` →
+     `(EVENTS . LENGTH)`: event records with exact rational starts and
+     durations, and the written length in pulses (trailing rests
+     included). Its errors are `&expansion-error`, a subtype of
+     `&error`, with `expansion-error?`, `expansion-error-kind`,
+     `expansion-error-time` (pulses from the start of the tokens, or
+     `#f`) and `expansion-error-uses` (`'()` until patterns), and a
+     `&message` without a location. The reader catches it, adds the
+     file, line and part, and raises `&notasi-syntax-error` with the
+     same kind, `time` and `uses`.
+   - `part-steps` becomes `part-end` and `events-at` takes a time
+     (02, "Derived values").
+   - Without a colotomy, a time T is written `pulse P` with P = T + 1,
+     a fraction as a mixed number: time 3/2 is "pulse 2 1/2", e.g.
+     "part `ugal', pulse 2 1/2: …". A `time` of `#f` prints no
+     position.
 3. `feat/music-rep` **[rep]**: `rep`.
 4. `feat/music-colotomy` **[colotomy]**: `colotomy` forms, `:colotomy`
    and `:pickup`, generated parts (step 11), `||` checks, lengths
@@ -494,14 +518,10 @@ The **[scores]** cases are built in milestone 2 (04, "Slices").
 iteration 2. It differs from the above as follows, and this section
 goes when iteration 2 is built:
 
-- `piece` takes the transitional `:steps-per-pulse` and
-  `:steps-per-system` options, and no `:colotomy` or `:pickup`.
-- Every token is one step; `-` is the rest and `/` takes no step; there
-  are no duration suffixes, `rep`, checks, patterns, colotomies or
-  scores. Steps 8 to 12 are not built.
+- `piece` takes no options yet (no `:colotomy` or `:pickup`).
+- There are no `rep`, `||` checks, patterns, colotomies or scores.
+  Steps 8, 11 and 12 are not built; `uses` is always `'()`.
 - Every part is in its own default group (`piece-groups`).
-- The condition has a `step` field (0-based) instead of `time` and
-  `uses`, and messages count steps from 1.
 
 ## Open questions
 

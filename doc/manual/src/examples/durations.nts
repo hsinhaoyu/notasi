@@ -1,0 +1,8 @@
+(piece "Pokok and kotekan")
+
+(use gong-kebyar)
+
+;; pulse:  1                 2                 3                 4
+(part ugal    a1                o2                i2                e2)
+(part reyong  i2:1/4 _  i2 o2 | _  i2 o2 _  | o2 i2 _  o2 | i2 o2 _  i2)
+(part gong    G:1               -:3)

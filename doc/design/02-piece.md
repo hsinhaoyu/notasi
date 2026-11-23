@@ -2,7 +2,9 @@
 
 Status: partly implemented (iteration 2). `degree` (with `damped`) and
 `instrument` (without `show-names?`) are as below since
-`feat/music-syntax`; the other records are agreed and not yet built:
+`feat/music-syntax`; times are exact rationals in pulses, with
+`part-end` and `events-at` taking a time, since `feat/music-durations`.
+The other records are agreed and not yet built:
 `(notasi piece)` still implements their v1 form, summarised under "What
 the code implements today". Tests in `tests/piece.scm`.
 
@@ -240,19 +242,17 @@ construction, since events are built from the tokens.
 records. It differs as follows, and this section goes when iteration 2
 is built:
 
-- Time is in integer steps. `piece` has `steps-per-pulse`,
-  `steps-per-system` and `length` in steps, and `groups` (every part in
-  exactly one group) instead of `scores`; there are no `pickup`,
-  `colotomies` or `patterns` fields.
-- `event-start` and `event-duration` are integers (`duration` ≥ 1).
+- `piece` is `(make-piece title length scales instruments parts
+  groups)`: `length` in pulses, and `groups` (every part in exactly one
+  group) instead of `scores`; there are no `pickup`, `colotomies` or
+  `patterns` fields yet.
 - `part` has no `origin` or `spans`; there are no `colotomy`, `pattern`,
   `pattern-span` or `score` records.
 - (`degree` has `damped` and `instrument` has no `show-names?` since
   iteration 2, slice 1: those two records are **Implemented** as
   above.)
 - `group` is `label`, `subtitle`, `parts`, `location`.
-- The derived values are `part-steps` and `(events-at piece step)`, and
-  `note-display` has no `damped?`; there are no `time->position`,
+- `note-display` has no `damped?`; there are no `time->position`,
   `position->time` or `piece-score`.
 - Invariant 4 is "every part belongs to exactly one group": the reader
   makes one default group per part.

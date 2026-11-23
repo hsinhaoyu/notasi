@@ -538,10 +538,9 @@ rest.
 milestone 1, slice 1). It differs from the rest as follows, and this
 section goes when iteration 2 is built:
 
-- Every token is one step, and two transitional `piece` options,
-  `:steps-per-pulse N` (default 4) and `:steps-per-system N`, give the
-  pulse and break the figure into systems. Notes have no duration
-  suffix, and there are no `|`, `||`, `rep`, patterns or colotomies.
+- Durations, `_`, `-`, `/` and `|` are read (slice 2). `piece` takes no
+  options yet, and there are no `||`, `rep`, patterns or colotomies.
+  A figure is one system for the whole piece.
 - `colotomy`, `pattern` and `score` forms raise `not-implemented`.
   There are no scores yet: every part is drawn in its own group, and no
   note shows its name.

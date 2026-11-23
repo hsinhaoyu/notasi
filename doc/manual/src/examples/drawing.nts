@@ -1,4 +1,4 @@
-(piece "Pokok with kempli" :steps-per-pulse 1)
+(piece "Pokok with kempli")
 
 (use gong-kebyar)
 

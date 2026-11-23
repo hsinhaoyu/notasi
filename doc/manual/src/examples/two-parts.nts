@@ -1,4 +1,4 @@
-(piece "Kotekan" :steps-per-pulse 4)
+(piece "Kotekan")
 
 (scale selisir
   (ding :alias i)
@@ -10,9 +10,7 @@
 (instrument reyong  selisir       e1 u1 a1 i2 o2 e2 u2 a2 i3 o3 e3 u3)
 (instrument gong    gong-strokes  G P)
 
-(part reyong :name polos    i2 _  i2 o2 / _  i2 o2 _  / o2 i2 _  o2 / i2 o2 _  i2)
-(part reyong :name sangsih  e2 u2 e2 _  / u2 e2 _  u2 / _  e2 u2 _  / e2 _  u2 e2)
-(part gong                  G  -  -  -  / -  -  -  -  / -  -  -  -  / P  -  -  -)
-
-;; Polos and sangsih share one block of rows.
-;; The gong, in no group, gets a block of its own.
+;; Four notes to each pulse, in quarter pulses.
+(part reyong :name polos    i2:1/4 _  i2 o2 | _  i2 o2 _  | o2 i2 _  o2 | i2 o2 _  i2)
+(part reyong :name sangsih  e2:1/4 u2 e2 _  | u2 e2 _  u2 | _  e2 u2 _  | e2 _  u2 e2)
+(part gong                  G:1               -:2                         P:1)

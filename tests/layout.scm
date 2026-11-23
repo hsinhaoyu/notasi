@@ -22,8 +22,6 @@
 ;;;   it has groups (the doc says sizes are "for the whole figure (all
 ;;;   systems)", which is unclear when there are no systems).  With no
 ;;;   groups at all: "1.5em" and "1.0em".
-;;; - steps-per-system larger than the piece gives one system whose
-;;;   `steps` is the piece length ("the last system may be shorter").
 ;;; - A note cut at a boundary keeps its own lane, text and look in
 ;;;   every piece; only start, dur and continued change.
 ;;; - An event that ends exactly on a boundary, or starts on one, is not
@@ -40,6 +38,17 @@
 ;;; still draws whatever groups the piece has, so tests of written
 ;;; groups (subtitles, several voices, merged lanes) build those groups
 ;;; by hand with `regroup`.
+;;;
+;;; Slice feat/music-durations (03, slice 2; 04, "The step"): the piece
+;;; has no steps-per-pulse or steps-per-system. Layout derives the step,
+;;; the largest duration dividing 1 pulse and every event start and end,
+;;; so `steps_per_pulse` is k for a step of 1/k pulse, and every time
+;;; becomes a whole number of columns. There is one system for the whole
+;;; piece until scores, so v1's tests of system splitting and of events
+;;; cut at system boundaries are gone (they come back with scores).
+;;; Test pieces keep their length a multiple of the step, so it does not
+;;; matter whether the piece's end also counts towards the step (04 says
+;;; `to` does).
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -102,8 +111,6 @@
 in that order: the groups v1 files wrote, which the notation no longer
 has (ADR 0031)."
   (make-piece (piece-title piece)
-              (piece-steps-per-pulse piece)
-              (piece-steps-per-system piece)
               (piece-length piece)
               (piece-scales piece)
               (piece-instruments piece)
@@ -187,21 +194,20 @@ and every array a vector?"
 ;;; ------------------------------------------------------------------
 ;;; Fixtures
 
-;; A small piece used for the complete figure: two systems of 3 and 2
-;; steps, a held note cut at step 3, a note ending exactly at step 3, a
-;; chord, a group with a subtitle (built by hand) and a default stroke
-;; group.
+;; A small piece used for the complete figure: half pulses (so 2 steps
+;; per pulse), 5 steps in one system, a held note, a chord, a group with
+;; a subtitle (built by hand) and a default stroke group.
 (define tiny
   (regroup
    (piece-of
-    "(piece \"Tiny\" :steps-per-pulse 2 :steps-per-system 3)"
+    "(piece \"Tiny\")"
     "(scale selisir (ding :display \"i\") (dong :display \"o\") (deng :display \"e\"))"
     "(strokes gong-strokes G P)"
     "(instrument ugal selisir ding1 dong1 deng1 ding2)"
     "(instrument gong gong-strokes G P)"
-    "(part ugal :name polos    1 _ 2 _ _)"
-    "(part ugal :name sangsih  - 4 _ (1 3) -)"
-    "(part gong                2 - - 1 -)")
+    "(part ugal :name polos    1:1/2 _ 2 _ _)"
+    "(part ugal :name sangsih  -:1/2 4 _ (1 3) -)"
+    "(part gong                2:1/2 - - 1 -)")
    '("Ugal" "polos + sangsih" polos sangsih)
    '("gong" #f gong)))
 
@@ -228,35 +234,26 @@ and every array a vector?"
               (row_height . "2.0em")))
     (systems
      . ,(vector
-         (sys 0 3
+         (sys 0 5
               (grp "Ugal" "polos + sangsih" #("i2" "e1" "o1" "i1")
                    (voice "polos"
                           (ev 0 2 3 'null ding-fill dark #f)
-                          (ev 2 1 2 'null dong-fill dark #f))
+                          (ev 2 3 2 'null dong-fill dark #f))
                    (voice "sangsih"
-                          (ev 1 2 0 'null ding-fill dark #f)))
+                          (ev 1 2 0 'null ding-fill dark #f)
+                          (ev 3 1 1 'null deng-fill dark #f)
+                          (ev 3 1 3 'null ding-fill dark #f)))
               (grp "gong" 'null #("G" "P")
                    (voice "gong"
-                          (ev 0 1 1 'null grey dark #f))))
-         (sys 3 2
-              (grp "Ugal" "polos + sangsih" #("i2" "e1" "o1" "i1")
-                   (voice "polos"
-                          (ev 0 2 2 'null dong-fill dark #t))
-                   (voice "sangsih"
-                          (ev 0 1 1 'null deng-fill dark #f)
-                          (ev 0 1 3 'null ding-fill dark #f)))
-              (grp "gong" 'null #("G" "P")
-                   (voice "gong"
-                          (ev 0 1 0 'null grey dark #f))))))
+                          (ev 0 1 1 'null grey dark #f)
+                          (ev 3 1 0 'null grey dark #f))))))
     (caption . null)))
 
-;; Pieces of 10 steps with various steps-per-system.
-(define (ten-steps . options)
+;; A piece of 10 pulses, one note or rest per pulse.
+(define (ten-steps)
   (apply piece-of
          (append
-          (list (string-append "(piece \"Ten\" "
-                               (string-join options " ")
-                               ")")
+          (list "(piece \"Ten\")"
                 "(scale s a b)"
                 "(strokes k-strokes K)"
                 "(instrument u s a1 b1)"
@@ -265,32 +262,14 @@ and every array a vector?"
                 "(part u :name rests   1 - - - - - - - - -)"
                 "(part kempli          K - K - K - K - K -)"))))
 
-;; Held notes against systems of 4 steps (16 steps, 4 systems).
-(define cuts
-  (piece-of
-   "(piece \"Cuts\" :steps-per-pulse 2 :steps-per-system 4)"
-   "(scale s (ding :display \"i\") (dong :display \"o\"))"
-   "(instrument u s ding1 dong1)"
-   ;; ding1 at 2 for 4 steps: crosses step 4.
-   "(part u :name one    - - 1 _ / _ _ - - / - - - - / - - - -)"
-   ;; ding1 at 3 for 6 steps: crosses steps 4 and 8.
-   "(part u :name two    - - - 1 / _ _ _ _ / _ - - - / - - - -)"
-   ;; ends on step 4; starts on step 4; inside; last step.
-   "(part u :name edges  1 _ _ _ / 2 _ - - / - 1 _ _ / - - - 2)"
-   ;; the whole piece.
-   "(part u :name whole  1 _ _ _ / _ _ _ _ / _ _ _ _ / _ _ _ _)"
-   ;; a chord at 3 for 2 steps.
-   "(part u :name chord  - - - (1 2) / _ - - - / - - - - / - - - -)"))
-
 ;; Groups of one part and of several, pitched and stroke: the groups v1
 ;; wrote ("Reyong-ish", "Colotomic") and its default groups, in v1's
 ;; order, built by hand.
-(define (groups-piece . options)
+(define (groups-piece)
   (regroup
    (apply piece-of
           (append
-           (list (string-append "(piece \"Groups\" "
-                                (string-join options " ") ")"))
+           (list "(piece \"Groups\")")
            selisir-lines
            (list
             "(strokes kempli-strokes K)"
@@ -328,10 +307,10 @@ and every array a vector?"
   (test-equal "version 1" 1 (field (layout-piece tiny) 'version))
   (test-equal "title is the piece's title"
     "Tiny" (field (layout-piece tiny) 'title))
-  (test-equal "steps_per_pulse from the piece"
+  (test-equal "steps_per_pulse derived: half pulses give 2"
     2 (field (layout-piece tiny) 'steps_per_pulse))
-  (test-equal "steps_per_pulse defaults to the piece's default (4)"
-    4 (field (layout-piece (ten-steps)) 'steps_per_pulse))
+  (test-equal "steps_per_pulse derived: whole pulses give 1"
+    1 (field (layout-piece (ten-steps)) 'steps_per_pulse))
   (test-equal "tenzer1: steps_per_pulse 1"
     1 (field (layout-piece tenzer) 'steps_per_pulse))
   (test-equal "tenzer1: title"
@@ -343,7 +322,7 @@ and every array a vector?"
   (test-assert "every object has its keys in order, arrays are vectors"
     (well-formed? (layout-piece tiny)))
   (test-assert "well-formed: groups piece"
-    (well-formed? (layout-piece (groups-piece ":steps-per-system 3"))))
+    (well-formed? (layout-piece (groups-piece))))
   (test-assert "well-formed: tenzer1"
     (well-formed? (layout-piece tenzer)))
   (test-assert "json-string accepts the figure"
@@ -479,10 +458,6 @@ and every array a vector?"
       (step_width . "2.0em") (row_height . "2.0em"))
     (field (layout-piece tenzer) 'sizes))
 
-  (test-equal "sizes are the same with and without systems breaks"
-    (field (layout-piece (groups-piece)) 'sizes)
-    (field (layout-piece (groups-piece ":steps-per-system 1")) 'sizes))
-
   (test-equal "groups piece: \"sangsih + polos\" → 10.5em, \"e2\" → 2.0em"
     '((label_width . "10.5em") (lane_width . "2.0em")
       (step_width . "2.0em") (row_height . "2.0em"))
@@ -495,30 +470,21 @@ and every array a vector?"
   (map (lambda (s) (list (field s 'start) (field s 'steps))) (systems fig)))
 
 (test-group "systems"
-  (test-equal "no steps-per-system: one system of the whole piece"
+  (test-equal "one system of the whole piece"
     '((0 10))
     (starts+steps (layout-piece (ten-steps))))
-  (test-equal "steps-per-system 5 divides 10: two systems"
-    '((0 5) (5 5))
-    (starts+steps (layout-piece (ten-steps ":steps-per-system 5"))))
-  (test-equal "steps-per-system 4: the last system is shorter"
-    '((0 4) (4 4) (8 2))
-    (starts+steps (layout-piece (ten-steps ":steps-per-system 4"))))
-  (test-equal "steps-per-system 3: starts are absolute"
-    '((0 3) (3 3) (6 3) (9 1))
-    (starts+steps (layout-piece (ten-steps ":steps-per-system 3"))))
-  (test-equal "steps-per-system 1: one system per step"
-    (map (lambda (i) (list i 1)) (iota 10))
-    (starts+steps (layout-piece (ten-steps ":steps-per-system 1"))))
-  (test-equal "steps-per-system 12 > length 10: one system of 10"
-    '((0 10))
-    (starts+steps (layout-piece (ten-steps ":steps-per-system 12"))))
-  (test-equal "steps-per-system 10 = length: one system"
-    '((0 10))
-    (starts+steps (layout-piece (ten-steps ":steps-per-system 10"))))
   (test-equal "tenzer1: one system of 9 steps"
     '((0 9))
     (starts+steps (layout-piece tenzer)))
+  (test-equal "one system, whatever the step: tiny is 5 half pulses"
+    '((0 5))
+    (starts+steps (layout-piece tiny)))
+  (test-equal "a long piece is still one system"
+    '((0 16))
+    (starts+steps (layout-piece (piece-of "(piece \"Long\")"
+                                          "(scale s a)"
+                                          "(instrument u s a1)"
+                                          "(part u :name p 1:1/4 _ _ _ -:15)"))))
 
   (test-equal "a piece of length 0 (no parts) has no systems"
     #()
@@ -530,77 +496,16 @@ and every array a vector?"
                                    "(instrument u s a1)"
                                    "(part u :name p /)"))
            'systems))
-  (test-equal "a piece of length 0 with steps-per-system has no systems"
-    #()
-    (field (layout-piece (piece-of "(piece \"Zero\" :steps-per-system 4)"
-                                   "(scale s a)"
-                                   "(instrument u s a1)"
-                                   "(part u :name p /)"))
-           'systems))
 
-  (test-equal "every group in every system, in piece order"
-    (make-list 3 '("melody" "rests" "kempli"))
-    (map (lambda (s)
-           (map (lambda (g) (field g 'label))
-                (vector->list (field s 'groups))))
-         (systems (layout-piece (ten-steps ":steps-per-system 4")))))
-  (test-equal "a voice with nothing in a system has events #()"
-    '(1 0 0)
-    (map (lambda (s) (length (events-of (layout-piece
-                                         (ten-steps ":steps-per-system 4"))
-                                        s 1 0)))
-         '(0 1 2)))
-  (test-equal "the empty voice is #(), not '()"
-    #()
-    (field (voice-ref (layout-piece (ten-steps ":steps-per-system 4")) 2 1 0)
-           'events))
-  (test-equal "events split by system, starts relative"
-    '(((0 1 0 #f) (2 1 0 #f))
-      ((0 1 0 #f) (2 1 0 #f))
-      ((0 1 0 #f)))
-    (map (lambda (s)
-           (timing (events-of (layout-piece (ten-steps ":steps-per-system 4"))
-                              s 2 0)))
-         '(0 1 2))))
-
-;;; ------------------------------------------------------------------
-;;; Cut events
-
-(test-group "cut events"
-  ;; Groups in cuts: one two edges whole chord (default groups, one voice).
-  (test-equal "crossing one boundary: two pieces, continued #f then #t"
-    '(((2 2 0 #f)) ((0 2 0 #t)) () ())
-    (map (lambda (s) (timing (events-of (layout-piece cuts) s 0 0)))
-         '(0 1 2 3)))
-  (test-equal "crossing two boundaries: three pieces"
-    '(((3 1 0 #f)) ((0 4 0 #t)) ((0 1 0 #t)) ())
-    (map (lambda (s) (timing (events-of (layout-piece cuts) s 1 0)))
-         '(0 1 2 3)))
-  (test-equal "ending on or starting on a boundary: not cut"
-    ;; lanes of edges: dong1 (0), ding1 (1)
-    '(((0 4 1 #f)) ((0 2 0 #f)) ((1 3 1 #f)) ((3 1 0 #f)))
-    (map (lambda (s) (timing (events-of (layout-piece cuts) s 2 0)))
-         '(0 1 2 3)))
-  (test-equal "a note through the whole piece: one piece per system"
-    '(((0 4 0 #f)) ((0 4 0 #t)) ((0 4 0 #t)) ((0 4 0 #t)))
-    (map (lambda (s) (timing (events-of (layout-piece cuts) s 3 0)))
-         '(0 1 2 3)))
-  (test-equal "a chord crossing a boundary: every note cut"
-    ;; lanes of chord: dong1 (0), ding1 (1)
-    '(((3 1 0 #f) (3 1 1 #f)) ((0 1 0 #t) (0 1 1 #t)) () ())
-    (map (lambda (s) (timing (events-of (layout-piece cuts) s 4 0)))
-         '(0 1 2 3)))
-  (test-equal "every piece of a cut note keeps its text and look"
-    (list (list 'null ding-fill dark) (list 'null ding-fill dark)
-          (list 'null ding-fill dark))
-    (map (lambda (s) (event-look (car (events-of (layout-piece cuts) s 1 0))))
-         '(0 1 2)))
-  (test-equal "the full event objects of a cut note"
-    (list (ev 2 2 0 'null ding-fill dark #f)
-          (ev 0 2 0 'null ding-fill dark #t))
-    (append (events-of (layout-piece cuts) 0 0 0)
-            (events-of (layout-piece cuts) 1 0 0)))
-  (test-equal "without systems breaks nothing is cut"
+  (test-equal "every group in the system, in piece order"
+    '("melody" "rests" "kempli")
+    (map (lambda (g) (field g 'label))
+         (vector->list (field (system-ref (layout-piece (ten-steps)) 0)
+                              'groups))))
+  (test-equal "events start at the piece's start"
+    '((0 1 0 #f) (2 1 0 #f) (4 1 0 #f) (6 1 0 #f) (8 1 0 #f))
+    (timing (events-of (layout-piece (ten-steps)) 0 2 0)))
+  (test-equal "a held note through the whole piece is not cut"
     '((3 6 0 #f))
     (timing (events-of (layout-piece
                         (piece-of "(piece \"P\")"
@@ -608,6 +513,61 @@ and every array a vector?"
                                   "(instrument u s a1)"
                                   "(part u :name two - - - 1 _ _ _ _ _ - - - - - - -)"))
                        0 0 0))))
+
+;;; ------------------------------------------------------------------
+;;; The step (04, "The step")
+
+(define (step-piece . tokens)
+  "A piece with one part on u (keys a1 b1) for each string in TOKENS."
+  (apply piece-of
+         "(piece \"Step\")" "(scale s a b)" "(instrument u s a1 b1)"
+         (map (lambda (t i)
+                (string-append "(part u :name p" (number->string i) " " t ")"))
+              tokens (iota (length tokens)))))
+
+(define (step-of . tokens)
+  (field (layout-piece (apply step-piece tokens)) 'steps_per_pulse))
+
+(test-group "the step"
+  (test-equal "whole pulses: 1" 1 (step-of "1 2 1 2"))
+  (test-equal "notes of two pulses: still 1 (the step divides a pulse)" 1
+    (step-of "1:2 2 1 2"))
+  (test-equal "half pulses: 2" 2 (step-of "1:1/2 2 1 2"))
+  (test-equal "quarter pulses: 4" 4 (step-of "1:1/4 2 1 2"))
+  (test-equal "thirds: 3" 3 (step-of "1:1/3 2 1"))
+  (test-equal "halves and thirds: 6" 6 (step-of "1:1/2 2:1/3 1:1/6"))
+  (test-equal "the fastest part sets it" 4
+    (step-of "1 2 1 2" "1:1/4 2 1 2 1:1 2 1"))
+  (test-equal "quarters in one place only" 4 (step-of "1 2 1:1/4 2 1 2 1:1"))
+  (test-equal "a start off the pulse counts, not only durations" 2
+    (step-of "-:1/2 1:1 -:1/2"))
+  (test-equal "an end off the pulse counts: a held quarter" 4
+    (step-of "1:1/4 _ _ -:1/4 -:1"))
+  (test-equal "the largest step: halves written as quarters" 2
+    (step-of "1:1/4 _ 2 _ 1 _ 2 _"))
+  (test-equal "no parts: 1" 1
+    (field (layout-piece (piece-of "(piece \"Empty\")")) 'steps_per_pulse))
+
+  (let ((fig (layout-piece (step-piece "1:1/4 2 1:1/2 2:1 1:1/4 2 -:1/2"))))
+    (test-equal "times become whole columns"
+      ;; lanes: b1 (0), a1 (1); k = 4
+      '((0 1 1 #f) (1 1 0 #f) (2 2 1 #f) (4 4 0 #f) (8 1 1 #f) (9 1 0 #f))
+      (timing (events-of fig 0 0 0)))
+    (test-equal "the system's steps are the length in columns" '((0 12))
+      (starts+steps fig))
+    (test-assert "every start and dur is an exact integer"
+      (every (lambda (e) (and (exact-integer? (field e 'start))
+                              (exact-integer? (field e 'dur))))
+             (events-of fig 0 0 0)))
+    (test-assert "json-string accepts it (no rationals left)"
+      (string? (json-string fig))))
+
+  (let ((fig (layout-piece (step-piece "1:1/3 2 1 2:1" "1:2"))))
+    (test-equal "thirds: columns" '((0 1 1 #f) (1 1 0 #f) (2 1 1 #f) (3 3 0 #f))
+      (timing (events-of fig 0 0 0)))
+    (test-equal "thirds: a two-pulse note is 6 columns" '((0 6 0 #f))
+      (timing (events-of fig 0 1 0)))
+    (test-equal "thirds: 6 columns" '((0 6)) (starts+steps fig))))
 
 ;;; ------------------------------------------------------------------
 ;;; Groups and lanes
@@ -654,28 +614,10 @@ and every array a vector?"
                  (piece-groups (groups-piece))))
     (map (lambda (g) (lanes-of (layout-piece (groups-piece)) 0 g))
          '(0 2 3)))
-  (test-equal "the same lanes in every system"
-    (make-list 4 (list #("e2" "o2" "i2" "a1") #("G" "P" "K")
-                       #("e2" "o2" "i2" "u1") #()))
-    (map (lambda (s)
-           (map (lambda (g) (lanes-of (layout-piece
-                                       (groups-piece ":steps-per-system 1"))
-                                      s g))
-                '(0 1 2 3)))
-         '(0 1 2 3)))
   (test-equal "voices: one per part, in the group's part order, as strings"
     '(("melody") ("gong" "kempli") ("sangsih" "polos") ("silent"))
     (map (lambda (g) (voice-names (layout-piece (groups-piece)) 0 g))
          '(0 1 2 3)))
-  (test-equal "voices in every system, even when empty"
-    (make-list 2 '(("melody") ("gong" "kempli") ("sangsih" "polos")
-                   ("silent")))
-    (map (lambda (s)
-           (map (lambda (g) (voice-names (layout-piece
-                                          (groups-piece ":steps-per-system 2"))
-                                         s g))
-                '(0 1 2 3)))
-         '(0 1)))
   (test-equal "lane index: melody a1 o2 i2 e2"
     '((0 1 3 #f) (1 1 1 #f) (2 1 2 #f) (3 1 0 #f))
     (timing (events-of (layout-piece (groups-piece)) 0 0 0)))
@@ -691,17 +633,7 @@ and every array a vector?"
           (timing (events-of (layout-piece (groups-piece)) 0 2 1))))
   (test-equal "a silent voice has events #()"
     #()
-    (field (voice-ref (layout-piece (groups-piece)) 0 3 0) 'events))
-  (test-equal "second system of two: relative starts, all lanes kept"
-    '(((0 1 2 #f) (1 1 0 #f))          ; melody i2 e2
-      ((0 1 0 #f))                     ; gong G
-      ((0 1 2 #f) (1 1 2 #f))          ; kempli
-      ((1 1 1 #f))                     ; sangsih o2
-      ((0 1 0 #f))                     ; polos e2
-      ())                              ; silent
-    (let ((fig (layout-piece (groups-piece ":steps-per-system 2"))))
-      (map (lambda (gv) (timing (apply events-of fig 1 gv)))
-           '((0 0) (1 0) (1 1) (2 0) (2 1) (3 0))))))
+    (field (voice-ref (layout-piece (groups-piece)) 0 3 0) 'events)))
 
 ;;; ------------------------------------------------------------------
 ;;; Events

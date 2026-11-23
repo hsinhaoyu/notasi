@@ -1,1 +1,1 @@
-note-out-of-range.nts:4: part `melody', step 3: note 6 does not exist on instrument `ugal' (it has 5 notes)
+note-out-of-range.nts:4: part `melody', pulse 3: note 6 does not exist on instrument `ugal' (it has 5 notes)

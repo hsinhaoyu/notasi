@@ -2,7 +2,7 @@
 
 Once your piece reads without errors, notasi can draw it as a score: a
 grid with one row for each note an instrument plays and one column for
-each step.
+each step of time, as fine as the shortest note.
 
 ## What you need
 
@@ -39,16 +39,15 @@ This is what you get:
 - Each **part** is a block of rows, with its name on the left. Each
   row is one note of the instrument, highest at the top, labelled with
   the note's name.
-- Each **column** is one step. The numbers along the top count pulses,
+- Each **column** is one step of time: a whole pulse, or a part of one
+  when the piece has shorter notes. The numbers along the top count pulses,
   and a thin line marks where each pulse begins (see
-  [Steps and pulses](steps-and-pulses.md)).
+  [Pulses and durations](pulses-and-durations.md)).
 - A **note** is a coloured square in its row. A held note (`_`) is a
   longer block. Each pitch has its own colour, the same in every
   octave and on every instrument, so you can follow a melody by colour.
 - **Gongs and drums** are grey squares. Their row labels say which
   stroke each row is.
-- A long piece is split into **systems** (rows of the score) by
-  `:steps-per-system`.
 
 ## PNG and SVG
 

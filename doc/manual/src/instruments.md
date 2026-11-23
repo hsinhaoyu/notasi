@@ -38,7 +38,7 @@ Scales, stroke sets and instruments can come in any order after the
 
 notasi reads this file as a piece with a scale, a stroke set and two
 instruments, ready for parts. Next, set the
-[steps and pulses](steps-and-pulses.md) and write the
+[pulses and durations](pulses-and-durations.md) and write the
 [notes](notes-rests-and-holds.md) each instrument plays.
 
 Most pieces for one gamelan share the same scale and instruments. Put

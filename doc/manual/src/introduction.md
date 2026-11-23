@@ -3,8 +3,8 @@
 notasi turns gamelan music, typed as short lines of text, into clear,
 colourful score figures.
 
-You write each part the way you would say it: one note or rest per
-step. notasi lines the parts up on a grid, gives every note its own row,
+You write each part the way you would say it, note by note, with how
+long each one lasts. notasi lines the parts up on a grid, gives every note its own row,
 and draws the result, so you can see at a glance how the polos and
 sangsih lock together, or where the gong falls in the cycle (see
 [Drawing a score](drawing.md)).

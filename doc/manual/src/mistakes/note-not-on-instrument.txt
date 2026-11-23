@@ -1,1 +1,1 @@
-note-not-on-instrument.nts:4: part `melody', step 2: `dong2' is not a note of instrument `ugal'
+note-not-on-instrument.nts:4: part `melody', pulse 2: `dong2' is not a note of instrument `ugal'

@@ -1,1 +1,1 @@
-unequal-length.nts:5: part `two': has 3 steps, but part `one' has 4; every part must have the same number of steps
+unequal-length.nts:5: part `two': lasts 3 pulses, but part `one' lasts 4; every part must have the same length

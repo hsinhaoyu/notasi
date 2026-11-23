@@ -1,7 +1,7 @@
 # Chords
 
 To strike two or more notes at once, put them in round brackets. The
-whole chord takes one step:
+whole chord lasts as long as one note:
 
 ```scheme
 {{#include examples/chords.nts}}

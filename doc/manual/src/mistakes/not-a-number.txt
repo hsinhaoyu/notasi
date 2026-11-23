@@ -1,1 +1,1 @@
-not-a-number.nts:1: `:steps-per-pulse' must be a positive whole number, not four
+not-a-number.nts:4: part `ugal', pulse 1: `dang1:four': a duration is a whole number or a fraction of pulses above zero, e.g. dang1:2 or dang1:1/4

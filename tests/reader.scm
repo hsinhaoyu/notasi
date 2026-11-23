@@ -4,16 +4,21 @@
 ;;; feat/reader-parts and feat/reader-templates), translated to the
 ;;; notation of iteration 2's first slice, feat/music-syntax
 ;;; (03-reader.md, "Slices (iteration 2)"), plus that slice's own cases:
-;;; reading with `keywords` off, `:key value` options, the transitional
-;;; piece options `:steps-per-pulse` and `:steps-per-system`, degrees and
+;;; reading with `keywords` off, `:key value` options, degrees and
 ;;; strokes with `:alias`, `:display` and `:damped`, instruments without
 ;;; options, `(part INSTRUMENT :name NAME TOKEN ...)`, `·` no longer a
 ;;; rest, `group-outside-score`, `text` gone, and `colotomy`, `pattern`
 ;;; and `score` raising `not-implemented`. Every part is in its own
 ;;; default group.
 ;;;
-;;; Time is still in integer steps in this slice, so the condition keeps
-;;; its v1 `step` field (0-based).
+;;; Slice feat/music-durations (slice 2): times are exact rationals in
+;;; pulses; duration suffixes, `_`, `-`, `|` and `/` are expanded by
+;;; (notasi expand); the condition has `time` (pulses, or #f) and `uses`
+;;; ('() until patterns) instead of v1's `step`; `piece` takes no options
+;;; until slice 4, so the transitional `:steps-per-pulse` and
+;;; `:steps-per-system` are `unknown-option`. With no duration written,
+;;; every token is one pulse, so the v1 token tests keep their numbers:
+;;; a 0-based step is now a time in pulses.
 ;;;
 ;;; Written from doc/design/01-notation.md, 02-piece.md and 03-reader.md,
 ;;; not from the implementation. Tests check the error kind and the
@@ -141,43 +146,15 @@ tests follow their layout instead of hard-coding it."
   (let ((pc (try-read-string "(piece \"Only a title\")")))
     (test-assert "returns a piece record" (piece? pc))
     (test-equal "title" "Only a title" (piece-title pc))
-    (test-equal "default steps-per-pulse is 4" 4 (piece-steps-per-pulse pc))
-    (test-equal "default steps-per-system is #f" #f
-      (piece-steps-per-system pc))
     (test-equal "length is 0" 0 (piece-length pc))
     (test-equal "no scales" '() (piece-scales pc))
     (test-equal "no instruments" '() (piece-instruments pc))
     (test-equal "no parts" '() (piece-parts pc))
     (test-equal "no groups" '() (piece-groups pc)))
 
-  (let ((pc (try-read-string
-             "(piece \"Kotekan\" :steps-per-pulse 2 :steps-per-system 16)")))
-    (test-equal "given :steps-per-pulse" 2 (piece-steps-per-pulse pc))
-    (test-equal "given :steps-per-system" 16 (piece-steps-per-system pc)))
-
-  (let ((pc (try-read-string
-             "(piece \"Kotekan\" :steps-per-system 8 :steps-per-pulse 1)")))
-    (test-equal "options in either order: steps-per-pulse" 1
-      (piece-steps-per-pulse pc))
-    (test-equal "options in either order: steps-per-system" 8
-      (piece-steps-per-system pc)))
-
-  (let ((pc (try-read-string "(piece \"P\" :steps-per-pulse 1)")))
-    (test-equal ":steps-per-pulse alone: given" 1 (piece-steps-per-pulse pc))
-    (test-equal ":steps-per-pulse alone: steps-per-system default" #f
-      (piece-steps-per-system pc)))
-
-  (let ((pc (try-read-string "(piece \"P\" :steps-per-system 32)")))
-    (test-equal ":steps-per-system alone: steps-per-pulse default" 4
-      (piece-steps-per-pulse pc))
-    (test-equal ":steps-per-system alone: given" 32
-      (piece-steps-per-system pc)))
-
-  (let ((pc (try-read-string "(piece \"P\" :steps-per-pulse 1 :steps-per-system 1)")))
-    (test-equal "1 is a positive integer (steps-per-pulse)" 1
-      (piece-steps-per-pulse pc))
-    (test-equal "1 is a positive integer (steps-per-system)" 1
-      (piece-steps-per-system pc))))
+  (let ((pc (try-read-string "(piece" "  \"Over two lines\")")))
+    (test-equal "a title on the next line" "Over two lines"
+      (and pc (piece-title pc)))))
 
 (test-group "comments and whitespace"
   (let ((pc (try-read
@@ -188,14 +165,13 @@ tests follow their layout instead of hard-coding it."
                     "   "
                     "#| a block"
                     "   comment |#"
-                    "\t(piece \"Commented\" ; trailing comment"
-                    "   :steps-per-pulse    ; the key on one line"
-                    "   2)                  ; its value on the next"
+                    "\t(piece ; trailing comment"
+                    "   \"Commented\"      ; the title on the next line"
+                    "   )"
                     ""
                     "; comment at the end"
                     ""))))))
-    (test-equal "title after comments" "Commented" (piece-title pc))
-    (test-equal "key and value split over lines" 2 (piece-steps-per-pulse pc)))
+    (test-equal "title after comments" "Commented" (piece-title pc)))
 
   (test-equal "empty title string is a string" ""
     (piece-title (read-piece-string "(piece \"\")"))))
@@ -207,7 +183,7 @@ tests follow their layout instead of hard-coding it."
 (test-group "read options"
   (let ((before (read-options)))
     (catch-syntax-error
-     (lambda () (read-piece-string "(piece \"P\" :steps-per-pulse 2)")))
+     (lambda () (read-piece-string "(piece \"P\")")))
     (test-equal "restored after a read" before (read-options))
     (catch-syntax-error (lambda () (read-piece-string "(piece \"P\"")))
     (test-equal "restored after a read-error" before (read-options))
@@ -219,14 +195,17 @@ tests follow their layout instead of hard-coding it."
       (lambda () (read-set! keywords 'prefix))
       (lambda ()
         (test-equal "`:key` is a key even when the caller reads :x as a keyword"
-          3
-          (piece-steps-per-pulse
-           (read-piece-string "(piece \"P\" :steps-per-pulse 3)")))
+          '(p)
+          (map part-name
+               (piece-parts
+                (read-piece-string
+                 (lines "(piece \"P\")" "(strokes k K)" "(instrument kempli k K)"
+                        "(part kempli :name p K)")))))
         (test-equal "the caller's keywords option is restored"
           'prefix
           (begin
             (catch-syntax-error
-             (lambda () (read-piece-string "(piece \"P\" :steps-per-pulse 3)")))
+             (lambda () (read-piece-string "(piece \"P\" :tempo 3)")))
             (cadr (memq 'keywords (read-options))))))
       (lambda () (read-set! keywords (cadr (memq 'keywords saved)))))))
 
@@ -243,10 +222,10 @@ tests follow their layout instead of hard-coding it."
 (test-group "read-piece-port"
   (let ((pc (try-read
              (lambda ()
-               (call-with-input-string "(piece \"From a port\" :steps-per-pulse 3)"
+               (call-with-input-string "(piece \"From a port\")"
                  read-piece-port)))))
     (test-equal "title" "From a port" (piece-title pc))
-    (test-equal "steps-per-pulse" 3 (piece-steps-per-pulse pc)))
+    (test-equal "length" 0 (piece-length pc)))
   (test-equal "#:directory is accepted" "D"
     (piece-title (call-with-input-string "(piece \"D\")"
                    (lambda (p) (read-piece-port p #:directory tmp-dir)))))
@@ -261,11 +240,9 @@ tests follow their layout instead of hard-coding it."
 
 (test-group "read-piece-file"
   (let* ((path (write-temp-file "ok.nts"
-                                (lines ";; a piece" "(piece \"From a file\" :steps-per-system 12)" "")))
+                                (lines ";; a piece" "(piece \"From a file\")" "")))
          (pc (try-read (lambda () (read-piece-file path)))))
     (test-equal "title" "From a file" (piece-title pc))
-    (test-equal "steps-per-system" 12 (piece-steps-per-system pc))
-    (test-equal "default steps-per-pulse" 4 (piece-steps-per-pulse pc))
     (test-equal "length 0" 0 (piece-length pc)))
 
   (let* ((path (write-temp-file "dup.nts"
@@ -310,8 +287,10 @@ tests follow their layout instead of hard-coding it."
     (test-equal "line" 2 (notasi-syntax-error-line c))
     (test-equal "part is #f for a piece-form error" #f
       (notasi-syntax-error-part c))
-    (test-equal "step is #f for a piece-form error" #f
-      (notasi-syntax-error-step c)))
+    (test-equal "time is #f for a piece-form error" #f
+      (notasi-syntax-error-time c))
+    (test-equal "uses is '() for a piece-form error" '()
+      (notasi-syntax-error-uses c)))
   (test-assert "predicate is #f for other conditions"
     (not (notasi-syntax-error?
           (make-exception (make-error) (make-exception-with-message "x")))))
@@ -406,7 +385,7 @@ tests follow their layout instead of hard-coding it."
   (test-equal "unknown form after a bad title: unknown-form" '(unknown-form 2)
     (string-error (lines "(piece 1)" "(foo)")))
   (test-equal "unknown form after a bad option: unknown-form" '(unknown-form 4)
-    (string-error (lines "(piece \"P\" :steps-per-pulse 0)" "" "" "(foo)")))
+    (string-error (lines "(piece \"P\" 4)" "" "" "(foo)")))
   (test-equal "first bad form in file order wins: improper then unknown"
     '(improper-form 2)
     (string-error (lines "(piece \"P\")" "(part a 1 . 2)" "(foo)")))
@@ -457,7 +436,7 @@ tests follow their layout instead of hard-coding it."
     (list "before bad-title" '(group-outside-score 2)
           (lines "(piece 1)" "(group \"G\" a)"))
     (list "before bad-option" '(group-outside-score 2)
-          (lines "(piece \"P\" :steps-per-pulse 0)" "(group \"G\" a)"))
+          (lines "(piece \"P\" 4)" "(group \"G\" a)"))
     (list "file order: an unknown form first" '(unknown-form 2)
           (lines "(piece \"P\")" "(foo)" "(group \"G\" a)"))
     (list "file order: the group first" '(group-outside-score 2)
@@ -471,10 +450,10 @@ tests follow their layout instead of hard-coding it."
           (lines "(piece \"P\")" "(score full (group \"G\" a))"))))
   (let ((c (catch-syntax-error
             (lambda () (read-piece-string (lines "(piece \"P\")" "(group \"G\" a)"))))))
-    (test-equal "fields: file, part and step #f" '(#f #f #f)
+    (test-equal "fields: file, part and time #f" '(#f #f #f)
       (and (notasi-syntax-error? c)
            (list (notasi-syntax-error-file c) (notasi-syntax-error-part c)
-                 (notasi-syntax-error-step c)))))
+                 (notasi-syntax-error-time c)))))
   (let* ((path (write-temp-file "group.nts"
                                 (lines "(piece \"P\")" ";; c" "(group \"G\" a)")))
          (c (catch-syntax-error (lambda () (read-piece-file path)))))
@@ -515,7 +494,7 @@ tests follow their layout instead of hard-coding it."
   (test-equal "duplicate-piece comes before bad-title" '(duplicate-piece 2)
     (string-error (lines "(piece 1)" "(piece 2)")))
   (test-equal "duplicate-piece comes before bad-option" '(duplicate-piece 2)
-    (string-error (lines "(piece \"A\" :steps-per-pulse 0)" "(piece \"B\")")))
+    (string-error (lines "(piece \"A\" 4)" "(piece \"B\")")))
   (test-equal "duplicate-piece comes before not-implemented" '(duplicate-piece 3)
     (string-error (lines "(piece \"A\")" score-form "(piece \"B\")"))))
 
@@ -528,80 +507,71 @@ tests follow their layout instead of hard-coding it."
   (test-equal "title is a number" '(bad-title 1) (string-error "(piece 42)"))
   (test-equal "title is missing" '(bad-title 1) (string-error "(piece)"))
   (test-equal "title missing, an option in its place" '(bad-title 1)
-    (string-error "(piece :steps-per-pulse 4)"))
+    (string-error "(piece :pickup 1)"))
   (test-equal "title is a list" '(bad-title 1)
     (string-error "(piece (\"P\"))"))
   (test-equal "bad title on line 3" '(bad-title 3)
     (string-error (lines ";; c" "" "(piece #t)")))
   (test-equal "bad-title comes before bad-option" '(bad-title 1)
-    (string-error "(piece 1 :steps-per-pulse 0)"))
+    (string-error "(piece 1 4)"))
   (test-equal "bad-title comes before unknown-option" '(bad-title 1)
     (string-error "(piece 1 :tempo 60)"))
   (test-equal "bad-title comes before not-implemented" '(bad-title 1)
     (string-error (lines "(piece 1)" score-form))))
 
 (test-group "bad-option"
+  ;; `piece` takes no options in this slice, so a bad-option is anything
+  ;; after the title that is not a `:key value` pair. A key with no value
+  ;; is not tested here: every key is unknown until slice 4, and which of
+  ;; the two errors comes first is not fixed (part options test it).
   (for-each
    (match-lambda
      ((name str)
       (test-equal name '(bad-option 1) (string-error str))))
-   (list (list "a key with no value, at the end" "(piece \"P\" :steps-per-pulse)")
-         (list "a key followed by another key"
-               "(piece \"P\" :steps-per-pulse :steps-per-system 4)")
-         (list "a key with no value after a good option"
-               "(piece \"P\" :steps-per-pulse 2 :steps-per-system)")
-         (list "a value with no key: a number" "(piece \"P\" 4)")
+   (list (list "a value with no key: a number" "(piece \"P\" 4)")
          (list "a value with no key: a string" "(piece \"P\" \"subtitle\")")
          (list "a v1 option without its colon" "(piece \"P\" steps-per-pulse 4)")
-         (list "a v1 list option" "(piece \"P\" (steps-per-pulse 4))")
-         (list "steps-per-pulse 0" "(piece \"P\" :steps-per-pulse 0)")
-         (list "steps-per-pulse negative" "(piece \"P\" :steps-per-pulse -4)")
-         (list "steps-per-pulse fraction" "(piece \"P\" :steps-per-pulse 1/2)")
-         (list "steps-per-pulse non-integer real" "(piece \"P\" :steps-per-pulse 2.5)")
-         (list "steps-per-pulse inexact integer" "(piece \"P\" :steps-per-pulse 4.0)")
-         (list "steps-per-pulse string" "(piece \"P\" :steps-per-pulse \"4\")")
-         (list "steps-per-pulse symbol" "(piece \"P\" :steps-per-pulse four)")
-         (list "steps-per-pulse boolean" "(piece \"P\" :steps-per-pulse #t)")
-         (list "steps-per-system 0" "(piece \"P\" :steps-per-system 0)")
-         (list "steps-per-system negative" "(piece \"P\" :steps-per-system -16)")
-         (list "steps-per-system string" "(piece \"P\" :steps-per-system \"16\")")
-         (list "steps-per-system list" "(piece \"P\" :steps-per-system (16))")))
+         (list "a v1 list option" "(piece \"P\" (steps-per-pulse 4))")))
   (test-equal "bad option on line 2" '(bad-option 2)
-    (string-error (lines ";; c" "(piece \"P\" :steps-per-pulse 0)")))
+    (string-error (lines ";; c" "(piece \"P\" 4)")))
   (test-equal "an option on the next line: the piece form's line" '(bad-option 1)
-    (string-error (lines "(piece \"P\"" "  :steps-per-pulse 0)")))
-  (test-equal "bad option after a good one" '(bad-option 1)
-    (string-error "(piece \"P\" :steps-per-pulse 4 :steps-per-system 0)"))
+    (string-error (lines "(piece \"P\"" "  4)")))
   (test-equal "bad-option comes before not-implemented" '(bad-option 1)
-    (string-error (lines "(piece \"P\" :steps-per-pulse 0)" score-form))))
+    (string-error (lines "(piece \"P\" 4)" score-form))))
 
 (test-group "unknown-option"
   (test-equal "unknown key" '(unknown-option 1)
     (string-error "(piece \"P\" :tempo 60)"))
+  ;; The transitional options of slice 1 are gone (03, slice 2).
+  (test-equal ":steps-per-pulse is gone" '(unknown-option 1)
+    (string-error "(piece \"P\" :steps-per-pulse 4)"))
+  (test-equal ":steps-per-system is gone" '(unknown-option 1)
+    (string-error "(piece \"P\" :steps-per-system 16)"))
+  (test-equal "both are gone" '(unknown-option 1)
+    (string-error "(piece \"P\" :steps-per-pulse 4 :steps-per-system 16)"))
+  (test-equal ":steps-per-pulse with a bad value: still unknown-option"
+    '(unknown-option 1)
+    (string-error "(piece \"P\" :steps-per-pulse 0)"))
+  ;; :colotomy and :pickup come in slice 4 (feat/music-colotomy).
+  (test-equal ":colotomy is not taken yet" '(unknown-option 1)
+    (string-error "(piece \"P\" :colotomy gilak)"))
+  (test-equal ":pickup is not taken yet" '(unknown-option 1)
+    (string-error "(piece \"P\" :pickup 1)"))
   (test-equal "keys are case-sensitive" '(unknown-option 1)
     (string-error "(piece \"P\" :Steps-Per-Pulse 4)"))
-  (test-equal "unknown key after good ones" '(unknown-option 1)
-    (string-error "(piece \"P\" :steps-per-pulse 4 :steps-per-system 8 :tempo 60)"))
   (test-equal "a part's key is not a piece key" '(unknown-option 1)
     (string-error "(piece \"P\" :name p)"))
   (test-equal "unknown key on line 3" '(unknown-option 3)
     (string-error (lines "" "" "(piece \"P\" :subtitle \"x\")")))
+  (test-equal "an unknown key on the next line: the piece form's line"
+    '(unknown-option 1)
+    (string-error (lines "(piece \"P\"" "  :steps-per-pulse 4)")))
   (test-equal "unknown-option comes before not-implemented" '(unknown-option 1)
     (string-error (lines "(piece \"P\" :tempo 60)" score-form))))
 
-(test-group "duplicate-option"
-  (test-equal "steps-per-pulse twice" '(duplicate-option 1)
-    (string-error "(piece \"P\" :steps-per-pulse 4 :steps-per-pulse 2)"))
-  (test-equal "steps-per-pulse twice with the same value" '(duplicate-option 1)
-    (string-error "(piece \"P\" :steps-per-pulse 4 :steps-per-pulse 4)"))
-  (test-equal "steps-per-system twice, not adjacent" '(duplicate-option 1)
-    (string-error
-     "(piece \"P\" :steps-per-system 8 :steps-per-pulse 4 :steps-per-system 16)"))
-  (test-equal "duplicate option on line 2" '(duplicate-option 2)
-    (string-error (lines ";; c" "(piece \"P\" :steps-per-pulse 4 :steps-per-pulse 2)")))
-  (test-equal "duplicate-option comes before not-implemented" '(duplicate-option 1)
-    (string-error (lines "(piece \"P\" :steps-per-pulse 4 :steps-per-pulse 4)"
-                         score-form))))
+;;; v1's duplicate-option tests of the piece form are gone: the piece
+;;; takes no options in this slice, so a key given twice is first an
+;;; unknown key. `part options` tests duplicate-option.
 
 ;;; ------------------------------------------------------------------
 ;;; colotomy, pattern and score are known forms, not built in this slice
@@ -635,8 +605,8 @@ tests follow their layout instead of hard-coding it."
       (and (notasi-syntax-error? c) (notasi-syntax-error-file c)))
     (test-equal "not-implemented: part field #f" #f
       (and (notasi-syntax-error? c) (notasi-syntax-error-part c)))
-    (test-equal "not-implemented: step field #f" #f
-      (and (notasi-syntax-error? c) (notasi-syntax-error-step c))))
+    (test-equal "not-implemented: time field #f" #f
+      (and (notasi-syntax-error? c) (notasi-syntax-error-time c))))
   (let* ((path (write-temp-file "score.nts" (lines "(piece \"P\")" score-form)))
          (c (catch-syntax-error (lambda () (read-piece-file path)))))
     (test-equal "not-implemented from a file: kind" 'not-implemented (kind-of c))
@@ -920,7 +890,7 @@ so a test using it fails rather than passing on #f."
 ;;; file.
 (test-group "gong kebyar definitions"
   (let ((pc (try-read-string
-             "(piece \"Gong kebyar\" :steps-per-pulse 1)"
+             "(piece \"Gong kebyar\")"
              ";; Selisir: the five-tone pelog scale of Balinese gong kebyar."
              ";; Degrees can be written by name (ding) or by vowel (i)."
              ""
@@ -1177,7 +1147,7 @@ so a test using it fails rather than passing on #f."
          (list "keys are case-sensitive" 3
                (lines "(piece \"P\")" "(scale s ding" "  (dong :Alias o))"))
          (list "a piece key is not a degree key" 3
-               (lines "(piece \"P\")" "(scale s ding" "  (dong :steps-per-pulse 4))"))
+               (lines "(piece \"P\")" "(scale s ding" "  (dong :pickup 1))"))
          (list "an unknown key after good ones" 3
                (lines "(piece \"P\")" "(scale s ding" "  (dong :alias o :colour red))"))
          (list "stroke: an unknown key" 3
@@ -1350,8 +1320,8 @@ so a test using it fails rather than passing on #f."
           (and (notasi-syntax-error? c) (notasi-syntax-error-file c)))
         (test-equal (string-append name ": part #f") #f
           (and (notasi-syntax-error? c) (notasi-syntax-error-part c)))
-        (test-equal (string-append name ": step #f") #f
-          (and (notasi-syntax-error? c) (notasi-syntax-error-step c))))))
+        (test-equal (string-append name ": time #f") #f
+          (and (notasi-syntax-error? c) (notasi-syntax-error-time c))))))
    (list (list "bad-form" 'bad-form (lines "(piece \"P\")" "(scale s)"))
          (list "bad-degree" 'bad-degree
                (lines "(piece \"P\")" "(scale s (ding :display 5))"))
@@ -1376,8 +1346,8 @@ so a test using it fails rather than passing on #f."
           (and (notasi-syntax-error? c) (notasi-syntax-error-line c)))
         (test-equal (string-append name " from a file: part #f") #f
           (and (notasi-syntax-error? c) (notasi-syntax-error-part c)))
-        (test-equal (string-append name " from a file: step #f") #f
-          (and (notasi-syntax-error? c) (notasi-syntax-error-step c))))))
+        (test-equal (string-append name " from a file: time #f") #f
+          (and (notasi-syntax-error? c) (notasi-syntax-error-time c))))))
    (list (list "bad-form" 'bad-form 2 (lines "(piece \"P\")" "(strokes g)"))
          (list "duplicate-definition" 'duplicate-definition 3
                (lines "(piece \"P\")" "(scale s ding)" "(strokes s G)"))
@@ -1418,7 +1388,7 @@ so a test using it fails rather than passing on #f."
     (list "bad-title comes before bad-form" '(bad-title 1)
           (lines "(piece 1)" "(scale)"))
     (list "bad-option comes before undefined-scale" '(bad-option 1)
-          (lines "(piece \"P\" :steps-per-pulse 0)" "(instrument x s ding1)"))
+          (lines "(piece \"P\" 4)" "(instrument x s ding1)"))
     ;; Item 5: use.
     (list "a template's scale is defined for the piece's instruments" 'no-error
           (lines "(piece \"P\")" "(use gong-kebyar)"
@@ -1590,12 +1560,12 @@ events as (START DURATION NOTES) triples."
   (and=> (group-location g) source-location-line))
 
 (define (error-fields str)
-  "(KIND LINE PART STEP) of the &notasi-syntax-error raised reading STR,
+  "(KIND LINE PART TIME) of the &notasi-syntax-error raised reading STR,
 or the raised object (or no-error) unchanged."
   (let ((c (catch-syntax-error (lambda () (read-piece-string str)))))
     (if (notasi-syntax-error? c)
         (list (notasi-syntax-error-kind c) (notasi-syntax-error-line c)
-              (notasi-syntax-error-part c) (notasi-syntax-error-step c))
+              (notasi-syntax-error-part c) (notasi-syntax-error-time c))
         c)))
 
 (define (error-kind+line+part str)
@@ -1607,13 +1577,13 @@ or the raised object (or no-error) unchanged."
         c)))
 
 (define (token-tests expected-kind cases)
-  "CASES is a list of (NAME INSTRUMENT TOKENS STEP). Each reads
+  "CASES is a list of (NAME INSTRUMENT TOKENS TIME). Each reads
 parts-defs plus (part INSTRUMENT :name p TOKENS) on line 10, and expects
-EXPECTED-KIND at line 10, part p, step STEP."
+EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
   (for-each
    (match-lambda
-     ((name instrument tokens step)
-      (test-equal name (list expected-kind 10 'p step)
+     ((name instrument tokens time)
+      (test-equal name (list expected-kind 10 'p time)
         (error-fields (defs+ (part-p-form instrument tokens))))))
    cases))
 
@@ -1648,7 +1618,7 @@ EXPECTED-KIND at line 10, part p, step STEP."
           '((0 2 (0)) (3 1 (1))))
     (list "only rests: no events" "gong" "- - - -"
           '())
-    (list "/ takes no step" "reyong" "1 / 2 / / 3"
+    (list "/ takes no time" "reyong" "1 / 2 / / 3"
           '((0 1 (0)) (1 1 (1)) (2 1 (2))))
     (list "_ after / extends the note before it" "reyong" "1 _ / _ 2 / _ 3"
           '((0 3 (0)) (3 2 (1)) (5 1 (2))))
@@ -1690,22 +1660,22 @@ EXPECTED-KIND at line 10, part p, step STEP."
    (match-lambda
      ((name expected . forms)
       (test-equal name expected (piece-length (apply read-defs+ forms)))))
-   (list (list "one step per token" 3 "(part reyong 1 2 3)")
+   (list (list "one pulse per token" 3 "(part reyong 1 2 3)")
          (list "holds count" 4 "(part reyong 1 _ _ 2)")
          (list "trailing rests count" 4 "(part reyong 1 2 - -)")
          (list "a part of only rests" 3 "(part gong - - -)")
          (list "/ does not count" 2 "(part reyong / 1 / 2 /)")
-         (list "a chord is one step" 2 "(part reyong (1 2) (3 4))")
+         (list "a chord is one pulse" 2 "(part reyong (1 2) (3 4))")
          (list "several parts of equal length" 4
                "(part reyong 1 2 - -)" "(part gong G _ _ _)")))
   (let ((pc (read-defs+)))
     (test-equal "no parts: length 0" 0 (piece-length pc))
     (test-equal "no parts: no groups" '() (piece-groups pc)))
   (let ((pc (read-defs+ "(part reyong 1 2 - -)" "(part gong G _ _ _)")))
-    (test-equal "part-steps is the end of the last event (ADR 0012)" '(2 4)
-      (map part-steps (piece-parts pc)))
-    (test-assert "part-steps <= piece-length"
-      (every (lambda (p) (<= (part-steps p) (piece-length pc)))
+    (test-equal "part-end is the end of the last event (ADR 0012)" '(2 4)
+      (map part-end (piece-parts pc)))
+    (test-assert "part-end <= piece-length"
+      (every (lambda (p) (<= (part-end p) (piece-length pc)))
              (piece-parts pc)))))
 
 ;;; ------------------------------------------------------------------
@@ -1834,37 +1804,38 @@ EXPECTED-KIND at line 10, part p, step STEP."
            (piece-groups pc)))))
 
 ;;; ------------------------------------------------------------------
-;;; The textbook excerpt at the end of 01-notation.md, in this slice's
-;;; notation.
+;;; The textbook excerpt at the end of 01-notation.md. In v1 it was
+;;; written with `:steps-per-pulse 4` and one token per step; now the
+;;; first token of each part sets a quarter pulse, and `|` checks the
+;;; pulses where v1 wrote `/`.
 
 (test-group "textbook excerpt"
   (let ((pc (try-read-string
-             "(piece \"Reyong kotekan\" :steps-per-pulse 4)"
+             "(piece \"Reyong kotekan\")"
              "(scale reyong-4  nang ning nong neng)          ; do mi fa sol"
              "(strokes gong-strokes  G)"
              "(instrument reyong reyong-4  nang1 ning1 nong1 neng1)"
              "(instrument gong gong-strokes G)"
              ""
-             "(part reyong :name polos    1 _ 1 2 / _ 1 2 _ / 2 1 _ 2)"
-             "(part reyong :name sangsih  4 3 4 _ / 3 4 _ 3 / _ 4 3 _)"
-             "(part gong                  1 - - - / - - - - / - - - -)")))
+             "(part reyong :name polos    1:1/4 _ 1 2 | _ 1 2 _ | 2 1 _ 2)"
+             "(part reyong :name sangsih  4:1/4 3 4 _ | 3 4 _ 3 | _ 4 3 _)"
+             "(part gong                  1:1/4 - - - / - - - - / - - - -)")))
     (test-assert "reads into a piece" (piece? pc))
     (test-equal "title" "Reyong kotekan" (piece-title pc))
-    (test-equal "steps-per-pulse" 4 (piece-steps-per-pulse pc))
-    (test-equal "length: 12 steps" 12 (piece-length pc))
+    (test-equal "length: 3 pulses" 3 (piece-length pc))
     (test-equal "parts" '(polos sangsih gong) (map part-name (piece-parts pc)))
     (test-equal "part lines" '(7 8 9)
       (map (lambda (p) (source-location-line (part-location p)))
            (piece-parts pc)))
     (test-equal "polos events"
-      '((0 2 (0)) (2 1 (0)) (3 2 (1)) (5 1 (0))
-        (6 2 (1)) (8 1 (1)) (9 2 (0)) (11 1 (1)))
+      '((0 1/2 (0)) (1/2 1/4 (0)) (3/4 1/2 (1)) (5/4 1/4 (0))
+        (3/2 1/2 (1)) (2 1/4 (1)) (9/4 1/2 (0)) (11/4 1/4 (1)))
       (part-triples pc 'polos))
     (test-equal "sangsih events"
-      '((0 1 (3)) (1 1 (2)) (2 2 (3)) (4 1 (2))
-        (5 2 (3)) (7 2 (2)) (9 1 (3)) (10 2 (2)))
+      '((0 1/4 (3)) (1/4 1/4 (2)) (1/2 1/2 (3)) (1 1/4 (2))
+        (5/4 1/2 (3)) (7/4 1/2 (2)) (9/4 1/4 (3)) (5/2 1/2 (2)))
       (part-triples pc 'sangsih))
-    (test-equal "gong events" '((0 1 (0))) (part-triples pc 'gong))
+    (test-equal "gong events" '((0 1/4 (0))) (part-triples pc 'gong))
     (test-equal "groups: one per part" '("polos" "sangsih" "gong")
       (map group-label (piece-groups pc)))
     (test-equal "group parts" '((polos) (sangsih) (gong))
@@ -1877,24 +1848,25 @@ EXPECTED-KIND at line 10, part p, step STEP."
       (map note-name (group-lanes (group-labelled pc "sangsih"))))
     (test-equal "group-lanes: gong" '(G)
       (map note-name (group-lanes (group-labelled pc "gong"))))
-    (test-equal "part-steps" '(12 12 1) (map part-steps (piece-parts pc)))
-    (test-assert "part-steps <= piece-length"
-      (every (lambda (p) (<= (part-steps p) (piece-length pc)))
+    (test-equal "part-end" '(3 3 1/4) (map part-end (piece-parts pc)))
+    (test-assert "part-end <= piece-length"
+      (every (lambda (p) (<= (part-end p) (piece-length pc)))
              (piece-parts pc)))
-    (test-equal "events-at step 8: polos starts, sangsih holds"
-      '((polos 8 (1)) (sangsih 7 (2)))
+    (test-equal "events-at pulse 2: polos starts, sangsih holds"
+      '((polos 2 (1)) (sangsih 7/4 (2)))
       (map (match-lambda
              ((p . e) (list (part-name p) (event-start e) (event-notes e))))
-           (events-at pc 8)))
-    (test-equal "events-at step 0: all three parts"
+           (events-at pc 2)))
+    (test-equal "events-at 0: all three parts"
       '((polos 0 (0)) (sangsih 0 (3)) (gong 0 (0)))
       (map (match-lambda
              ((p . e) (list (part-name p) (event-start e) (event-notes e))))
            (events-at pc 0)))))
 
 ;;; ------------------------------------------------------------------
-;;; Token errors. Each is at the part's line (10), part p, and the
-;;; token's 0-based step.
+;;; Token errors. Each is at the part's line (10), part p, and the time
+;;; in pulses where the token starts. With no duration written, each
+;;; token is one pulse, so the times are v1's 0-based steps.
 
 (test-group "note-out-of-range"
   (token-tests 'note-out-of-range
@@ -1970,12 +1942,19 @@ EXPECTED-KIND at line 10, part p, step STEP."
          (list "1.5" "reyong" "1 2 1.5" 2)
          (list "a vector" "reyong" "1 #(1 2)" 1))))
 
-(test-group "step counting"
+(test-group "time counting"
   (token-tests 'note-out-of-range
-   (list (list "/ takes no step" "reyong" "1 2 / 3 / 9" 3)
+   (list (list "/ takes no time" "reyong" "1 2 / 3 / 9" 3)
          (list "/ before the first token" "reyong" "/ / 9" 0)
-         (list "holds and rests take steps" "reyong" "1 _ - - / 2 9" 5)
-         (list "a chord takes one step" "reyong" "(1 2) / (3 4) / 9" 2)))
+         (list "holds and rests take a pulse each" "reyong" "1 _ - - / 2 9" 5)
+         (list "a chord takes one pulse" "reyong" "(1 2) / (3 4) / 9" 2)
+         (list "| takes no time" "reyong" "1 | 2 | 9" 2)
+         (list "durations: whole pulses" "reyong" "1:2 2 9" 4)
+         (list "durations: a fraction" "reyong" "1:1/2 2 3 9" 3/2)
+         (list "a rest's duration" "reyong" "1 -:3 9" 4)
+         (list "a hold of the current duration" "reyong" "1:1/4 _ _ 9" 3/4)
+         (list "a chord of the current duration" "reyong" "1:1/3 (1 2) 9" 2/3)
+         (list "a suffix on the bad note: where it starts" "reyong" "1:1/2 9:2" 1/2)))
   (token-tests 'hold-without-note
    (list (list "/ around a rest" "reyong" "1 / - / _" 2)))
   (test-equal "a part over several lines: the form's line"
@@ -1989,6 +1968,108 @@ EXPECTED-KIND at line 10, part p, step STEP."
   (test-equal "a part without :name: the error names it after its instrument"
     '(note-out-of-range 10 ugal 1)
     (error-fields (defs+ "(part ugal 1 9)"))))
+
+;;; ------------------------------------------------------------------
+;;; Durations, holds, rests and checks through the reader (slice 2,
+;;; [durations]). (notasi expand) is tested on its own in
+;;; tests/expand.scm; these check that the reader uses it, and that its
+;;; errors reach the reader's condition with the part's line and name.
+
+(test-group "durations in parts"
+  (for-each
+   (match-lambda
+     ((name instrument tokens expected)
+      (test-equal name expected (part-p-events instrument tokens))))
+   (list
+    (list "a duration in pulses" "reyong" "1:2 2"
+          '((0 2 (0)) (2 2 (1))))
+    (list "a fraction stays in force" "reyong" "1:1/4 2 3 4"
+          '((0 1/4 (0)) (1/4 1/4 (1)) (1/2 1/4 (2)) (3/4 1/4 (3))))
+    (list "a suffix on a name and an alias" "reyong" "ding2:1/2 i2 a2:1"
+          '((0 1/2 (3)) (1/2 1/2 (3)) (1 1 (7))))
+    (list "a suffix on a stroke" "gong" "G:2 P:1/2"
+          '((0 2 (0)) (2 1/2 (1))))
+    (list "a chord takes the current duration" "reyong" "1:1/2 (2 5)"
+          '((0 1/2 (0)) (1/2 1/2 (1 4))))
+    (list "_ extends by the current duration" "reyong" "1:1/2 _ 2"
+          '((0 1 (0)) (1 1/2 (1))))
+    (list "a rest with a duration sets it" "reyong" "-:1/4 1 - 1"
+          '((1/4 1/4 (0)) (3/4 1/4 (0))))
+    (list "| takes no time" "reyong" "1:1/2 2 | 3 4 |"
+          '((0 1/2 (0)) (1/2 1/2 (1)) (1 1/2 (2)) (3/2 1/2 (3))))))
+  (test-assert "event times are exact"
+    (every (lambda (t) (and (exact? (car t)) (exact? (cadr t))))
+           (part-p-events "reyong" "1:1/3 2 3 4:1/2")))
+  (for-each
+   (match-lambda
+     ((name expected . forms)
+      (test-equal name expected (piece-length (apply read-defs+ forms)))))
+   (list (list "the length in pulses" 4 "(part reyong 1:2 2)")
+         (list "a length that is a fraction" 3/2 "(part reyong 1:1/2 2 3)")
+         (list "trailing rests with a duration count" 5 "(part reyong 1 -:4)")
+         (list "parts of equal length with different durations" 2
+               "(part reyong :name a 1:1/2 2 3 4)" "(part reyong :name b 1:2)")
+         (list "a part of only rests" 3/2 "(part gong -:1/2 - -)")))
+  (let ((pc (read-defs+ "(part reyong :name a 1:1/4 2 3 4)"
+                        "(part reyong :name b 1:1/2 -)")))
+    (test-equal "part-end leaves out trailing rests" '(1 1/2)
+      (and pc (map part-end (piece-parts pc))))
+    (test-equal "the piece's length includes them" 1
+      (and pc (piece-length pc)))))
+
+(test-group "bad-duration"
+  (token-tests 'bad-duration
+   (list (list "zero" "reyong" "e2:0" 0)
+         (list "negative" "reyong" "1 e2:-1" 1)
+         (list "a word" "reyong" "e2:x" 0)
+         (list "inexact" "reyong" "e2:0.5" 0)
+         (list "on a key number" "reyong" "1 2:0" 1)
+         (list "on a rest" "reyong" "-:0" 0)
+         (list "on a stroke" "gong" "G:x" 0)
+         (list "on _" "reyong" "1 _:2" 1)
+         (list "after a fraction: where the token starts" "reyong" "1:1/2 2 e2:0" 1))))
+
+(test-group "hold-without-note with durations"
+  (token-tests 'hold-without-note
+   (list (list "_ after | at the start" "reyong" "| _ 1" 0)
+         (list "_ after a rest with a duration" "reyong" "1 -:2 _" 3)
+         (list "_ after a rest of a fraction" "reyong" "1 -:1/2 _" 3/2))))
+
+(test-group "misplaced-pulse-check"
+  (token-tests 'misplaced-pulse-check
+   (list (list "after a half pulse" "reyong" "1:1/2 | 2" 1/2)
+         (list "after three quarters" "reyong" "1:1/4 2 3 | 4" 3/4)
+         (list "after a rest" "gong" "-:1/2 | G" 1/2)
+         (list "the second check" "reyong" "1 | 2:1/2 | 3" 3/2)))
+  (let ((pc (read-defs+ "(part reyong :name p | 1:1/2 2 | 3:2 | 4:1/3 5 6 |)")))
+    (test-equal "checks on whole pulses read" 4 (and pc (piece-length pc)))))
+
+(test-group "[durations] error fields"
+  (for-each
+   (match-lambda
+     ((name expected tokens)
+      (let ((c (catch-syntax-error
+                (lambda () (read-piece-string
+                            (defs+ (part-p-form "reyong" tokens)))))))
+        (test-equal (string-append name ": kind, line, part, time") expected
+          (and (notasi-syntax-error? c)
+               (list (notasi-syntax-error-kind c) (notasi-syntax-error-line c)
+                     (notasi-syntax-error-part c) (notasi-syntax-error-time c))))
+        (test-equal (string-append name ": file #f") #f
+          (and (notasi-syntax-error? c) (notasi-syntax-error-file c)))
+        (test-equal (string-append name ": uses '()") '()
+          (and (notasi-syntax-error? c) (notasi-syntax-error-uses c)))
+        (test-assert (string-append name ": a &notasi-syntax-error, not an &expansion-error")
+          (notasi-syntax-error? c))
+        (test-assert (string-append name ": the time is exact")
+          (and (notasi-syntax-error? c)
+               (exact? (notasi-syntax-error-time c)))))))
+   (list (list "bad-duration" '(bad-duration 10 p 1/2) "1:1/2 2:0")
+         (list "misplaced-pulse-check" '(misplaced-pulse-check 10 p 3/4)
+               "1:1/4 2 3 |")
+         (list "hold-without-note" '(hold-without-note 10 p 3/2) "1 -:1/2 _")
+         (list "note-out-of-range" '(note-out-of-range 10 p 5/2) "1:1/2 2 3 4 5 9")
+         (list "unknown-note" '(unknown-note 10 p 1/3) "1:1/3 foo1"))))
 
 ;;; ------------------------------------------------------------------
 ;;; Other part errors
@@ -2022,7 +2103,19 @@ EXPECTED-KIND at line 10, part p, step STEP."
                '(unequal-length 11 gong #f)
                "(part reyong 1 2 3 4)" "(part gong G)")
          (list "multi-line part: the form's line" '(unequal-length 11 b #f)
-               "(part reyong :name a 1 2 3 4)" "(part reyong :name b" "  1 2 3)")))
+               "(part reyong :name a 1 2 3 4)" "(part reyong :name b" "  1 2 3)")
+         (list "lengths in pulses, not tokens: shorter" '(unequal-length 11 b #f)
+               "(part reyong :name a 1 2)" "(part reyong :name b 1:1/2 2 3)")
+         (list "lengths in pulses, not tokens: longer" '(unequal-length 11 b #f)
+               "(part reyong :name a 1 2 3 4)" "(part reyong :name b 1:3 2)")
+         (list "a quarter pulse short" '(unequal-length 11 b #f)
+               "(part reyong :name a 1 2)" "(part reyong :name b 1 2:1/4 3 4)")
+         (list "a trailing rest with a duration" '(unequal-length 11 b #f)
+               "(part reyong :name a 1 2)" "(part reyong :name b 1 2 -:1/2)")))
+  (let ((pc (read-defs+ "(part reyong :name a 1 2 3 4)" "(part reyong :name b 1:2 2)"
+                        "(part gong :name c G:1/4 - - - -:3)")))
+    (test-equal "equal lengths in pulses with different tokens read" 4
+      (and pc (piece-length pc))))
   (let ((pc (read-defs+ "(part reyong :name a 1 / 2)" "(part reyong :name b / 1 2 /)")))
     (test-equal "/ ignored: parts of equal length read" 2 (piece-length pc))))
 
@@ -2113,7 +2206,7 @@ EXPECTED-KIND at line 10, part p, step STEP."
    (list (list "unknown key" 10 (defs+ "(part reyong :colour red 1)"))
          (list "keys are case-sensitive" 10 (defs+ "(part reyong :Name p 1)"))
          (list "a piece key is not a part key" 10
-               (defs+ "(part reyong :steps-per-pulse 4 1)"))
+               (defs+ "(part reyong :pickup 1 1)"))
          (list "unknown key after :name" 10
                (defs+ "(part reyong :name p :colour red 1)"))))
   (table-tests 'duplicate-option
@@ -2138,11 +2231,11 @@ EXPECTED-KIND at line 10, part p, step STEP."
      ((name expected contents)
       (let* ((path (write-temp-file (string-append name ".nts") contents))
              (c (catch-syntax-error (lambda () (read-piece-file path)))))
-        (test-equal (string-append name " from a file: kind, line, part, step")
+        (test-equal (string-append name " from a file: kind, line, part, time")
           expected
           (and (notasi-syntax-error? c)
                (list (notasi-syntax-error-kind c) (notasi-syntax-error-line c)
-                     (notasi-syntax-error-part c) (notasi-syntax-error-step c))))
+                     (notasi-syntax-error-part c) (notasi-syntax-error-time c))))
         (test-equal (string-append name " from a file: file") path
           (and (notasi-syntax-error? c) (notasi-syntax-error-file c))))))
    (list (list "note-out-of-range" '(note-out-of-range 10 p 1)
@@ -2152,7 +2245,11 @@ EXPECTED-KIND at line 10, part p, step STEP."
          (list "hold-without-note" '(hold-without-note 10 p 0)
                (defs+ "(part reyong :name p _)"))
          (list "unequal-length" '(unequal-length 11 q #f)
-               (defs+ "(part reyong :name p 1)" "(part reyong :name q 1 2)")))))
+               (defs+ "(part reyong :name p 1)" "(part reyong :name q 1 2)"))
+         (list "bad-duration" '(bad-duration 10 p 1)
+               (defs+ "(part reyong :name p 1 2:x)"))
+         (list "misplaced-pulse-check" '(misplaced-pulse-check 10 p 1/2)
+               (defs+ "(part reyong :name p 1:1/2 |)")))))
 
 ;;; ------------------------------------------------------------------
 ;;; Check order for parts (03-reader.md, "Error reporting")
@@ -2238,6 +2335,22 @@ EXPECTED-KIND at line 10, part p, step STEP."
     (list "bad-chord before a later unknown-token"
           '(bad-chord 10 p 1)
           (defs+ "(part reyong :name p 1 (1) \"x\")"))
+    (list "bad-duration before a later unknown-note"
+          '(bad-duration 10 p 1)
+          (defs+ "(part reyong :name p 1 2:0 foo1)"))
+    (list "unknown-note before a later bad-duration"
+          '(unknown-note 10 p 1)
+          (defs+ "(part reyong :name p 1 foo1 2:0)"))
+    (list "misplaced-pulse-check before a later out-of-range note"
+          '(misplaced-pulse-check 10 p 1/2)
+          (defs+ "(part reyong :name p 1:1/2 | 9)"))
+    (list "an out-of-range note before a later misplaced-pulse-check"
+          '(note-out-of-range 10 p 0)
+          (defs+ "(part reyong :name p 9:1/2 |)"))
+    (list "a later part's misplaced-pulse-check before unequal-length"
+          '(misplaced-pulse-check 12 c 1/2)
+          (defs+ "(part reyong :name a 1 2)" "(part reyong :name b 1)"
+                 "(part reyong :name c 1:1/2 | 2)"))
     ;; Item 13: parts in file order.
     (list "an earlier part's token error before a later part's"
           '(note-out-of-range 10 a 2)
@@ -2800,10 +2913,10 @@ canonicalized, or the raised object (or no-error) unchanged."
             (at 'template-not-found #f 2)
             (string-in dir "(piece \"P\")" "(use \"tests/reader.scm\")"))))
     (let ((c (catch-syntax-error (string-in dir "(piece \"P\")" "(use \"nope.nts\")"))))
-      (test-equal "kind, part field #f, step field #f" '(template-not-found #f #f)
+      (test-equal "kind, part field #f, time field #f" '(template-not-found #f #f)
         (and (notasi-syntax-error? c)
              (list (notasi-syntax-error-kind c) (notasi-syntax-error-part c)
-                   (notasi-syntax-error-step c)))))))
+                   (notasi-syntax-error-time c)))))))
 
 (test-group "template-cycle"
   (let* ((dir (fresh-dir))
@@ -2968,10 +3081,10 @@ canonicalized, or the raised object (or no-error) unchanged."
       (test-assert "the message names the first definition's file"
         (and (notasi-syntax-error? cnd)
              (string-contains (exception-message cnd) "b.nts")))
-      (test-equal "kind, part field #f, step field #f" '(template-conflict #f #f)
+      (test-equal "kind, part field #f, time field #f" '(template-conflict #f #f)
         (and (notasi-syntax-error? cnd)
              (list (notasi-syntax-error-kind cnd) (notasi-syntax-error-part cnd)
-                   (notasi-syntax-error-step cnd))))))
+                   (notasi-syntax-error-time cnd))))))
   ;; With the real templates: my.nts also uses selisir (no conflict
   ;; there) but defines ugal, which gong-kebyar defines too.
   (let* ((dir (fresh-dir))
@@ -3082,7 +3195,7 @@ canonicalized, or the raised object (or no-error) unchanged."
       (list "bad-title before template-not-found" (at 'bad-title #f 1)
             (string-in dir "(piece 1)" "(use \"nope.nts\")"))
       (list "bad-option before a template's error" (at 'bad-option #f 1)
-            (string-in dir "(piece \"P\" :steps-per-pulse 0)" "(use \"bf.nts\")"))
+            (string-in dir "(piece \"P\" 4)" "(use \"bf.nts\")"))
       ;; 5.1: the piece's use forms before loading any template.
       (list "use-not-first before bad-form of an earlier use"
             (at 'use-not-first #f 4)
@@ -3194,9 +3307,7 @@ canonicalized, or the raised object (or no-error) unchanged."
   (let ((pc (read-file tenzer-file)))
     (test-assert "reads into a piece" (piece? pc))
     (test-equal "title" "Eight-pulse gong cycle" (piece-title pc))
-    (test-equal "steps-per-pulse" 1 (piece-steps-per-pulse pc))
-    (test-equal "steps-per-system" #f (piece-steps-per-system pc))
-    (test-equal "length" 9 (piece-length pc))
+    (test-equal "length: 9 pulses" 9 (piece-length pc))
     (test-equal "scales: selisir, then gong-kebyar's stroke sets"
       '(selisir kempli-strokes gong-strokes kendang-strokes)
       (scale-names pc))
