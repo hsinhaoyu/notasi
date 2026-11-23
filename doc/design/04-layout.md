@@ -9,8 +9,8 @@ in `tests/style.scm`, `tests/layout.scm` and `tests/golden.scm`.
 Planned for iteration 3: contract version 3 (ADR 0043) with the header
 labels, the pickup's cycle mark and each group's lines; strokes one
 column wide (ADR 0042); a lighter stroke grey (ADR 0041); `:keys`,
-`:octave-numbers` and `:display`; golden files named `NAME_SCORE`
-(ADR 0040).
+`:octave-numbers` and `:display`; key numbers and row labels left out
+(ADR 0047); golden files named `NAME_SCORE` (ADR 0040).
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -44,11 +44,11 @@ in this order:
 | Object | Keys |
 |---|---|
 | figure | `version` (2; **Planned**: 3, ADR 0043), `title`, `subtitle`, `steps_per_pulse`, `sizes`, `systems`, `caption` |
-| sizes | `font_size`, `label_width`, `lane_width`, `cell_width`, `cell_height` |
+| sizes | `font_size`, `label_width`, `lane_width`, `cell_width`, `cell_height` (**Planned**, version 3: `key_width` after `label_width`) |
 | system | `start`, `steps`, `header`, `lines`, `groups` |
 | header | `label`, `cycles`, `pulses` (**Planned**, version 3: `cycle_label`, `pulse_label`, `cycles`, `pulses`, `pulse_lines`) |
 | cycle mark | `column`, `text` |
-| group | `label`, `subtitle`, `lanes`, `voices`, `overlays` (**Planned**, version 3: then `pulse_lines`, `row_lines`) |
+| group | `label`, `subtitle`, `lanes`, `voices`, `overlays` (**Planned**, version 3: `key_numbers` after `lanes`, then `pulse_lines`, `row_lines` at the end) |
 | voice | `name`, `events` |
 | event | `start`, `dur`, `lane`, `text`, `fill`, `text_color`, `continued` |
 | overlay | `start`, `dur`, `row`, `rows`, `text`, `continued` |
@@ -220,6 +220,13 @@ pitched lane is labelled with its display form alone (`i`), even when
 two lanes then read alike; a stroke in the group's `display` is
 labelled with that form.
 
+**Planned** (ADR 0047): with `row-labels?` false, every entry of the
+group's `lanes` is `""`. With `key-numbers?` true (pitched `notes` rows
+only), the group's `key_numbers` holds each lane's key number on its
+instrument, counted from 1, as a string (`"4"` for the ugal's `a1`);
+otherwise it is `null`. With `keys` `used` the numbers skip the keys not
+shown; with `all` they run from 1.
+
 ### Note style
 
 **Implemented** (v1 slice 2, `feat/layout-style`). Module
@@ -344,7 +351,9 @@ text. `dark2` gives strong colours with mostly white text.
     (05), so there the subtitle counts as the longer of its labels, two
     spaces and the subtitle (decided in `feat/targets`, for Baris).
   - `lane_width` (lane and row labels): 0.52em × the longest label +
-    1em.
+    1em. **Planned** (ADR 0047): `"0.0em"` when no group shows row labels.
+  - **Planned** (ADR 0047): `key_width` (key numbers): 0.52em × the
+    longest number + 1em, or `"0.0em"` when no group shows key numbers.
   - Lengths are strings in `em` with one decimal, even when whole,
     rounded to the nearest, ties upward: `"10.5em"`, `"3.6em"`. With no
     groups the longest label counts as 0. Sizes come from the score's
