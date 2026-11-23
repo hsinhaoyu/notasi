@@ -1,0 +1,121 @@
+;; Baris (gilak): one gong cycle, after Michael Tenzer's figure
+;; "Notation of reyong and kendang parts, with gong, kempur, kempli and
+;; calung (core melody)", and the sung lines below it.
+;;
+;; Numbering: Tenzer numbers the beats 1-8 with the gong on 1. We number
+;; pulses 1-8 with the gong on 8 (Gold), so his beat 1 is our pickup
+;; (cycle 0, pulse 8) and his beat b is our pulse b - 1. The scores print
+;; his numbers with :numbering gong-first.
+;;
+;; The music is the same cycle as examples/tenzer1.nts: the ugal line is
+;; identical, and the gongs are the gilak colotomy.
+
+(piece "Baris" :colotomy gilak :pickup 1)
+
+(use gong-kebyar)
+
+;; ---------------------------------------------------------------
+;; Definitions for this piece (they replace the template's). The reyong
+;; (e2 to u4) and the calung come from the template.
+
+;; Tenzer writes the degrees as syllables: the open form when the note
+;; rings, the damped form (with ') when it is cut short.
+(scale selisir
+  (ding :alias (i ning) :display "ning" :damped "ni'")
+  (dong :alias (o nong) :display "nong" :damped "no'")
+  (deng :alias (e neng) :display "neng" :damped "ne'")
+  (dung :alias (u nung) :display "nung" :damped "nu'")
+  (dang :alias (a nang) :display "nang" :damped "na'"))
+
+;; Gilak's two gongs are both written G in Tenzer's figure.
+(strokes gong-strokes  G (GL :display "G") P T)
+(instrument gong gong-strokes  G GL P T)
+
+(colotomy gilak 8
+  (gong gong  -:3 GL:1 P - P G))
+
+;; Each drum is played with two hands: left-hand strokes (pak, kap) and
+;; right-hand strokes (dug, du', dag, da'). du' and da' are strokes of
+;; their own.
+(strokes kendang-lanang-strokes  pak dug (du :display "du'"))
+(strokes kendang-wadon-strokes   kap dag (da :display "da'"))
+(instrument kendang-lanang kendang-lanang-strokes  pak dug du)
+(instrument kendang-wadon  kendang-wadon-strokes   kap dag da)
+
+;; ---------------------------------------------------------------
+;; Patterns: three quarter-beats against the four of the pulse. From
+;; Tenzer's beat 5 the reyong repeats them across the pulse boundaries.
+
+(pattern nang-ni :instrument reyong :short "3" :long "nang - ni'"
+  a2:1/4 _ i3)
+(pattern ne-nong :instrument reyong :short "3" :long "ne' nong -"
+  e3:1/4 o3 _)
+
+;; ---------------------------------------------------------------
+;; The music. Each part: the pickup (Tenzer's beat 1), ||, pulses 1-3
+;; (his beats 2-4), pulses 4-7 (his 5-8), pulse 8 (his closing 1, the
+;; gong), ||. The kempli is implied; the gong part comes from gilak.
+
+;; Reyong: four kettles, nang ning nong neng (a2 i3 o3 e3), in the
+;; reyong's range of Gold's figure 2.7 (e2 to u4).
+(part reyong :name polos
+  a2:1/4 _ a2 i3 ||
+  _ a2 i3 _ | i3 a2 _ i3 | a2 _ a2 i3 |
+  _ (rep 5 @nang-ni) |
+  a2 _ a2 i3 ||)
+
+(part reyong :name sangsih
+  e3:1/4 o3 e3 _ ||
+  o3 e3 _ o3 | _ e3 o3 _ | e3 o3 e3 _ |
+  o3 (rep 5 @ne-nong) |
+  e3 o3 e3 _ ||)
+
+;; Ugal (main melody) and calung (core melody).
+(part ugal    a1 ||  o2 i2 e2 o2 | a1 o2 i2 a1 ||)
+(part calung  a2 ||  _ i2:2 o2 i2 a2:1 ||)
+
+;; Kendang, one part per hand.
+(part kendang-lanang :name lanang-lh
+  -:1 ||  -:3 | -:1/4 pak - - | - pak - pak | - - - pak | - pak - - |  -:1 ||)
+(part kendang-lanang :name lanang-rh
+  -:1/4 dug - du ||  dug - dug - | dug - dug - | dug - - dug |
+  - - - dug | - - - - | - dug - - | - - - dug |  - dug - du ||)
+(part kendang-wadon :name wadon-lh
+  -:1 ||  -:3 | -:1/4 - kap - | - - kap - | kap - - - | kap - kap - |  -:1 ||)
+(part kendang-wadon :name wadon-rh
+  dag:1/4 - dag - ||  - dag - dag | - dag - dag | - da dag - |
+  dag - - - | dag - - - | - - dag - | - - - - |  dag - dag - ||)
+
+;; ---------------------------------------------------------------
+;; Scores, after Tenzer's layout: names only, no colour; one row per
+;; part except the reyong; beats numbered with the gong as 1; a break
+;; after his beat 3 (before our cycle 1, pulse 3).
+
+(score full :fill none :note-names yes :numbering gong-first
+    :pulse-label "Beats" :breaks ((1 3))
+    :caption "Notation of reyong and kendang parts, with gong, kempur, kempli and calung (core melody)."
+  (group "Reyong" :subtitle "sangsih, polos"  sangsih polos)
+  (group "Ugal" :subtitle "main melody" :rows parts  ugal)
+  (group "Calung" :subtitle "core melody" :rows parts  calung)
+  (group "" :rows parts  (kempli :label "Kempli") (gong :label "Gong & Kempur"))
+  (group "Kendang lanang" :rows parts
+    (lanang-lh :label "LH") (lanang-rh :label "RH"))
+  (group "Kendang wadon" :rows parts
+    (wadon-lh :label "LH") (wadon-rh :label "RH")))
+
+;; The sung lines: one part on one row, "-" for each held step.
+(score polos-alone :fill none :note-names yes :numbering gong-first
+    :pulse-label "Beats (Clap)" :breaks ((1 3)) :holds dash
+    :caption "Singing the reyong polos part alone"
+  (group "Reyong/Polos" :rows parts  polos))
+
+(score sangsih-alone :fill none :note-names yes :numbering gong-first
+    :pulse-label "Beats (Clap)" :breaks ((1 3)) :holds dash
+    :caption "Singing the reyong sangsih part alone"
+  (group "Reyong/Sangsih" :rows parts  sangsih))
+
+;; All four hands on one row: the composite drum part.
+(score kendang-composite :fill none :note-names yes :numbering gong-first
+    :pulse-label "Beats (Clap)" :breaks ((1 3))
+    :caption "Singing the composite drum part (for one person)"
+  (group "Kendang" :rows single  lanang-lh lanang-rh wadon-lh wadon-rh))

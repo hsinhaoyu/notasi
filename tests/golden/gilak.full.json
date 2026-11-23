@@ -46,7 +46,7 @@
         {
           "label": "Gong",
           "subtitle": null,
-          "lanes": ["G", "P"],
+          "lanes": ["G", "GL", "P"],
           "voices": [
             {
               "name": "gong",
@@ -170,7 +170,7 @@
         {
           "label": "G.",
           "subtitle": null,
-          "lanes": ["G", "P"],
+          "lanes": ["G", "GL", "P"],
           "voices": [
             {
               "name": "gong",
@@ -185,9 +185,18 @@
                   "continued": false
                 },
                 {
-                  "start": 5,
+                  "start": 4,
                   "dur": 1,
-                  "lane": 1,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 6,
+                  "dur": 1,
+                  "lane": 2,
                   "text": null,
                   "fill": "#cccccc",
                   "text_color": "#222222",
@@ -312,7 +321,7 @@
         {
           "label": "G.",
           "subtitle": null,
-          "lanes": ["G", "P"],
+          "lanes": ["G", "GL", "P"],
           "voices": [
             {
               "name": "gong",
@@ -327,9 +336,18 @@
                   "continued": false
                 },
                 {
-                  "start": 5,
+                  "start": 4,
                   "dur": 1,
-                  "lane": 1,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 6,
+                  "dur": 1,
+                  "lane": 2,
                   "text": null,
                   "fill": "#cccccc",
                   "text_color": "#222222",
@@ -454,7 +472,7 @@
         {
           "label": "G.",
           "subtitle": null,
-          "lanes": ["G", "P"],
+          "lanes": ["G", "GL", "P"],
           "voices": [
             {
               "name": "gong",
@@ -469,9 +487,18 @@
                   "continued": false
                 },
                 {
-                  "start": 5,
+                  "start": 4,
                   "dur": 1,
-                  "lane": 1,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#cccccc",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 6,
+                  "dur": 1,
+                  "lane": 2,
                   "text": null,
                   "fill": "#cccccc",
                   "text_color": "#222222",

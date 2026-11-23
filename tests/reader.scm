@@ -3056,7 +3056,7 @@ canonicalized, or the raised object (or no-error) unchanged."
       '(selisir kempli-strokes gong-strokes kendang-strokes)
       (scale-names pc))
     (test-equal "gong-kebyar: instruments in load order"
-      '(ugal reyong kempli gong kendang)
+      '(jegogan jublag calung panyacah ugal pemade kantilan trompong reyong kempli gong kendang)
       (instrument-names pc))
     (test-equal "gong-kebyar: files"
       '("selisir.nts" "gong-kebyar.nts" "gong-kebyar.nts" "gong-kebyar.nts")
@@ -3065,14 +3065,14 @@ canonicalized, or the raised object (or no-error) unchanged."
     (test-equal "gong-kebyar: instrument lines"
       (map (lambda (name)
              (line-in gong-kebyar-file (string-append "(instrument " name " ")))
-           '("ugal" "reyong" "kempli" "gong" "kendang"))
+           '("jegogan" "jublag" "calung" "panyacah" "ugal" "pemade" "kantilan" "trompong" "reyong" "kempli" "gong" "kendang"))
       (map (lambda (i) (source-location-line (instrument-location i)))
            (piece-instruments pc)))
     (test-equal "gong-kebyar: ugal notes resolve against selisir"
       '(dong1 deng1 dung1 dang1 ding2 dong2 deng2 dung2 dang2 ding3)
       (note-names (instrument-named pc 'ugal)))
     (test-equal "gong-kebyar: the stroke instruments' notes"
-      '((K) (G P) (dag dug du))
+      '((K) (G GL P T) (dag dug du))
       (map (lambda (name) (note-names (instrument-named pc name)))
            '(kempli gong kendang)))
     (test-assert "gong-kebyar: ugal's scale is the merged selisir"
@@ -3140,7 +3140,9 @@ canonicalized, or the raised object (or no-error) unchanged."
   (let ((pc (try-read-string "(piece \"P\")" "(use gong-kebyar)"
                              "(instrument ugal selisir i2 o2 e2)"   ; 3
                              "(part ugal :name p 1 2 3)")))         ; 4
-    (test-equal "replacing ugal: it moves to the end" '(reyong kempli gong kendang ugal)
+    (test-equal "replacing ugal: it moves to the end"
+      '(jegogan jublag calung panyacah pemade kantilan trompong reyong
+        kempli gong kendang ugal)
       (instrument-names pc))
     (test-equal "replacing ugal: the piece's notes" '(ding2 dong2 deng2)
       (note-names (instrument-named pc 'ugal)))
@@ -4396,15 +4398,16 @@ line 12."
       '(selisir kempli-strokes gong-strokes kendang-strokes)
       (scale-names pc))
     (test-equal "instruments, including those no part plays"
-      '(ugal reyong kempli gong kendang)
+      '(jegogan jublag calung panyacah ugal pemade kantilan trompong reyong kempli gong kendang)
       (instrument-names pc))
-    (test-equal "parts: the written ugal and gong, then the generated kempli"
+    (test-equal "parts: the written ugal, then the generated gong and kempli"
       '(ugal gong kempli)
       (map part-name (piece-parts pc)))
-    (test-equal "origins" '(written written timekeeper)
+    (test-equal "origins" '(written colotomy timekeeper)
       (map part-origin (piece-parts pc)))
-    (test-equal "no colotomy, no pickup" '(() 0)
-      (list (piece-colotomies pc) (piece-pickup pc)))
+    (test-equal "the gilak colotomy, a one-pulse pickup" '((gilak) 1)
+      (list (map (lambda (c) (colotomy-name (cdr c))) (piece-colotomies pc))
+            (piece-pickup pc)))
     (test-assert "the kempli plays the template's kempli instrument"
       (eq? (part-instrument (part-named pc 'kempli))
            (instrument-named pc 'kempli)))
@@ -4418,8 +4421,8 @@ line 12."
     (test-equal "kempli events: one K per pulse"
       (map (lambda (i) (list i 1 '(0))) (iota 9))
       (part-triples pc 'kempli))
-    (test-equal "gong events"
-      '((0 1 (0)) (4 1 (0)) (5 1 (1)) (7 1 (1)) (8 1 (0)))
+    (test-equal "gong events: from the colotomy, G GL P T as 0 1 2 3"
+      '((0 1 (0)) (4 1 (1)) (5 1 (2)) (7 1 (2)) (8 1 (0)))
       (part-triples pc 'gong))
     (test-equal "selisir shows its degrees by vowel"
       '("i" "o" "e" "u" "a")
@@ -4442,7 +4445,7 @@ line 12."
       (map (lambda (name)
              (list "tenzer1.nts"
                    (line-in tenzer-file (string-append "(part " name " "))))
-           '("ugal" "gong"))
+           '("ugal"))
       (map (lambda (p)
              (let ((loc (part-location p)))
                (list (basename (source-location-file loc))
@@ -6108,6 +6111,56 @@ colotomy, 4 pulses."
     (list "colliding parts in a score where they are on separate rows"
           "(score a :note-names yes" "  (group \"R\" :rows single polos)"
           "  (group \"S\" :rows single sangsih))")))
+
+;;; notes-collide on `notes' rows (milestone 3, decided while drawing
+;;; Jaya Semara: 03, [scores]): two parts on one key share a cell unless
+;;; they strike it together for the same length, a unison drawn once.
+(test-group "[scores] notes-collide on notes rows"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (apply collide-error more))))
+   (list
+    (list "a key struck while the other part holds it"
+          '(notes-collide 17 b 1)
+          "(part reyong :name a 1 _ - -)"                         ; 14
+          "(part reyong :name b - 1 - -)"                         ; 15
+          "(score s" "  (group \"R\" a b))")                    ; 16, 17
+    (list "the same key, the same start, different lengths"
+          '(notes-collide 17 b 0)
+          "(part reyong :name a 1 _ - -)"
+          "(part reyong :name b 1 - - -)"
+          "(score s" "  (group \"R\" a b))")
+    (list "one note of a chord against a held note"
+          '(notes-collide 17 b 1)
+          "(part reyong :name a 3 _ - -)"
+          "(part reyong :name b - (1 3) - -)"
+          "(score s" "  (group \"R\" a b))")))
+  (for-each
+   (match-lambda
+     ((name . more)
+      (test-assert name (piece? (apply read-scores+ more)))))
+   (list
+    (list "a unison: the same key, start and length"
+          "(part reyong :name a 1 2 - -)"
+          "(part reyong :name b 1 3 - -)"
+          "(score s" "  (group \"R\" a b))")
+    (list "a unison of held notes"
+          "(part reyong :name a 1 _ 2 -)"
+          "(part reyong :name b 1 _ - 3)"
+          "(score s" "  (group \"R\" a b))")
+    (list "different keys at once"
+          "(part reyong :name a 1 _ - -)"
+          "(part reyong :name b 2 _ - -)"
+          "(score s" "  (group \"R\" a b))")
+    (list "the same key in separate groups"
+          "(part reyong :name a 1 _ - -)"
+          "(part reyong :name b - 1 - -)"
+          "(score s" "  (group \"R\" a)" "  (group \"S\" b))")
+    (list "the same key on :rows parts"
+          "(part reyong :name a 1 _ - -)"
+          "(part reyong :name b - 1 - -)"
+          "(score s :note-names yes" "  (group \"R\" :rows parts a b))"))))
   (test-assert "notes-collide is a &notasi-syntax-error with file #f"
     (let ((c (catch-syntax-error
               (lambda ()
@@ -6304,7 +6357,8 @@ colotomy, 4 pulses."
     (list "half pulses: the time where they start to share"
           '(pattern-names-overlap 23 b 1/2)
           "(part reyong :name a 1:1/2 @alpha 1 2 3)"
-          "(part reyong :name b @beta 1 2)"
+          ;; Keys 5 and 6, so that no key is shared (notes-collide).
+          "(part reyong :name b @beta 5 6)"
           "(score s :pattern-names short" "  (group \"R\" a b))")
     (list "the later part in member order, not file order"
           '(pattern-names-overlap 23 a 0)
@@ -6461,6 +6515,96 @@ colotomy, 4 pulses."
           "(score x :pattern-names short"
           "  (group \"R\" a b))"
           "(score y (group \"U\" nope))"))))
+
+;;; ==================================================================
+;;; [template] The gong-kebyar template (milestone feat/targets)
+;;; ==================================================================
+;;;
+;;; Written from 01-notation.md ("strokes", "instrument": the ranges of
+;;; Gold's figure 2.7 and the paragraph after them) and the decisions of
+;;; iteration 2's milestone 3 (feat/targets). A piece that only says
+;;; (use gong-kebyar) gets every instrument of the table, with its keys,
+;;; the gongs as one instrument with strokes G GL P T shown by their
+;;; names, the kempli and the kendang, and no colotomy.
+;;; Choices made where the docs are not explicit:
+;;; - The template's instruments are exactly the table's nine, the gong,
+;;;   the kempli and the kendang ("besides the gongs, the kempli and the
+;;;   kendang"); their order is not fixed, so the names are compared
+;;;   sorted.
+;;; - Keys are compared by note name (the degree's own name, aliases
+;;;   resolved), in the instrument's order.
+;;; - "Shown by its name": each gong stroke's display form, and its
+;;;   note-label, is the stroke's name.
+;;; - The kempli's and kendang's strokes are not checked, only that the
+;;;   instruments are there.
+;;; - A colotomy the template doesn't define is undefined-colotomy at the
+;;;   piece form (03, check 12), tested with gilak and pangecet-16.
+
+(define (symbol<? a b) (string<? (symbol->string a) (symbol->string b)))
+
+(test-group "[template] gong-kebyar"
+  (let ((pc (try-read-string "(piece \"P\")" "(use gong-kebyar)")))
+    (test-assert "a piece that only uses gong-kebyar reads" (piece? pc))
+    (test-equal "instruments: the table's nine, gong, kempli and kendang"
+      (sort '(jegogan jublag calung panyacah ugal pemade kantilan trompong
+              reyong gong kempli kendang)
+            symbol<?)
+      (and pc (sort (instrument-names pc) symbol<?)))
+    (for-each
+     (match-lambda
+       ((name keys)
+        (test-equal (string-append (symbol->string name) ": keys of 01's table")
+          keys
+          (and pc (note-names (instrument-named pc name))))))
+     '((jegogan  (ding1 dong1 deng1 dung1 dang1))
+       (jublag   (ding2 dong2 deng2 dung2 dang2))
+       (calung   (ding2 dong2 deng2 dung2 dang2))
+       (panyacah (ding3 dong3 deng3 dung3 dang3))
+       (ugal     (dong1 deng1 dung1 dang1 ding2 dong2 deng2 dung2 dang2 ding3))
+       (pemade   (dong2 deng2 dung2 dang2 ding3 dong3 deng3 dung3 dang3 ding4))
+       (kantilan (dong3 deng3 dung3 dang3 ding4 dong4 deng4 dung4 dang4 ding5))
+       (trompong (dang1 ding2 dong2 deng2 dung2 dang2 ding3 dong3 deng3 dung3))
+       (reyong   (deng2 dung2 dang2 ding3 dong3 deng3 dung3 dang3
+                  ding4 dong4 deng4 dung4))))
+    (test-equal "the pitched instruments play selisir"
+      '(selisir selisir selisir selisir selisir selisir selisir selisir selisir)
+      (and pc (map (lambda (name)
+                     (scale-name (instrument-scale (instrument-named pc name))))
+                   '(jegogan jublag calung panyacah ugal pemade kantilan
+                     trompong reyong))))
+    (test-equal "gong: one instrument with strokes G GL P T, in that order"
+      '(G GL P T)
+      (and pc (note-names (instrument-named pc 'gong))))
+    (test-equal "gong: each stroke displayed by its name"
+      '("G" "GL" "P" "T")
+      (and pc (map degree-display
+                   (scale-degrees (instrument-scale (instrument-named pc 'gong))))))
+    (test-equal "gong: each stroke's label is its name"
+      '("G" "GL" "P" "T")
+      (and pc (let ((inst (instrument-named pc 'gong)))
+                (map (lambda (n) (note-label inst n))
+                     (vector->list (instrument-notes inst))))))
+    (test-assert "kempli is still there"
+      (and pc (instrument? (instrument-named pc 'kempli))))
+    (test-assert "kendang is still there"
+      (and pc (instrument? (instrument-named pc 'kendang))))
+    (test-equal "no colotomy comes from the template" '()
+      (and pc (piece-colotomies pc))))
+  ;; The reyong's lowest key is e2, its highest u4.
+  (let ((pc (try-read-string "(piece \"P\")" "(use gong-kebyar)"
+                             "(part reyong 1 12 e2 u4)")))
+    (test-equal "reyong: key 1 is e2 and key 12 is u4"
+      '((0 1 (0)) (1 1 (11)) (2 1 (0)) (3 1 (11)))
+      (and pc (part-triples pc 'reyong))))
+  ;; Colotomies stay in the pieces.
+  (test-equal "a piece's :colotomy gilak with no colotomy of its own"
+    '(undefined-colotomy 1)
+    (string-error (lines "(piece \"P\" :colotomy gilak)" "(use gong-kebyar)"
+                         "(part ugal 1:8)")))
+  (test-equal "a piece's :colotomy pangecet-16 with no colotomy of its own"
+    '(undefined-colotomy 1)
+    (string-error (lines "(piece \"P\" :colotomy pangecet-16 :pickup 1)"
+                         "(use gong-kebyar)" "(part ugal 1:17)"))))
 
 (define runner (test-runner-current))
 (test-end "reader")

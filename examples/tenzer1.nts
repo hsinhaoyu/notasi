@@ -1,8 +1,8 @@
-;; Eight-pulse gong cycle with ugal melody, kempli and gong/kempur.
-;; The kempli, one stroke per pulse, is added by notasi.
-;; Each note is one kempli pulse. Pulse 9 is pulse 1 of the next cycle,
-;; where the gong lands again; it is written out because the source
-;; figure shows it. The ugal line continues ("etc.") beyond this.
+;; Eight-pulse gong cycle with ugal melody, after Tenzer's figure; the
+;; gongs come from the gilak colotomy, and the kempli is added by notasi.
+;; Each note is one kempli pulse. The piece opens on the gong, a one-pulse
+;; pickup, then one cycle that ends on the gong again, as the source
+;; figure shows. The ugal line continues ("etc.") beyond this.
 ;;
 ;; The source writes the melody in syllables (nang ning nong neng).
 ;; These are the selisir degrees, written here in short form by vowel:
@@ -10,10 +10,14 @@
 ;; are four adjacent ugal keys: a1 i2 o2 e2. The figure does not give
 ;; the register; this places them in the middle of the ugal.
 
-(piece "Eight-pulse gong cycle")
+(piece "Eight-pulse gong cycle" :colotomy gilak :pickup 1)
 
 (use gong-kebyar)
 
-;; pulse:      1  2  3  4  5  6  7  8  1
-(part ugal    a1 o2 i2 e2 o2 a1 o2 i2 a1)
-(part gong    G  -  -  -  G  P  -  P  G)
+;; Gong lanang on pulse 4, kempur on 5 and 7, and the gong (wadon) on 8,
+;; ending the cycle.
+(colotomy gilak 8
+  (gong gong  -:3 GL:1 P - P G))
+
+;; pulse:   8 || 1  2  3  4  5  6  7  8
+(part ugal  a1 || o2 i2 e2 o2 a1 o2 i2 a1 ||)

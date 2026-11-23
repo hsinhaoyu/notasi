@@ -1284,15 +1284,33 @@ instruments."
                   "group `~a' shows its notes by name (:rows ~a, :fill ~a), so it needs :note-names yes"
                   (group-label group) (group-rows group) (group-fill group))))
 
-(define (part-spans-of part)
-  (map (lambda (e)
-         (cons (event-start e) (+ (event-start e) (event-duration e))))
-       (part-events part)))
+(define (part-cells group part)
+  "Where PART's notes sit in GROUP: (START END KEY) for each note, KEY
+being #f on a single row (every note shares it) and (INSTRUMENT . INDEX)
+on `notes' rows (the note's own lane)."
+  (append-map
+   (lambda (e)
+     (let ((start (event-start e))
+           (end (+ (event-start e) (event-duration e))))
+       (if (eq? (group-rows group) 'single)
+           (list (list start end #f))
+           (map (lambda (index)
+                  (list start end (cons (part-instrument part) index)))
+                (event-notes e)))))
+   (part-events part)))
 
-(define (check-single-row group line)
-  "On a single row no two notes may sound in one column: the earliest
-shared column is reported, against the later of the two parts."
-  (when (eq? (group-rows group) 'single)
+(define (same-key? a b)
+  (match (list a b)
+    ((#f #f) #t)
+    (((i1 . n1) (i2 . n2)) (and (eq? i1 i2) (= n1 n2)))
+    (_ #f)))
+
+(define (check-collisions group line)
+  "No two notes of a group's parts may share a cell: on a single row, any
+two notes; on `notes' rows, two notes on one key, unless they are a
+unison (the same key, start and length), which is drawn once.  The
+earliest shared time is reported, against the later of the two parts."
+  (unless (eq? (group-rows group) 'parts)
     (let loop ((parts (group-parts group)) (earlier '()) (found #f))
       (match parts
         (()
@@ -1300,25 +1318,30 @@ shared column is reported, against the later of the two parts."
            (#f #t)
            ((time . part)
             (part-error 'notes-collide line (part-name part) time
-                        "on a single row, two notes sound in one column"))))
+                        (if (eq? (group-rows group) 'single)
+                            "on a single row, two notes sound in one column"
+                            "two parts play this key at once without striking it together; give them groups of their own")))))
         ((part . rest)
-         (let* ((spans (part-spans-of part))
+         (let* ((cells (part-cells group part))
                 (times (append-map
                         (match-lambda
-                          ((s1 . e1)
-                           (filter-map (match-lambda
-                                         ((s2 . e2)
-                                          (and (< (max s1 s2) (min e1 e2))
-                                               (max s1 s2))))
-                                       earlier)))
-                        spans))
+                          ((s1 e1 k1)
+                           (filter-map
+                            (match-lambda
+                              ((s2 e2 k2)
+                               (and (same-key? k1 k2)
+                                    (< (max s1 s2) (min e1 e2))
+                                    (not (and k1 (= s1 s2) (= e1 e2)))
+                                    (max s1 s2))))
+                            earlier)))
+                        cells))
                 (found (if (null? times)
                            found
                            (let ((t (apply min times)))
                              (if (or (not found) (< t (car found)))
                                  (cons t part)
                                  found)))))
-           (loop rest (append spans earlier) found)))))))
+           (loop rest (append cells earlier) found)))))))
 
 (define (named-spans group part)
   "PART's spans at GROUP's pattern level, as (START END TEXT)."
@@ -1457,7 +1480,7 @@ print."
                      groups)))
           (for-each (match-lambda
                       ((group . gline)
-                       (check-single-row group gline)
+                       (check-collisions group gline)
                        (check-pattern-names group gline)))
                     built)
           (make-score name (or (assq-ref opts 'title) title)

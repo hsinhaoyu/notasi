@@ -187,6 +187,20 @@ pulse, identical ones written once, sorted by start."
               (named-spans group)))
         (lambda (a b) (< (car a) (car b)))))
 
+(define (without-unisons voices)
+  "VOICES, (NAME . EVENTS) in member order, with every event that an
+earlier voice already has (the same start, duration and lane: a unison,
+which the reader allows on `notes' rows) left out, so it is drawn once."
+  (let loop ((voices voices) (seen '()) (out '()))
+    (match voices
+      (() (reverse out))
+      (((name . events) . rest)
+       (let* ((cell (match-lambda ((start duration lane _)
+                                   (list start duration lane))))
+              (kept (remove (lambda (e) (member (cell e) seen)) events)))
+         (loop rest (append (map cell events) seen)
+               (cons (cons name kept) out)))))))
+
 (define (prepare-rows group k from to)
   (let ((style (group-style group)))
     (define (voices lane-of-part)
@@ -199,14 +213,15 @@ pulse, identical ones written once, sorted by start."
       ('notes
        (let ((lanes (lanes-in-range group from to)))
          (list group (map lane-label lanes)
-               (voices
+               (without-unisons
+                (voices
                 (lambda (part)
                   (lambda (index)
                     (let ((note (vector-ref (instrument-notes
                                              (part-instrument part))
                                             index)))
                       (list-index (match-lambda ((_ . n) (eq? n note)))
-                                  lanes))))))))
+                                  lanes)))))))))
       ('parts
        (list group (map cdr (group-members group))
              (voices (lambda (part)
