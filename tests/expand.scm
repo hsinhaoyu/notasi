@@ -28,6 +28,25 @@
 ;;; - Tokens that are only `/` give no events and length 0.
 ;;; - An error's time is where the offending token starts; for `|`, the
 ;;;   time of the check.
+;;;
+;;; Slice feat/music-rep (slice 3): `(rep N TOKEN ...)`, written from
+;;; 01-notation.md ("Tokens", "Durations") and 03-reader.md (step 9,
+;;; "Error reporting", the [rep] case and slice 3's decided bullets):
+;;; every repetition identical, the body read with the duration in force
+;;; before the rep and the duration after it the body's last; a leading
+;;; `_` as a lead hold; nesting; `|` checked at every repetition, other
+;;; mistakes at the first; `bad-rep` with `expansion-error-line`.
+;;; Choices made where the docs are not explicit:
+;;; - bad-rep's time is where the rep starts (as for any token).
+;;; - `expansion-error-line` is 1-based from the source line Guile's
+;;;   `read` records on the rep list (the toks helper reads from a string
+;;;   port, so its first line is 1); #f for tokens built by hand.
+;;; - `(rep N . x)` (an improper list), `(rep 2.0 1)` and `(rep :n 1)`
+;;;   are bad-rep.
+;;; - In a body, `/` before a leading `_` leaves it leading (`/` is
+;;;   skipped), but `- _` is hold-without-note, as anywhere else.
+;;; - The shape of a rep is checked before its body: `(rep 0 9)` is
+;;;   bad-rep.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -430,6 +449,262 @@ raises KIND at TIME, with no uses."
   (test-equal "hold-without-note before a later bad-duration"
     '(hold-without-note 0 ())
     (err "_ 1:0" reyong)))
+
+;;; ------------------------------------------------------------------
+;;; rep (slice 3, feat/music-rep)
+
+(define (rep-err str instrument)
+  "(KIND TIME LINE) of the &expansion-error raised for STR, or what
+expanding returned or raised, unchanged."
+  (let ((c (expand str instrument)))
+    (if (expansion-error? c)
+        (list (expansion-error-kind c) (expansion-error-time c)
+              (expansion-error-line c))
+        c)))
+
+(define (expand-list tokens instrument)
+  "(EVENTS . LENGTH) for TOKENS built by hand (no source positions), or
+the raised object."
+  (guard (c (#t c))
+    (expand-tokens tokens instrument)))
+
+(test-group "rep: repeating tokens"
+  (event-tests
+   (list
+    (list "two notes twice" reyong "(rep 2 1 2)"
+          '((0 1 (0)) (1 1 (1)) (2 1 (0)) (3 1 (1))))
+    (list "once is the body itself" reyong "(rep 1 1 2)"
+          '((0 1 (0)) (1 1 (1))))
+    (list "notes before and after" reyong "1 (rep 3 2) 3"
+          '((0 1 (0)) (1 1 (1)) (2 1 (1)) (3 1 (1)) (4 1 (2))))
+    (list "names and aliases in the body" reyong "(rep 2 i2 dang2)"
+          '((0 1 (3)) (1 1 (7)) (2 1 (3)) (3 1 (7))))
+    (list "strokes" gong "(rep 2 G P)"
+          '((0 1 (0)) (1 1 (1)) (2 1 (0)) (3 1 (1))))
+    (list "a chord in the body" reyong "(rep 2 (1 3))"
+          '((0 1 (0 2)) (1 1 (0 2))))
+    (list "a chord next to a rep is still a chord" reyong "(1 3) (rep 1 2)"
+          '((0 1 (0 2)) (1 1 (1))))
+    (list "holds and rests in the body" reyong "(rep 2 1 _ - 2)"
+          '((0 2 (0)) (3 1 (1)) (4 2 (0)) (7 1 (1))))
+    (list "/ in the body takes no time" reyong "(rep 2 1 / 2)"
+          '((0 1 (0)) (1 1 (1)) (2 1 (0)) (3 1 (1))))
+    (list "a rest first in the body" reyong "(rep 2 - 1)"
+          '((1 1 (0)) (3 1 (0))))
+    (list "a body of only rests" gong "(rep 3 -)" '())
+    (list "two reps in a row" reyong "(rep 2 1) (rep 2 2)"
+          '((0 1 (0)) (1 1 (0)) (2 1 (1)) (3 1 (1))))))
+  (test-equal "the length" 4 (len "(rep 2 1 2)" reyong))
+  (test-equal "the length with tokens around it" 5 (len "1 (rep 3 2) 3" reyong))
+  (test-equal "trailing rests in the body count" 6 (len "(rep 3 1 -)" reyong))
+  (test-equal "a body of only rests: the length" 3 (len "(rep 3 -)" gong))
+  (test-equal "the length is exact" #t (exact? (len "(rep 3 1:1/3)" reyong)))
+  (test-equal "repeated events are event records" #t
+    (match (expand "(rep 3 1 2)" reyong)
+      (((? list? events) . _) (and (= 6 (length events)) (every event? events)))
+      (_ #f)))
+  (test-equal "tokens built by hand"
+    '(((0 1 (0)) (1 1 (1)) (2 1 (0)) (3 1 (1))) . 4)
+    (match (expand-list (list (list 'rep 2 1 2)) reyong)
+      (((? list? events) . length)
+       (cons (map (lambda (e)
+                    (list (event-start e) (event-duration e) (event-notes e)))
+                  events)
+             length))
+      (other other))))
+
+(test-group "rep: durations"
+  (event-tests
+   (list
+    (list "the body takes the duration in force before the rep"
+          reyong "1:2 (rep 2 2) 3"
+          '((0 2 (0)) (2 2 (1)) (4 2 (1)) (6 2 (2))))
+    (list "a fraction in force before the rep" reyong "1:1/2 (rep 2 2 3) 4"
+          '((0 1/2 (0)) (1/2 1/2 (1)) (1 1/2 (2)) (3/2 1/2 (1)) (2 1/2 (2))
+            (5/2 1/2 (3))))
+    (list "every repetition is identical: each starts with the duration before the rep"
+          reyong "1:1/2 (rep 2 2 3:1)"
+          '((0 1/2 (0)) (1/2 1/2 (1)) (1 1 (2)) (2 1/2 (1)) (5/2 1 (2))))
+    (list "after the rep, the duration is the body's last"
+          reyong "1:1/2 (rep 2 2 3:1) 4"
+          '((0 1/2 (0)) (1/2 1/2 (1)) (1 1 (2)) (2 1/2 (1)) (5/2 1 (2))
+            (7/2 1 (3))))
+    (list "a suffix first in the body" reyong "(rep 2 1:1/4 2) 3"
+          '((0 1/4 (0)) (1/4 1/4 (1)) (1/2 1/4 (0)) (3/4 1/4 (1)) (1 1/4 (2))))
+    (list "a rest's suffix in the body sets it too" reyong "(rep 2 -:1/2 1) 2"
+          '((1/2 1/2 (0)) (3/2 1/2 (0)) (2 1/2 (1))))
+    (list "a body with no suffix leaves the duration unchanged"
+          reyong "1:1/3 (rep 2 2) 3"
+          '((0 1/3 (0)) (1/3 1/3 (1)) (2/3 1/3 (1)) (1 1/3 (2))))
+    (list "_ in the body extends by the duration in force" reyong "1:1/2 (rep 2 2 _)"
+          '((0 1/2 (0)) (1/2 1 (1)) (3/2 1 (1))))))
+  (test-equal "the length with a fraction in force" 9/2
+    (len "1:1/2 (rep 2 2 3:1) 4" reyong)))
+
+(test-group "rep: a leading _ (lead hold)"
+  (event-tests
+   (list
+    (list "holds the note before the rep, then the body's last note"
+          reyong "1 (rep 2 _ 2)"
+          '((0 2 (0)) (2 2 (1)) (4 1 (1))))
+    (list "four times" reyong "1 (rep 4 _ 2)"
+          '((0 2 (0)) (2 2 (1)) (4 2 (1)) (6 2 (1)) (8 1 (1))))
+    (list "the body's last note, not its first" reyong "1 (rep 2 _ 2 3)"
+          '((0 2 (0)) (2 1 (1)) (3 2 (2)) (5 1 (1)) (6 1 (2))))
+    (list "by the duration in force before the rep" reyong "1:1/2 (rep 2 _ 2)"
+          '((0 1 (0)) (1 1 (1)) (2 1/2 (1))))
+    (list "holds a chord before the rep" reyong "(1 3) (rep 2 _ 2)"
+          '((0 2 (0 2)) (2 2 (1)) (4 1 (1))))
+    (list "_ after / at the start of the body is still leading"
+          reyong "1 (rep 2 / _ 2)"
+          '((0 2 (0)) (2 2 (1)) (4 1 (1))))
+    (list "a held last note is held further" reyong "1 (rep 2 _ 2 _)"
+          '((0 2 (0)) (2 3 (1)) (5 2 (1))))))
+  (test-equal "the length with a lead hold" 5 (len "1 (rep 2 _ 2)" reyong))
+  (error-tests 'hold-without-note
+   (list
+    (list "a part starting with a rep that starts with _" reyong "(rep 2 _ 1)" 0)
+    (list "a rest before the rep" reyong "1 - (rep 2 _ 2)" 2)
+    (list "only / before the rep" reyong "/ (rep 2 _ 1)" 0)
+    (list "the body ends in a rest: the second time" reyong "1 (rep 2 _ 2 -)" 4)
+    (list "the body ends in a rest: the second time, at a fraction"
+          reyong "1:1/3 (rep 3 _ 2 -)" 4/3)
+    (list "_ after a rest inside the body: the first time" reyong "1 (rep 2 - _ 2)" 2)
+    (list "_ after a rest later in the body" reyong "(rep 2 1 - _)" 2))))
+
+(test-group "rep: nested"
+  (event-tests
+   (list
+    (list "a rep inside a rep" reyong "(rep 2 1 (rep 2 2))"
+          '((0 1 (0)) (1 1 (1)) (2 1 (1)) (3 1 (0)) (4 1 (1)) (5 1 (1))))
+    (list "three levels" reyong "(rep 2 (rep 2 (rep 2 1)))"
+          '((0 1 (0)) (1 1 (0)) (2 1 (0)) (3 1 (0))
+            (4 1 (0)) (5 1 (0)) (6 1 (0)) (7 1 (0))))
+    (list "the inner body takes the duration in force in the outer body"
+          reyong "(rep 2 1:1/2 (rep 3 2)) 3"
+          '((0 1/2 (0)) (1/2 1/2 (1)) (1 1/2 (1)) (3/2 1/2 (1))
+            (2 1/2 (0)) (5/2 1/2 (1)) (3 1/2 (1)) (7/2 1/2 (1))
+            (4 1/2 (2))))
+    (list "the inner rep's last duration carries out of both"
+          reyong "(rep 2 1 (rep 1 2:1/2)) 3"
+          '((0 1 (0)) (1 1/2 (1)) (3/2 1 (0)) (5/2 1/2 (1)) (3 1/2 (2))))
+    (list "a nested lead hold" reyong "1 (rep 2 (rep 2 _ 2))"
+          '((0 2 (0)) (2 2 (1)) (4 2 (1)) (6 2 (1)) (8 1 (1))))))
+  (test-equal "the length of a nested rep" 6 (len "(rep 2 1 (rep 2 2))" reyong))
+  (test-equal "the length of three levels" 8
+    (len "(rep 2 (rep 2 (rep 2 1)))" reyong))
+  (test-equal "hold-without-note in a nested body"
+    '(hold-without-note 0 ())
+    (err "(rep 2 (rep 2 _ 1))" reyong)))
+
+(test-group "rep: | is checked at every repetition"
+  (event-tests
+   (list
+    (list "| on the pulse every time" reyong "(rep 4 1:1/2 2 |)"
+          '((0 1/2 (0)) (1/2 1/2 (1)) (1 1/2 (0)) (3/2 1/2 (1))
+            (2 1/2 (0)) (5/2 1/2 (1)) (3 1/2 (0)) (7/2 1/2 (1))))
+    (list "| first in the body, on the pulse every time" reyong "(rep 2 | 1 2)"
+          '((0 1 (0)) (1 1 (1)) (2 1 (0)) (3 1 (1))))))
+  (error-tests 'misplaced-pulse-check
+   (list
+    (list "off the pulse the first time" reyong "(rep 2 1:1/4 2 3 |)" 3/4)
+    (list "a body of 3/4 pulse: passes the first time, fails the second"
+          reyong "(rep 2 | 1:1/4 2 3)" 3/4)
+    (list "fails the second time at the end of the body"
+          reyong "1:1/2 (rep 2 2 |)" 3/2)
+    (list "after a note before the rep" reyong "1 (rep 3 | 2:1/2)" 3/2)
+    (list "a body of 3/4 pulse in a nested rep" reyong "(rep 2 | (rep 3 1:1/4))" 3/4)
+    (list "in the inner body, on a later outer repetition"
+          reyong "(rep 2 (rep 2 | 1:1/2 2) 3)" 5/2)
+    (list "after the rep" reyong "(rep 3 1:1/2) |" 3/2))))
+
+(test-group "rep: other mistakes in the body, at the first repetition"
+  (error-tests 'note-out-of-range
+   (list
+    (list "a key number" reyong "1 (rep 3 2 9)" 2)
+    (list "in a chord" reyong "1:1/2 (rep 2 2 (1 9))" 1)
+    (list "in a nested body" reyong "(rep 2 1 (rep 2 2 9))" 2)))
+  (error-tests 'unknown-note
+   (list (list "a note name" reyong "(rep 2 1 foo1)" 1)))
+  (error-tests 'bad-duration
+   (list (list "a suffix" reyong "(rep 2 1 2:0)" 1)
+         (list "a suffix on _" reyong "1 (rep 2 _:2)" 1)))
+  (error-tests 'bad-chord
+   (list (list "a chord of one note" reyong "1 (rep 2 (1))" 1)))
+  (error-tests 'unknown-token
+   (list (list "a string" reyong "(rep 2 1 \"x\")" 1)
+         (list "#t" reyong "1:1/2 (rep 2 #t)" 1/2))))
+
+(test-group "bad-rep"
+  (for-each
+   (match-lambda
+     ((name tokens time)
+      (test-equal name (list 'bad-rep time 1) (rep-err tokens reyong))))
+   (list
+    (list "no count and no tokens" "(rep)" 0)
+    (list "a count but no tokens" "(rep 2)" 0)
+    (list "a count of 0" "(rep 0 1)" 0)
+    (list "a negative count" "(rep -1 1)" 0)
+    (list "an inexact count" "(rep 1.5 1)" 0)
+    (list "an inexact whole count" "(rep 2.0 1)" 0)
+    (list "a fraction" "(rep 3/2 1)" 0)
+    (list "a symbol" "(rep x 1)" 0)
+    (list "a string" "(rep \"2\" 1)" 0)
+    (list "a :key" "(rep :n 1)" 0)
+    (list "a list as the count" "(rep (2) 1)" 0)
+    (list "an improper list" "(rep 2 1 . 2)" 0)
+    (list "at the time where the rep starts" "1 2:1/2 (rep 0 3)" 3/2)
+    (list "nested: the time of the inner rep" "(rep 2 1 (rep 0 2))" 1)))
+  (test-equal "the line of the rep, when it is not the first"
+    '(bad-rep 3 2)
+    (rep-err "1 2\n3 (rep 0 1)" reyong))
+  (test-equal "the line of a nested rep"
+    '(bad-rep 2 3)
+    (rep-err "(rep 2 1\n  2\n  (rep x 3))" reyong))
+  (test-equal "the line of the outer rep when it is the bad one"
+    '(bad-rep 0 2)
+    (rep-err "\n(rep 0\n 1\n (rep 2 3))" reyong))
+  (test-equal "the shape is checked before the body" '(bad-rep 0 1)
+    (rep-err "(rep 0 9)" reyong))
+  (test-equal "a mistake before a bad nested rep comes first"
+    '(note-out-of-range 0 #f)
+    (rep-err "(rep 2 9 (rep 0 1))" reyong))
+  (let ((c (expand-list (list 1 (list 'rep 0 1)) reyong)))
+    (test-equal "tokens built by hand: kind" 'bad-rep
+      (and (expansion-error? c) (expansion-error-kind c)))
+    (test-equal "tokens built by hand: time" 1
+      (and (expansion-error? c) (expansion-error-time c)))
+    (test-equal "tokens built by hand: line #f" #f
+      (and (expansion-error? c) (expansion-error-line c))))
+  (let ((c (expand "(rep 0 1)" reyong)))
+    (test-assert "bad-rep is an &expansion-error" (expansion-error? c))
+    (test-assert "and an &error" (error? c))
+    (test-equal "uses '()" '()
+      (and (expansion-error? c) (expansion-error-uses c)))))
+
+(test-group "expansion-error-line is #f for errors that do not set it"
+  (for-each
+   (match-lambda
+     ((name tokens expected)
+      (test-equal name expected (rep-err tokens reyong))))
+   (list
+    (list "a token error outside a rep" "1\n9" '(note-out-of-range 1 #f))
+    (list "a token error inside a rep" "(rep 2\n 1 9)" '(note-out-of-range 1 #f))
+    (list "misplaced-pulse-check inside a rep" "(rep 2 | 1:1/4 2 3)"
+          '(misplaced-pulse-check 3/4 #f))
+    (list "hold-without-note inside a rep" "(rep 2 _ 1)" '(hold-without-note 0 #f))
+    (list "bad-duration" "1:0" '(bad-duration 0 #f)))))
+
+(test-group "rep: errors left to right"
+  (test-equal "an error before the rep comes first" '(note-out-of-range 0 ())
+    (err "9 (rep 0 1)" reyong))
+  (test-equal "a bad rep before a later error" '(bad-rep 1 ())
+    (err "1 (rep 0 1) 9" reyong))
+  (test-equal "an error in the body before one after the rep"
+    '(unknown-note 1 ())
+    (err "(rep 2 1 foo1) 9" reyong))
+  (test-equal "an error after the rep, at its time" '(note-out-of-range 4 ())
+    (err "(rep 2 1 2) 9" reyong)))
 
 (define runner (test-runner-current))
 (test-end "expand")

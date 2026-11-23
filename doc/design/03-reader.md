@@ -498,7 +498,18 @@ error cases tagged with its feature, and the steps above that they need.
      a fraction as a mixed number: time 3/2 is "pulse 2 1/2", e.g.
      "part `ugal', pulse 2 1/2: …". A `time` of `#f` prints no
      position.
-3. `feat/music-rep` **[rep]**: `rep`.
+3. `feat/music-rep` **[rep]**: `rep`. Decided for this slice:
+   - `&expansion-error` gains a field `line`, accessor
+     `expansion-error-line`: the 1-based line of the list to blame
+     (Guile's source line of a `rep`), or `#f`. The reader reports
+     that line when it is set, else the part's line. `bad-rep` sets it.
+   - A `rep` body may start with `_`: it holds the note before the
+     `rep` the first time, and the body's last note each time after
+     (a lead hold, as for patterns); with no note there it is
+     `hold-without-note` at that time.
+   - `rep` may be nested. A `|` in the body is checked at every
+     repetition; any other mistake in the body is reported at its time
+     in the first repetition.
 4. `feat/music-colotomy` **[colotomy]**: `colotomy` forms, `:colotomy`
    and `:pickup`, generated parts (step 11), `||` checks, lengths
    (step 10), positions as `cycle C, pulse P`, `time->position` and

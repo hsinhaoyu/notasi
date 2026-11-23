@@ -756,7 +756,8 @@ before it, after its instrument and before its tokens.  Return
        (check-name)
        (match (guard (e ((expansion-error? e)
                          (raise-syntax-error
-                          (expansion-error-kind e) line name
+                          (expansion-error-kind e)
+                          (or (expansion-error-line e) line) name
                           (expansion-error-time e) (expansion-error-uses e)
                           (string-append "part `~a'~@[, ~a~]: ~a")
                           (list name
