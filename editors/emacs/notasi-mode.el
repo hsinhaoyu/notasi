@@ -14,7 +14,8 @@
 ;; Balinese gamelan music as s-expressions.  It highlights the forms
 ;; and, in the music of parts, patterns and colotomies, the notes,
 ;; holds, rests, bars and pattern calls, each in a face of its own.
-;; Forms such as `score' and `pattern' indent their body by 2.
+;; Forms such as `score' and `pattern' indent their body by 2, and a
+;; line of options by 4.
 ;;
 ;; notasi is at https://github.com/hsinhaoyu/notasi; its manual
 ;; explains the notation.
@@ -205,7 +206,8 @@ The forms are highlighted, and in the music of parts, patterns and
 colotomies, notes, holds, rests, bars and pattern calls each have a
 face: `notasi-note', `notasi-hold', `notasi-rest', `notasi-bar' and
 `notasi-pattern'.  `piece', `score', `pattern' and the other forms
-indent their body by 2.
+indent their body by 2, and a line of options (starting with `:') by
+4.
 
 \\{notasi-mode-map}"
   :group 'notasi
