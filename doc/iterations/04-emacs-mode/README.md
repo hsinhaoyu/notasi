@@ -94,13 +94,13 @@ Each milestone, or each slice of one, is its own branch and PR into
    music highlighted only in parts, patterns and colotomies, body
    indented by 2 and option lines by 4, and `make check-emacs` finding
    the macOS app and installing package-lint itself (08).
-2. **`feat/emacs-preview`**, in three slices:
+2. **`feat/emacs-preview`** (done), in three slices:
    1. `feat/emacs-preview-draw` (done): finding notasi, `notasi --version`
       and its check, drawing, the preview window and header line,
       `C-c C-c`, `C-c C-p`, `C-c C-o`, cleaning up.
    2. `feat/emacs-preview-live` (done): redrawing on a pause and on saving,
       the settings, the score shown, `C-c C-s`.
-   3. `feat/emacs-preview-errors`: mistakes through Flymake, the red
+   3. `feat/emacs-preview-errors` (done): mistakes through Flymake, the red
       header and the last good picture, mistakes in templates, other
       problems.
 3. **`feat/emacs-docs`**, the acceptance test: the README's section,

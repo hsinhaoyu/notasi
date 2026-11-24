@@ -2,9 +2,9 @@
 
 Status: partly implemented (iteration 4): milestone 1,
 `feat/emacs-package` (the package, writing, `make check-emacs`), and
-slices 1 and 2 of the preview, `feat/emacs-preview-draw` and
-`feat/emacs-preview-live` (the preview, the score shown, how a drawing
-is made, finding notasi); mistakes and the documentation are planned. ADRs 0048 (the command line it depends on),
+milestone 2, `feat/emacs-preview`, in its three slices (the preview,
+the score shown, how a drawing is made, mistakes, finding notasi); the
+documentation is planned. ADRs 0048 (the command line it depends on),
 0049 (installing) and 0050 (the package).
 
 ## Responsibility
@@ -183,7 +183,7 @@ one-second pause is enough, and notasi needs no process kept running.
 
 ## Mistakes
 
-**Planned.** `notasi render` exits with status 1 and prints
+**Implemented** (`feat/emacs-preview-errors`). `notasi render` exits with status 1 and prints
 `FILE:LINE: message` for a mistake in the notation, or a line starting
 `notasi: ` for any other problem (05).
 
@@ -217,7 +217,7 @@ one-second pause is enough, and notasi needs no process kept running.
    working in the notasi repository.
 
 If none is found, the preview says so in one sentence and points to
-the manual's installation section. The mode runs `notasi --version`
+the manual's chapter on Emacs (whose first part is installing). The mode runs `notasi --version`
 (05) once for each notasi it finds; when that notasi is older than the
 package (comparing the numbers, ignoring `-dev`), the preview says so
 in one sentence, and still draws.
@@ -233,7 +233,10 @@ notasi and the real test (`feat/emacs-preview-draw`).
 - **A fake notasi**, `editors/emacs/fake-notasi`: a short script that
   writes a small SVG to the `-o` file, or, when its input contains
   `MISTAKE`, prints `FILE:3: a mistake` to standard error and exits
-  with 1, as the contract in 05 says. The tests use it, so they need
+  with 1, as the contract in 05 says; when it contains
+  `TEMPLATE-MISTAKE NAME`, prints `NAME.nts:2: a mistake in a template`
+  and exits with 1; and when it contains `NOTASI-PROBLEM`, prints
+  `notasi: typst is not installed` and exits with 1. The tests use it, so they need
   neither Guile nor Typst. It changes when the contract does.
 - **One real test** draws `examples/jaya-semara.nts` with
   `scripts/notasi`, skipped when Guile or Typst is missing.
@@ -329,6 +332,34 @@ own branch and PR into `dev`, started with `/start-milestone <branch>`:
      `notasi-auto-preview` are on or off; `notasi-preview-delay` is a
      number of seconds, 1 by default. With `notasi-auto-preview` off,
      neither a pause nor saving redraws; `C-c C-c` still does.
-3. `feat/emacs-preview-errors`: mistakes through Flymake, the red
+3. **Implemented.** `feat/emacs-preview-errors`: mistakes through Flymake, the red
    header and the last good picture, mistakes in templates, and the
    other problems.
+   Decided for this slice:
+   - **One process.** Flymake runs no notasi of its own: the mode is a
+     Flymake backend, `notasi-flymake`, that reports the last
+     drawing's mistake, or none, and each drawing's result is reported
+     to Flymake when it ends.
+   - **Flymake is on.** `notasi-mode` turns on `flymake-mode` in a
+     buffer that visits a file, with `notasi-flymake` as its only
+     backend; users can turn it off.
+   - **The red header** uses the face `notasi-preview-error`
+     (inheriting `error`, in the `notasi` group).
+   - **A mistake in a template** is matched to a `(use X)` form whose
+     name, or the file name in its string, without its folder and
+     `.nts`, is FILE's without its folder and `.nts`: `(use
+     gong-kebyar)` for `gong-kebyar.nts`, `(use "lib/my.nts")` for
+     `my.nts`. The whole form is marked; with no match (as for a
+     template used by a template), the first `(use …)` form.
+   - **The messages.** For a mistake in the piece, Flymake's message
+     is notasi's without `FILE:LINE: `; for one in a template, it keeps
+     `FILE:LINE: ` (`gong-kebyar.nts:12: …`), since the marked line is
+     not where the mistake is. The red header shows notasi's whole
+     line, the hidden file's name replaced by the real one.
+   - **Other problems** (a `notasi: ` line, exit status 2, or notasi
+     not found): the header turns red and shows the sentence followed
+     by " — see the manual's chapter on Emacs"; the echo area shows it
+     the first time that problem appears in the buffer, not on each
+     redraw; Flymake marks nothing; the picture stays; and drawing on
+     a pause goes on, so fixing the cause is picked up by itself.
+   - **The fake notasi** gains two cases (see "Testing").

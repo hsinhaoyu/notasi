@@ -20,6 +20,11 @@
 ;; feat/emacs-preview-live: redrawing on a pause and on saving, the
 ;; settings, the score shown, `notasi-choose-score' and kept pictures.
 ;;
+;; The tests under "The preview: mistakes" were written from 08
+;; ("Mistakes", "Testing" and "Slices", item 3) for the slice
+;; feat/emacs-preview-errors: Flymake, the red header, mistakes in
+;; templates and the other problems.
+;;
 ;; Run from the repository root with:
 ;;
 ;;   emacs -Q --batch -L editors/emacs -l ert \
@@ -2118,6 +2123,549 @@ cursor: the next drawing is the cursor's score, not marked (chosen)."
        (let ((header (notasi-mode-tests--live-header ctx)))
          (should (string-search "Gilak: pangawit — kotekan" header))
          (should-not (string-search "(chosen)" header)))))))
+
+;;;; The preview: mistakes (slice feat/emacs-preview-errors)
+
+;; Written from 08 ("Mistakes", "Testing" and "Slices", item 3 and its
+;; decided list) before the code.  Choices where 08 leaves room:
+;;
+;; - Files are opened in the selected window (`find-file'), so Flymake's
+;;   deferred start can run.  The tests never call `flymake-start' to
+;;   get a drawing's result, since 08 says each drawing's result is
+;;   reported to Flymake when it ends: they wait up to 3 s for
+;;   `flymake-diagnostics' to show it.  They call `flymake-start' only
+;;   to check that Flymake runs no notasi of its own.
+;; - "The whole line" is marked: the diagnostic starts at the line's
+;;   start and ends at its end, or just after its newline.  A template's
+;;   `(use …)' form is marked from its "(" to its ")".
+;; - "Red" means the text of the preview's header line in the face
+;;   `notasi-preview-error'.  `format-mode-line' gives "" in batch
+;;   Emacs, so it is read from `header-line-format' by a walker like
+;;   `notasi-mode-tests--format': the characters of a string whose
+;;   `face' property is, or lists, the face, and everything inside
+;;   (:propertize ELT face FACE).  A good drawing has no text in it.
+;; - Other problems: the header line holds the sentence (with notasi's
+;;   "notasi: " or without it) followed by " — see the manual's chapter
+;;   on Emacs", all of it red.  "Shown in the echo area" means a
+;;   message logged in *Messages* holding the sentence (batch Emacs logs
+;;   there too; "[N times]" counts N).  Whether a problem that goes away and comes
+;;   back is shown again is left open.
+;; - Exit status 2 is made by a wrapper around the fake that adds an
+;;   unknown option when the piece contains USAGE-PROBLEM, so the fake
+;;   prints its usage ("notasi: unknown option …") and exits with 2.
+;; - notasi not found is tested in a fresh Emacs that loads a copy of
+;;   the package from a folder outside any clone, with an empty PATH, as
+;;   in `notasi-mode-test-find-program-none'; it loads this file too, for
+;;   its helpers.
+
+(require 'flymake)
+
+(defconst notasi-mode-tests--manual-pointer
+  " — see the manual's chapter on Emacs"
+  "What the header line adds after another problem's sentence.")
+
+(defconst notasi-mode-tests--problem
+  "typst is not installed"
+  "The sentence of the fake's other problem (after \"notasi: \").")
+
+(defconst notasi-mode-tests--uses
+  "(piece \"Gilak: pangawit\" :colotomy gilak :pickup 1)
+
+(use kendang)
+(use gong-kebyar)
+(use \"lib/my.nts\")
+
+(score full :fill none
+  (group \"Ugal\" ugal))
+"
+  "A piece using three templates; its first `(use …)' form is `kendang''s.")
+
+;;;;; Helpers for mistakes
+
+(defun notasi-mode-tests--face-p (face value)
+  "Return non-nil if the `face' property VALUE is FACE or lists it."
+  (or (eq value face)
+      (and (consp value) (memq face value) t)))
+
+(defun notasi-mode-tests--text-in-face (format face &optional in-face)
+  "Return the text of the mode line construct FORMAT that is in FACE.
+As `notasi-mode-tests--format', keeping only the characters whose
+`face' property is FACE or lists it, and those inside (:propertize ELT
+face FACE ...).  IN-FACE non-nil means FORMAT is inside such a form."
+  (let ((walk (lambda (elt) (notasi-mode-tests--text-in-face elt face in-face))))
+    (pcase format
+      ('nil "")
+      ((pred stringp)
+       (let ((kept nil))
+         (dotimes (i (length format))
+           (when (or in-face
+                     (notasi-mode-tests--face-p
+                      face (get-text-property i 'face format)))
+             (push (aref format i) kept)))
+         (string-replace "%%" "%" (concat (nreverse kept)))))
+      ((pred symbolp)
+       (if (boundp format) (funcall walk (symbol-value format)) ""))
+      (`(:eval ,form) (funcall walk (eval form t)))
+      (`(:propertize ,elt . ,props)
+       (notasi-mode-tests--text-in-face
+        elt face (or in-face
+                     (notasi-mode-tests--face-p face (plist-get props 'face)))))
+      (`(,(and (pred integerp)) ,elt) (funcall walk elt))
+      (`(,(and (pred symbolp) (pred (not keywordp)) sym) ,then . ,else)
+       (if (and (boundp sym) (symbol-value sym))
+           (funcall walk then)
+         (mapconcat walk else "")))
+      ((pred consp) (mapconcat walk format ""))
+      (_ ""))))
+
+(defun notasi-mode-tests--red (preview)
+  "Return the text of the buffer PREVIEW's header line that is red.
+That is, in the face `notasi-preview-error'."
+  (with-current-buffer preview
+    (notasi-mode-tests--text-in-face header-line-format
+                                     'notasi-preview-error)))
+
+(defun notasi-mode-tests--diagnostics (buffer predicate &optional timeout)
+  "Wait until PREDICATE is true of BUFFER's Flymake diagnostics.
+Wait at most TIMEOUT seconds (3).  Return the diagnostics."
+  (let ((get (lambda () (with-current-buffer buffer (flymake-diagnostics)))))
+    (notasi-mode-tests--wait-until
+     (lambda () (funcall predicate (funcall get)))
+     (or timeout 3))
+    (funcall get)))
+
+(defun notasi-mode-tests--diagnostic-saying (buffer text)
+  "Wait for BUFFER's diagnostics to be one, saying TEXT; return it.
+Return nil if they don't become that within 3 seconds; then the test
+fails on what they are."
+  (let ((found (notasi-mode-tests--diagnostics
+                buffer
+                (lambda (ds)
+                  (and (= (length ds) 1)
+                       (equal (flymake-diagnostic-text (car ds)) text))))))
+    (should (= (length found) 1))
+    (should (equal (flymake-diagnostic-text (car found)) text))
+    (car found)))
+
+(defun notasi-mode-tests--no-diagnostics (buffer)
+  "Wait for BUFFER to have no Flymake diagnostics; fail if it keeps some."
+  (should-not (notasi-mode-tests--diagnostics buffer #'null)))
+
+(defun notasi-mode-tests--redraw-with (line)
+  "Add the comment LINE at the end of the buffer, redraw and wait.
+Return the drawing's process."
+  (goto-char (point-max))
+  (insert line "\n")
+  (let ((p (notasi-preview-redraw)))
+    (notasi-mode-tests--wait p)
+    p))
+
+(defun notasi-mode-tests--remove-line (text)
+  "Remove the first line of the buffer holding TEXT."
+  (save-excursion
+    (goto-char (point-min))
+    (search-forward text)
+    (delete-region (line-beginning-position) (line-beginning-position 2))))
+
+(defun notasi-mode-tests--should-mark-line (diagnostic line)
+  "Check that DIAGNOSTIC marks the whole LINE of the current buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (forward-line (1- line))
+    (should (= (flymake-diagnostic-beg diagnostic) (point)))
+    (should (member (flymake-diagnostic-end diagnostic)
+                    (list (line-end-position) (1+ (line-end-position)))))))
+
+(defun notasi-mode-tests--should-mark-form (diagnostic form)
+  "Check that DIAGNOSTIC marks the first FORM (its text) in the buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (search-forward form)
+    (should (= (flymake-diagnostic-beg diagnostic) (match-beginning 0)))
+    (should (= (flymake-diagnostic-end diagnostic) (match-end 0)))))
+
+(defun notasi-mode-tests--messages-end ()
+  "Return the end of *Messages*, to count what is echoed after it."
+  (with-current-buffer (messages-buffer) (point-max)))
+
+(defun notasi-mode-tests--echoed (since text)
+  "Return how many times TEXT was echoed after SINCE in *Messages*.
+A line ending in \"[N times]\" (Emacs's way of logging a message
+repeated N times) counts N."
+  (with-current-buffer (messages-buffer)
+    (apply #'+ 0
+           (mapcar (lambda (line)
+                     (cond ((not (string-search text line)) 0)
+                           ((string-match "\\[\\([0-9]+\\) times\\]\\'" line)
+                            (string-to-number (match-string 1 line)))
+                           (t 1)))
+                   (split-string (buffer-substring-no-properties
+                                  (min since (point-max)) (point-max))
+                                 "\n" t)))))
+
+(defun notasi-mode-tests--usage-wrapper ()
+  "Write a notasi that is the fake, but used wrongly for USAGE-PROBLEM.
+When the piece it is given contains USAGE-PROBLEM, it runs the fake with
+an unknown option, so the fake prints \"notasi: unknown option …\" and
+exits with status 2.  Return its file name, in a folder of its own."
+  (let ((wrapper (expand-file-name
+                  "notasi" (make-temp-file "notasi-mode-wrapper" t))))
+    (with-temp-file wrapper
+      (insert "#!/bin/sh\n"
+              "piece=\n"
+              "for arg in \"$@\"; do\n"
+              "  case \"$arg\" in *.nts) piece=$arg ;; esac\n"
+              "done\n"
+              "if [ -n \"$piece\" ] && grep -q USAGE-PROBLEM \"$piece\"; then\n"
+              "  exec " (shell-quote-argument notasi-mode-tests--fake)
+              " \"$@\" --no-such-option\n"
+              "fi\n"
+              "exec " (shell-quote-argument notasi-mode-tests--fake) " \"$@\"\n"))
+    (set-file-modes wrapper #o755)
+    wrapper))
+
+;;;;; Flymake and the face
+
+(ert-deftest notasi-mode-test-preview-error-face ()
+  "The red header's face, `notasi-preview-error', inherits `error' and is
+in the `notasi' group, with a docstring."
+  (should (facep 'notasi-preview-error))
+  (let ((inherit (face-attribute 'notasi-preview-error :inherit)))
+    (should (or (eq inherit 'error)
+                (and (consp inherit) (memq 'error inherit)))))
+  (should (member '(notasi-preview-error custom-face)
+                  (get 'notasi 'custom-group)))
+  (should (get 'notasi-preview-error 'face-documentation)))
+
+(ert-deftest notasi-mode-test-flymake-on-in-file-buffer ()
+  "In a buffer visiting a .nts file, `flymake-mode' is on, with
+`notasi-flymake' its only backend."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (with-current-buffer (plist-get ctx :buffer)
+       (should (functionp 'notasi-flymake))
+       (should flymake-mode)
+       (should (equal flymake-diagnostic-functions '(notasi-flymake)))))
+   :select t))
+
+(ert-deftest notasi-mode-test-flymake-off-without-file ()
+  "In a `notasi-mode' buffer that visits no file, `flymake-mode' stays off."
+  (let ((notasi-program notasi-mode-tests--fake))
+    (with-temp-buffer
+      (insert notasi-mode-tests--gilak)
+      (notasi-mode)
+      (should-not flymake-mode))))
+
+(ert-deftest notasi-mode-test-flymake-runs-no-notasi ()
+  "Flymake runs no notasi of its own: starting it adds no run, and it
+reports the last drawing's mistake again."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let* ((buffer (plist-get ctx :buffer))
+            (log (plist-get ctx :log))
+            (before (notasi-mode-tests--count log)))
+       (should (functionp 'notasi-flymake))
+       (flymake-start)
+       (notasi-mode-tests--pause 0.5)
+       (should (= (notasi-mode-tests--count log) before))
+       (notasi-mode-tests--redraw-with ";; MISTAKE")
+       (notasi-mode-tests--diagnostic-saying buffer "a mistake")
+       (should (= (notasi-mode-tests--count log) (1+ before)))
+       (flymake-start)
+       (notasi-mode-tests--pause 0.5)
+       (should (= (notasi-mode-tests--count log) (1+ before)))
+       (notasi-mode-tests--diagnostic-saying buffer "a mistake")))
+   :select t))
+
+(ert-deftest notasi-mode-test-flymake-can-be-turned-off ()
+  "With `flymake-mode' turned off by the user, a mistake still turns the
+header red, and drawing does not turn Flymake back on."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let ((preview (notasi-mode-tests--preview (plist-get ctx :file))))
+       (flymake-mode -1)
+       (notasi-mode-tests--redraw-with ";; MISTAKE")
+       (should-not flymake-mode)
+       (should (string-search "gilak.nts:3: a mistake"
+                              (notasi-mode-tests--red preview)))))
+   :select t))
+
+;;;;; A mistake in the piece
+
+(ert-deftest notasi-mode-test-mistake-marked ()
+  "A mistake in the piece is one Flymake error on its whole line, saying
+notasi's message without FILE:LINE:; the header line turns red with the
+whole line, under the real file's name; the last picture stays."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let* ((buffer (plist-get ctx :buffer))
+            (file (plist-get ctx :file))
+            (preview (notasi-mode-tests--preview file))
+            (before (notasi-mode-tests--shown file)))
+       (should before)
+       (should (= (process-exit-status
+                   (notasi-mode-tests--redraw-with ";; MISTAKE"))
+                  1))
+       (let ((d (notasi-mode-tests--diagnostic-saying buffer "a mistake")))
+         (should (eq (flymake-diagnostic-type d) :error))
+         (notasi-mode-tests--should-mark-line d 3))
+       (let ((header (notasi-mode-tests--header preview))
+             (red (notasi-mode-tests--red preview)))
+         (should (string-search "gilak.nts:3: a mistake" header))
+         (should-not (string-search ".notasi-preview" header))
+         (should (string-search "gilak.nts:3: a mistake" red)))
+       (should (equal (notasi-mode-tests--shown file) before))))
+   :select t))
+
+(ert-deftest notasi-mode-test-mistake-on-opening ()
+  "A file opened with a mistake in it has it marked, and a red header."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let ((d (notasi-mode-tests--diagnostic-saying
+               (plist-get ctx :buffer) "a mistake")))
+       (should (eq (flymake-diagnostic-type d) :error))
+       (notasi-mode-tests--should-mark-line d 3))
+     (should (string-search "gilak.nts:3: a mistake"
+                            (notasi-mode-tests--red
+                             (notasi-mode-tests--preview
+                              (plist-get ctx :file))))))
+   :text (concat notasi-mode-tests--gilak ";; MISTAKE\n")
+   :select t))
+
+(ert-deftest notasi-mode-test-fixing-mistake-clears-it ()
+  "Fixing the mistake clears its mark and the red header, and the
+picture is redrawn."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let* ((buffer (plist-get ctx :buffer))
+            (file (plist-get ctx :file))
+            (preview (notasi-mode-tests--preview file)))
+       (notasi-mode-tests--redraw-with ";; MISTAKE")
+       (notasi-mode-tests--diagnostic-saying buffer "a mistake")
+       (notasi-mode-tests--remove-line "MISTAKE")
+       (insert ";; fixed\n;; and longer\n")
+       (let ((p (notasi-preview-redraw)))
+         (notasi-mode-tests--wait p)
+         (should (= (process-exit-status p) 0)))
+       (notasi-mode-tests--no-diagnostics buffer)
+       (let ((header (notasi-mode-tests--header preview)))
+         (should (string-search "Gilak: pangawit — full" header))
+         (should-not (string-search "mistake" header)))
+       (should (equal (notasi-mode-tests--red preview) ""))
+       (should (string-search
+                (format "%d lines" (count-lines (point-min) (point-max)))
+                (notasi-mode-tests--shown file)))))
+   :select t))
+
+;;;;; A mistake in a template
+
+(ert-deftest notasi-mode-test-template-mistake-marks-use ()
+  "A mistake in gong-kebyar.nts marks the whole (use gong-kebyar) form,
+saying notasi's message with its FILE:LINE:; the header line is red."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let* ((buffer (plist-get ctx :buffer))
+            (preview (notasi-mode-tests--preview (plist-get ctx :file)))
+            (said "gong-kebyar.nts:2: a mistake in a template"))
+       (notasi-mode-tests--redraw-with ";; TEMPLATE-MISTAKE gong-kebyar")
+       (let ((d (notasi-mode-tests--diagnostic-saying buffer said)))
+         (should (eq (flymake-diagnostic-type d) :error))
+         (notasi-mode-tests--should-mark-form d "(use gong-kebyar)"))
+       (should (string-search said (notasi-mode-tests--header preview)))
+       (should (string-search said (notasi-mode-tests--red preview)))))
+   :text notasi-mode-tests--uses :select t))
+
+(ert-deftest notasi-mode-test-template-mistake-string-use ()
+  "A mistake in my.nts, or lib/my.nts, marks (use \"lib/my.nts\"): names
+are compared without their folder and .nts."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let ((buffer (plist-get ctx :buffer)))
+       (dolist (name '("my" "lib/my"))
+         (notasi-mode-tests--redraw-with
+          (concat ";; TEMPLATE-MISTAKE " name))
+         (let ((d (notasi-mode-tests--diagnostic-saying
+                   buffer (concat name ".nts:2: a mistake in a template"))))
+           (notasi-mode-tests--should-mark-form d "(use \"lib/my.nts\")"))
+         (notasi-mode-tests--remove-line "TEMPLATE-MISTAKE"))))
+   :text notasi-mode-tests--uses :select t))
+
+(ert-deftest notasi-mode-test-template-mistake-no-match ()
+  "A mistake in a template no `(use …)' form names (gong.nts is not
+gong-kebyar.nts) marks the first `(use …)' form."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let ((buffer (plist-get ctx :buffer)))
+       (dolist (name '("nowhere" "gong"))
+         (notasi-mode-tests--redraw-with
+          (concat ";; TEMPLATE-MISTAKE " name))
+         (let ((d (notasi-mode-tests--diagnostic-saying
+                   buffer (concat name ".nts:2: a mistake in a template"))))
+           (notasi-mode-tests--should-mark-form d "(use kendang)"))
+         (notasi-mode-tests--remove-line "TEMPLATE-MISTAKE"))))
+   :text notasi-mode-tests--uses :select t))
+
+;;;;; Other problems
+
+(ert-deftest notasi-mode-test-problem-red-header ()
+  "Another problem (a `notasi: ' line) turns the header red with its
+sentence and the manual's chapter; Flymake marks nothing; the picture
+stays."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let* ((buffer (plist-get ctx :buffer))
+            (file (plist-get ctx :file))
+            (preview (notasi-mode-tests--preview file))
+            (before (notasi-mode-tests--shown file))
+            (said (concat notasi-mode-tests--problem
+                          notasi-mode-tests--manual-pointer)))
+       (should before)
+       (notasi-mode-tests--redraw-with ";; NOTASI-PROBLEM")
+       (should (string-search said (notasi-mode-tests--header preview)))
+       (should (string-search said (notasi-mode-tests--red preview)))
+       (notasi-mode-tests--pause 0.5)
+       (should-not (with-current-buffer buffer (flymake-diagnostics)))
+       (should (equal (notasi-mode-tests--shown file) before))))
+   :select t))
+
+(ert-deftest notasi-mode-test-problem-clears-mistake-mark ()
+  "A drawing that ends in another problem, after one with a mistake,
+leaves no mark: Flymake reports the last drawing's mistake, or none."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let ((buffer (plist-get ctx :buffer)))
+       (notasi-mode-tests--redraw-with ";; MISTAKE")
+       (notasi-mode-tests--diagnostic-saying buffer "a mistake")
+       (notasi-mode-tests--remove-line "MISTAKE")
+       (notasi-mode-tests--redraw-with ";; NOTASI-PROBLEM")
+       (notasi-mode-tests--no-diagnostics buffer)))
+   :select t))
+
+(ert-deftest notasi-mode-test-problem-echoed-once ()
+  "Another problem is shown in the echo area the first time it appears
+in the buffer, not on each redraw; the header stays red."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let ((preview (notasi-mode-tests--preview (plist-get ctx :file)))
+           (since (notasi-mode-tests--messages-end)))
+       (notasi-mode-tests--redraw-with ";; NOTASI-PROBLEM")
+       (should (= (notasi-mode-tests--echoed
+                   since notasi-mode-tests--problem)
+                  1))
+       (notasi-mode-tests--wait (notasi-preview-redraw))
+       (notasi-mode-tests--wait (notasi-preview-redraw))
+       (should (= (notasi-mode-tests--echoed
+                   since notasi-mode-tests--problem)
+                  1))
+       (should (string-search (concat notasi-mode-tests--problem
+                                      notasi-mode-tests--manual-pointer)
+                              (notasi-mode-tests--red preview)))))
+   :select t))
+
+(ert-deftest notasi-mode-test-problem-pause-still-redraws ()
+  "With another problem, a pause still redraws, so fixing its cause is
+picked up by itself: the header loses its red, and the picture is new."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let* ((log (plist-get ctx :log))
+            (file (plist-get ctx :file))
+            (preview (notasi-mode-tests--preview file)))
+       (notasi-mode-tests--type ";; NOTASI-PROBLEM\n" (point-max))
+       (notasi-mode-tests--must-draw log)
+       (should (string-search notasi-mode-tests--manual-pointer
+                              (notasi-mode-tests--red preview)))
+       (notasi-mode-tests--type ";; more\n")
+       (notasi-mode-tests--must-draw log)
+       (should (string-search notasi-mode-tests--manual-pointer
+                              (notasi-mode-tests--red preview)))
+       (notasi-mode-tests--command
+        (lambda () (notasi-mode-tests--remove-line "NOTASI-PROBLEM")))
+       (notasi-mode-tests--must-draw log)
+       (should (equal (notasi-mode-tests--red preview) ""))
+       (let ((header (notasi-mode-tests--header preview)))
+         (should (string-search "Gilak: pangawit — full" header))
+         (should-not (string-search notasi-mode-tests--problem header)))
+       (should (string-search
+                (format "%d lines" (count-lines (point-min) (point-max)))
+                (notasi-mode-tests--shown file)))
+       (should-not (flymake-diagnostics))))))
+
+(ert-deftest notasi-mode-test-exit-status-two-is-a-problem ()
+  "notasi used wrongly (exit status 2) is another problem: a red header
+with the manual's chapter, no Flymake mark, the picture kept."
+  (let ((program (notasi-mode-tests--usage-wrapper)))
+    (unwind-protect
+        (notasi-mode-tests--with-piece
+         (lambda (ctx)
+           (let* ((buffer (plist-get ctx :buffer))
+                  (file (plist-get ctx :file))
+                  (preview (notasi-mode-tests--preview file))
+                  (before (notasi-mode-tests--shown file)))
+             (should before)
+             (should (= (process-exit-status
+                         (notasi-mode-tests--redraw-with ";; USAGE-PROBLEM"))
+                        2))
+             (let ((header (notasi-mode-tests--header preview))
+                   (red (notasi-mode-tests--red preview)))
+               (should (string-search "unknown option" header))
+               (should (string-search notasi-mode-tests--manual-pointer header))
+               (should (string-search "unknown option" red))
+               (should (string-search notasi-mode-tests--manual-pointer red)))
+             (notasi-mode-tests--pause 0.5)
+             (should-not (with-current-buffer buffer (flymake-diagnostics)))
+             (should (equal (notasi-mode-tests--shown file) before))))
+         :program program :select t)
+      (delete-directory (file-name-directory program) t))))
+
+(ert-deftest notasi-mode-test-not-found-red-header ()
+  "When no notasi is found, the preview's header line is red and points
+to the manual's chapter on Emacs; Flymake marks nothing.  Tested in a
+fresh Emacs loading a copy of the package from outside any clone."
+  (let* ((tmp (make-temp-file "notasi-mode-notfound" t))
+         (lisp (expand-file-name "pkg/lisp" tmp))
+         (empty (expand-file-name "empty" tmp))
+         (nts (expand-file-name "songs/gilak.nts" tmp)))
+    (unwind-protect
+        (progn
+          (make-directory lisp t)
+          (make-directory empty t)
+          (make-directory (file-name-directory nts) t)
+          (copy-file notasi-mode-tests--package-file
+                     (file-name-as-directory lisp))
+          (with-temp-file nts (insert notasi-mode-tests--gilak))
+          (pcase-let
+              ((`(,header ,red ,marks)
+                (notasi-mode-tests--run-emacs-for
+                 `(progn
+                    (setq exec-path (list ,empty))
+                    (let* ((buffer (find-file ,nts))
+                           (preview nil)
+                           (result nil))
+                      (notasi-mode-tests--wait-until
+                       (lambda ()
+                         (setq preview (get-buffer "*notasi: gilak.nts*"))
+                         (and preview
+                              (string-search
+                               "see the manual"
+                               (notasi-mode-tests--header preview))))
+                       5)
+                      (setq result
+                            (list (and preview
+                                       (notasi-mode-tests--header preview))
+                                  (and preview
+                                       (notasi-mode-tests--red preview))
+                                  (with-current-buffer buffer
+                                    (length (flymake-diagnostics)))))
+                      (kill-buffer buffer)
+                      result))
+                 "-L" lisp
+                 "-l" (expand-file-name "notasi-mode-tests.el"
+                                        notasi-mode-tests--dir))))
+            (should (stringp header))
+            (should (string-search notasi-mode-tests--manual-pointer header))
+            (should (string-search notasi-mode-tests--manual-pointer red))
+            (should (= marks 0))))
+      (delete-directory tmp t))))
 
 (provide 'notasi-mode-tests)
 
