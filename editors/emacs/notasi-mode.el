@@ -807,7 +807,13 @@ The score is drawn from the text as it is now, saved or not."
   (notasi-mode--stop)
   (when buffer-file-name
     (let ((preview (notasi-mode--preview)))
-      (when preview (kill-buffer preview)))
+      (when preview
+        ;; Close the preview's windows, so no split is left showing some
+        ;; other buffer; a frame's only window stays.
+        (dolist (window (get-buffer-window-list preview nil t))
+          (unless (frame-root-window-p window)
+            (delete-window window)))
+        (kill-buffer preview)))
     (ignore-errors (notasi-mode--delete-hidden-file)))
   (when (and notasi-mode--out-dir (file-directory-p notasi-mode--out-dir))
     (delete-directory notasi-mode--out-dir t)))
