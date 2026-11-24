@@ -114,6 +114,14 @@ FACES is the value of a `face' property: nil, a face or a list."
     (insert-file-contents notasi-mode-tests--package-file)
     (should (equal (package-desc-version (package-buffer-info)) '(0 4 0)))))
 
+(ert-deftest notasi-mode-test-version-constant-matches-header ()
+  "`notasi-mode-version', which the version check compares with, is the
+Version: header's."
+  (with-temp-buffer
+    (insert-file-contents notasi-mode-tests--package-file)
+    (should (equal (version-to-list notasi-mode-version)
+                   (package-desc-version (package-buffer-info))))))
+
 (ert-deftest notasi-mode-test-package-requires-emacs-29-1 ()
   "The package requires Emacs 29.1."
   (with-temp-buffer
