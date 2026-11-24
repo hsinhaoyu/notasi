@@ -1,8 +1,9 @@
 # 07 — Environment, installation and testing
 
-Status: open questions only; nothing decided yet. Each question, once
-decided, gets an ADR and this document is updated to describe the
-choice.
+Status: mostly open questions. Planned (iteration 4, ADR 0049): what
+Emacs users install, and CI for the Emacs package; this answers
+question 2 for Emacs users only. Each question, once decided, gets an
+ADR and this document is updated to describe the choice.
 
 ## Responsibility
 
@@ -22,6 +23,7 @@ at the right versions:
 | Guile 3.0 | everyone | runs notasi and its tests |
 | Typst | everyone who draws, and contributors | draws the figures (05, 06); pinned to 0.15.1 |
 | mdBook | contributors | builds the user manual (ADR 0014) |
+| Emacs 29.1 or later | Emacs users of `notasi-mode`, and contributors to it | runs the package (08); planned, iteration 4 |
 
 Typst is pre-1.0 and has breaking changes in most releases, usually
 small (05, "Version pinning"). Whatever is decided below has to pin
@@ -49,6 +51,28 @@ its version.
 - Nothing installs notasi for users yet: they run `scripts/notasi`
   from a copy of the repository, with Guile and Typst installed by
   hand.
+
+## Emacs users
+
+**Planned** (iteration 4, ADR 0049).
+
+- **notasi** comes with the Emacs package (08): installed from GitHub
+  with `package-vc` or `use-package :vc`, the whole repository is
+  cloned, and the mode runs its `scripts/notasi`. Nothing else
+  installs notasi.
+- **Guile and Typst** are installed by hand. The manual's chapter for
+  Emacs users gives the commands for macOS and for Debian and Ubuntu:
+  Guile 3.0 from the system's package manager (Homebrew, apt), and
+  Typst at the pinned version (0.15.1) from Typst's GitHub releases,
+  as CI installs it. When the pin changes, those commands change with
+  it.
+- **Emacs 29.1** is the oldest supported.
+- **CI** checks the package in a job of its own, running
+  `make check-emacs` on Emacs 29.1 and on the newest Emacs release. It
+  installs `package-lint` from MELPA. `make check` does not need Emacs.
+- Before the iteration is accepted, the acceptance test is run by hand
+  on a fresh Emacs, following only the README and the manual (the
+  "README test" of question 3, done once, by hand).
 
 ## Open questions
 
@@ -78,6 +102,9 @@ How does a musician who is not a programmer install notasi?
 | **Container image** | Same everywhere; nothing to install but Docker | Docker is heavy and unfamiliar to most musicians; awkward for files on their machine |
 | **autotools install** (`./configure && make install`, scaffolded with guile-hall) | The traditional way to install Guile modules | Users must install Guile and Typst themselves first |
 | **Typst Universe** (for the Typst package in 06) | Typst downloads it from the import line | Covers only the Typst side; the `notasi` command still needs installing |
+
+Partly answered for Emacs users (ADR 0049, "Emacs users" above);
+open for everyone else.
 
 Depends on: how much of 06 goes ahead. Standalone figures need Guile and
 Typst; documents also need the Typst package. Can wait until there is

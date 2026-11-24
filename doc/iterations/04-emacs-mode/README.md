@@ -77,7 +77,7 @@ In dependency order (ADR 0023). No change to 01–04 or 06:
    the score at point, mistakes, finding notasi, testing.
 4. The build order in `doc/design/README.md`.
 
-Promoted so far: `05-typst-backend.md` (ADR 0048).
+Promoted so far: `05-typst-backend.md` (ADR 0048), `07-environment.md` (ADR 0049).
 
 ## Milestones
 
