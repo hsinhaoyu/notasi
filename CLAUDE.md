@@ -11,6 +11,7 @@ GNU Guile 3.0 project for notating and visualizing Balinese gamelan music. `(not
 - Run all tests: `make check` (exits non-zero if any test file fails)
 - Run one test file: `guile --fresh-auto-compile -L . tests/<name>.scm`
 - Remove SRFI-64 logs: `make clean`
+- Check the Emacs package (tests, byte-compiling, checkdoc, package-lint; needs Emacs, not part of `make check`): `make check-emacs`
 - Draw every score of each example to `build/preview/` (`NAME.png`, or `NAME_SCORE.png` for a file with scores) for a visual check: `make preview` (needs Typst)
 
 Typst is pinned to **0.15.1** (05, "Version pinning"); CI installs exactly that version. `tests/template.scm` needs `typst` on the PATH.
@@ -34,6 +35,7 @@ notasi/             Guile modules: piece, reader, expand, style, layout, json, t
 typst/              Typst template notasi.typ; the package's typst.toml (planned, 06)
 scripts/            the notasi command: notasi render (typst, update, watch planned, 06);
                     preview.scm, used by make preview
+editors/emacs/      notasi-mode, the Emacs package (08), its ERT tests and check.el
 examples/           real pieces (.nts), used as test fixtures
 templates/          shared definitions (.nts) loaded with (use NAME)
 tests/              SRFI-64 test files: one per module, plus golden, syntax,

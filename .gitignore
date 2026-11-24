@@ -6,3 +6,7 @@
 .claude/settings.local.json
 /doc/manual/book/
 /doc/manual/src/figures/
+
+# Emacs: byte-compiled files, and the hidden copies notasi-mode draws from (08).
+*.elc
+.notasi-preview-*

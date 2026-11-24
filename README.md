@@ -17,6 +17,7 @@ Tools for notating and visualizing Balinese gamelan music, written in GNU Guile 
   (`jaya-semara.nts`) and Tenzer's Baris (`baris.nts`)
 - `templates/`: shared scales, stroke sets and instruments, loaded with `(use NAME)`
 - `doc/manual/`: the user manual (mdBook)
+- `editors/emacs/`: `notasi-mode`, an Emacs package for writing `.nts` files (in progress)
 
 Design documents, decisions and iterations' design ideas are on the `dev` branch:
 [the design](https://github.com/hsinhaoyu/notasi/tree/dev/doc/design)
@@ -53,6 +54,10 @@ figures, and review the diff.
 
 Requires Guile 3.0, and Typst 0.15.1 (the tested version) for drawing
 figures. Run code from the repo root with `guile -L .`.
+
+`make check-emacs` checks the Emacs package in `editors/emacs/`: its
+tests, byte-compiling, checkdoc and package-lint. It needs Emacs 29.1
+or later, and isn't part of `make check`.
 
 `make preview` draws every score of each piece in `examples/` with
 Typst, to `build/preview/NAME.png` (or `NAME_SCORE.png` for a piece with
