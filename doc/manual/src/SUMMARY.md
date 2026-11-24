@@ -32,6 +32,15 @@
 
 - [Drawing a score](drawing.md)
 
+# Writing in Emacs
+
+- [Installing for Emacs](emacs-installing.md)
+- [Your first score in Emacs](emacs-first-score.md)
+- [When something is wrong](emacs-mistakes.md)
+- [Several scores in one file](emacs-several-scores.md)
+- [Keys and settings](emacs-keys-and-settings.md)
+- [Problems](emacs-problems.md)
+
 # When something goes wrong
 
 - [Error messages](errors.md)
