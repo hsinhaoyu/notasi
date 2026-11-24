@@ -6,6 +6,7 @@
   "sizes": {
     "font_size": null,
     "label_width": "4.5em",
+    "key_width": "0.0em",
     "lane_width": "2.0em",
     "cell_width": "2em",
     "cell_height": "2em"
@@ -32,6 +33,7 @@
           "label": "U.",
           "subtitle": null,
           "lanes": ["u2", "e2", "o2", "i2", "a1"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "ugal",
@@ -119,6 +121,7 @@
           "label": "G.",
           "subtitle": null,
           "lanes": ["G", "GL", "P"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "gong",

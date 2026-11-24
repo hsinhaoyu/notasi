@@ -6,6 +6,7 @@
   "sizes": {
     "font_size": null,
     "label_width": "8.7em",
+    "key_width": "0.0em",
     "lane_width": "3.6em",
     "cell_width": "3em",
     "cell_height": "2em"
@@ -36,6 +37,7 @@
           "label": "Reyong/Polos",
           "subtitle": null,
           "lanes": ["polos"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "polos",
@@ -137,6 +139,7 @@
           "label": "Reyong/Polos",
           "subtitle": null,
           "lanes": ["polos"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "polos",

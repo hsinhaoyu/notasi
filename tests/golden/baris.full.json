@@ -6,6 +6,7 @@
   "sizes": {
     "font_size": null,
     "label_width": "12.9em",
+    "key_width": "0.0em",
     "lane_width": "7.8em",
     "cell_width": "3em",
     "cell_height": "2em"
@@ -36,6 +37,7 @@
           "label": "Reyong",
           "subtitle": "sangsih, polos",
           "lanes": ["neng3", "nong3", "ning3", "nang2"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "sangsih",
@@ -155,6 +157,7 @@
           "label": "Ugal",
           "subtitle": "main melody",
           "lanes": ["ugal"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "ugal",
@@ -188,6 +191,7 @@
           "label": "Calung",
           "subtitle": "core melody",
           "lanes": ["calung"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "calung",
@@ -212,13 +216,14 @@
           "label": "",
           "subtitle": null,
           "lanes": ["Kempli", "Gong & Kempur"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "kempli",
               "events": [
                 {
                   "start": 0,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 0,
                   "text": "K",
                   "fill": null,
@@ -227,7 +232,7 @@
                 },
                 {
                   "start": 4,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 0,
                   "text": "K",
                   "fill": null,
@@ -241,7 +246,7 @@
               "events": [
                 {
                   "start": 0,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 1,
                   "text": "G",
                   "fill": null,
@@ -259,6 +264,7 @@
           "label": "Kendang lanang",
           "subtitle": null,
           "lanes": ["LH", "RH"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "lanang-lh",
@@ -314,6 +320,7 @@
           "label": "Kendang wadon",
           "subtitle": null,
           "lanes": ["LH", "RH"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "wadon-lh",
@@ -383,6 +390,7 @@
           "label": "Reyong",
           "subtitle": "sangsih, polos",
           "lanes": ["neng3", "nong3", "ning3", "nang2"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "sangsih",
@@ -754,6 +762,7 @@
           "label": "Ugal",
           "subtitle": "main melody",
           "lanes": ["ugal"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "ugal",
@@ -832,6 +841,7 @@
           "label": "Calung",
           "subtitle": "core melody",
           "lanes": ["calung"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "calung",
@@ -883,13 +893,14 @@
           "label": "",
           "subtitle": null,
           "lanes": ["Kempli", "Gong & Kempur"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "kempli",
               "events": [
                 {
                   "start": 0,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 0,
                   "text": "K",
                   "fill": null,
@@ -898,7 +909,7 @@
                 },
                 {
                   "start": 4,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 0,
                   "text": "K",
                   "fill": null,
@@ -907,7 +918,7 @@
                 },
                 {
                   "start": 8,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 0,
                   "text": "K",
                   "fill": null,
@@ -916,7 +927,7 @@
                 },
                 {
                   "start": 12,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 0,
                   "text": "K",
                   "fill": null,
@@ -925,7 +936,7 @@
                 },
                 {
                   "start": 16,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 0,
                   "text": "K",
                   "fill": null,
@@ -934,7 +945,7 @@
                 },
                 {
                   "start": 20,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 0,
                   "text": "K",
                   "fill": null,
@@ -943,7 +954,7 @@
                 },
                 {
                   "start": 24,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 0,
                   "text": "K",
                   "fill": null,
@@ -957,7 +968,7 @@
               "events": [
                 {
                   "start": 8,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 1,
                   "text": "G",
                   "fill": null,
@@ -966,7 +977,7 @@
                 },
                 {
                   "start": 12,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 1,
                   "text": "P",
                   "fill": null,
@@ -975,7 +986,7 @@
                 },
                 {
                   "start": 20,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 1,
                   "text": "P",
                   "fill": null,
@@ -984,7 +995,7 @@
                 },
                 {
                   "start": 24,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 1,
                   "text": "G",
                   "fill": null,
@@ -1002,6 +1013,7 @@
           "label": "Kendang lanang",
           "subtitle": null,
           "lanes": ["LH", "RH"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "lanang-lh",
@@ -1148,6 +1160,7 @@
           "label": "Kendang wadon",
           "subtitle": null,
           "lanes": ["LH", "RH"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "wadon-lh",

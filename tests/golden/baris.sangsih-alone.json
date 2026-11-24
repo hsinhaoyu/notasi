@@ -6,6 +6,7 @@
   "sizes": {
     "font_size": null,
     "label_width": "9.9em",
+    "key_width": "0.0em",
     "lane_width": "4.6em",
     "cell_width": "3em",
     "cell_height": "2em"
@@ -36,6 +37,7 @@
           "label": "Reyong/Sangsih",
           "subtitle": null,
           "lanes": ["sangsih"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "sangsih",
@@ -137,6 +139,7 @@
           "label": "Reyong/Sangsih",
           "subtitle": null,
           "lanes": ["sangsih"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "sangsih",

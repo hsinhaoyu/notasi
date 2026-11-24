@@ -6,6 +6,7 @@
   "sizes": {
     "font_size": "8pt",
     "label_width": "9.3em",
+    "key_width": "0.0em",
     "lane_width": "2.0em",
     "cell_width": "2em",
     "cell_height": "2em"
@@ -36,6 +37,7 @@
           "label": "Gangsa pemade",
           "subtitle": "norot",
           "lanes": ["u3", "e3", "o3", "i3", "a2"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "polos",
@@ -685,6 +687,7 @@
           "label": "Ugal",
           "subtitle": null,
           "lanes": ["e2", "o2", "i2", "a1"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "ugal",
@@ -798,6 +801,7 @@
           "label": "Panyacah",
           "subtitle": null,
           "lanes": ["a3", "u3", "e3", "o3", "i3"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "panyacah",
@@ -983,6 +987,7 @@
           "label": "Jublag",
           "subtitle": null,
           "lanes": ["a2", "e2", "o2", "i2"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "jublag",
@@ -1096,6 +1101,7 @@
           "label": "Jegogan",
           "subtitle": null,
           "lanes": ["a1", "o1"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "jegogan",
@@ -1173,13 +1179,14 @@
           "label": "Gong, kempli",
           "subtitle": null,
           "lanes": ["G", "P", "T", "K"],
+          "key_numbers": null,
           "voices": [
             {
               "name": "gong",
               "events": [
                 {
                   "start": 0,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 0,
                   "text": "G",
                   "fill": "#e6e6e6",
@@ -1188,7 +1195,7 @@
                 },
                 {
                   "start": 16,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 1,
                   "text": "P",
                   "fill": "#e6e6e6",
@@ -1197,7 +1204,7 @@
                 },
                 {
                   "start": 32,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 2,
                   "text": "T",
                   "fill": "#e6e6e6",
@@ -1206,7 +1213,7 @@
                 },
                 {
                   "start": 48,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 1,
                   "text": "P",
                   "fill": "#e6e6e6",
@@ -1215,7 +1222,7 @@
                 },
                 {
                   "start": 64,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 0,
                   "text": "G",
                   "fill": "#e6e6e6",
@@ -1229,7 +1236,7 @@
               "events": [
                 {
                   "start": 0,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1238,7 +1245,7 @@
                 },
                 {
                   "start": 4,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1247,7 +1254,7 @@
                 },
                 {
                   "start": 8,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1256,7 +1263,7 @@
                 },
                 {
                   "start": 12,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1265,7 +1272,7 @@
                 },
                 {
                   "start": 16,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1274,7 +1281,7 @@
                 },
                 {
                   "start": 20,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1283,7 +1290,7 @@
                 },
                 {
                   "start": 24,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1292,7 +1299,7 @@
                 },
                 {
                   "start": 28,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1301,7 +1308,7 @@
                 },
                 {
                   "start": 32,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1310,7 +1317,7 @@
                 },
                 {
                   "start": 36,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1319,7 +1326,7 @@
                 },
                 {
                   "start": 40,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1328,7 +1335,7 @@
                 },
                 {
                   "start": 44,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1337,7 +1344,7 @@
                 },
                 {
                   "start": 48,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1346,7 +1353,7 @@
                 },
                 {
                   "start": 52,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1355,7 +1362,7 @@
                 },
                 {
                   "start": 56,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1364,7 +1371,7 @@
                 },
                 {
                   "start": 60,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
@@ -1373,7 +1380,7 @@
                 },
                 {
                   "start": 64,
-                  "dur": 4,
+                  "dur": 1,
                   "lane": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
