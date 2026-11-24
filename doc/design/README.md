@@ -24,7 +24,7 @@ book.typ + book.notasi.json ──typst compile──▶ PDF
 |---|---|---|
 | Notation language | — | [01-notation.md](01-notation.md) |
 | Piece (internal data) | `(notasi piece)` | [02-piece.md](02-piece.md) |
-| Reader + validation | `(notasi reader)`, `(notasi expand)` (planned) | [03-reader.md](03-reader.md) |
+| Reader + validation | `(notasi reader)`, `(notasi expand)` | [03-reader.md](03-reader.md) |
 | Layout, note style | `(notasi layout)`, `(notasi style)` | [04-layout.md](04-layout.md) |
 | Typst backend | `(notasi typst)`, `typst/notasi.typ` | [05-typst-backend.md](05-typst-backend.md) |
 | Scores in Typst documents | `scripts/notasi`, `typst/` package | [06-documents.md](06-documents.md) |
@@ -77,7 +77,7 @@ See [its README](../iterations/04-emacs-mode/README.md).
 
 1. **Implemented.** `feat/emacs-package`: the package and the major mode, `make
    check-emacs` and its CI job, `editors/` shipped to `main`
-2. `feat/emacs-preview`: the preview; three slices, see
+2. **Implemented.** `feat/emacs-preview`: the preview; three slices, see
    [08-emacs.md](08-emacs.md#slices)
 3. `feat/emacs-docs`: the acceptance test: the README, the manual's
    chapter, and the test on a fresh Emacs
@@ -93,7 +93,7 @@ Each decision's context and consequences are in its record in
 [`../decisions/`](../decisions/README.md).
 
 1. The notation is s-expressions: [0001](../decisions/0001-notation-is-s-expressions.md)
-2. Time is measured in pulses, with durations: [0025](../decisions/0025-time-is-measured-in-pulses.md) (planned; replaces [0002](../decisions/0002-time-is-a-grid-of-equal-steps.md))
+2. Time is measured in pulses, with durations: [0025](../decisions/0025-time-is-measured-in-pulses.md) (replaces [0002](../decisions/0002-time-is-a-grid-of-equal-steps.md))
 3. Notes are symbolic: [0003](../decisions/0003-notes-are-symbolic.md)
 4. The piece is the centre: [0008](../decisions/0008-the-piece-is-the-centre.md)
 5. Guile decides, Typst draws: [0005](../decisions/0005-guile-decides-typst-draws.md)
@@ -107,17 +107,17 @@ Each decision's context and consequences are in its record in
 13. A plain white grid; notes fill their cells: [0020](../decisions/0020-plain-grid-notes-fill-cells.md)
 14. pastel1 is the default palette: [0021](../decisions/0021-pastel1-is-the-default-palette.md)
 15. Notation files end in `.nts`: [0022](../decisions/0022-notation-files-end-in-nts.md)
-16. Options are written `:key value`: [0026](../decisions/0026-options-are-key-value.md) (planned)
-17. A part names its instrument first: [0027](../decisions/0027-a-part-names-its-instrument-first.md) (planned)
-18. `_` holds, `-` damps: [0028](../decisions/0028-hold-sustains-rest-damps.md) (planned)
-19. Patterns belong to one instrument: [0029](../decisions/0029-patterns-belong-to-one-instrument.md) (planned)
-20. Colotomies generate the gong and kempli parts: [0030](../decisions/0030-colotomies-generate-gong-and-kempli-parts.md) (planned)
-21. Printing belongs to scores: [0031](../decisions/0031-printing-belongs-to-scores.md) (planned)
-22. The palette is chosen in the score: [0032](../decisions/0032-the-palette-is-chosen-in-the-score.md) (planned)
-23. Pitched and stroke instruments are grouped apart: [0034](../decisions/0034-pitched-and-stroke-instruments-are-grouped-apart.md) (planned)
-24. Expansion is its own module: [0035](../decisions/0035-expansion-is-its-own-module.md) (planned)
-25. The JSON contract is version 2: [0036](../decisions/0036-json-contract-version-2.md) (planned)
-26. Cycle lines are heavier than pulse lines: [0037](../decisions/0037-cycle-lines-are-heavier.md) (planned)
+16. Options are written `:key value`: [0026](../decisions/0026-options-are-key-value.md)
+17. A part names its instrument with `:instrument`: [0038](../decisions/0038-parts-name-their-instrument-with-an-option.md) (replaces [0027](../decisions/0027-a-part-names-its-instrument-first.md))
+18. `_` holds, `-` damps: [0028](../decisions/0028-hold-sustains-rest-damps.md)
+19. Patterns belong to one instrument: [0029](../decisions/0029-patterns-belong-to-one-instrument.md)
+20. Colotomies generate the gong and kempli parts: [0030](../decisions/0030-colotomies-generate-gong-and-kempli-parts.md) (their parts are written as `part` forms: [0038](../decisions/0038-parts-name-their-instrument-with-an-option.md))
+21. Printing belongs to scores: [0031](../decisions/0031-printing-belongs-to-scores.md)
+22. The palette is chosen in the score: [0032](../decisions/0032-the-palette-is-chosen-in-the-score.md)
+23. Pitched and stroke instruments are grouped apart: [0034](../decisions/0034-pitched-and-stroke-instruments-are-grouped-apart.md)
+24. Expansion is its own module: [0035](../decisions/0035-expansion-is-its-own-module.md)
+25. The JSON contract is version 3: [0043](../decisions/0043-json-contract-version-3.md) (replaces [0036](../decisions/0036-json-contract-version-2.md))
+26. Cycle lines are heavier than pulse lines: [0037](../decisions/0037-cycle-lines-are-heavier.md)
 27. The notasi command line is a contract for editors: [0048](../decisions/0048-the-command-line-is-a-contract-for-editors.md)
 28. An Emacs package ships with notasi and only runs the command: [0050](../decisions/0050-an-emacs-package-ships-with-notasi.md) (partly implemented)
 
