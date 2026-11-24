@@ -282,18 +282,20 @@ NAMES? (the group's note-names?), else null."
 (define* (hand-group label parts
                      #:key (subtitle #f) (note-names? #f) (scheme 'by-degree)
                      (palette 'pastel1) (colors '()) (short label)
-                     (labels 'first-long))
+                     (labels 'first-long) (background 'grid))
   "A group record built by hand, as the reader fills it in (ADR 0033):
 PARTS with their names as row labels, every other setting at its
 default unless given."
   (make-group label short subtitle labels 'notes
               (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
-              note-names? 'colour 'none 'none 0 scheme palette colors #f))
+              note-names? 'colour 'none 'none 0 scheme palette colors
+              background #f))
 
 (define* (hand-score piece groups
                      #:key (title (piece-title piece)) (subtitle #f)
                      (caption #f) (system-length #f) (cycle-numbers? #f)
                      (pulse-numbers? #t) (numbering 'gong-last)
+                     (background 'grid)
                      (cycle-label #f) (pulse-label #f) (font-size #f)
                      (cell-width "2em") (cell-height "2em")
                      (from 0) (to (piece-length piece)) (breaks '()))
@@ -301,15 +303,16 @@ default unless given."
 TO (times) say otherwise."
   (make-score 'hand title subtitle caption from to
               system-length breaks cycle-numbers? pulse-numbers? numbering
-              cycle-label pulse-label font-size cell-width cell-height groups #f))
+              background cycle-label pulse-label font-size cell-width cell-height
+              groups #f))
 
 (define figure-keys
   '(version title subtitle steps_per_pulse sizes systems caption))
 (define sizes-keys '(font_size label_width lane_width cell_width cell_height))
 (define system-keys '(start steps header lines groups))
-(define header-keys '(cycle_label pulse_label cycles pulses))
+(define header-keys '(cycle_label pulse_label cycles pulses pulse_lines))
 (define mark-keys '(column text))
-(define group-keys '(label subtitle lanes voices overlays))
+(define group-keys '(label subtitle lanes voices overlays pulse_lines row_lines))
 (define voice-keys '(name events))
 (define event-keys '(start dur lane text fill text_color continued))
 
@@ -366,7 +369,7 @@ at its default: font_size null, cells \"2em\"."
 
 (define white "#ffffff")
 (define dark "#222222")
-(define grey "#cccccc")              ; strokes (ADRs 0019, 0021)
+(define grey "#e6e6e6")              ; strokes (ADRs 0019, 0021, 0041)
 ;; pastel1 (the default, ADR 0021), degree k → colour k; all take dark text
 (define ding-fill "#fbb4ae")
 (define dong-fill "#b3cde3")
@@ -417,16 +420,17 @@ at its default: font_size null, cells \"2em\"."
 (define* (hdr label cycles pulses #:optional (cycle-label 'null))
   "A version 3 header: LABEL is the pulse row's label (ADR 0043)."
   `((cycle_label . ,cycle-label) (pulse_label . ,label)
-    (cycles . ,cycles) (pulses . ,pulses)))
+    (cycles . ,cycles) (pulses . ,pulses) (pulse_lines . #t)))
 
 (define (mark column text)
   "A cycle mark."
   `((column . ,column) (text . ,text)))
 
 (define (grp label subtitle lanes . voices)
-  "A group with no overlays (there are none until slice 4)."
+  "A group with no overlays, and the default `grid' lines (ADR 0041)."
   `((label . ,label) (subtitle . ,subtitle) (lanes . ,lanes)
-    (voices . ,(list->vector voices)) (overlays . #())))
+    (voices . ,(list->vector voices)) (overlays . #())
+    (pulse_lines . #t) (row_lines . #t)))
 
 (define (voice name . events)
   `((name . ,name) (events . ,(list->vector events))))
@@ -2395,7 +2399,7 @@ give."
                                                      (symbol->string n)))
                                              '(p q))
                                         #f 'colour 'none 'short 0
-                                        'by-degree 'pastel1 '() #f))))))))
+                                        'by-degree 'pastel1 '() 'grid #f))))))))
     (test-equal "the overlays" pqd-short
       (and fig (overlays-of fig 0 0)))))
 
@@ -2747,7 +2751,7 @@ give."
 ;;;   the score record's constructor gains `cycle-label` at a place 02
 ;;;   lists but this slice's tests don't need to pin.
 
-(define v3-header-keys '(cycle_label pulse_label cycles pulses))
+(define v3-header-keys '(cycle_label pulse_label cycles pulses pulse_lines))
 
 (define (cycle-label-of fig s) (field (header-of fig s) 'cycle_label))
 (define (pulse-label-of fig s) (field (header-of fig s) 'pulse_label))
@@ -3070,6 +3074,270 @@ its row is."
       (width "(score s :cycle-label \"\" :pulse-label \"\" (group \"U\" ugal))"))
     (test-equal "a label whose row isn't shown doesn't count" "2.1em"
       (width "(score s :cycle-numbers no :pulse-numbers no (group \"U\" ugal))"))))
+
+;;; ==================================================================
+;;; The lines behind the notes (iteration 3, milestone 2, slice
+;;; feat/drawing-lines)
+;;; ==================================================================
+;;;
+;;; 04, "Slices (iteration 3)" slice 2 and its decided bullets, "Header
+;;; and lines", "Groups and rows", "Note style", the keys table; 05,
+;;; "JSON contract (version 3)"; 01, `:background`; ADRs 0041, 0043.
+;;; The header gains `pulse_lines` after `pulses`, from the score's
+;;; background: true for `grid` and `vertical`. Each group gains
+;;; `pulse_lines` and `row_lines` after `overlays`, from its own
+;;; (effective) background: `grid` both true, `vertical` pulse lines
+;;; only, `horizontal` row lines only, `empty` neither, for every kind
+;;; of rows. The default is `grid`. A stroke's fill is `#e6e6e6`, its
+;;; text near-black.
+;;; Choices made where the docs are not explicit:
+;;; - The flags are JSON booleans: #t and #f in the figure.
+;;; - `header.pulse_lines` follows the score's own `:background` (or
+;;;   grid), whatever its groups say; 02 gives the score record no
+;;;   `background`, so these tests read every fixture from text.
+;;; - A group of one row (one lane, or `single`) still has `row_lines`
+;;;   true under `grid`: the flag is the background's, and the template
+;;;   has no two rows to draw a line between.
+;;; - `lines` (pulse and cycle) do not depend on the background: the
+;;;   template decides where pulse lines are drawn from the flags.
+;;; - Every system of a score carries the same flags.
+
+(define lines-group-keys
+  '(label subtitle lanes voices overlays pulse_lines row_lines))
+(define lines-header-keys
+  '(cycle_label pulse_label cycles pulses pulse_lines))
+(define stroke-grey "#e6e6e6")
+
+(define (header-pulse-lines fig s) (field (header-of fig s) 'pulse_lines))
+
+(define (group-lines fig s g)
+  "Group G of system S's (pulse_lines row_lines)."
+  (let ((grp (group-ref fig s g)))
+    (list (field grp 'pulse_lines) (field grp 'row_lines))))
+
+(define (all-group-lines fig s)
+  "Every group of system S's (pulse_lines row_lines), in order."
+  (map (lambda (g) (group-lines fig s g))
+       (iota (vector-length (field (system-ref fig s) 'groups)))))
+
+(define (background-flags value)
+  "The (pulse_lines row_lines) a group with background VALUE gets."
+  (match value
+    ('grid '(#t #t))
+    ('vertical '(#t #f))
+    ('horizontal '(#f #t))
+    ('empty '(#f #f))))
+
+(define (lines-keys-ok? fig)
+  "Does every system of FIG have the header and group keys of this slice?"
+  (every (lambda (s)
+           (and (equal? (keys (field s 'header)) lines-header-keys)
+                (every (lambda (g) (equal? (keys g) lines-group-keys))
+                       (vector->list (field s 'groups)))))
+         (systems fig)))
+
+(test-group "lines: the header's and the groups' keys"
+  (test-equal "the header's keys: pulse_lines after pulses" lines-header-keys
+    (keys (header-of (layout (colo-piece (notes 8))) 0)))
+  (test-equal "a group's keys: pulse_lines and row_lines after overlays"
+    lines-group-keys
+    (keys (group-ref (layout (colo-piece (notes 8))) 0 0)))
+  (test-assert "every system and group, without a colotomy"
+    (lines-keys-ok? (layout (ten-score ":system-length 4"))))
+  (test-assert "every system and group, the default score"
+    (lines-keys-ok? (layout (colo-piece (notes 9) #:pickup 1 #:score? #f))))
+  (test-assert "parts and single rows, with overlays"
+    (let ((fig (rows-fig "(score s :note-names yes :background empty"
+                         "  (group \"P\" :rows parts p q)"
+                         "  (group \"S\" :rows single r s)"
+                         "  (group \"D\" d))")))
+      (and fig (lines-keys-ok? fig))))
+  (test-assert "with both header rows off"
+    (lines-keys-ok? (layout (colo-piece (notes 8)
+                                        #:options ":cycle-numbers no :pulse-numbers no"))))
+  (test-assert "json-string accepts the figure"
+    (string? (json-string (layout (ten-score ":background horizontal"))))))
+
+(test-group "lines: the default is grid"
+  (let ((fig (layout-or-false (layout (colo-piece (notes 8) #:score? #f)))))
+    (test-eq "the default score: the header's pulse lines" #t
+      (if fig (header-pulse-lines fig 0) 'no-figure))
+    ;; Two groups: the part and the colotomy's generated gong.
+    (test-equal "the default score: pulse and row lines" '((#t #t) (#t #t))
+      (and fig (all-group-lines fig 0))))
+  (let ((fig (layout-or-false (layout (ten-steps)))))
+    (test-equal "the default score of three parts: every group both"
+      '((#t #t) (#t #t) (#t #t))
+      (and fig (all-group-lines fig 0))))
+  (let ((fig (layout-or-false (layout (ten-score)))))
+    (test-eq "a score without :background: the header's pulse lines" #t
+      (if fig (header-pulse-lines fig 0) 'no-figure))
+    (test-equal "a score without :background: every group both"
+      '((#t #t) (#t #t) (#t #t))
+      (and fig (all-group-lines fig 0)))))
+
+(test-group "lines: :background on a score"
+  (for-each
+   (lambda (value)
+     (let* ((name (symbol->string value))
+            (fig (layout-or-false
+                  (layout (ten-score (string-append ":background " name))))))
+       (test-eq (string-append name ": the header's pulse lines")
+         (and (memq value '(grid vertical)) #t)
+         (if fig (header-pulse-lines fig 0) 'no-figure))
+       (test-equal (string-append name ": every group")
+         (make-list 3 (background-flags value))
+         (and fig (all-group-lines fig 0)))))
+   '(grid vertical horizontal empty)))
+
+(test-group "lines: :background on a group"
+  (for-each
+   (lambda (value)
+     (let* ((name (symbol->string value))
+            (fig (layout-or-false
+                  (layout (ten-steps
+                           (string-append "(score s"
+                                          " (group \"melody\" :background " name " melody)"
+                                          " (group \"rests\" rests)"
+                                          " (group \"kajar\" kajar))"))))))
+       (test-equal (string-append name " on the first group: the others grid")
+         (list (background-flags value) '(#t #t) '(#t #t))
+         (and fig (all-group-lines fig 0)))
+       (test-eq (string-append name " on a group: the header follows the score")
+         #t
+         (if fig (header-pulse-lines fig 0) 'no-figure))))
+   '(grid vertical horizontal empty))
+  (let ((fig (layout-or-false
+              (layout (ten-steps
+                       (string-append "(score s :background empty"
+                                      " (group \"melody\" :background grid melody)"
+                                      " (group \"rests\" :background horizontal rests)"
+                                      " (group \"kajar\" kajar))"))))))
+    (test-equal "groups override the score's empty"
+      '((#t #t) (#f #t) (#f #f))
+      (and fig (all-group-lines fig 0)))
+    (test-eq "the score's empty: no pulse lines in the header" #f
+      (if fig (header-pulse-lines fig 0) 'no-figure)))
+  (let ((fig (layout-or-false
+              (layout (ten-steps
+                       (string-append "(score s :background vertical"
+                                      " (group \"melody\" :background empty melody)"
+                                      " (group \"rests\" rests)"
+                                      " (group \"kajar\" :background horizontal kajar))"))))))
+    (test-equal "groups override the score's vertical"
+      '((#f #f) (#t #f) (#f #t))
+      (and fig (all-group-lines fig 0)))
+    (test-eq "the score's vertical: pulse lines in the header" #t
+      (if fig (header-pulse-lines fig 0) 'no-figure)))
+  (let ((fig (layout-or-false
+              (layout (ten-score ":background horizontal")))))
+    (test-eq "the score's horizontal: no pulse lines in the header" #f
+      (if fig (header-pulse-lines fig 0) 'no-figure))))
+
+(test-group "lines: every kind of rows"
+  (for-each
+   (lambda (value)
+     (let* ((name (symbol->string value))
+            (fig (rows-fig (string-append "(score s :note-names yes :background " name)
+                           "  (group \"N\" p)"
+                           "  (group \"P\" :rows parts q r)"
+                           "  (group \"S\" :rows single s)"
+                           "  (group \"D\" d))")))
+       (test-equal (string-append name ": notes, parts, single and stroke rows")
+         (make-list 4 (background-flags value))
+         (and fig (all-group-lines fig 0)))))
+   '(grid vertical horizontal empty))
+  (let ((fig (rows-fig "(score s :note-names yes"
+                       "  (group \"N\" :background empty p)"
+                       "  (group \"P\" :rows parts :background horizontal q r)"
+                       "  (group \"S\" :rows single :background vertical s)"
+                       "  (group \"D\" d))")))
+    (test-equal "each kind of rows with its own background"
+      '((#f #f) (#f #t) (#t #f) (#t #t))
+      (and fig (all-group-lines fig 0)))))
+
+(test-group "lines: a group of one row keeps row_lines"
+  (let ((fig (rows-fig "(score s :note-names yes"
+                       "  (group \"S\" :rows single r)"
+                       "  (group \"R\" s))")))
+    (test-equal "one row, grid: both true" '((#t #t) (#t #t))
+      (and fig (all-group-lines fig 0)))))
+
+(test-group "lines: across systems and ranges"
+  (let ((fig (layout-or-false
+              (layout (ten-steps
+                       (string-append "(score s :background vertical :system-length 4"
+                                      " (group \"melody\" melody)"
+                                      " (group \"rests\" :background horizontal rests)"
+                                      " (group \"kajar\" kajar))"))))))
+    (test-equal "the same flags in every system"
+      (make-list 3 (list #t '((#t #f) (#f #t) (#t #f))))
+      (and fig (map (lambda (s) (list (header-pulse-lines fig s)
+                                      (all-group-lines fig s)))
+                    '(0 1 2)))))
+  (let ((fig (layout-or-false
+              (layout (colo-piece (notes 9) #:pickup 1
+                                  #:options ":background empty :from (1 2) :to (2 1)")))))
+    (test-equal "an excerpt: the score's flags" '(#f ((#f #f)))
+      (and fig (list (header-pulse-lines fig 0) (all-group-lines fig 0)))))
+  (let ((fig (layout-or-false
+              (layout (colo-piece (notes 8)
+                                  #:options ":background empty :cycle-numbers no :pulse-numbers no")))))
+    (test-eq "with both header rows off, pulse_lines is still a boolean" #f
+      (if fig (header-pulse-lines fig 0) 'no-figure))))
+
+(test-group "lines: the second score of a file"
+  (let ((pc (piece-of "(piece \"C\" :colotomy c)"
+                      "(scale s a b)"
+                      "(strokes gong-strokes G)"
+                      "(instrument u s a1 b1)"
+                      "(instrument gong gong-strokes G)"
+                      "(colotomy c 4 (part :instrument gong -:3 G:1))"
+                      "(part :instrument u :name m 1 2 1 2)"
+                      "(score one :background empty (group \"m\" m))"
+                      "(score two (group \"m\" m))")))
+    (test-equal "each score its own background"
+      '((#f ((#f #f))) (#t ((#t #t))))
+      (and pc (map (lambda (name)
+                     (let ((fig (layout-named pc name)))
+                       (list (header-pulse-lines fig 0) (all-group-lines fig 0))))
+                   '(one two))))))
+
+(test-group "lines: the system's lines do not depend on the background"
+  (let ((lines-with (lambda (value)
+                      (lines-of (layout (colo-piece (notes 9) #:pickup 1
+                                                    #:options (string-append
+                                                               ":background " value)))
+                                0))))
+    (test-equal "grid and empty: the same lines"
+      (lines-with "grid") (lines-with "empty"))
+    (test-equal "vertical and horizontal: the same lines"
+      (lines-with "vertical") (lines-with "horizontal"))
+    (test-equal "the cycle lines stay under empty"
+      '("cycle" "pulse" "pulse" "pulse" "cycle" "pulse" "pulse" "pulse")
+      (cdr (vector->list (lines-with "empty"))))))
+
+(test-group "strokes: the lighter grey"
+  (let ((fig (layout-or-false (layout (ten-score)))))
+    (test-equal "kajar: every stroke #e6e6e6, near-black text"
+      (make-list 5 (list stroke-grey dark))
+      (and fig (map (lambda (e) (list (field e 'fill) (field e 'text_color)))
+                    (events-of fig 0 2 0)))))
+  (let ((fig (layout-or-false (layout (ten-score ":note-names yes :palette set1")))))
+    (test-equal "with names and another palette: still #e6e6e6"
+      (make-list 5 (list "K" stroke-grey dark))
+      (and fig (map (lambda (e) (list (field e 'text) (field e 'fill)
+                                      (field e 'text_color)))
+                    (events-of fig 0 2 0)))))
+  (let ((fig (rows-fig "(score s :note-names yes (group \"D\" d))")))
+    (test-equal "kendang: dag and dug in #e6e6e6"
+      (list stroke-grey stroke-grey)
+      (and fig (map (lambda (e) (field e 'fill)) (events-of fig 0 0 0)))))
+  (let ((fig (rows-fig "(score s :note-names yes (group \"D\" :rows single d))")))
+    (test-equal "on a single row too" (list stroke-grey stroke-grey)
+      (and fig (map (lambda (e) (field e 'fill)) (events-of fig 0 0 0)))))
+  (test-equal "the stroke grey takes near-black text" dark
+    (text-color-for stroke-grey)))
 
 (test-end "layout")
 

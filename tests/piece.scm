@@ -162,20 +162,20 @@
                     (rows 'notes) (note-names? #f) (fill 'colour)
                     (holds 'none) (pattern-names 'none) (pattern-level 0)
                     (scheme 'by-degree) (palette 'pastel1) (colors '())
-                    (location #f))
+                    (background 'grid) (location #f))
   "A group of PARTS, each with its name as row label; every other
 setting at its default unless given."
   (make-group label short subtitle labels rows
               (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
               note-names? fill holds pattern-names pattern-level
-              scheme palette colors location))
+              scheme palette colors background location))
 
 (define (mk-group label . parts)
   (mk-group* label parts))
 
 (define* (mk-score name groups #:key (title "T") (to 0) (location #f))
   "A score called NAME holding GROUPS, every other setting at its default."
-  (make-score name title #f #f 0 to #f '() #f #t 'gong-last #f #f #f
+  (make-score name title #f #f 0 to #f '() #f #t 'gong-last 'grid #f #f #f
               "2em" "2em" groups location))
 
 (define (mk-piece title length scales instruments parts groups)
@@ -284,7 +284,7 @@ one score holding GROUPS."
          (g (make-group "Reyong" "Rey." "polos + sangsih" 'short 'parts
                         members #t 'none 'dash 'long 1
                         'by-degree '("#111111" "#eeeeee")
-                        '((ding . "#000000")) loc))
+                        '((ding . "#000000")) 'vertical loc))
          (d (mk-group "polos" p)))
     (test-assert "predicate" (group? g))
     (test-equal "label" "Reyong" (group-label g))
@@ -298,6 +298,7 @@ one score holding GROUPS."
       (and (eq? p (car (car (group-members g))))
            (eq? s (car (cadr (group-members g))))))
     (test-eq "note-names?" #t (group-note-names? g))
+    (test-eq "background" 'vertical (group-background g))
     (test-eq "fill" 'none (group-fill g))
     (test-eq "holds" 'dash (group-holds g))
     (test-eq "pattern-names" 'long (group-pattern-names g))
@@ -325,12 +326,13 @@ one score holding GROUPS."
   (let* ((p (mk-part 'polos reyong))
          (g (mk-group "Reyong" p))
          (sc (make-score 'full "Full score" "pangecet" "A caption"
-                         1/2 15/2 4 '(2 6) #t #f 'gong-first "Cycle" "Beats"
+                         1/2 15/2 4 '(2 6) #t #f 'gong-first 'empty "Cycle" "Beats"
                          "8pt" "3em" "1.5em" (list g) loc))
          (d (mk-score 'default (list g) #:title "Piece" #:to 8)))
     (test-assert "predicate" (score? sc))
     (test-eq "name" 'full (score-name sc))
     (test-equal "title" "Full score" (score-title sc))
+    (test-eq "background" 'empty (score-background sc))
     (test-equal "subtitle" "pangecet" (score-subtitle sc))
     (test-equal "caption" "A caption" (score-caption sc))
     (test-equal "from" 1/2 (score-from sc))
@@ -350,13 +352,14 @@ one score holding GROUPS."
     (test-assert "times stay exact"
       (and (exact? (score-from sc)) (exact? (score-to sc))))
     (test-equal "a default score: its settings"
-      (list 'default "Piece" #f #f 0 8 #f '() #f #t 'gong-last #f #f #f
+      (list 'default "Piece" #f #f 0 8 #f '() #f #t 'gong-last 'grid #f #f #f
             "2em" "2em" (list g) #f)
       (list (score-name d) (score-title d) (score-subtitle d)
             (score-caption d) (score-from d) (score-to d)
             (score-system-length d) (score-breaks d)
             (score-cycle-numbers? d) (score-pulse-numbers? d)
-            (score-numbering d) (score-cycle-label d) (score-pulse-label d)
+            (score-numbering d) (score-background d) (score-cycle-label d)
+            (score-pulse-label d)
             (score-font-size d)
             (score-cell-width d) (score-cell-height d) (score-groups d)
             (score-location d)))

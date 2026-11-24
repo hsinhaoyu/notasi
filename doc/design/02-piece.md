@@ -148,6 +148,9 @@ score
   cycle-numbers? : boolean
   pulse-numbers? : boolean
   numbering      : symbol              gong-last | gong-first
+  background     : symbol              **Planned**: the score's own
+                                       `:background`, else grid; the
+                                       header's pulse lines (04)
   cycle-label    : string | #f         "Cycle" unless `:cycle-label`;
                                        #f for ""
   pulse-label    : string | #f         "Pulse" unless `:pulse-label`;

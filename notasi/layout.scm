@@ -272,7 +272,15 @@ which the reader allows on `notes' rows) left out, so it is drawn once."
        (overlays
         . ,(list->vector
             (filter-map (lambda (o) (clip-overlay o (length lanes) from to))
-                        overlays)))))))
+                        overlays)))
+       ;; The lines behind the group's rows (ADRs 0041, 0043).
+       (pulse_lines . ,(pulse-lines? (group-background group)))
+       (row_lines . ,(and (memq (group-background group) '(grid horizontal))
+                          #t))))))
+
+(define (pulse-lines? background)
+  "Does BACKGROUND draw pulse lines?"
+  (and (memq background '(grid vertical)) #t))
 
 ;;; ------------------------------------------------------------------
 ;;; The step (04, "The step")
@@ -371,7 +379,8 @@ pattern names the score prints."
                           'null
                           (null-if-false (score-pulse-label score))))
       (cycles . ,cycles)
-      (pulses . ,pulses))))
+      (pulses . ,pulses)
+      (pulse_lines . ,(pulse-lines? (score-background score))))))
 
 (define (lines meter k start end)
   (list->vector

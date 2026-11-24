@@ -488,7 +488,13 @@ with the examples, golden files and manual pages it affects.
    iteration ends.
 2. `feat/drawing-lines`: `:background` (row lines, pulse lines by
    group, ADR 0041); the frame line (ADR 0044); grey note borders and
-   the lighter stroke grey (ADR 0041).
+   the lighter stroke grey (ADR 0041). Decided for this slice: the stroke grey is
+   `#e6e6e6` (no palette's colour; text near-black), checked by eye; the
+   border's width and grey are the template's, judged by eye. Each
+   group's `pulse_lines` and `row_lines` come after `overlays`, and
+   `header.pulse_lines` after `pulses`. The score record gets
+   `background` (its own `:background`, else `grid`; 02), from which
+   the header's `pulse_lines` comes.
 3. `feat/drawing-rows`: `:keys` and `outside-keys`; `:octave-numbers`;
    `:display`; `:key-numbers` and `:row-labels` (ADR 0047); strokes one
    column wide (ADR 0042).

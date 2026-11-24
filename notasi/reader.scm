@@ -1208,7 +1208,9 @@ cut at the piece's end, on the piece's kempli or a built-in one."
     (holds ,(lambda (v) (memq v '(none dash))) . "none or dash")
     (pattern-names ,(lambda (v) (memq v '(none short long))) . "none, short or long")
     (pattern-level ,(lambda (v) (and (exact-integer? v) (>= v 0))) . "a whole number from 0")
-    (labels ,(lambda (v) (memq v '(long short first-long))) . "long, short or first-long")))
+    (labels ,(lambda (v) (memq v '(long short first-long))) . "long, short or first-long")
+    (background ,(lambda (v) (memq v '(grid vertical horizontal empty)))
+                . "grid, vertical, horizontal or empty")))
 
 (define score-only-options
   `((title ,string? . "a string")
@@ -1276,6 +1278,7 @@ DEFAULT (ADR 0033)."
                 (setting 'palette own score-opts 'pastel1)
                 (map (match-lambda ((degree colour) (cons degree colour)))
                      colors)
+                (setting 'background own score-opts 'grid)
                 location)))
 
 (define (printable-parts parts)
@@ -1524,6 +1527,7 @@ print."
                         (v (eq? v 'yes)))
                       (not (eq? (assq-ref opts 'pulse-numbers) 'no))
                       (or (assq-ref opts 'numbering) 'gong-last)
+                      (or (assq-ref opts 'background) 'grid)
                       (header-label opts 'cycle-label "Cycle")
                       (header-label opts 'pulse-label "Pulse")
                       (assq-ref opts 'font-size)
@@ -1542,13 +1546,13 @@ print."
 (define (default-score parts title length colotomy)
   "A file with no score gets this one: every part in its own group."
   (make-score 'default title #f #f 0 length #f '() (and colotomy #t) #t
-              'gong-last "Cycle" "Pulse" #f "2em" "2em"
+              'gong-last 'grid "Cycle" "Pulse" #f "2em" "2em"
               (map (lambda (part)
                      (let ((name (symbol->string (part-name part))))
                        (make-group name name #f 'first-long 'notes
                                    (list (cons part name))
                                    #f 'colour 'none 'none 0
-                                   'by-degree 'pastel1 '() #f)))
+                                   'by-degree 'pastel1 '() 'grid #f)))
                    parts)
               #f))
 

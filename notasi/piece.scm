@@ -58,7 +58,8 @@ make-source-location source-location?
             make-score score?
             score-name score-title score-subtitle score-caption score-from
             score-to score-system-length score-breaks score-cycle-numbers?
-            score-pulse-numbers? score-numbering score-cycle-label score-pulse-label
+            score-pulse-numbers? score-numbering score-background score-cycle-label
+            score-pulse-label
             score-font-size score-cell-width score-cell-height score-groups
             score-location
 
@@ -66,7 +67,8 @@ make-source-location source-location?
             group-label group-short group-subtitle group-labels group-rows
             group-members group-note-names? group-fill group-holds
             group-pattern-names group-pattern-level group-scheme
-            group-palette group-colors group-location group-parts))
+            group-palette group-colors group-background group-location
+            group-parts))
 
 ;;; Where a record came from, for error messages.  FILE is #f when the
 ;;; source was a string or port; LINE is 1-based.
@@ -191,7 +193,8 @@ make-source-location source-location?
 ;;; options.  LOCATION is #f for the default score.
 (define-record-type <score>
   (make-score name title subtitle caption from to system-length breaks
-              cycle-numbers? pulse-numbers? numbering cycle-label pulse-label
+              cycle-numbers? pulse-numbers? numbering background cycle-label
+              pulse-label
               font-size cell-width cell-height groups location)
   score?
   (name           score-name)
@@ -205,6 +208,7 @@ make-source-location source-location?
   (cycle-numbers? score-cycle-numbers?)
   (pulse-numbers? score-pulse-numbers?)
   (numbering      score-numbering)
+  (background     score-background)
   (cycle-label    score-cycle-label)
   (pulse-label    score-pulse-label)
   (font-size      score-font-size)
@@ -219,7 +223,7 @@ make-source-location source-location?
 (define-record-type <group>
   (make-group label short subtitle labels rows members note-names? fill
               holds pattern-names pattern-level scheme palette colors
-              location)
+              background location)
   group?
   (label         group-label)
   (short         group-short)
@@ -235,6 +239,7 @@ make-source-location source-location?
   (scheme        group-scheme)
   (palette       group-palette)
   (colors        group-colors)
+  (background    group-background)
   (location      group-location))
 
 (define (group-parts group)
