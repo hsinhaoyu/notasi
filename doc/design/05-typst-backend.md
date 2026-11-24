@@ -13,8 +13,9 @@ template), `scripts/notasi` (the command). Contract version 3 (ADR
 0043) with the template's header labels and centred numbers (ADR 0044)
 since iteration 3's `feat/drawing-header`; the frame (ADR 0044), row
 lines, pulse lines by group and grey note borders (ADR 0041) since
-`feat/drawing-lines`. Planned for iteration 3: the key-number column and row labels left out
-(ADR 0047); a sans-serif font for standalone figures (ADR 0045); file
+`feat/drawing-lines`; the key-number column and row labels left out
+(ADR 0047) since `feat/drawing-rows`. Planned for iteration 3: a
+sans-serif font for standalone figures (ADR 0045); file
 names `NAME_SCORE` (ADR 0040).
 
 ## Responsibility
@@ -29,9 +30,9 @@ must work in both places; see "Typst template design", points 6 and 7.
 
 ## JSON contract (version 3)
 
-**Implemented** for the header (ADR 0043, `feat/drawing-header`) and
-the lines (`feat/drawing-lines`); the rest **Planned**, added by
-`feat/drawing-rows`. Version 2
+**Implemented** (ADR 0043): the header (`feat/drawing-header`), the
+lines (`feat/drawing-lines`), and key numbers and one-column strokes
+(`feat/drawing-rows`). Version 2
 below, with these changes (04 lists the keys in order):
 
 - `version` is 3.
@@ -311,8 +312,8 @@ third layer over the notes, since a grid can't overlap its cells:
   event whose `fill` is `null` (`:fill none`) is its text alone, which
   also draws the `"-"` of `:holds dash`.
 
-**Planned** for version 3 (ADRs 0039, 0041, 0043, 0044), changing the
-above:
+**Implemented** for version 3 (ADRs 0039, 0041, 0043, 0044, 0047),
+changing the above:
 
 - **Header labels** (**Implemented**): `cycle_label` at the left of the
   cycle row and `pulse_label` at the left of the pulse row, each in the
@@ -326,7 +327,7 @@ above:
   true, and through a group's rows when its `pulse_lines` is. When a
   group's `row_lines` is true, a thin line (`0.5pt`, `luma(170)`, like
   a pulse line) runs between each two of its rows.
-- **Columns** (ADR 0047): `label_width`, then `key_width` (key
+- **Columns** (**Implemented**, ADR 0047): `label_width`, then `key_width` (key
   numbers), then `lane_width` (row labels), then the grid. A key number
   is right-aligned in its column, the same size as a row label, in a
   lighter grey (`luma(170)`, judged by eye); a group whose

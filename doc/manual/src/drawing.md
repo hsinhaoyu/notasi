@@ -56,7 +56,8 @@ This is what you get:
 - Thin lines run between the rows, and a darker line separates the row
   labels from the music. A score can choose which lines it draws (see
   `:background` in [Scores](scores.md)).
-- **Gongs and drums** are light grey squares. Their row labels say which
+- **Gongs and drums** are light grey squares, one column wide wherever
+  they fall: a stroke marks a moment. Their row labels say which
   stroke each row is.
 - The **kempli** block is added by notasi, one stroke on every pulse
   (see [Gong cycles](gong-cycles.md)).

@@ -46,6 +46,29 @@ own instead.
 | `:cell-width "2em"`, `:cell-height "2em"` | score | The size of a square. |
 | `:background grid` / `vertical` / `horizontal` / `empty` | score or group | The lines behind the notes: pulse lines and lines between rows (`grid`, the default), pulse lines only (`vertical`), lines between rows only (`horizontal`), or neither (`empty`). The lines between groups and at each new cycle are always drawn. |
 
+## Which rows, and their labels
+
+By default a group has a row for each key it plays. A score can show
+every key of the instrument instead, number the keys, and choose how
+the rows are labelled:
+
+```scheme
+{{#include examples/scores-keys.nts}}
+```
+
+![Every key of the ugal, numbered](figures/scores-keys.svg)
+
+| Setting | Where | What it does |
+|---|---|---|
+| `:keys used` / `all` / `(LOW HIGH)` | score or group | The rows: the keys played (the default), every key of the instrument, or the keys from LOW up to HIGH, written as in a part (`(a1 u2)` or `(4 8)`). Gongs and drums take `used` or `all`. |
+| `:key-numbers yes` / `no` | score or group | A column of key numbers to the left of the row labels, counted from the lowest key: on the ugal, `a1` is key 4. Only for pitched instruments. `no` unless you say. |
+| `:octave-numbers yes` / `no` | score or group | `no` labels the rows `a`, `i`, … instead of `a1`, `i2`, …. |
+| `:row-labels yes` / `no` | score or group | `no` leaves the row labels out. |
+| `:display ((GL "G") …)` | score or group | Show these strokes another way in this score, in their row labels and names: here both gongs as "G", as Tenzer writes them. |
+
+With `:keys (LOW HIGH)`, every note the group plays must be among the
+keys shown.
+
 ## Rows of names
 
 A score can also print music the way it is sung, with names instead of
@@ -124,6 +147,9 @@ don't overwrite each other.
   both. To compare the ugal and the reyong, give each a group.
 - A part can be in only one group of a score.
 - Every part a group names must exist.
+- With `:keys (LOW HIGH)`, a group can't play a note outside that range.
+  `:keys` and `:key-numbers` choose rows of keys, so they don't go on a
+  group with `:rows parts` or `:rows single`.
 - When parts share a group's rows, two of them can play the same key at
   once only by striking it together, for the same length (a unison,
   drawn once).

@@ -339,6 +339,20 @@ sangsih's figures start a pulse later than polos's. Give them groups of
 their own, or choose another `:pattern-level` (see
 [Patterns](patterns.md#printing-pattern-names)).
 
+### A note outside the keys shown
+
+```scheme
+{{#include mistakes/outside-keys.nts}}
+```
+
+```text
+{{#include mistakes/outside-keys.txt}}
+```
+
+The group shows only the keys from `i2` to `e2`, but the ugal plays
+`a1`. Widen the range, or use `:keys used` or `:keys all` (see
+[Scores](scores.md#which-rows-and-their-labels)).
+
 ### A pattern that doesn't exist
 
 ```scheme
