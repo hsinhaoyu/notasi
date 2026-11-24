@@ -1825,10 +1825,16 @@ so a file with several problems always reports the same one."
                     (if (null? forms)
                         (list (default-score printable (car piece) length
                                              colotomy))
-                        (map (lambda (form)
-                               (build-score form printable (car piece)
-                                            length colotomy pickup))
-                             forms)))))))
+                        ;; With the meter set, so that errors found in a
+                        ;; score give cycle and pulse, like the others.
+                        (parameterize ((current-meter
+                                        (and colotomy
+                                             (cons (colotomy-length colotomy)
+                                                   pickup))))
+                          (map (lambda (form)
+                                 (build-score form printable (car piece)
+                                              length colotomy pickup))
+                               forms))))))))
 
 (define (read-port port dir chain)
   (read-piece (read-forms port) dir chain))
