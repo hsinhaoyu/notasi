@@ -1795,6 +1795,93 @@ prints no warning.  Typst's output is shown when either fails."
 }
 ")
 
+;;; Slice feat/drawing-rows (05, "JSON contract (version 3)" and the
+;;; template's Planned "Columns" bullet; 04, the keys table; ADRs 0042,
+;;; 0047): two hand-written figures with this slice's keys, each
+;;; group's `key_numbers` after `lanes` and `sizes.key_width` after
+;;; `label_width`.  The first has two systems, a group with key numbers
+;;; (two digits among them) and its row labels, a group with key numbers
+;;; and every lane "" (`:row-labels no`), a stroke group with
+;;; `key_numbers` null and one-column strokes, and a `parts` group with
+;;; null; `key_width` "2.0em".  The second has `key_width` and
+;;; `lane_width` both "0.0em": no key numbers and no row labels in any
+;;; group, so the group label sits next to the grid.  Only compiling
+;;; without a warning is tested; the columns are checked by eye (make
+;;; preview).
+
+(define (rows3-event start dur lane text fill)
+  (string-append
+   "{ \"start\": " (number->string start) ", \"dur\": " (number->string dur)
+   ", \"lane\": " (number->string lane) ", \"text\": " text
+   ", \"fill\": " fill ", \"text_color\": \"#222222\", \"continued\": false }"))
+
+(define (rows3-group label lanes key-numbers voices)
+  (string-append
+   "{ \"label\": \"" label "\", \"subtitle\": null, \"lanes\": " lanes
+   ", \"key_numbers\": " key-numbers ", \"voices\": " voices
+   ", \"overlays\": [], \"pulse_lines\": true, \"row_lines\": true }"))
+
+(define (rows3-system start groups)
+  (string-append
+   "{ \"start\": " (number->string start) ", \"steps\": 4,"
+   " \"header\": { \"cycle_label\": null, \"pulse_label\": \"Pulse\","
+   " \"cycles\": null, \"pulses\": [\"1\", \"2\", \"3\", \"4\"],"
+   " \"pulse_lines\": true },"
+   " \"lines\": [\"none\", \"pulse\", \"pulse\", \"pulse\"],"
+   " \"groups\": [" (string-join groups ", ") "] }"))
+
+(define (rows3-figure key-width lane-width systems)
+  (string-append
+   "{ \"version\": 3, \"title\": \"Rows\", \"subtitle\": null,"
+   " \"steps_per_pulse\": 1,"
+   " \"sizes\": { \"font_size\": null, \"label_width\": \"4.5em\","
+   " \"key_width\": \"" key-width "\", \"lane_width\": \"" lane-width "\","
+   " \"cell_width\": \"2em\", \"cell_height\": \"2em\" },"
+   " \"systems\": [" (string-join systems ", ") "], \"caption\": null }\n"))
+
+(define (rows3-groups)
+  (list
+   (rows3-group "Ugal" "[\"i3\", \"a2\", \"u1\"]" "[\"10\", \"9\", \"3\"]"
+                (string-append
+                 "[{ \"name\": \"m\", \"events\": ["
+                 (rows3-event 0 2 2 "\"u\"" "\"#decbe4\"") ", "
+                 (rows3-event 2 1 0 "\"i\"" "\"#fbb4ae\"") "] }]"))
+   (rows3-group "Gangsa" "[\"\", \"\"]" "[\"5\", \"4\"]"
+                (string-append
+                 "[{ \"name\": \"g\", \"events\": ["
+                 (rows3-event 1 1 1 "null" "\"#fed9a6\"") ", "
+                 (rows3-event 3 1 0 "null" "\"#fbb4ae\"") "] }]"))
+   (rows3-group "Gong" "[\"Gong\", \"P\"]" "null"
+                (string-append
+                 "[{ \"name\": \"gong\", \"events\": ["
+                 (rows3-event 0 1 1 "\"P\"" "\"#e6e6e6\"") ", "
+                 (rows3-event 2 1 0 "\"Gong\"" "\"#e6e6e6\"") "] }]"))
+   (rows3-group "Parts" "[\"polos\", \"sangsih\"]" "null"
+                (string-append
+                 "[{ \"name\": \"polos\", \"events\": ["
+                 (rows3-event 0 1 0 "\"i\"" "null") "] },"
+                 " { \"name\": \"sangsih\", \"events\": [] }]"))))
+
+(define v3-rows
+  (rows3-figure "2.0em" "3.6em"
+                (list (rows3-system 0 (rows3-groups))
+                      (rows3-system 4 (rows3-groups)))))
+
+(define v3-rows-off
+  (rows3-figure "0.0em" "0.0em"
+                (list (rows3-system
+                       0
+                       (list
+                        (rows3-group "Ugal" "[\"\", \"\", \"\"]" "null"
+                                     (string-append
+                                      "[{ \"name\": \"m\", \"events\": ["
+                                      (rows3-event 0 4 2 "null" "\"#decbe4\"") "] }]"))
+                        (rows3-group "Gong" "[\"\"]" "null"
+                                     (string-append
+                                      "[{ \"name\": \"gong\", \"events\": ["
+                                      (rows3-event 3 1 0 "null" "\"#e6e6e6\"")
+                                      "] }]")))))))
+
 ;;; The tests.
 
 (test-begin "template")
@@ -1832,7 +1919,11 @@ prints no warning.  Typst's output is shown when either fails."
       (check-figure "version 3: pulse and row lines by group, strokes #e6e6e6"
                     "v3-lines.json" v3-lines)
       (check-figure "version 3: every line flag off, a one-row group with both on"
-                    "v3-lines-off.json" v3-lines-off))
+                    "v3-lines-off.json" v3-lines-off)
+      (check-figure "version 3: key numbers, row labels left out, one-column strokes"
+                    "v3-rows.json" v3-rows)
+      (check-figure "version 3: key_width and lane_width both 0.0em"
+                    "v3-rows-off.json" v3-rows-off))
     (test-assert "typst is installed (CI installs 0.15.1)" #f))
 
 (define runner (test-runner-current))

@@ -6,8 +6,10 @@ and step 12 with milestone 2 (`feat/scores`, 04 "Slices (iteration
 2)"). No form or option raises `not-implemented` any more; the kind is
 kept for later iterations. Tests in `tests/reader.scm`. The **[parts]**
 cases (ADR 0038) since iteration 3's `feat/syntax`, tests in
-`tests/syntax.scm`. Planned for iteration 3: the **[score-options]**
-cases below (ADRs 0039–0041), and the new settings in step 12.
+`tests/syntax.scm`. The **[score-options]** cases and step 12's new
+settings since `feat/drawing-header`, `feat/drawing-lines` and
+`feat/drawing-rows`, except a score name with `_`, planned for
+`feat/drawing-output`.
 
 Everything in this document is **Implemented** unless it says
 otherwise. Since slices 1 and 2: steps 1, 2, 3 to 7, step 9 for
@@ -177,7 +179,7 @@ Finding templates (**Implemented**):
     default (ADR 0033), and turn the positions in `:from`, `:to` and
     `:breaks` into times. A file with no score gets the default score:
     every part in its own group, in part order, labelled with its name,
-    location `#f`. **Planned** (iteration 3): the settings `keys`,
+    location `#f`. Iteration 3 adds the settings `keys`,
     `octave-numbers?`, `key-numbers?`, `row-labels?`, `display`,
     `background`, `cycle-label` and the
     `"Pulse"` default (02), checked as they are filled in; then, with
@@ -281,7 +283,8 @@ keep their meaning, **[syntax]** (the `:key value` forms, `part`,
 degrees), **[durations]**, **[rep]**, **[colotomy]**, **[patterns]** and
 **[scores]**; iteration 3 adds **[parts]** (the forms of ADR 0038,
 **Implemented**) and **[score-options]** (the score options of ADRs
-0039–0041, `:keys` and `:display`, **Planned**). Each case is followed by its `kind`.
+0039–0041, `:keys` and `:display`, **Implemented**, except the `_` in
+a score name, **Planned**). Each case is followed by its `kind`.
 
 ### Files and forms
 

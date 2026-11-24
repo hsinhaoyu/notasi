@@ -6828,6 +6828,444 @@ colotomy, 4 pulses."
   (test-equal "duplicate-option on a group: :background" '(duplicate-option 15)
     (string-error (one-group "(group \"U\" :background grid :background grid ugal)"))))
 
+;;; ==================================================================
+;;; [score-options] :keys, :octave-numbers, :key-numbers, :row-labels
+;;; and :display (iteration 3, milestone 2, slice feat/drawing-rows)
+;;; ==================================================================
+;;;
+;;; 04, "Slices (iteration 3)" slice 3 and its decided bullets; 01, the
+;;; options and their rules; 02, the group's `keys`, `octave-numbers?`,
+;;; `key-numbers?`, `row-labels?` and `display`, invariant 10; 03,
+;;; [score-options] and step 12; ADR 0047. Each option is read on a
+;;; score and on a group; a group's setting is its own, else the
+;;; score's, else the default: `used`, yes, no, yes, none (ADR 0033).
+;;; `keys` is `used`, `all`, or (LOW . HIGH), two note records of the
+;;; group's instrument; LOW and HIGH are written as in a part (a name,
+;;; an alias, or a key number). A range on a score applies to its
+;;; pitched `notes` groups, each of which must have LOW and HIGH among
+;;; its keys (else `bad-option` at the score's line); stroke, `parts`
+;;; and `single` groups ignore an inherited `:keys` and keep `used`
+;;; (stroke groups keep an inherited `all`), while a range written on a
+;;; stroke group, or any `:keys` written on a `parts` or `single` group,
+;;; is `bad-option`. `:key-numbers yes` likewise: written on a stroke,
+;;; `parts` or `single` group it is `bad-option`, inherited it is
+;;; ignored (#f). A note played in the score's range outside a group's
+;;; range is `outside-keys`, at the group's line, with its part and time.
+;;; Choices made where the docs are not explicit:
+;;; - Accessors follow 02's field names: `group-keys`,
+;;;   `group-octave-numbers?`, `group-key-numbers?`, `group-row-labels?`,
+;;;   `group-display`. `display` is a list of (STROKE . STRING) pairs in
+;;;   the order written.
+;;; - A group's own `:display` replaces the score's (own, else the
+;;;   score's, ADR 0033); the two are not merged. Only stroke groups'
+;;;   `display` is tested when it comes from the score: whether a
+;;;   pitched group keeps the score's list is not pinned.
+;;; - `:keys used`, written on a `parts` or `single` group, is an error
+;;;   too: 01 and 03 say ":keys written" there is one, whatever the
+;;;   value.
+;;; - LOW and HIGH may be written differently (`(1 i2)`), as tokens of
+;;;   a part may; LOW equal to HIGH is a range of one key ("LOW not
+;;;   above HIGH").
+;;; - A stroke group keeps an inherited `:keys all` (04: "`all` is ...
+;;;   every stroke of each stroke instrument"); only a range is ignored.
+;;; - The yes/no values are the symbols `yes` and `no`; anything else
+;;;   (`#t`, "no", `Yes`, a list, a number) is `bad-option`.
+;;; - `outside-keys` reports the earliest note outside the range, in
+;;;   time; the tests have only one part outside at that time. A note
+;;;   held into the score's range from before it is not tested. The
+;;;   message is tested only for the note and the range, with a scale
+;;;   without aliases, so the names in it are unambiguous.
+
+(define (keys-shown g)
+  "G's `keys`: the symbol, or (LOW HIGH) as note names."
+  (match (group-keys g)
+    ((low . high) (list (note-name low) (note-name high)))
+    (k k)))
+
+(define (rows3-settings g)
+  "G's settings of this slice: (KEYS OCTAVE-NUMBERS? KEY-NUMBERS?
+ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
+  (list (keys-shown g) (group-octave-numbers? g) (group-key-numbers? g)
+        (group-row-labels? g) (group-display g)))
+
+(define default-rows3 '(used #t #f #t ()))
+
+(define (score-rows3 pc name)
+  (map rows3-settings (score-groups (score-named pc name))))
+
+(define (score-keys pc name)
+  (map keys-shown (score-groups (score-named pc name))))
+
+(define (score-field pc name accessor)
+  (map accessor (score-groups (score-named pc name))))
+
+(test-group "[score-options] the defaults"
+  (let ((pc (read-scores+)))
+    (test-equal "the default score: used, yes, no, yes, none"
+      (and pc (map (const default-rows3) (score-groups (score-named pc 'default))))
+      (and pc (score-rows3 pc 'default))))
+  (let ((pc (read-scores+ "(score s (group \"U\" ugal)"
+                          "  (group \"R\" polos sangsih) (group \"G\" gong))")))
+    (test-equal "a score without these options"
+      (list default-rows3 default-rows3 default-rows3)
+      (and pc (score-rows3 pc 's))))
+  (let ((pc (read-scores+ "(score s :note-names yes"
+                          "  (group \"P\" :rows parts polos)"
+                          "  (group \"S\" :rows single sangsih))")))
+    (test-equal "parts and single rows: the same defaults"
+      (list default-rows3 default-rows3)
+      (and pc (score-rows3 pc 's))))
+  (let ((pc (read-scores+ "(score s :keys all :octave-numbers no :row-labels no"
+                          "  :display ((G \"Gong\")) (group \"G\" gong))")))
+    (test-equal "these options change no other setting"
+      (list (default-group-settings "G"))
+      (and pc (map group-settings (score-groups (score-named pc 's)))))))
+
+(test-group "[score-options] :keys: reading"
+  (let ((pc (read-scores+ "(score s (group \"U\" :keys all ugal)"
+                          "  (group \"G\" :keys all gong))")))
+    (test-equal "all on a pitched and a stroke group" '(all all)
+      (and pc (score-keys pc 's))))
+  (let ((pc (read-scores+ "(score s (group \"U\" :keys used ugal))")))
+    (test-equal "used written" '(used) (and pc (score-keys pc 's))))
+  (let ((pc (read-scores+ "(score s :keys all (group \"U\" ugal) (group \"G\" gong)"
+                          "  (group \"R\" :rows parts :note-names yes polos sangsih))")))
+    (test-equal "all on a score: notes groups take it, a parts group keeps used"
+      '(all all used)
+      (and pc (score-keys pc 's))))
+  ;; ugal: 1 dong1 2 deng1 3 dung1 4 dang1 5 ding2 6 dong2; it plays 1 2 3 4.
+  (for-each
+   (match-lambda
+     ((written expected)
+      (let ((pc (read-scores+ (string-append "(score s (group \"U\" :keys "
+                                             written " ugal))"))))
+        (test-equal (string-append "a range on a group: " written)
+          (list expected)
+          (and pc (score-keys pc 's))))))
+   '(("(o1 a1)" (dong1 dang1))
+     ("(dong1 dang1)" (dong1 dang1))
+     ("(1 4)" (dong1 dang1))
+     ("(o1 o2)" (dong1 dong2))
+     ("(1 6)" (dong1 dong2))
+     ("(o1 nding2)" (dong1 ding2))
+     ("(dong1 i2)" (dong1 ding2))
+     ("(1 i2)" (dong1 ding2))))
+  (let ((pc (read-scores+ "(part :instrument reyong :name one 2 2 - 2)"      ; 14
+                          "(score s (group \"O\" :keys (u1 u1) one))")))
+    (test-equal "LOW equal to HIGH: one key" '((dung1 dung1))
+      (and pc (score-keys pc 's))))
+  (let ((pc (read-scores+ "(score s (group \"U\" :keys (o1 a1) ugal))")))
+    (test-assert "LOW and HIGH are the instrument's note records"
+      (and pc (let ((g (car (score-groups (score-named pc 's))))
+                    (notes (vector->list (instrument-notes
+                                          (part-instrument (part-named pc 'ugal))))))
+                (and (memq (car (group-keys g)) notes)
+                     (memq (cdr (group-keys g)) notes)
+                     #t)))))
+  ;; reyong: 1 deng1 2 dung1 3 dang1 4 ding2 ...; polos and sangsih play 1-4.
+  (let ((pc (read-scores+ "(score s :keys (1 4) (group \"U\" ugal)"
+                          "  (group \"R\" polos sangsih) (group \"G\" gong))")))
+    (test-equal "key numbers on a score: each group's own keys; strokes keep used"
+      '((dong1 dang1) (deng1 ding2) used)
+      (and pc (score-keys pc 's))))
+  (let ((pc (read-scores+ "(score s :keys (e1 i2) (group \"R\" polos sangsih)"
+                          "  (group \"G\" gong)"
+                          "  (group \"P\" :rows parts :note-names yes ugal))")))
+    (test-equal "names on a score: parts and stroke groups keep used"
+      '((deng1 ding2) used used)
+      (and pc (score-keys pc 's))))
+  (let ((pc (read-scores+ "(score s :keys (o1 a1) :note-names yes (group \"U\" ugal)"
+                          "  (group \"R\" :rows single polos))")))
+    (test-equal "a single group without LOW among its keys ignores the score's range"
+      '((dong1 dang1) used)
+      (and pc (score-keys pc 's))))
+  (let ((pc (read-scores+ "(score s :keys (1 4) (group \"U\" :keys all ugal)"
+                          "  (group \"R\" :keys used polos sangsih))")))
+    (test-equal "a group's own :keys overrides the score's range" '(all used)
+      (and pc (score-keys pc 's))))
+  (let ((pc (read-scores+ "(score s :keys all (group \"U\" :keys (o1 a1) ugal)"
+                          "  (group \"G\" gong))")))
+    (test-equal "a group's own range overrides the score's all"
+      '((dong1 dang1) all)
+      (and pc (score-keys pc 's))))
+  (let ((pc (read-scores+ "(score one :keys all (group \"U\" ugal))"
+                          "(score two (group \"U\" ugal))")))
+    (test-equal "each score its own" '((all) (used))
+      (and pc (list (score-keys pc 'one) (score-keys pc 'two))))))
+
+(test-group "[score-options] :keys: errors"
+  (for-each
+   (match-lambda
+     ((name value)
+      (test-equal (string-append "on a group: " name) '(bad-option 15)
+        (string-error
+         (one-group (string-append "(group \"U\" :keys " value " ugal)"))))
+      (test-equal (string-append "on a score: " name) '(bad-option 14)
+        (score-error (string-append "(score s :keys " value " (group \"U\" ugal))")))))
+   (list
+    (list "not a choice: none" "none")
+    (list "yes" "yes")
+    (list "a string" "\"all\"")
+    (list "a number" "3")
+    (list "a list of one" "(all)")
+    (list "one key" "(o1)")
+    (list "three keys" "(o1 a1 i2)")
+    (list "an empty list" "()")
+    (list "an unknown note" "(x1 a1)")
+    (list "a note of the scale, not a key of the instrument" "(o1 a2)")
+    (list "LOW above HIGH" "(a1 o1)")
+    (list "key numbers, LOW above HIGH" "(4 1)")
+    (list "key number 0" "(0 4)")
+    (list "a key number past the last key" "(1 7)")
+    (list "a chord" "((o1 e1) a1)")
+    (list "a rest" "(- a1)")))
+  (test-equal "an option error: no part, no time" '(bad-option 15 #f #f)
+    (error-fields (one-group "(group \"U\" :keys (a1 o1) ugal)")))
+  (test-equal "a score's range without LOW on one of its groups: the score's line"
+    '(bad-option 14)
+    (score-error "(score s :keys (o1 a1)"        ; reyong has no o1
+                 "  (group \"U\" ugal)"
+                 "  (group \"R\" polos sangsih))"))
+  (test-equal "a score's key numbers past one group's last key: the score's line"
+    '(bad-option 14)
+    (score-error "(score s :keys (1 7)"           ; reyong has 8 keys, ugal 6
+                 "  (group \"R\" polos sangsih)"
+                 "  (group \"U\" ugal))"))
+  (test-equal "a range on a stroke group, by name" '(bad-option 15)
+    (string-error (one-group "(group \"G\" :keys (G P) gong)")))
+  (test-equal "a range on a stroke group, by key number" '(bad-option 15)
+    (string-error (one-group "(group \"G\" :keys (1 2) gong)")))
+  (test-equal ":keys all on a parts group" '(bad-option 15)
+    (string-error
+     (one-group "(group \"R\" :rows parts :note-names yes :keys all polos sangsih)")))
+  (test-equal ":keys used on a parts group" '(bad-option 15)
+    (string-error
+     (one-group "(group \"R\" :rows parts :note-names yes :keys used polos sangsih)")))
+  (test-equal "a range on a single group" '(bad-option 15)
+    (string-error
+     (one-group "(group \"R\" :rows single :note-names yes :keys (e1 i2) polos)")))
+  (test-equal ":keys on a group whose :rows parts comes from the score"
+    '(bad-option 15)
+    (score-error "(score s :rows parts :note-names yes"
+                 "  (group \"U\" :keys all ugal))"))
+  (test-equal "on a later group, at that group's line" '(bad-option 16)
+    (score-error "(score s" "  (group \"U\" ugal)"
+                 "  (group \"G\" :keys (G P) gong))"))
+  (test-equal "duplicate-option: :keys on a score" '(duplicate-option 14)
+    (score-error "(score s :keys all :keys used (group \"U\" ugal))"))
+  (test-equal "duplicate-option: :keys on a group" '(duplicate-option 15)
+    (string-error (one-group "(group \"U\" :keys all :keys all ugal)"))))
+
+(test-group "[score-options] :octave-numbers, :key-numbers, :row-labels: reading"
+  (let ((pc (read-scores+ "(score s :octave-numbers no (group \"U\" ugal)"
+                          "  (group \"R\" :octave-numbers yes polos sangsih)"
+                          "  (group \"G\" gong))")))
+    (test-equal ":octave-numbers: the score's, a group's own" '(#f #t #f)
+      (and pc (score-field pc 's group-octave-numbers?))))
+  (let ((pc (read-scores+ "(score s (group \"U\" :octave-numbers no ugal)"
+                          "  (group \"G\" :octave-numbers no gong))")))
+    (test-equal ":octave-numbers no on a group, strokes too" '(#f #f)
+      (and pc (score-field pc 's group-octave-numbers?))))
+  (let ((pc (read-scores+ "(score s :row-labels no :note-names yes (group \"U\" ugal)"
+                          "  (group \"P\" :rows parts polos)"
+                          "  (group \"S\" :rows single sangsih)"
+                          "  (group \"G\" :row-labels yes gong))")))
+    (test-equal ":row-labels: the score's on every kind of rows, a group's own"
+      '(#f #f #f #t)
+      (and pc (score-field pc 's group-row-labels?))))
+  (let ((pc (read-scores+ "(score s (group \"U\" :key-numbers yes ugal)"
+                          "  (group \"R\" polos sangsih) (group \"G\" gong))")))
+    (test-equal ":key-numbers yes on a group" '(#t #f #f)
+      (and pc (score-field pc 's group-key-numbers?))))
+  (let ((pc (read-scores+ "(score s :key-numbers yes (group \"U\" ugal)"
+                          "  (group \"G\" gong)"
+                          "  (group \"S\" :rows single :note-names yes polos)"
+                          "  (group \"P\" :rows parts :note-names yes sangsih))")))
+    (test-equal ":key-numbers yes on a score: ignored by strokes, parts and single"
+      '(#t #f #f #f)
+      (and pc (score-field pc 's group-key-numbers?))))
+  (let ((pc (read-scores+ "(score s :key-numbers yes (group \"U\" :key-numbers no ugal)"
+                          "  (group \"R\" polos sangsih))")))
+    (test-equal ":key-numbers no on a group overrides the score's" '(#f #t)
+      (and pc (score-field pc 's group-key-numbers?))))
+  (test-assert ":key-numbers no written on a stroke group reads"
+    (piece? (read-scores+ "(score s (group \"G\" :key-numbers no gong))")))
+  (test-assert ":key-numbers no written on a parts group reads"
+    (piece? (read-scores+ "(score s (group \"P\" :rows parts :note-names yes"
+                          "  :key-numbers no polos))"))))
+
+(test-group "[score-options] :octave-numbers, :key-numbers, :row-labels: errors"
+  (for-each
+   (lambda (option)
+     (for-each
+      (match-lambda
+        ((name value)
+         (test-equal (string-append option " on a score: " name) '(bad-option 14)
+           (score-error (string-append "(score s " option " " value
+                                       " (group \"U\" ugal))")))
+         (test-equal (string-append option " on a group: " name) '(bad-option 15)
+           (string-error
+            (one-group (string-append "(group \"U\" " option " " value " ugal)"))))))
+      (list (list "maybe" "maybe")
+            (list "#t" "#t")
+            (list "a string" "\"no\"")
+            (list "a number" "1")
+            (list "a list" "(yes)")
+            (list "capitalised" "Yes")))
+     (test-equal (string-append "duplicate-option: " option) '(duplicate-option 15)
+       (string-error
+        (one-group (string-append "(group \"U\" " option " yes " option " no ugal)")))))
+   '(":octave-numbers" ":key-numbers" ":row-labels"))
+  (test-equal ":key-numbers yes written on a stroke group" '(bad-option 15)
+    (string-error (one-group "(group \"G\" :key-numbers yes gong)")))
+  (test-equal ":key-numbers yes written on a parts group" '(bad-option 15)
+    (string-error
+     (one-group "(group \"P\" :rows parts :note-names yes :key-numbers yes polos)")))
+  (test-equal ":key-numbers yes written on a single group" '(bad-option 15)
+    (string-error
+     (one-group "(group \"S\" :rows single :note-names yes :key-numbers yes polos)")))
+  (test-equal ":key-numbers yes on a group whose :rows parts comes from the score"
+    '(bad-option 15)
+    (score-error "(score s :rows parts :note-names yes"
+                 "  (group \"U\" :key-numbers yes ugal))")))
+
+(test-group "[score-options] :display: reading"
+  (let ((pc (read-scores+ "(score s (group \"G\" :display ((G \"Gong\")) gong))")))
+    (test-equal "on a group: (STROKE . STRING)" '(((G . "Gong")))
+      (and pc (score-field pc 's group-display))))
+  (let ((pc (read-scores+ "(score s (group \"G\" :display ((P \"Kempur\") (G \"Gong\")) gong))")))
+    (test-equal "several, in the order written" '(((P . "Kempur") (G . "Gong")))
+      (and pc (score-field pc 's group-display))))
+  (let ((pc (read-scores+ "(score s (group \"G\" :display ((G \"●\")) gong))")))
+    (test-equal "any text" '(((G . "●")))
+      (and pc (score-field pc 's group-display))))
+  (let ((pc (read-scores+ "(score s :display ((P \"Kempur\")) (group \"U\" ugal)"
+                          "  (group \"G\" gong))")))
+    (test-equal "on a score: the stroke group takes it" '((P . "Kempur"))
+      (and pc (group-display (cadr (score-groups (score-named pc 's)))))))
+  (let ((pc (read-scores+ "(score s :display ((P \"Kempur\"))"
+                          "  (group \"G\" :display ((G \"Gong\")) gong))")))
+    (test-equal "a group's own replaces the score's" '(((G . "Gong")))
+      (and pc (score-field pc 's group-display))))
+  (let ((pc (read-scores+ "(score s :display ((K \"k\")) (group \"G\" gong)"
+                          "  (group \"K\" kempli))")))
+    (test-equal "on a score: a stroke of any of its groups" '((K . "k"))
+      (and pc (group-display (cadr (score-groups (score-named pc 's)))))))
+  (let ((pc (read-scores+ "(score s :note-names yes"
+                          "  (group \"G\" :rows single :display ((G \"Gong\")) gong))")))
+    (test-equal "on a single row" '(((G . "Gong")))
+      (and pc (score-field pc 's group-display)))))
+
+(test-group "[score-options] :display: errors"
+  (for-each
+   (match-lambda
+     ((name value)
+      (test-equal (string-append "on a group: " name) '(bad-option 15)
+        (string-error
+         (one-group (string-append "(group \"G\" :display " value " gong)"))))
+      (test-equal (string-append "on a score: " name) '(bad-option 14)
+        (score-error (string-append "(score s :display " value " (group \"G\" gong))")))))
+   (list
+    (list "a symbol" "G")
+    (list "a string" "\"G\"")
+    (list "one pair, not in a list" "(G \"Gong\")")
+    (list "a stroke without a form" "((G))")
+    (list "a form that is a symbol" "((G Gong))")
+    (list "two forms" "((G \"a\" \"b\"))")
+    (list "a stroke written as a string" "((\"G\" \"Gong\"))")
+    (list "a stroke that is a list" "(((G) \"Gong\"))")
+    (list "a stroke of an instrument not in the group" "((K \"k\"))")
+    (list "a degree, not a stroke" "((ding \"x\"))")
+    (list "an unknown stroke" "((X \"x\"))")))
+  (test-equal "a stroke on a pitched group" '(bad-option 15)
+    (string-error (one-group "(group \"U\" :display ((G \"Gong\")) ugal)")))
+  (test-equal "a score's stroke in none of its groups" '(bad-option 14)
+    (score-error "(score s :display ((K \"k\"))"
+                 "  (group \"U\" ugal) (group \"G\" gong))"))
+  (test-equal "duplicate-option: :display" '(duplicate-option 15)
+    (string-error
+     (one-group "(group \"G\" :display ((G \"a\")) :display ((P \"b\")) gong)"))))
+
+(test-group "[score-options] outside-keys"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (apply collide-error more))))
+   (list
+    ;; ugal plays o1 e1 u1 a1, one a pulse.
+    (list "a note below LOW" '(outside-keys 15 ugal 0)
+          "(score s" "  (group \"U\" :keys (e1 a1) ugal))")
+    (list "a note above HIGH" '(outside-keys 15 ugal 3)
+          "(score s" "  (group \"U\" :keys (o1 u1) ugal))")
+    (list "a range by key numbers" '(outside-keys 15 ugal 0)
+          "(score s" "  (group \"U\" :keys (2 4) ugal))")
+    (list "the earliest note outside, in the first part" '(outside-keys 15 polos 0)
+          "(score s" "  (group \"R\" :keys (u1 i2) polos sangsih))")
+    (list "a later part of the group" '(outside-keys 16 hi 3)
+          "(part :instrument reyong :name hi 1 2 3 8)"           ; 14
+          "(score s" "  (group \"R\" :keys (e1 i2) polos hi))")  ; 15, 16
+    (list "a range from the score: the group's line" '(outside-keys 16 ugal 0)
+          "(score s :keys (e1 i2)"                               ; 14
+          "  (group \"R\" polos sangsih)"                        ; 15
+          "  (group \"U\" ugal))")                               ; 16
+    (list "half pulses: the note's time" '(outside-keys 16 h 3/2)
+          "(part :instrument reyong :name h 2:1/2 2 2 1 2 2 2 2)"
+          "(score s" "  (group \"R\" :keys (u1 i2) h))")
+    (list "a note of a chord" '(outside-keys 16 c 2)
+          "(part :instrument reyong :name c (2 3) - (1 4) -)"
+          "(score s" "  (group \"R\" :keys (u1 i2) c))")
+    (list "a note in the score's range, at its end" '(outside-keys 15 ugal 3)
+          "(score s :to 4" "  (group \"U\" :keys (o1 u1) ugal))")))
+  (for-each
+   (match-lambda
+     ((name . more)
+      (test-assert name (piece? (apply read-scores+ more)))))
+   (list
+    (list "a note before the score's range is not checked"
+          "(score s :from 2 (group \"U\" :keys (e1 a1) ugal))")
+    (list "a note after the score's range is not checked"
+          "(score s :to 3 (group \"U\" :keys (o1 u1) ugal))")
+    (list "every note within the range"
+          "(score s (group \"U\" :keys (o1 a1) ugal))")
+    (list ":keys all" "(score s (group \"U\" :keys all ugal))")
+    (list ":keys used" "(score s (group \"U\" :keys used ugal))")
+    (list "a score's range ignored by a parts group"
+          "(score s :keys (e1 a1) :note-names yes"
+          "  (group \"U\" :rows parts ugal))")))
+  (let ((c (catch-syntax-error
+            (lambda ()
+              (read-piece-string
+               (lines "(piece \"K\")"
+                      "(scale sl ding dong deng dung dang)"
+                      "(instrument ugal sl dong1 deng1 dung1 dang1 ding2 dong2)"
+                      "(part :instrument ugal deng1 dong1 ding2 deng1)"
+                      "(score s (group \"U\" :keys (deng1 ding2) ugal))"))))))
+    (test-equal "the fields" '(outside-keys 5 ugal 1)
+      (if (notasi-syntax-error? c)
+          (list (notasi-syntax-error-kind c) (notasi-syntax-error-line c)
+                (notasi-syntax-error-part c) (notasi-syntax-error-time c))
+          c))
+    (test-assert "the message names the part"
+      (and (exception-with-message? c)
+           (string-contains (exception-message c) "part `ugal'")))
+    (test-assert "the message names the note"
+      (and (exception-with-message? c)
+           (string-contains (exception-message c) "`dong1'")))
+    (test-assert "the message names the range"
+      (and (exception-with-message? c)
+           (string-contains (exception-message c)
+                            "outside the keys shown, `deng1' to `ding2' (:keys)")))))
+
+(test-group "[score-options] check order: keys"
+  ;; The group is on the score's line (14).
+  (test-equal "a group's :keys before its members" '(bad-option 14)
+    (score-error "(score s (group \"U\" :keys none nosuch))"))
+  (test-equal "a later group's options before outside-keys" '(bad-option 16)
+    (score-error "(score s" "  (group \"U\" :keys (e1 a1) ugal)"
+                 "  (group \"G\" :keys (G P) gong))"))
+  (test-equal "a score's :keys before its groups" '(bad-option 14)
+    (score-error "(score s :keys none (group \"U\" nosuch))")))
+
 (define runner (test-runner-current))
 (test-end "reader")
 

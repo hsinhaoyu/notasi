@@ -1,0 +1,10 @@
+(piece "Gilak on the whole ugal" :colotomy gilak :pickup 1)
+
+(use gong-kebyar)
+
+(part :instrument ugal  a1 || o2 i2 e2 o2 | a1 o2 i2 a1 ||)
+
+;; Every key of the ugal, numbered, with the names alone.
+(score keys :keys all :key-numbers yes :octave-numbers no
+  (group "Ugal" ugal)
+  (group "Gong" :display ((GL "G")) gong))

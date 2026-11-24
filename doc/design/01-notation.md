@@ -9,9 +9,9 @@ inside a colotomy (ADR 0038), and `gilak` and `bapang` in the
 `gong-kebyar` template (ADR 0046) since iteration 3's `feat/syntax`.
 Labelled number rows (ADR 0039) and the pickup shown as cycle 0 since
 `feat/drawing-header`; `:background` (ADR 0041) since
-`feat/drawing-lines`. Planned for iteration 3: `:keys`,
-`:octave-numbers` and a group's own stroke names (`:display`); no `_` in score names
-(ADR 0040); `:key-numbers` and `:row-labels`.
+`feat/drawing-lines`; `:keys`, `:octave-numbers`, `:display`,
+`:key-numbers` and `:row-labels` since `feat/drawing-rows`. Planned for
+iteration 3: no `_` in score names (ADR 0040).
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -511,11 +511,11 @@ In the grid:
 | `:fill colour/none` | score, group | `colour` | `none` draws the names alone, without a coloured box. |
 | `:holds none/dash` | score, group | `none` | `dash` writes "-" in every step a note is held, as in a sung line. |
 | `:rows notes/parts/single` | score, group | `notes` | `notes`: one row per key or stroke used. `parts`: one row per part, labelled. `single`: all the group's parts on one row. |
-| `:keys used/all/(LOW HIGH)` | score, group | `used` | With `:rows notes`, which rows a group has: the keys or strokes played in the score's range, every key or stroke of the instrument, or the keys from LOW up to HIGH, both included (`:keys (a1 u2)`). **Planned** (iteration 3). |
-| `:octave-numbers yes/no` | score, group | `yes` | Write the octave number after each row label (`i2`), or the display form alone (`i`). Only rows of pitched keys change. **Planned** (iteration 3). |
-| `:key-numbers yes/no` | score, group | `no` | A column of key numbers to the left of the row labels: each row's key on its instrument, from 1 (on the ugal, `a1` is key 4). Pitched keys only. **Planned** (iteration 3). |
-| `:row-labels yes/no` | score, group | `yes` | The column of row labels (note names, stroke names or parts' labels); with `no` the column is left out. **Planned** (iteration 3). |
-| `:display ((STROKE STRING) ...)` | score, group | none | Show these strokes with these forms in this score, in row labels and note names, instead of their own display forms: `:display ((GL "G"))`. **Planned** (iteration 3). |
+| `:keys used/all/(LOW HIGH)` | score, group | `used` | With `:rows notes`, which rows a group has: the keys or strokes played in the score's range, every key or stroke of the instrument, or the keys from LOW up to HIGH, both included (`:keys (a1 u2)`). |
+| `:octave-numbers yes/no` | score, group | `yes` | Write the octave number after each row label (`i2`), or the display form alone (`i`). Only rows of pitched keys change. |
+| `:key-numbers yes/no` | score, group | `no` | A column of key numbers to the left of the row labels: each row's key on its instrument, from 1 (on the ugal, `a1` is key 4). Pitched keys only. |
+| `:row-labels yes/no` | score, group | `yes` | The column of row labels (note names, stroke names or parts' labels); with `no` the column is left out. |
+| `:display ((STROKE STRING) ...)` | score, group | none | Show these strokes with these forms in this score, in row labels and note names, instead of their own display forms: `:display ((GL "G"))`. |
 | `:background grid/vertical/horizontal/empty` | score, group | `grid` | The lines behind the notes: pulse lines and a line between every two rows (`grid`), pulse lines only (`vertical`), row lines only (`horizontal`), or neither (`empty`). The lines between groups and the cycle lines are always drawn (ADR 0041). |
 
 Colour and size (ADR 0032):
@@ -537,7 +537,7 @@ With `:note-names yes`, a note shows its damped form (`:damped`) when it
 lasts no longer than one column of the grid, and its display form
 otherwise. Without a damped form, the display form is used for both.
 The test uses the note's written duration: strokes, which are to be
-drawn one column wide (04, **Planned**), still show `du` or `du'` as
+drawn one column wide (04, ADR 0042), still show `du` or `du'` as
 written.
 
 #### Rules
@@ -555,16 +555,16 @@ written.
 - `:from` must come before `:to`, and both must lie in the piece.
 - `:rows parts`, `:rows single` and `:fill none` need `:note-names yes`
   on the group, since without names those rows would not show pitch.
-- `:keys` (**Planned**): LOW and HIGH are keys of the group's
+- `:keys`: LOW and HIGH are keys of the group's
   instrument, written as in a part, LOW not above HIGH; a range is an
   error on a group of strokes, which has only `used` and `all`; `:keys`
   on a `:rows parts` or `single` group is an error, and ignored when it
   comes from the score. A note outside the keys shown is an error
   naming the part, the note, its position and the range.
-- `:key-numbers yes` (**Planned**) written on a group of strokes, or on
+- `:key-numbers yes` written on a group of strokes, or on
   a `:rows parts` or `single` group, is an error; coming from the score,
   it is ignored there.
-- `:display` (**Planned**): each STROKE is a stroke of an instrument in
+- `:display`: each STROKE is a stroke of an instrument in
   the group (on a score, of an instrument in one of its groups); it
   changes only how the stroke is shown in that score.
 - With `:rows single`, two notes may not fall in one cell. With `:rows

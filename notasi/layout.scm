@@ -37,17 +37,36 @@
           ((pred (vector-ref vector i)) i)
           (else (loop (1+ i))))))
 
-(define (lane-label lane)
+(define (lane-label group lane)
+  "LANE's label in GROUP: a stroke's form from the group's :display, or
+the note's label, with or without its octave; \"\" without row labels."
   (match lane
-    ((instrument . note) (note-label instrument note))))
+    ((instrument . note)
+     (cond ((not (group-row-labels? group)) "")
+           ((assq-ref (group-display group) (note-name note)))
+           (else (note-label instrument note
+                             #:octave? (group-octave-numbers? group)))))))
+
+(define (stroke-instrument? instrument)
+  (not (scale-pitched? (instrument-scale instrument))))
+
+(define (lane-key-number lane)
+  "LANE's key number on its instrument, counted from 1, as a string."
+  (match lane
+    ((instrument . note)
+     (number->string
+      (1+ (vector-index (lambda (n) (eq? n note))
+                        (instrument-notes instrument)))))))
 
 ;;; ------------------------------------------------------------------
 ;;; Events
 
-(define (note-text instrument note columns)
-  "NOTE's name for an event COLUMNS long: its damped form when the note
-lasts no longer than one column, its display form otherwise."
-  (note-display instrument note #:damped? (<= columns 1)))
+(define (note-text group instrument note columns)
+  "NOTE's name for an event COLUMNS long (as written): its damped form
+when the note lasts no longer than one column, its display form
+otherwise; a stroke in GROUP's :display shows that form."
+  (or (assq-ref (group-display group) (note-name note))
+      (note-display instrument note #:damped? (<= columns 1))))
 
 (define (event-looks group style instrument indices columns)
   "The looks of an event striking INDICES on INSTRUMENT, COLUMNS long:
@@ -60,7 +79,7 @@ one per note on `notes' rows; one for the whole chord on `parts' and
                  (and (group-note-names? group) text)
                  (look-text-color look))))
   (define (name index)
-    (note-text instrument (vector-ref (instrument-notes instrument) index)
+    (note-text group instrument (vector-ref (instrument-notes instrument) index)
                columns))
   (if (eq? (group-rows group) 'notes)
       (map (lambda (index) (cons index (look-of index (name index)))) indices)
@@ -69,10 +88,12 @@ one per note on `notes' rows; one for the whole chord on `parts' and
                     (look-of lowest
                              (string-join (map name (sort indices <)) " ")))))))
 
-(define (with-holds group events)
+(define (with-holds group instrument events)
   "With `holds' `dash', each event takes its first column only, and
-every later column it was held for gets a one-column \"-\" event."
-  (if (eq? (group-holds group) 'dash)
+every later column it was held for gets a one-column \"-\" event.
+Strokes are not held (ADR 0042): they get no dashes."
+  (if (and (eq? (group-holds group) 'dash)
+           (not (stroke-instrument? instrument)))
       (append-map
        (match-lambda
          ((start duration lane look)
@@ -89,13 +110,16 @@ every later column it was held for gets a one-column \"-\" event."
 of 1/K pulse.  LANE-OF gives a note's lane from its index."
   (let ((instrument (part-instrument part)))
     (with-holds
-     group
+     group instrument
      (append-map
       (lambda (event)
-        (let ((columns (* k (event-duration event))))
+        (let* ((columns (* k (event-duration event)))
+               ;; A stroke is drawn one column wide (ADR 0042); its
+               ;; name still follows its written length.
+               (drawn (if (stroke-instrument? instrument) 1 columns)))
           (map (match-lambda
                  ((index . look)
-                  (list (* k (event-start event)) columns
+                  (list (* k (event-start event)) drawn
                         (lane-of index) look)))
                (event-looks group style instrument (event-notes event)
                             columns))))
@@ -138,7 +162,11 @@ start relative to FROM, or #f if it doesn't sound there."
 ;;; columns of 1/K pulse.  Rows are the notes used (`notes'), one per
 ;;; member (`parts'), or one for all (`single').
 (define (prepare-group group k from to)
-  (append (prepare-rows group k from to) (list (group-overlays group k))))
+  "(GROUP LANE-LABELS VOICES OVERLAYS KEY-NUMBERS), KEY-NUMBERS a string
+per lane or #f."
+  (match (prepare-rows group k from to)
+    ((group labels voices key-numbers)
+     (list group labels voices (group-overlays group k) key-numbers))))
 
 (define (sounds-in? event from to)
   "Whether EVENT sounds somewhere in [FROM, TO), in pulses."
@@ -211,8 +239,8 @@ which the reader allows on `notes' rows) left out, so it is drawn once."
            (group-parts group)))
     (match (group-rows group)
       ('notes
-       (let ((lanes (lanes-in-range group from to)))
-         (list group (map lane-label lanes)
+       (let ((lanes (group-key-lanes group from to)))
+         (list group (map (lambda (lane) (lane-label group lane)) lanes)
                (without-unisons
                 (voices
                 (lambda (part)
@@ -221,15 +249,44 @@ which the reader allows on `notes' rows) left out, so it is drawn once."
                                              (part-instrument part))
                                             index)))
                       (list-index (match-lambda ((_ . n) (eq? n note)))
-                                  lanes)))))))))
+                                  lanes))))))
+               (and (group-key-numbers? group)
+                    (map lane-key-number lanes)))))
       ('parts
-       (list group (map cdr (group-members group))
+       (list group (map (lambda (m) (if (group-row-labels? group) (cdr m) ""))
+                        (group-members group))
              (voices (lambda (part)
                        (let ((row (list-index (match-lambda ((p . _) (eq? p part)))
                                               (group-members group))))
-                         (const row))))))
+                         (const row))))
+             #f))
       ('single
-       (list group '("") (voices (lambda (part) (const 0))))))))
+       (list group '("") (voices (lambda (part) (const 0))) #f)))))
+
+(define (group-key-lanes group from to)
+  "The lanes of a `notes' group, top first, by its `keys' (04): the keys
+played in [FROM, TO), every key of the instruments, or LOW to HIGH."
+  (match (group-keys group)
+    ('used (lanes-in-range group from to))
+    ('all (all-lanes group))
+    ((low . high)
+     (let* ((instrument (part-instrument (car (group-parts group))))
+            (notes (vector->list (instrument-notes instrument)))
+            (lo (list-index (lambda (n) (eq? n low)) notes))
+            (hi (list-index (lambda (n) (eq? n high)) notes)))
+       (map (lambda (n) (cons instrument n))
+            (reverse (list-head (list-tail notes lo) (1+ (- hi lo)))))))))
+
+(define (all-lanes group)
+  "Every key of GROUP's instrument, highest first, or every stroke of
+each stroke instrument, in its order, as blocks in the order their first
+part appears."
+  (append-map
+   (lambda (instrument)
+     (let ((notes (vector->list (instrument-notes instrument))))
+       (map (lambda (n) (cons instrument n))
+            (if (stroke-instrument? instrument) notes (reverse notes)))))
+   (delete-duplicates (map part-instrument (group-parts group)) eq?)))
 
 (define (clip-overlay overlay rows from to)
   "OVERLAY cut to the columns [FROM, TO), as a JSON overlay object, or
@@ -255,10 +312,11 @@ which the reader allows on `notes' rows) left out, so it is drawn once."
 
 (define (group-in-system prepared index from to)
   (match prepared
-    ((group lanes voices overlays)
+    ((group lanes voices overlays key-numbers)
      `((label . ,(printed-label group index))
        (subtitle . ,(null-if-false (group-subtitle group)))
        (lanes . ,(list->vector lanes))
+       (key_numbers . ,(if key-numbers (list->vector key-numbers) 'null))
        (voices
         . ,(list->vector
             (map (match-lambda
@@ -460,7 +518,7 @@ and every system length from its start, in order."
                  ;; and the subtitle.
                  (filter-map
                   (match-lambda
-                    ((group lanes _ _)
+                    ((group lanes _ _ _)
                      (and (group-subtitle group)
                           (if (= (length lanes) 1)
                               (string-append
@@ -471,11 +529,26 @@ and every system length from its start, in order."
                                "  " (group-subtitle group))
                               (group-subtitle group)))))
                   prepared)))
-        (lane-labels (append-map (match-lambda ((_ lanes _ _) lanes))
-                                 prepared)))
+        (lane-labels (append-map (match-lambda
+                                   ((group lanes _ _ _)
+                                    (if (group-row-labels? group) lanes '())))
+                                 prepared))
+        (key-numbers (append-map (match-lambda ((_ _ _ _ keys) (or keys '())))
+                                 prepared))
+        (any-labels? (any (match-lambda ((group . _) (group-row-labels? group)))
+                          prepared)))
     `((font_size . ,(null-if-false (score-font-size score)))
       (label_width . ,(em (+ (* 3/5 (longest labels)) 3/2)))
-      (lane_width . ,(em (+ (* 13/25 (longest lane-labels)) 1)))
+      ;; The key-number and row-label columns take no space when no
+      ;; group shows them (ADR 0047).
+      (key_width . ,(if (null? key-numbers)
+                        "0.0em"
+                        (em (+ (* 13/25 (longest key-numbers)) 1))))
+      (lane_width . ,(if (and (null? prepared) #t)
+                         (em (+ (* 13/25 (longest lane-labels)) 1))
+                         (if any-labels?
+                             (em (+ (* 13/25 (longest lane-labels)) 1))
+                             "0.0em")))
       (cell_width . ,(score-cell-width score))
       (cell_height . ,(score-cell-height score)))))
 

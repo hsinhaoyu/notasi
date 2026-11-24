@@ -68,6 +68,8 @@ make-source-location source-location?
             group-members group-note-names? group-fill group-holds
             group-pattern-names group-pattern-level group-scheme
             group-palette group-colors group-background group-location
+            group-keys group-octave-numbers? group-key-numbers?
+            group-row-labels? group-display
             group-parts))
 
 ;;; Where a record came from, for error messages.  FILE is #f when the
@@ -222,7 +224,8 @@ make-source-location source-location?
 ;;; group of the default score.
 (define-record-type <group>
   (make-group label short subtitle labels rows members note-names? fill
-              holds pattern-names pattern-level scheme palette colors
+              holds pattern-names pattern-level keys octave-numbers?
+              key-numbers? row-labels? display scheme palette colors
               background location)
   group?
   (label         group-label)
@@ -236,6 +239,11 @@ make-source-location source-location?
   (holds         group-holds)
   (pattern-names group-pattern-names)
   (pattern-level group-pattern-level)
+  (keys          group-keys)            ; used | all | (LOW . HIGH) notes
+  (octave-numbers? group-octave-numbers?)
+  (key-numbers?  group-key-numbers?)
+  (row-labels?   group-row-labels?)
+  (display       group-display)         ; ((STROKE . STRING) ...)
   (scheme        group-scheme)
   (palette       group-palette)
   (colors        group-colors)
@@ -283,13 +291,14 @@ none."
     (or (and damped? (degree-damped degree))
         (degree-display degree))))
 
-(define (note-label instrument note)
+(define* (note-label instrument note #:key (octave? #t))
   "Return NOTE's lane label: the display form plus the octave (\"i2\"),
-or just the display form for a stroke."
-  (let ((shown (note-display instrument note)))
-    (match (note-octave note)
-      (#f shown)
-      (octave (string-append shown (number->string octave))))))
+or just the display form for a stroke, or with OCTAVE? false."
+  (let ((shown (note-display instrument note))
+        (octave (note-octave note)))
+    (if (and octave octave?)
+        (string-append shown (number->string octave))
+        shown)))
 
 (define (group-lanes group)
   "Return the notes the parts of GROUP play, each once, as note records:

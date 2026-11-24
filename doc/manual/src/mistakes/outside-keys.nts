@@ -1,0 +1,5 @@
+(piece "Gilak" :colotomy gilak :pickup 1)
+(use gong-kebyar)
+(part :instrument ugal a1 || o2 i2 e2 o2 | a1 o2 i2 a1 ||)
+(score s
+  (group "Ugal" :keys (i2 e2) ugal))

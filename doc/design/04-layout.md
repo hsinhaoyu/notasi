@@ -8,10 +8,10 @@ style" is built from a score's options. Modules: `(notasi style)`, `(notasi layo
 in `tests/style.scm`, `tests/layout.scm` and `tests/golden.scm`.
 Contract version 3 (ADR 0043) with the header labels and the pickup's
 cycle mark since `feat/drawing-header`; each group's lines and the
-lighter stroke grey (ADR 0041) since `feat/drawing-lines`. Planned for
-iteration 3: strokes one column wide (ADR 0042); `:keys`,
-`:octave-numbers` and `:display`; key numbers and row labels left out
-(ADR 0047); golden files named `NAME_SCORE` (ADR 0040).
+lighter stroke grey (ADR 0041) since `feat/drawing-lines`; strokes one
+column wide (ADR 0042), `:keys`, `:octave-numbers`, `:display`, key
+numbers and row labels left out (ADR 0047) since `feat/drawing-rows`.
+Planned for iteration 3: golden files named `NAME_SCORE` (ADR 0040).
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -45,11 +45,11 @@ in this order:
 | Object | Keys |
 |---|---|
 | figure | `version` (3, ADR 0043), `title`, `subtitle`, `steps_per_pulse`, `sizes`, `systems`, `caption` |
-| sizes | `font_size`, `label_width`, `lane_width`, `cell_width`, `cell_height` (**Planned**, version 3: `key_width` after `label_width`) |
+| sizes | `font_size`, `label_width`, `key_width`, `lane_width`, `cell_width`, `cell_height` |
 | system | `start`, `steps`, `header`, `lines`, `groups` |
 | header | `cycle_label`, `pulse_label`, `cycles`, `pulses`, `pulse_lines` |
 | cycle mark | `column`, `text` |
-| group | `label`, `subtitle`, `lanes`, `voices`, `overlays`, `pulse_lines`, `row_lines` (**Planned**: `key_numbers` after `lanes`, `feat/drawing-rows`) |
+| group | `label`, `subtitle`, `lanes`, `key_numbers`, `voices`, `overlays`, `pulse_lines`, `row_lines` |
 | voice | `name`, `events` |
 | event | `start`, `dur`, `lane`, `text`, `fill`, `text_color`, `continued` |
 | overlay | `start`, `dur`, `row`, `rows`, `text`, `continued` |
@@ -147,7 +147,7 @@ Layout works out every header number and every line, for every column:
   in the score's range (`from` to `to`), in `group-lanes` order: highest
   pitch at the top; stroke instruments give one lane per stroke, in
   instrument order, so an excerpt shows only the keys it uses.
-  **Planned** (iteration 3), by the group's `keys`: `used` is the rule
+  By the group's `keys` (iteration 3): `used` is the rule
   above; `all` is every key of the instrument (every stroke of each
   stroke instrument, in instrument order, as blocks in the order their
   first part appears); a range is the instrument's keys from LOW to
@@ -183,13 +183,13 @@ Layout works out every header number and every line, for every column:
   alone.
 - With `holds` `dash`, every column a note is held after its first gets
   an event of one column with text `"-"`, `fill` `null`, in the note's
-  row, so a sung line reads `nang - - ni'`. **Planned** (ADR 0042): only
+  row, so a sung line reads `nang - - ni'`. (ADR 0042) Only
   pitched notes are held; a stroke gets no dashes.
-- **Planned** (ADR 0042): an event of a stroke instrument is one column
+- (ADR 0042) An event of a stroke instrument is one column
   wide (`dur` 1), starting where the stroke starts, whatever its
   written duration; its text is still chosen by the written duration
   (`du` or `du'`). Pitched notes keep their widths.
-- **Planned** (iteration 3): a stroke in a group's `display` shows that
+- A stroke in a group's `display` shows that
   form instead of its own, as text and in its lane label.
 - (ADRs 0041, 0043) Each group carries `pulse_lines` and
   `row_lines` from its `background`: `grid` both, `vertical` pulse
@@ -216,12 +216,12 @@ the group's `pattern-level`:
 Lane labels show the display form followed by the octave number
 (`i2`) in small grey text; a stroke's label is its display form
 (**Implemented**, `note-label`). With `parts` rows the labels are the
-row labels. **Planned** (iteration 3): with `octave-numbers?` false, a
+row labels. With `octave-numbers?` false, a
 pitched lane is labelled with its display form alone (`i`), even when
 two lanes then read alike; a stroke in the group's `display` is
 labelled with that form.
 
-**Planned** (ADR 0047): with `row-labels?` false, every entry of the
+(ADR 0047) With `row-labels?` false, every entry of the
 group's `lanes` is `""`. With `key-numbers?` true (pitched `notes` rows
 only), the group's `key_numbers` holds each lane's key number on its
 instrument, counted from 1, as a string (`"4"` for the ugal's `a1`);
@@ -354,8 +354,8 @@ text. `dark2` gives strong colours with mostly white text.
     The header labels printed (`cycle_label`, `pulse_label`) count too,
     since they sit in the same column (`feat/drawing-header`).
   - `lane_width` (lane and row labels): 0.52em × the longest label +
-    1em. **Planned** (ADR 0047): `"0.0em"` when no group shows row labels.
-  - **Planned** (ADR 0047): `key_width` (key numbers): 0.52em × the
+    1em; `"0.0em"` when no group shows row labels (ADR 0047).
+  - (ADR 0047) `key_width` (key numbers): 0.52em × the
     longest number + 1em, or `"0.0em"` when no group shows key numbers.
   - Lengths are strings in `em` with one decimal, even when whole,
     rounded to the nearest, ties upward: `"10.5em"`, `"3.6em"`. With no
@@ -495,9 +495,15 @@ with the examples, golden files and manual pages it affects.
    `header.pulse_lines` after `pulses`. The score record gets
    `background` (its own `:background`, else `grid`; 02), from which
    the header's `pulse_lines` comes.
-3. `feat/drawing-rows`: `:keys` and `outside-keys`; `:octave-numbers`;
+3. **Implemented.** `feat/drawing-rows`: `:keys` and `outside-keys`; `:octave-numbers`;
    `:display`; `:key-numbers` and `:row-labels` (ADR 0047); strokes one
-   column wide (ADR 0042).
+   column wide (ADR 0042). Decided for this slice: a `:keys` range on a score applies to
+   its pitched `notes` groups, each of which must have LOW and HIGH
+   among its keys (`bad-option` at the score's line otherwise); stroke,
+   `parts` and `single` groups ignore an inherited range and show the
+   keys they play, while a range written on such a group is an error.
+   LOW and HIGH are written as in a part: a note's name, an alias name,
+   or a key number (`(a1 u2)`, `(dang1 dung2)`, `(4 8)`).
 4. `feat/drawing-output`: `NAME_SCORE` file names and no `_` in score
    names (ADR 0040); the sans-serif font (ADR 0045).
 

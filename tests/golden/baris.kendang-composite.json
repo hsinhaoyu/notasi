@@ -6,6 +6,7 @@
   "sizes": {
     "font_size": null,
     "label_width": "8.7em",
+    "key_width": "0.0em",
     "lane_width": "1.0em",
     "cell_width": "3em",
     "cell_height": "2em"
@@ -36,6 +37,7 @@
           "label": "Kendang",
           "subtitle": null,
           "lanes": [""],
+          "key_numbers": null,
           "voices": [
             {
               "name": "lanang-lh",
@@ -150,6 +152,7 @@
           "label": "Kendang",
           "subtitle": null,
           "lanes": [""],
+          "key_numbers": null,
           "voices": [
             {
               "name": "lanang-lh",

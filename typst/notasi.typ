@@ -45,7 +45,9 @@
 // number and line comes from the figure (ADRs 0036, 0043).
 #let _system(data, sys) = {
   let sizes = data.sizes
-  let first = 2                     // column 0: group label, 1: lane label
+  // Columns: 0 group label, 1 key numbers, 2 row labels, then the grid
+  // (ADR 0047).
+  let first = 3
   let header = sys.header
 
   let cells = ()
@@ -62,7 +64,7 @@
   let span(column) = calc.min(k, sys.steps - column)
   if header.cycles != none {
     if header.cycle_label != none {
-      cells.push(grid.cell(x: 0, y: row, colspan: 2,
+      cells.push(grid.cell(x: 0, y: row, colspan: 3,
         align: left + horizon, text(weight: "bold", header.cycle_label)))
     }
     for m in header.cycles {
@@ -75,7 +77,7 @@
   }
   if header.pulses != none {
     if header.pulse_label != none {
-      cells.push(grid.cell(x: 0, y: row, colspan: 2,
+      cells.push(grid.cell(x: 0, y: row, colspan: 3,
         align: left + horizon, text(weight: "bold", header.pulse_label)))
     }
     for (i, p) in header.pulses.enumerate() {
@@ -104,8 +106,16 @@
           }
         }))
       for (i, l) in lanes.enumerate() {
-        cells.push(grid.cell(x: 1, y: row + i, align: horizon + right,
+        cells.push(grid.cell(x: 2, y: row + i, align: horizon + right,
           inset: (right: 5pt), text(fill: luma(140), size: 0.85em, l)))
+      }
+      // Key numbers, to the left of the row labels, lighter (ADR 0047).
+      let numbers = g.at("key_numbers", default: none)
+      if numbers != none {
+        for (i, n) in numbers.enumerate() {
+          cells.push(grid.cell(x: 1, y: row + i, align: horizon + right,
+            inset: (right: 3pt), text(fill: luma(170), size: 0.85em, n)))
+        }
       }
       for v in g.voices {
         for e in v.events {
@@ -138,7 +148,9 @@
   }
   let rows-count = calc.max(row, 1)
 
-  let cols = ((_len(sizes.label_width), _len(sizes.lane_width))
+  let cols = ((_len(sizes.label_width),
+               _len(sizes.at("key_width", default: "0em")),
+               _len(sizes.lane_width))
     + (_len(sizes.cell_width),) * sys.steps)
   let rows = (_len(sizes.cell_height),) * rows-count
 

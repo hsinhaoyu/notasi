@@ -11,11 +11,10 @@ the `pattern` and `pattern-span` records since `feat/music-patterns`;
 `feat/scores-form`, and `note-display #:damped?` since
 `feat/scores-rows`, and the score's `cycle-label` and the "Pulse"
 default since `feat/drawing-header`, and the score's and group's
-`background` since `feat/drawing-lines`. Tests in `tests/piece.scm`.
-Planned for iteration
-3: the group's `keys`, `octave-numbers?`,
-`key-numbers?`, `row-labels?` and `display`; `note-label`'s `#:octave?`; invariants 9 and
-10.
+`background` since `feat/drawing-lines`, and the group's `keys`,
+`octave-numbers?`, `key-numbers?`, `row-labels?` and `display`,
+`note-label`'s `#:octave?` and invariant 10 since `feat/drawing-rows`.
+Tests in `tests/piece.scm`. Planned for iteration 3: invariant 9.
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -176,18 +175,18 @@ group                                  every setting filled in (ADR 0033)
   holds         : symbol               none | dash
   pattern-names : symbol               none | short | long
   pattern-level : integer
-  keys          : symbol | (note . note)   **Planned**: used | all, or the
+  keys          : symbol | (note . note)   used | all, or the
                                        lowest and highest note shown
                                        (`:keys (LOW HIGH)`); `used`
                                        for `parts` and `single` rows
-  octave-numbers? : boolean            **Planned**: octave numbers on
+  octave-numbers? : boolean            octave numbers on
                                        row labels
-  key-numbers?  : boolean              **Planned**: a column of key
+  key-numbers?  : boolean              a column of key
                                        numbers; #f for strokes, `parts`
                                        and `single` rows
-  row-labels?   : boolean              **Planned**: the column of row
+  row-labels?   : boolean              the column of row
                                        labels
-  display       : list of (symbol . string)   **Planned**: stroke name
+  display       : list of (symbol . string)   stroke name
                                        and the form shown for it in this
                                        score (`:display`); '() for none
   background    : symbol               grid | vertical |
@@ -223,7 +222,7 @@ group                                  every setting filled in (ADR 0033)
   or the display form if it has none. Used for the text in note cells.
 - `(note-label instrument note)` (**Implemented**): the display form plus
   the octave, e.g. `"i2"`; for a stroke, just its display form. Used for
-  row labels. **Planned**: `#:octave?` (default `#t`); with `#f`, the
+  row labels. `#:octave?` (default `#t`); with `#f`, the
   display form alone (`"i"`), for `:octave-numbers no`. A group's
   `display` is applied by layout, which looks a stroke up there first.
 - `(group-lanes group)` (**Implemented**): the notes actually used by the
@@ -274,7 +273,7 @@ construction, since events are built from the tokens.
 8. Part names are unique in the piece, generated parts included, and
    score names are unique.
 9. **Planned**: score names contain no `_` (ADR 0040).
-10. **Planned**: in a group whose `keys` is a range, every note its parts
+10. In a group whose `keys` is a range, every note its parts
     play in the score's range is within it; the range's notes are keys
     of the group's instrument, the lower first. A group whose `keys` is
     a range is pitched, with `rows` `notes`. Every stroke in a group's
