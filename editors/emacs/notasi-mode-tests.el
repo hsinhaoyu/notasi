@@ -328,8 +328,13 @@ as in `lisp-data-mode'."
   (dolist (text '("(use\ngong-kebyar)"
                   "(@ polos-1 :step 1\n:short \"2\")"
                   "(o2\ne2)"))
+    ;; Lisp reads `@' as a prefix, so the baseline uses a plain name of
+    ;; the same length in its place.
     (should (equal (notasi-mode-tests--indent #'notasi-mode text)
-                   (notasi-mode-tests--indent #'lisp-data-mode text)))))
+                   (string-replace
+                    "(x " "(@ "
+                    (notasi-mode-tests--indent
+                     #'lisp-data-mode (string-replace "(@ " "(x " text)))))))
 
 (ert-deftest notasi-mode-test-indent-does-not-set-symbol-properties ()
   "The indentation is not put on the symbols, which Emacs Lisp shares."
