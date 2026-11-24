@@ -15,6 +15,11 @@
 ;; `fake-notasi', so they need neither Guile nor Typst; one real test
 ;; draws with scripts/notasi when both are installed.
 ;;
+;; The tests under "The preview: live" were written from 08 ("The
+;; preview", "The score shown" and "Slices", item 2) for the slice
+;; feat/emacs-preview-live: redrawing on a pause and on saving, the
+;; settings, the score shown, `notasi-choose-score' and kept pictures.
+;;
 ;; Run from the repository root with:
 ;;
 ;;   emacs -Q --batch -L editors/emacs -l ert \
@@ -1512,6 +1517,607 @@ Skipped when Guile or Typst is missing."
         (kill-buffer buffer))
       (ignore-errors (notasi-mode-tests--wait nil 120))
       (delete-directory dir t))))
+
+;;;; The preview: live (slice feat/emacs-preview-live)
+
+;; Written from 08 ("The preview", "The score shown" and "Slices", item
+;; 2 and its decided list) before the code.  Choices where 08 leaves
+;; room:
+;;
+;; - The user's actions are simulated with `ert-simulate-command', so
+;;   `pre-command-hook' and `post-command-hook' run around each, as in
+;;   the command loop: moving the cursor is `goto-char', typing is a
+;;   command that inserts (so `after-change-functions' run too), saving
+;;   is `save-buffer', choosing is `notasi-choose-score'.  The buffer is
+;;   shown in the selected window (`find-file').
+;; - The pause runs on a timer (`run-at-time'), restarted by each change;
+;;   it fires while the tests wait in `accept-process-output'.  The tests
+;;   bind `notasi-preview-delay' to 0.1 s (0.3 or 0.5 s where the tests
+;;   look before it runs out), and each setting with `let', in effect
+;;   while the mode decides.
+;; - Moving the cursor into a score that has no kept picture draws it,
+;;   at once or after the pause: the tests wait up to 2 s.  Switching
+;;   back to a kept picture shows it within 0.05 s.
+;; - "No drawing" is checked by waiting 0.5 s (five pauses) and finding
+;;   no new run in the fake's log.
+;; - `(notasi-choose-score nil)' goes back to following the cursor; the
+;;   tests then move the cursor (inside the same score) before expecting
+;;   the cursor's score, so whether choosing nil switches at once is
+;;   left open.
+;; - A chosen score that disappears goes back to following the cursor by
+;;   the drawing that follows the change (after the pause); that drawing
+;;   is of the cursor's score, never of the vanished one.
+;; - Interactively, `notasi-choose-score' reads with `completing-read';
+;;   "follow the cursor" is a candidate matching that phrase, whatever
+;;   its case.
+;; - `notasi-preview-delay''s customisation type accepts 0.5 and 2; the
+;;   two others are `boolean'.
+;; - With `notasi-preview-on-open' off, opening a file starts no drawing
+;;   and makes no preview buffer; what happens later is not tested.
+;; - With `notasi-auto-preview' off the file still draws on opening (that
+;;   is `notasi-preview-on-open'); the tests turn it off once the file
+;;   is open.
+
+(require 'ert-x)
+(require 'wid-edit)
+
+(defvar notasi-preview-delay)
+(defvar notasi-auto-preview)
+(defvar notasi-preview-on-open)
+
+(defconst notasi-mode-tests--three
+  "(piece \"Gilak: pangawit\" :colotomy gilak :pickup 1)
+
+(use gong-kebyar)
+
+(score full :fill none
+  (group \"Ugal\" ugal))
+
+(pattern pokok :instrument ugal
+  _ i2 _ a1)
+
+(score kotekan
+  (group \"Ugal\" ugal))
+
+(part :instrument ugal
+  @pokok)
+
+(score third
+  (group \"Ugal\" ugal))
+"
+  "A piece with three scores, `full' (the first), `kotekan' and `third'.")
+
+;;;;; Helpers for the live preview
+
+(defun notasi-mode-tests--call (function)
+  "Call FUNCTION: a command, for `notasi-mode-tests--command'."
+  (interactive (list #'ignore))
+  (funcall function))
+
+(defun notasi-mode-tests--command (function)
+  "Call FUNCTION as a command, with the command loop's hooks around it."
+  (ert-simulate-command (list #'notasi-mode-tests--call function)))
+
+(defun notasi-mode-tests--place (where &optional offset)
+  "Return the position at the end of the first WHERE, plus OFFSET.
+WHERE is a string, or a position."
+  (+ (if (stringp where)
+         (save-excursion
+           (goto-char (point-min))
+           (search-forward where))
+       where)
+     (or offset 0)))
+
+(defun notasi-mode-tests--move (where &optional offset)
+  "Move the cursor, as the user would, to WHERE plus OFFSET.
+See `notasi-mode-tests--place'."
+  (ert-simulate-command
+   (list #'goto-char (notasi-mode-tests--place where offset))))
+
+(defun notasi-mode-tests--type (text &optional where)
+  "Type TEXT, as the user would, at WHERE (see `notasi-mode-tests--move').
+Without WHERE, at the cursor."
+  (when where (notasi-mode-tests--move where))
+  (notasi-mode-tests--command (lambda () (insert text))))
+
+(defun notasi-mode-tests--pause (seconds)
+  "Let timers, processes and sentinels run for SECONDS."
+  (let ((end (+ (float-time) seconds)))
+    (while (< (float-time) end)
+      (accept-process-output nil 0.02))))
+
+(defun notasi-mode-tests--wait-until (predicate &optional timeout)
+  "Wait until PREDICATE returns non-nil, at most TIMEOUT seconds (2).
+Return its value, or nil."
+  (let ((end (+ (float-time) (or timeout 2)))
+        value)
+    (while (and (not (setq value (funcall predicate)))
+                (< (float-time) end))
+      (accept-process-output nil 0.02))
+    value))
+
+(defun notasi-mode-tests--count (log)
+  "Return how many render runs LOG records."
+  (length (notasi-mode-tests--render-runs log)))
+
+(defun notasi-mode-tests--runs-after (log count)
+  "Return the render runs in LOG after the first COUNT."
+  (nthcdr count (notasi-mode-tests--render-runs log)))
+
+(defun notasi-mode-tests--score-of (run)
+  "Return the `--score' of the render RUN, or nil."
+  (notasi-mode-tests--option run "--score"))
+
+(defun notasi-mode-tests--next-drawing (log count &optional timeout)
+  "Wait for a render run in LOG after the first COUNT, then for it to end.
+Give up waiting for it after TIMEOUT seconds (2).  Return the new runs."
+  (when (notasi-mode-tests--wait-until
+         (lambda () (notasi-mode-tests--runs-after log count))
+         timeout)
+    (notasi-mode-tests--wait))
+  (notasi-mode-tests--runs-after log count))
+
+(defun notasi-mode-tests--must-draw (log)
+  "Wait for a new drawing recorded in LOG, and for it to end.
+Fail at once if none starts within 2 seconds."
+  (should (notasi-mode-tests--next-drawing
+           log (notasi-mode-tests--count log))))
+
+(defun notasi-mode-tests--live-header (ctx)
+  "Return the header line of the preview of the piece in CTX."
+  (notasi-mode-tests--header
+   (notasi-mode-tests--preview (plist-get ctx :file))))
+
+(cl-defun notasi-mode-tests--with-live-piece
+    (function &key (delay 0.1) env)
+  "Open the three-score piece in the selected window and call FUNCTION.
+As `notasi-mode-tests--with-piece', with `notasi-preview-delay' DELAY
+and ENV added to the environment."
+  (let ((notasi-preview-delay delay))
+    (notasi-mode-tests--with-piece
+     function :text notasi-mode-tests--three :select t :env env)))
+
+;;;;; Settings and keys
+
+(ert-deftest notasi-mode-test-live-settings ()
+  "`notasi-preview-on-open', `notasi-auto-preview' and
+`notasi-preview-delay' are settings in the `notasi' group, with
+docstrings."
+  (dolist (setting '(notasi-preview-on-open notasi-auto-preview
+                     notasi-preview-delay))
+    (should (custom-variable-p setting))
+    (should (assq setting (get 'notasi 'custom-group)))
+    (should (documentation-property setting 'variable-documentation))))
+
+(ert-deftest notasi-mode-test-live-settings-on-by-default ()
+  "`notasi-preview-on-open' and `notasi-auto-preview' are on or off,
+and on by default."
+  (dolist (setting '(notasi-preview-on-open notasi-auto-preview))
+    (should (custom-variable-p setting))
+    (should (eq (get setting 'custom-type) 'boolean))
+    (should (eq (eval (car (get setting 'standard-value)) t) t))))
+
+(ert-deftest notasi-mode-test-preview-delay-setting ()
+  "`notasi-preview-delay' is a number of seconds, 1 by default."
+  (should (custom-variable-p 'notasi-preview-delay))
+  (let ((default (eval (car (get 'notasi-preview-delay 'standard-value)) t))
+        (widget (widget-convert (get 'notasi-preview-delay 'custom-type))))
+    (should (numberp default))
+    (should (= default 1))
+    (should (widget-apply widget :match 0.5))
+    (should (widget-apply widget :match 2))))
+
+(ert-deftest notasi-mode-test-choose-score-key ()
+  "C-c C-s is `notasi-choose-score', a command with a docstring."
+  (should (eq (lookup-key notasi-mode-map (kbd "C-c C-s"))
+              'notasi-choose-score))
+  (should (commandp 'notasi-choose-score))
+  (should (documentation 'notasi-choose-score)))
+
+;;;;; Redrawing on a pause and on saving
+
+(ert-deftest notasi-mode-test-typing-redraws-after-pause ()
+  "Typing redraws once the pause has run out, not before, without saving."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let* ((log (plist-get ctx :log))
+            (before (notasi-mode-tests--count log)))
+       (notasi-mode-tests--type ";; typed\n" (point-max))
+       (notasi-mode-tests--pause 0.25)
+       (should-not (notasi-mode-tests--runs-after log before))
+       (let ((runs (notasi-mode-tests--next-drawing log before)))
+         (should (= (length runs) 1))
+         (should-not (notasi-mode-tests--score-of (car runs))))
+       (should (buffer-modified-p))
+       (should (string-search
+                (format "%d lines" (count-lines (point-min) (point-max)))
+                (notasi-mode-tests--shown (plist-get ctx :file))))))
+   :delay 0.5))
+
+(ert-deftest notasi-mode-test-quick-changes-draw-once ()
+  "Changes closer together than the pause give one drawing, of the
+text after the last change."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let* ((log (plist-get ctx :log))
+            (before (notasi-mode-tests--count log)))
+       (notasi-mode-tests--move (point-max))
+       (dotimes (i 4)
+         (notasi-mode-tests--type (format ";; change %d\n" i))
+         (notasi-mode-tests--pause 0.1))
+       (should-not (notasi-mode-tests--runs-after log before))
+       (notasi-mode-tests--next-drawing log before)
+       (notasi-mode-tests--pause 0.5)
+       (should (= (length (notasi-mode-tests--runs-after log before)) 1))
+       (should (equal (with-temp-buffer
+                        (insert-file-contents (plist-get ctx :input))
+                        (buffer-string))
+                      (buffer-string)))))
+   :delay 0.3))
+
+(ert-deftest notasi-mode-test-moving-cursor-does-not-redraw ()
+  "Moving the cursor, without leaving the score shown for another
+score, never redraws."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let* ((log (plist-get ctx :log))
+            (before (notasi-mode-tests--count log)))
+       (notasi-mode-tests--move "(score full")
+       (notasi-mode-tests--move "(pattern pokok")
+       (notasi-mode-tests--move "\n\n(part" -6)
+       (notasi-mode-tests--move (point-max))
+       (notasi-mode-tests--move (point-min))
+       (notasi-mode-tests--pause 0.5)
+       (should-not (notasi-mode-tests--runs-after log before))))))
+
+(ert-deftest notasi-mode-test-saving-redraws ()
+  "Saving redraws, even when the text has not changed."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let* ((log (plist-get ctx :log))
+            (before (notasi-mode-tests--count log)))
+       (set-buffer-modified-p t)
+       (ert-simulate-command '(save-buffer))
+       (should-not (buffer-modified-p))
+       (should (= (length (notasi-mode-tests--next-drawing log before)) 1))))))
+
+(ert-deftest notasi-mode-test-auto-preview-off ()
+  "With `notasi-auto-preview' off, neither a pause nor saving redraws;
+`notasi-preview-redraw' still does."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let* ((log (plist-get ctx :log))
+            (before (notasi-mode-tests--count log))
+            (notasi-auto-preview nil))
+       (notasi-mode-tests--type ";; typed\n" (point-max))
+       (notasi-mode-tests--pause 0.5)
+       (should-not (notasi-mode-tests--runs-after log before))
+       (ert-simulate-command '(save-buffer))
+       (notasi-mode-tests--pause 0.5)
+       (should-not (notasi-mode-tests--runs-after log before))
+       (notasi-mode-tests--wait (notasi-preview-redraw))
+       (should (= (length (notasi-mode-tests--runs-after log before)) 1))))))
+
+(ert-deftest notasi-mode-test-preview-on-open-off ()
+  "With `notasi-preview-on-open' off, opening a file draws nothing and
+shows no preview."
+  (let* ((dir (make-temp-file "notasi-mode-piece" t))
+         (aux (make-temp-file "notasi-mode-aux" t))
+         (file (expand-file-name "gilak.nts" dir))
+         (log (expand-file-name "fake.log" aux))
+         (process-environment (cons (concat "FAKE_NOTASI_LOG=" log)
+                                    process-environment))
+         (notasi-program notasi-mode-tests--fake)
+         (notasi-preview-on-open nil)
+         buffer)
+    (with-temp-file file (insert notasi-mode-tests--three))
+    (unwind-protect
+        (progn
+          (delete-other-windows)
+          (setq buffer (find-file file))
+          (should (eq (buffer-local-value 'major-mode buffer) 'notasi-mode))
+          (notasi-mode-tests--pause 0.5)
+          (should-not (notasi-mode-tests--render-runs log))
+          (should-not (notasi-mode-tests--preview file))
+          (should (equal (length (window-list)) 1)))
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer (set-buffer-modified-p nil))
+        (kill-buffer buffer))
+      (ignore-errors (notasi-mode-tests--wait))
+      (delete-other-windows)
+      (delete-directory dir t)
+      (delete-directory aux t))))
+
+;;;;; The score shown
+
+(ert-deftest notasi-mode-test-cursor-into-score-draws-it ()
+  "Moving the cursor into (score kotekan …) draws it with
+`--score kotekan', and the header line names it."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let* ((log (plist-get ctx :log))
+            (before (notasi-mode-tests--count log)))
+       (notasi-mode-tests--move "(score kotekan")
+       (let ((runs (notasi-mode-tests--next-drawing log before)))
+         (should runs)
+         (should (equal (notasi-mode-tests--score-of (car (last runs)))
+                        "kotekan")))
+       (let ((header (notasi-mode-tests--live-header ctx)))
+         (should (string-search "Gilak: pangawit — kotekan" header))
+         (should-not (string-search "(chosen)" header))
+         (should-not (notasi-mode-tests--drawing-p header)))
+       (should (string-search "fake-notasi: kotekan,"
+                              (notasi-mode-tests--shown
+                               (plist-get ctx :file))))))))
+
+(ert-deftest notasi-mode-test-moving-out-keeps-score ()
+  "Moving out of a score, into a pattern, a part or between forms,
+keeps it shown, without drawing."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let ((log (plist-get ctx :log)))
+       (notasi-mode-tests--move "(score kotekan")
+       (notasi-mode-tests--must-draw log)
+       (let ((before (notasi-mode-tests--count log)))
+         (notasi-mode-tests--move "(part :instrument")
+         (notasi-mode-tests--move "(pattern pokok")
+         (notasi-mode-tests--move "\n\n(part" -6)
+         (notasi-mode-tests--move (point-max))
+         (notasi-mode-tests--pause 0.5)
+         (should-not (notasi-mode-tests--runs-after log before)))
+       (should (string-search "Gilak: pangawit — kotekan"
+                              (notasi-mode-tests--live-header ctx)))
+       (should (string-search "fake-notasi: kotekan,"
+                              (notasi-mode-tests--shown
+                               (plist-get ctx :file))))))))
+
+(ert-deftest notasi-mode-test-typing-in-score-redraws-it ()
+  "Typing in a score that isn't the first redraws it with `--score'."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let ((log (plist-get ctx :log)))
+       (notasi-mode-tests--move "(score kotekan")
+       (notasi-mode-tests--must-draw log)
+       (let ((before (notasi-mode-tests--count log)))
+         (notasi-mode-tests--type "\n  ;; typed")
+         (let ((runs (notasi-mode-tests--next-drawing log before)))
+           (should (= (length runs) 1))
+           (should (equal (notasi-mode-tests--score-of (car runs))
+                          "kotekan"))))
+       (should (string-search
+                (format "kotekan, %d lines"
+                        (count-lines (point-min) (point-max)))
+                (notasi-mode-tests--shown (plist-get ctx :file))))))))
+
+(ert-deftest notasi-mode-test-cursor-into-first-score-no-score-option ()
+  "Moving the cursor back into the first score, changed since it was
+drawn, draws it without `--score'."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let ((log (plist-get ctx :log)))
+       (notasi-mode-tests--move "(score kotekan")
+       (notasi-mode-tests--must-draw log)
+       (notasi-mode-tests--type "\n  ;; typed")
+       (notasi-mode-tests--must-draw log)
+       (let ((before (notasi-mode-tests--count log)))
+         (notasi-mode-tests--move "(score full")
+         (let ((runs (notasi-mode-tests--next-drawing log before)))
+           (should (= (length runs) 1))
+           (should-not (member "--score" (car runs)))))
+       (let ((header (notasi-mode-tests--live-header ctx)))
+         (should (string-search "Gilak: pangawit — full" header))
+         (should-not (string-search "(chosen)" header)))))))
+
+;;;;; Kept pictures
+
+(ert-deftest notasi-mode-test-switching-back-shows-kept-picture ()
+  "Switching back to a score drawn before, the text unchanged, shows
+its kept picture at once and draws nothing."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let* ((log (plist-get ctx :log))
+            (file (plist-get ctx :file))
+            (full (notasi-mode-tests--shown file)))
+       (should (string-search "fake-notasi: first score," full))
+       (notasi-mode-tests--move "(score kotekan")
+       (notasi-mode-tests--must-draw log)
+       (should (string-search "fake-notasi: kotekan,"
+                              (notasi-mode-tests--shown file)))
+       (let ((before (notasi-mode-tests--count log))
+             (process-environment (cons "FAKE_NOTASI_SLEEP=3"
+                                        process-environment)))
+         (notasi-mode-tests--move "(score full")
+         (notasi-mode-tests--pause 0.05)
+         (should (equal (notasi-mode-tests--shown file) full))
+         (should (string-search "Gilak: pangawit — full"
+                                (notasi-mode-tests--live-header ctx)))
+         (notasi-mode-tests--pause 0.5)
+         (should-not (notasi-mode-tests--runs-after log before)))))))
+
+(ert-deftest notasi-mode-test-switching-back-redraws-if-changed ()
+  "Switching back to a score whose text changed since it was drawn shows
+its kept picture at once, and redraws it in the background."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let* ((log (plist-get ctx :log))
+            (file (plist-get ctx :file))
+            (full (notasi-mode-tests--shown file)))
+       (should (string-search "fake-notasi: first score," full))
+       (notasi-mode-tests--move "(score kotekan")
+       (notasi-mode-tests--must-draw log)
+       (notasi-mode-tests--type "\n  ;; typed")
+       (notasi-mode-tests--must-draw log)
+       (let ((before (notasi-mode-tests--count log))
+             (process-environment (cons "FAKE_NOTASI_SLEEP=3"
+                                        process-environment)))
+         (notasi-mode-tests--move "(score full")
+         (notasi-mode-tests--pause 0.05)
+         (should (equal (notasi-mode-tests--shown file) full))
+         (should (notasi-mode-tests--wait-until
+                  (lambda () (notasi-mode-tests--runs-after log before))))
+         (let ((runs (notasi-mode-tests--runs-after log before)))
+           (should (= (length runs) 1))
+           (should-not (member "--score" (car runs))))
+         ;; While it draws, the kept picture stays.
+         (should (equal (notasi-mode-tests--shown file) full)))))))
+
+;;;;; Choosing a score
+
+(ert-deftest notasi-mode-test-choose-score-shows-it ()
+  "`notasi-choose-score' with a name draws that score, marked (chosen)
+in the header line."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let* ((log (plist-get ctx :log))
+            (before (notasi-mode-tests--count log)))
+       (ert-simulate-command '(notasi-choose-score "third"))
+       (let ((runs (notasi-mode-tests--next-drawing log before)))
+         (should runs)
+         (should (equal (notasi-mode-tests--score-of (car (last runs)))
+                        "third")))
+       (should (string-search "Gilak: pangawit — third (chosen)"
+                              (notasi-mode-tests--live-header ctx)))
+       (should (string-search "fake-notasi: third,"
+                              (notasi-mode-tests--shown
+                               (plist-get ctx :file))))))))
+
+(ert-deftest notasi-mode-test-chosen-score-stays ()
+  "A chosen score stays shown when the cursor moves into another score."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let ((log (plist-get ctx :log)))
+       (ert-simulate-command '(notasi-choose-score "third"))
+       (notasi-mode-tests--must-draw log)
+       (let ((before (notasi-mode-tests--count log)))
+         (notasi-mode-tests--move "(score kotekan")
+         (notasi-mode-tests--pause 0.5)
+         (should-not (seq-find (lambda (run)
+                                 (equal (notasi-mode-tests--score-of run)
+                                        "kotekan"))
+                               (notasi-mode-tests--runs-after log before))))
+       (should (string-search "Gilak: pangawit — third (chosen)"
+                              (notasi-mode-tests--live-header ctx)))))))
+
+(ert-deftest notasi-mode-test-choose-score-nil-follows-cursor ()
+  "`(notasi-choose-score nil)' follows the cursor again, and the header
+line loses its (chosen) mark."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let ((log (plist-get ctx :log)))
+       (ert-simulate-command '(notasi-choose-score "third"))
+       (notasi-mode-tests--must-draw log)
+       (notasi-mode-tests--move "(score kotekan")
+       (let ((before (notasi-mode-tests--count log)))
+         (ert-simulate-command '(notasi-choose-score nil))
+         (notasi-mode-tests--move "(score kotekan" 1)
+         (should (notasi-mode-tests--wait-until
+                  (lambda ()
+                    (seq-find (lambda (run)
+                                (equal (notasi-mode-tests--score-of run)
+                                       "kotekan"))
+                              (notasi-mode-tests--runs-after log before)))))
+         (notasi-mode-tests--wait))
+       (let ((header (notasi-mode-tests--live-header ctx)))
+         (should (string-search "Gilak: pangawit — kotekan" header))
+         (should-not (string-search "(chosen)" header)))))))
+
+(ert-deftest notasi-mode-test-choose-score-interactively ()
+  "Interactively, `notasi-choose-score' offers the file's scores and
+\"follow the cursor\"."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let* ((log (plist-get ctx :log))
+            (before (notasi-mode-tests--count log))
+            offered
+            (answer "kotekan")
+            (completing-read-function
+             (lambda (_prompt collection &rest _)
+               (setq offered (all-completions "" collection))
+               answer)))
+       (call-interactively #'notasi-choose-score)
+       (should (member "full" offered))
+       (should (member "kotekan" offered))
+       (should (member "third" offered))
+       (let ((follow (seq-find (lambda (c)
+                                 (string-match-p "follow the cursor"
+                                                 (downcase c)))
+                               offered)))
+         (should follow)
+         (notasi-mode-tests--next-drawing log before)
+         (should (string-search "Gilak: pangawit — kotekan (chosen)"
+                                (notasi-mode-tests--live-header ctx)))
+         (setq answer follow)
+         (call-interactively #'notasi-choose-score)
+         (notasi-mode-tests--pause 0.2)
+         (notasi-mode-tests--wait)
+         (should-not (string-search "(chosen)"
+                                    (notasi-mode-tests--live-header ctx))))))))
+
+(ert-deftest notasi-mode-test-chosen-score-renamed-follows-cursor ()
+  "A chosen score renamed in the text goes back to following the cursor:
+the next drawing is the cursor's score, not marked (chosen)."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let ((log (plist-get ctx :log)))
+       (ert-simulate-command '(notasi-choose-score "third"))
+       (notasi-mode-tests--must-draw log)
+       (notasi-mode-tests--move "(score kotekan")
+       (notasi-mode-tests--pause 0.3)
+       (notasi-mode-tests--wait)
+       (let ((before (notasi-mode-tests--count log)))
+         (notasi-mode-tests--command
+          (lambda ()
+            (save-excursion
+              (goto-char (point-min))
+              (search-forward "(score third")
+              (replace-match "(score fourth" t t))))
+         (should (notasi-mode-tests--wait-until
+                  (lambda ()
+                    (seq-find (lambda (run)
+                                (equal (notasi-mode-tests--score-of run)
+                                       "kotekan"))
+                              (notasi-mode-tests--runs-after log before)))))
+         (notasi-mode-tests--wait)
+         (should-not (seq-find (lambda (run)
+                                 (equal (notasi-mode-tests--score-of run)
+                                        "third"))
+                               (notasi-mode-tests--runs-after log before))))
+       (let ((header (notasi-mode-tests--live-header ctx)))
+         (should (string-search "Gilak: pangawit — kotekan" header))
+         (should-not (string-search "(chosen)" header)))))))
+
+(ert-deftest notasi-mode-test-chosen-score-deleted-follows-cursor ()
+  "A chosen score deleted from the text goes back to following the
+cursor: the next drawing is the cursor's score, not marked (chosen)."
+  (notasi-mode-tests--with-live-piece
+   (lambda (ctx)
+     (let ((log (plist-get ctx :log)))
+       (ert-simulate-command '(notasi-choose-score "third"))
+       (notasi-mode-tests--must-draw log)
+       (notasi-mode-tests--move "(score kotekan")
+       (notasi-mode-tests--pause 0.3)
+       (notasi-mode-tests--wait)
+       (let ((before (notasi-mode-tests--count log)))
+         (notasi-mode-tests--command
+          (lambda ()
+            (save-excursion
+              (goto-char (point-min))
+              (search-forward "(score third")
+              (delete-region (match-beginning 0) (point-max)))))
+         (should (notasi-mode-tests--wait-until
+                  (lambda ()
+                    (seq-find (lambda (run)
+                                (equal (notasi-mode-tests--score-of run)
+                                       "kotekan"))
+                              (notasi-mode-tests--runs-after log before)))))
+         (notasi-mode-tests--wait)
+         (should-not (seq-find (lambda (run)
+                                 (equal (notasi-mode-tests--score-of run)
+                                        "third"))
+                               (notasi-mode-tests--runs-after log before))))
+       (let ((header (notasi-mode-tests--live-header ctx)))
+         (should (string-search "Gilak: pangawit — kotekan" header))
+         (should-not (string-search "(chosen)" header)))))))
 
 (provide 'notasi-mode-tests)
 

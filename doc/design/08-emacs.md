@@ -314,6 +314,26 @@ own branch and PR into `dev`, started with `/start-milestone <branch>`:
      window changes size.
 2. `feat/emacs-preview-live`: redrawing on a pause and on saving, the
    settings, the score shown, and `C-c C-s`.
+   Decided for this slice:
+   - **A pause** is a second (`notasi-preview-delay`) with no change to
+     the text: each change restarts a timer, and the drawing happens
+     when it runs out. Moving the cursor or scrolling never redraws.
+   - **`--score NAME`** is passed for any score but the first in the
+     file; the first is drawn without it.
+   - **`notasi-choose-score`** (`C-c C-s`) takes a score's name, or nil
+     for "follow the cursor"; interactively it offers the file's
+     scores and "follow the cursor" with completion. A chosen score
+     that disappears (renamed or deleted) goes back to following the
+     cursor.
+   - **A chosen score** is marked in the header line:
+     `Jaya Semara: pangecet — kotekan (chosen)`.
+   - **Switching back** to a score shows its kept picture at once, and
+     redraws it in the background if the text has changed since it was
+     drawn.
+   - **The settings:** `notasi-preview-on-open` and
+     `notasi-auto-preview` are on or off; `notasi-preview-delay` is a
+     number of seconds, 1 by default. With `notasi-auto-preview` off,
+     neither a pause nor saving redraws; `C-c C-c` still does.
 3. `feat/emacs-preview-errors`: mistakes through Flymake, the red
    header and the last good picture, mistakes in templates, and the
    other problems.
