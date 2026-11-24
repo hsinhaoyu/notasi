@@ -497,7 +497,13 @@ with the examples, golden files and manual pages it affects.
    the header's `pulse_lines` comes.
 3. `feat/drawing-rows`: `:keys` and `outside-keys`; `:octave-numbers`;
    `:display`; `:key-numbers` and `:row-labels` (ADR 0047); strokes one
-   column wide (ADR 0042).
+   column wide (ADR 0042). Decided for this slice: a `:keys` range on a score applies to
+   its pitched `notes` groups, each of which must have LOW and HIGH
+   among its keys (`bad-option` at the score's line otherwise); stroke,
+   `parts` and `single` groups ignore an inherited range and show the
+   keys they play, while a range written on such a group is an error.
+   LOW and HIGH are written as in a part: a note's name, an alias name,
+   or a key number (`(a1 u2)`, `(dang1 dung2)`, `(4 8)`).
 4. `feat/drawing-output`: `NAME_SCORE` file names and no `_` in score
    names (ADR 0040); the sans-serif font (ADR 0045).
 

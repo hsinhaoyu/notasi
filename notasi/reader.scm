@@ -1210,7 +1210,25 @@ cut at the piece's end, on the piece's kempli or a built-in one."
     (pattern-level ,(lambda (v) (and (exact-integer? v) (>= v 0))) . "a whole number from 0")
     (labels ,(lambda (v) (memq v '(long short first-long))) . "long, short or first-long")
     (background ,(lambda (v) (memq v '(grid vertical horizontal empty)))
-                . "grid, vertical, horizontal or empty")))
+                . "grid, vertical, horizontal or empty")
+    (keys ,(lambda (v)
+             (match v
+               ((or 'used 'all) #t)
+               (((or (? note-name?) (? positive-whole-number?))
+                 (or (? note-name?) (? positive-whole-number?)))
+                #t)
+               (_ #f)))
+          . "used, all or (LOW HIGH)")
+    (octave-numbers ,yes-no? . "yes or no")
+    (key-numbers ,yes-no? . "yes or no")
+    (row-labels ,yes-no? . "yes or no")
+    (display ,(lambda (v)
+                (and (list? v)
+                     (every (match-lambda
+                              (((? note-name?) (? string?)) #t)
+                              (_ #f))
+                            v)))
+             . "a list of (STROKE \"TEXT\")")))
 
 (define score-only-options
   `((title ,string? . "a string")
@@ -1263,17 +1281,126 @@ DEFAULT (ADR 0033)."
         ((assq name score) => cdr)
         (else default)))
 
-(define (make-score-group label subtitle members own score-opts location)
-  (let ((colors (setting 'colors own score-opts '())))
+(define (key-on instrument key line)
+  "The note of INSTRUMENT that KEY names: a key number, or a note's name
+or alias with its octave, as in a part; `bad-option' at LINE if none."
+  (let* ((notes (instrument-notes instrument))
+         (scale (instrument-scale instrument))
+         (found
+          (match key
+            ((? positive-whole-number? n)
+             (and (<= n (vector-length notes)) (vector-ref notes (- n 1))))
+            ((? symbol?)
+             (match (split-octave key)
+               (#f #f)
+               ((degree . octave)
+                (let ((i (list-index (lambda (d) (memq degree (degree-names d)))
+                                     (scale-degrees scale))))
+                  (and i
+                       (find (lambda (n) (and (= (note-degree n) i)
+                                              (eqv? (note-octave n) octave)))
+                             (vector->list notes)))))))
+            (_ #f))))
+    (or found
+        (syntax-error 'bad-option line
+                      ":keys: `~a' is not a key of instrument `~a'"
+                      key (instrument-name instrument)))))
+
+(define (note-position instrument note)
+  (list-index (lambda (n) (eq? (note-name n) (note-name note)))
+              (vector->list (instrument-notes instrument))))
+
+(define (group-keys-setting own score-opts rows pitched? instrument line
+                            score-line)
+  "A group's `keys': used, all, or (LOW . HIGH) note records (04, slice
+3).  Written on a stroke, parts or single group, :keys is an error, and
+a range is an error on strokes; inherited, it is ignored there."
+  (let ((written (assq-ref own 'keys))
+        (inherited (assq-ref score-opts 'keys)))
+    (when written
+      (cond ((memq rows '(parts single))
+             (syntax-error 'bad-option line
+                           ":keys chooses the rows of keys; a group with :rows ~a has none"
+                           rows))
+            ((and (pair? written) (not pitched?))
+             (syntax-error 'bad-option line
+                           ":keys (LOW HIGH) names keys, and strokes have no range: write used or all"))))
+    (let ((value (or written inherited 'used))
+          (value-line (if written line score-line)))
+      (cond ((memq rows '(parts single)) 'used)
+            ((pair? value)
+             (if pitched?
+                 (match value
+                   ((low high)
+                    (let ((lo (key-on instrument low value-line))
+                          (hi (key-on instrument high value-line)))
+                      (when (> (note-position instrument lo)
+                               (note-position instrument hi))
+                        (syntax-error 'bad-option value-line
+                                      ":keys: `~a' is above `~a'; write the lower key first"
+                                      low high))
+                      (cons lo hi))))
+                 'used))
+            (else value)))))
+
+(define (group-key-numbers-setting own score-opts key-rows? line)
+  "Key numbers are for pitched keys on notes rows: written elsewhere,
+`yes' is an error; inherited, it is ignored."
+  (when (and (eq? (assq-ref own 'key-numbers) 'yes) (not key-rows?))
+    (syntax-error 'bad-option line
+                  ":key-numbers shows the keys of a pitched instrument, on :rows notes"))
+  (and key-rows?
+       (eq? (setting 'key-numbers own score-opts 'no) 'yes)))
+
+(define (group-display-setting own score-opts instruments line)
+  "A group's own :display, else the score's, as (STROKE . STRING) pairs.
+A group's own strokes must be strokes of its instruments."
+  (let ((strokes (append-map (lambda (i)
+                               (if (scale-pitched? (instrument-scale i))
+                                   '()
+                                   (map note-name
+                                        (vector->list (instrument-notes i)))))
+                             instruments)))
+    (match (assq 'display own)
+      ((_ . pairs)
+       (for-each (match-lambda
+                   ((stroke _)
+                    (unless (memq stroke strokes)
+                      (syntax-error 'bad-option line
+                                    ":display: `~a' is not a stroke of this group"
+                                    stroke))))
+                 pairs)
+       (map (match-lambda ((stroke text) (cons stroke text))) pairs))
+      (#f
+       (filter-map (match-lambda
+                     ((stroke text) (and (memq stroke strokes)
+                                         (cons stroke text))))
+                   (or (assq-ref score-opts 'display) '()))))))
+
+(define (make-score-group label subtitle members own score-opts location
+                          score-line)
+  (let* ((colors (setting 'colors own score-opts '()))
+         (rows (setting 'rows own score-opts 'notes))
+         (line (source-location-line location))
+         (instruments (delete-duplicates
+                       (map (compose part-instrument car) members) eq?))
+         (pitched? (any (compose scale-pitched? instrument-scale) instruments))
+         (key-rows? (and pitched? (eq? rows 'notes))))
     (make-group label (or (assq-ref own 'short) label) subtitle
                 (setting 'labels own score-opts 'first-long)
-                (setting 'rows own score-opts 'notes)
+                rows
                 members
                 (eq? (setting 'note-names own score-opts 'no) 'yes)
                 (setting 'fill own score-opts 'colour)
                 (setting 'holds own score-opts 'none)
                 (setting 'pattern-names own score-opts 'none)
                 (setting 'pattern-level own score-opts 0)
+                (group-keys-setting own score-opts rows pitched?
+                                    (car instruments) line score-line)
+                (not (eq? (setting 'octave-numbers own score-opts 'yes) 'no))
+                (group-key-numbers-setting own score-opts key-rows? line)
+                (not (eq? (setting 'row-labels own score-opts 'yes) 'no))
+                (group-display-setting own score-opts instruments line)
                 (setting 'scheme own score-opts 'by-degree)
                 (setting 'palette own score-opts 'pastel1)
                 (map (match-lambda ((degree colour) (cons degree colour)))
@@ -1465,6 +1592,54 @@ breaks outside the range are dropped."
                  (filter (lambda (b) (< from b to)) breaks))
                 <))))
 
+(define (check-score-display opts groups line)
+  "Every stroke in a score's :display is a stroke of one of its groups."
+  (for-each
+   (match-lambda
+     ((stroke _)
+      (unless (any (lambda (group)
+                     (any (lambda (part)
+                            (let ((i (part-instrument part)))
+                              (and (not (scale-pitched? (instrument-scale i)))
+                                   (memq stroke (map note-name
+                                                     (vector->list (instrument-notes i)))))))
+                          (group-parts group)))
+                   groups)
+        (syntax-error 'bad-option line
+                      ":display: `~a' is not a stroke of any group of this score"
+                      stroke))))
+   (or (assq-ref opts 'display) '())))
+
+(define (check-keys group line from to)
+  "With a :keys range, every note the group's parts play in [FROM, TO)
+must be among the keys shown: `outside-keys' at the earliest."
+  (match (group-keys group)
+    ((low . high)
+     (let* ((part0 (car (group-parts group)))
+            (instrument (part-instrument part0))
+            (lo (note-position instrument low))
+            (hi (note-position instrument high))
+            (outside
+             (append-map
+              (lambda (part)
+                (filter-map
+                 (lambda (e)
+                   (and (< (event-start e) to)
+                        (> (+ (event-start e) (event-duration e)) from)
+                        (let ((bad (find (lambda (i) (not (<= lo i hi)))
+                                         (event-notes e))))
+                          (and bad (list (event-start e) part bad)))))
+                 (part-events part)))
+              (group-parts group))))
+       (unless (null? outside)
+         (match (car (sort outside (lambda (a b) (< (car a) (car b)))))
+           ((time part index)
+            (part-error 'outside-keys line (part-name part) time
+                        "`~a' is outside the keys shown, `~a' to `~a' (:keys)"
+                        (note-name (vector-ref (instrument-notes instrument) index))
+                        (note-name low) (note-name high)))))))
+    (_ #t)))
+
 (define (build-score form parts title length colotomy pickup)
   "Build a score record from FORM.  PARTS are the parts a score may
 print."
@@ -1509,14 +1684,19 @@ print."
                                  (let ((group (make-score-group
                                                label (assq-ref own 'subtitle)
                                                members own opts
-                                               (location gline))))
+                                               (location gline) line)))
                                    (check-group-names group gline)
                                    (cons group gline)))))))))
                      groups)))
+          (check-score-display opts (map car built) line)
           (for-each (match-lambda
                       ((group . gline)
                        (check-collisions group gline)
                        (check-pattern-names group gline)))
+                    built)
+          (for-each (match-lambda
+                      ((group . gline)
+                       (check-keys group gline (car range) (cadr range))))
                     built)
           (make-score name (or (assq-ref opts 'title) title)
                       (assq-ref opts 'subtitle) (assq-ref opts 'caption)
@@ -1552,6 +1732,7 @@ print."
                        (make-group name name #f 'first-long 'notes
                                    (list (cons part name))
                                    #f 'colour 'none 'none 0
+                                   'used #t #f #t '()
                                    'by-degree 'pastel1 '() 'grid #f)))
                    parts)
               #f))

@@ -288,8 +288,8 @@ PARTS with their names as row labels, every other setting at its
 default unless given."
   (make-group label short subtitle labels 'notes
               (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
-              note-names? 'colour 'none 'none 0 scheme palette colors
-              background #f))
+              note-names? 'colour 'none 'none 0 'used #t #f #t '()
+              scheme palette colors background #f))
 
 (define* (hand-score piece groups
                      #:key (title (piece-title piece)) (subtitle #f)
@@ -308,11 +308,12 @@ TO (times) say otherwise."
 
 (define figure-keys
   '(version title subtitle steps_per_pulse sizes systems caption))
-(define sizes-keys '(font_size label_width lane_width cell_width cell_height))
+(define sizes-keys '(font_size label_width key_width lane_width cell_width cell_height))
 (define system-keys '(start steps header lines groups))
 (define header-keys '(cycle_label pulse_label cycles pulses pulse_lines))
 (define mark-keys '(column text))
-(define group-keys '(label subtitle lanes voices overlays pulse_lines row_lines))
+(define group-json-keys
+  '(label subtitle lanes key_numbers voices overlays pulse_lines row_lines))
 (define voice-keys '(name events))
 (define event-keys '(start dur lane text fill text_color continued))
 
@@ -330,7 +331,7 @@ per column?"
          (string? (field v 'name))
          (every-in (field v 'events) event-ok?)))
   (define (group-ok? g)
-    (and (equal? (keys g) group-keys)
+    (and (equal? (keys g) group-json-keys)
          (every-in (field g 'lanes) string?)
          (every-in (field g 'voices) voice-ok?)
          (vector? (field g 'overlays))))
@@ -364,7 +365,7 @@ per column?"
 (define (v2-sizes label-width lane-width)
   "The sizes of a figure with these label widths and every other size
 at its default: font_size null, cells \"2em\"."
-  `((font_size . null) (label_width . ,label-width)
+  `((font_size . null) (label_width . ,label-width) (key_width . "0.0em")
     (lane_width . ,lane-width) (cell_width . "2em") (cell_height . "2em")))
 
 (define white "#ffffff")
@@ -429,6 +430,7 @@ at its default: font_size null, cells \"2em\"."
 (define (grp label subtitle lanes . voices)
   "A group with no overlays, and the default `grid' lines (ADR 0041)."
   `((label . ,label) (subtitle . ,subtitle) (lanes . ,lanes)
+    (key_numbers . null)
     (voices . ,(list->vector voices)) (overlays . #())
     (pulse_lines . #t) (row_lines . #t)))
 
@@ -445,6 +447,7 @@ at its default: font_size null, cells \"2em\"."
     (steps_per_pulse . 2)
     (sizes . ((font_size . null)
               (label_width . "10.5em")   ; "polos + sangsih": 15 chars
+              (key_width . "0.0em")      ; no key numbers
               (lane_width . "2.0em")     ; "i2": 2 chars
               (cell_width . "2em")
               (cell_height . "2em")))
@@ -478,6 +481,7 @@ at its default: font_size null, cells \"2em\"."
     (steps_per_pulse . 2)
     (sizes . ((font_size . null)
               (label_width . "10.5em")
+              (key_width . "0.0em")
               (lane_width . "2.0em")
               (cell_width . "2em")
               (cell_height . "2em")))
@@ -2012,7 +2016,8 @@ give."
       #("e2" "o2" "i2")
       (and fig (lanes-of fig 0 0)))
     (test-equal "strokes on a parts row: one row, damped names"
-      (list #("d") (list (ev 0 1 0 "d" grey dark #f) (ev 1 2 0 "dug" grey dark #f)))
+      ;; A stroke is one column wide (ADR 0042); "dug" still lasts 2.
+      (list #("d") (list (ev 0 1 0 "d" grey dark #f) (ev 1 1 0 "dug" grey dark #f)))
       (and fig (list (lanes-of fig 0 1) (events-of fig 0 1 0))))))
 
 (test-group ":rows single"
@@ -2087,7 +2092,7 @@ give."
             (ev 3 1 0 "e" 'null dark #f))
       (and fig (events-of fig 0 0 0)))
     (test-equal "strokes: fill null too"
-      '((0 1 0 "d" null #f) (1 2 1 "dug" null #f))
+      '((0 1 0 "d" null #f) (1 1 1 "dug" null #f))   ; one column (ADR 0042)
       (and fig (shapes fig 0 1 0)))
     (test-assert "well-formed" (and fig (well-formed? fig))))
   (let ((fig (rows-fig "(score s :note-names yes"
@@ -2124,7 +2129,8 @@ give."
   (let ((fig (rows-fig "(score s :note-names yes :holds dash"
                        "  (group \"K\" :rows single d))")))
     (test-equal "strokes on a single row"
-      (list (list 0 1 0 "d" grey #f) (list 1 1 0 "dug" grey #f) (dash 2 0))
+      ;; Strokes are not held: no dash (ADR 0042).
+      (list (list 0 1 0 "d" grey #f) (list 1 1 0 "dug" grey #f))
       (and fig (shapes fig 0 0 0))))
   (let ((fig (rows-fig "(score s :note-names yes :holds dash :fill none"
                        "  (group \"U\" :rows single q))")))
@@ -2399,6 +2405,7 @@ give."
                                                      (symbol->string n)))
                                              '(p q))
                                         #f 'colour 'none 'short 0
+                                        'used #t #f #t '()
                                         'by-degree 'pastel1 '() 'grid #f))))))))
     (test-equal "the overlays" pqd-short
       (and fig (overlays-of fig 0 0)))))
@@ -3103,7 +3110,7 @@ its row is."
 ;;; - Every system of a score carries the same flags.
 
 (define lines-group-keys
-  '(label subtitle lanes voices overlays pulse_lines row_lines))
+  '(label subtitle lanes key_numbers voices overlays pulse_lines row_lines))
 (define lines-header-keys
   '(cycle_label pulse_label cycles pulses pulse_lines))
 (define stroke-grey "#e6e6e6")
@@ -3338,6 +3345,362 @@ its row is."
       (and fig (map (lambda (e) (field e 'fill)) (events-of fig 0 0 0)))))
   (test-equal "the stroke grey takes near-black text" dark
     (text-color-for stroke-grey)))
+
+;;; ==================================================================
+;;; Rows, keys and strokes (iteration 3, milestone 2, slice
+;;; feat/drawing-rows)
+;;; ==================================================================
+;;;
+;;; 04, "Slices (iteration 3)" slice 3 and its decided bullets, "Groups
+;;; and rows", "Note text, fill and holds", "Lane labels", "Sizes", the
+;;; keys table; 05, "JSON contract (version 3)"; 01, `:keys`,
+;;; `:octave-numbers`, `:key-numbers`, `:row-labels`, `:display`, "Which
+;;; name a note shows"; ADRs 0042, 0047.
+;;; - `:keys all`: every key of the instrument, highest at the top; for
+;;;   strokes every stroke, in instrument order, a block per instrument
+;;;   in the order its first part appears. A range: the instrument's
+;;;   keys from LOW to HIGH, highest at the top. `used` as before.
+;;; - `:octave-numbers no`: a pitched lane is labelled with its display
+;;;   form alone. `:display`: a stroke shows that form in its lane label
+;;;   and as its text.
+;;; - `:row-labels no`: every entry of `lanes` is "". `lane_width` is
+;;;   "0.0em" when no group shows row labels.
+;;; - `:key-numbers yes`: the group's `key_numbers` (after `lanes`) is
+;;;   each lane's key on its instrument, from 1, as a string; else null.
+;;;   `sizes.key_width` (after `label_width`) is 0.52em × the longest
+;;;   number + 1em, or "0.0em" when no group shows key numbers.
+;;; - A stroke is one column wide (`dur` 1) from where it starts,
+;;;   whatever its written duration; its text is chosen by the written
+;;;   duration (`D` for a `dag:2`, damped `d` for a one-pulse `dag`);
+;;;   `:holds dash` writes no dashes after it. Pitched notes keep their
+;;;   widths and dashes.
+;;; Choices made where the docs are not explicit:
+;;; - Group lanes hidden by `:row-labels no` do not count towards
+;;;   `lane_width` when another group shows its labels: their labels are
+;;;   "" (04: the width is the longest label).
+;;; - A stroke cut short by a system break leaves nothing in the next
+;;;   system: it is one column, so it is never cut.
+;;; - Whether a stroke's written end counts towards the step, and what
+;;;   an excerpt starting inside a stroke's written duration shows, are
+;;;   not tested.
+;;; - `:display` is tested only on strokes whose text is their display
+;;;   form (no damped form, or a written duration over one column), so
+;;;   whether it also replaces a damped form is not pinned.
+;;; - Existing tests that build groups or write out group and sizes keys
+;;;   are left as they are: this slice changes them (the report lists
+;;;   them).
+
+(define rows3-group-keys
+  '(label subtitle lanes key_numbers voices overlays pulse_lines row_lines))
+(define rows3-sizes-keys
+  '(font_size label_width key_width lane_width cell_width cell_height))
+
+;;; ugal has ten keys: 1 o1  2 e1  3 u1  4 a1  5 i2  6 o2  7 e2  8 u2
+;;; 9 a2  10 i3. Every note is one pulse but where written: one column
+;;; is one pulse.
+;;;   m: u1 (0), a1 (1-3), i2 (3)        → used: i2 a1 u1
+;;;   n: i2 (0), e1 (3)
+;;;   gong: P (0, written 2 pulses), G (2, written 2): GL and T unplayed
+;;;   d (kendang): dag (0, written 2), dug (2), dag (3, damped "d")
+(define keys-lines
+  '("(piece \"K\")"
+    "(scale sel (ding :alias i :display \"i\") (dong :alias o :display \"o\")"
+    "  (deng :alias e :display \"e\") (dung :alias u :display \"u\")"
+    "  (dang :alias a :display \"a\"))"
+    "(strokes gs G GL P T)"
+    "(strokes ks (dag :display \"D\" :damped \"d\") dug)"
+    "(instrument ugal sel o1 e1 u1 a1 i2 o2 e2 u2 a2 i3)"
+    "(instrument gong gs G GL P T)"
+    "(instrument kendang ks dag dug)"
+    "(part :instrument ugal :name m u1 a1:2 i2:1)"
+    "(part :instrument ugal :name n i2 - - e1)"
+    "(part :instrument gong P:2 G:2)"
+    "(part :instrument kendang :name d dag:2 dug:1 dag)"))
+
+(define (keys-fig . score-lines)
+  "The figure of keys-lines with SCORE-LINES (its first score), or #f."
+  (layout-or-false (layout (apply piece-of (append keys-lines score-lines)))))
+
+(define (key-numbers-of fig s g) (field (group-ref fig s g) 'key_numbers))
+(define (size-of fig key) (field (field fig 'sizes) key))
+(define (lane-numbers fig s g v)
+  (map (lambda (e) (field e 'lane)) (events-of fig s g v)))
+(define all-ugal-lanes #("i3" "a2" "u2" "e2" "o2" "i2" "a1" "u1" "e1" "o1"))
+
+(define (rows3-well-formed? fig)
+  "Does every group of FIG have this slice's keys, with `key_numbers`
+null or one string per lane, and `sizes` this slice's keys?"
+  (and (equal? (keys (field fig 'sizes)) rows3-sizes-keys)
+       (every (lambda (s)
+                (every (lambda (g)
+                         (and (equal? (keys g) rows3-group-keys)
+                              (let ((k (field g 'key_numbers)))
+                                (or (eq? k 'null)
+                                    (and (vector? k)
+                                         (= (vector-length k)
+                                            (vector-length (field g 'lanes)))
+                                         (every string? (vector->list k)))))))
+                       (vector->list (field s 'groups))))
+              (systems fig))))
+
+(test-group "rows: the keys of version 3"
+  (let ((fig (keys-fig "(score s (group \"U\" m) (group \"G\" gong))")))
+    (test-equal "a group's keys: key_numbers after lanes" rows3-group-keys
+      (and fig (keys (group-ref fig 0 0))))
+    (test-equal "sizes: key_width after label_width" rows3-sizes-keys
+      (and fig (keys (field fig 'sizes))))
+    (test-assert "well-formed" (and fig (rows3-well-formed? fig))))
+  (test-assert "every kind of group, numbers and all"
+    (let ((fig (keys-fig "(score s :note-names yes :system-length 2"
+                         "  (group \"U\" :keys all :key-numbers yes m)"
+                         "  (group \"P\" :rows parts n)"
+                         "  (group \"S\" :rows single :row-labels no d)"
+                         "  (group \"G\" gong))")))
+      (and fig (rows3-well-formed? fig))))
+  (test-assert "the default score"
+    (let ((fig (keys-fig)))
+      (and fig (rows3-well-formed? fig))))
+  (test-assert "json-string accepts the figure"
+    (let ((fig (keys-fig "(score s (group \"U\" :key-numbers yes m))")))
+      (and fig (string? (json-string fig))))))
+
+(test-group ":keys: lanes"
+  (let ((fig (keys-fig "(score s (group \"U\" m) (group \"G\" gong))")))
+    (test-equal "used (the default): the keys played"
+      (list #("i2" "a1" "u1") '(2 1 0))
+      (and fig (list (lanes-of fig 0 0) (lane-numbers fig 0 0 0))))
+    (test-equal "used: the strokes played" (list #("G" "P") '(1 0))
+      (and fig (list (lanes-of fig 0 1) (lane-numbers fig 0 1 0)))))
+  (let ((fig (keys-fig "(score s (group \"U\" :keys all m))")))
+    (test-equal "all: every key of the instrument, highest at the top"
+      (list all-ugal-lanes '(7 6 5))
+      (and fig (list (lanes-of fig 0 0) (lane-numbers fig 0 0 0)))))
+  (let ((fig (keys-fig "(score s (group \"U\" :keys (e1 i2) m))")))
+    (test-equal "a range: LOW to HIGH, both included, highest at the top"
+      (list #("i2" "a1" "u1" "e1") '(2 1 0))
+      (and fig (list (lanes-of fig 0 0) (lane-numbers fig 0 0 0)))))
+  (let ((fig (keys-fig "(score s (group \"U\" :keys (2 5) m))")))
+    (test-equal "a range by key numbers" #("i2" "a1" "u1" "e1")
+      (and fig (lanes-of fig 0 0))))
+  (let ((fig (keys-fig "(score s (group \"U\" :keys (u1 e2) m))")))
+    (test-equal "a range above the notes played"
+      (list #("e2" "o2" "i2" "a1" "u1") '(4 3 2))
+      (and fig (list (lanes-of fig 0 0) (lane-numbers fig 0 0 0)))))
+  (let ((fig (keys-fig "(score s :keys (e1 i2) (group \"U\" m n) (group \"G\" gong))")))
+    (test-equal "a range on the score: the pitched group takes it, strokes keep used"
+      (list #("i2" "a1" "u1" "e1") #("G" "P"))
+      (and fig (list (lanes-of fig 0 0) (lanes-of fig 0 1))))
+    (test-equal "two parts in the range: n's lanes" '(0 3)
+      (and fig (lane-numbers fig 0 0 1))))
+  (let ((fig (keys-fig "(score s (group \"G\" :keys all gong))")))
+    (test-equal "all on strokes: every stroke, in instrument order"
+      (list #("G" "GL" "P" "T") '(2 0))
+      (and fig (list (lanes-of fig 0 0) (lane-numbers fig 0 0 0)))))
+  (let ((fig (keys-fig "(score s (group \"K\" :keys all d gong))")))
+    (test-equal "all on two stroke instruments: blocks in the order of their parts"
+      (list #("D" "dug" "G" "GL" "P" "T") '(0 1 0) '(4 2))
+      (and fig (list (lanes-of fig 0 0) (lane-numbers fig 0 0 0)
+                     (lane-numbers fig 0 0 1)))))
+  (let ((fig (keys-fig "(score s (group \"K\" :keys all gong d))")))
+    (test-equal "the other order of parts, the other order of blocks"
+      (list #("G" "GL" "P" "T" "D" "dug") '(2 0) '(4 5 4))
+      (and fig (list (lanes-of fig 0 0) (lane-numbers fig 0 0 0)
+                     (lane-numbers fig 0 0 1)))))
+  (let ((fig (keys-fig "(score s :keys all :system-length 2 (group \"U\" m))")))
+    (test-equal "all: the same lanes in every system, played or not"
+      (list all-ugal-lanes all-ugal-lanes)
+      (and fig (list (lanes-of fig 0 0) (lanes-of fig 1 0)))))
+  (let ((fig (keys-fig "(score s :keys all (group \"U\" m))")))
+    (test-equal "lane_width counts every lane shown" "2.0em"
+      (and fig (size-of fig 'lane_width)))))
+
+(test-group ":octave-numbers no"
+  (let ((fig (keys-fig "(score s :octave-numbers no (group \"U\" m) (group \"G\" gong))")))
+    (test-equal "pitched lanes: the display form alone"
+      (list #("i" "a" "u") '(2 1 0))
+      (and fig (list (lanes-of fig 0 0) (lane-numbers fig 0 0 0))))
+    (test-equal "strokes are unchanged" #("G" "P")
+      (and fig (lanes-of fig 0 1))))
+  (let ((fig (keys-fig "(score s (group \"U\" :keys all :octave-numbers no m))")))
+    (test-equal "with all: lanes may read alike"
+      #("i" "a" "u" "e" "o" "i" "a" "u" "e" "o")
+      (and fig (lanes-of fig 0 0)))
+    (test-equal "lane_width from the shorter labels" "1.5em"
+      (and fig (size-of fig 'lane_width))))
+  (let ((fig (keys-fig "(score s (group \"U\" :octave-numbers no m)"
+                       "  (group \"N\" n))")))
+    (test-equal "on one group only" (list #("i" "a" "u") #("i2" "e1"))
+      (and fig (list (lanes-of fig 0 0) (lanes-of fig 0 1)))))
+  (let ((fig (keys-fig "(score s :note-names yes"
+                       "  (group \"P\" :rows parts :octave-numbers no m n))")))
+    (test-equal "parts rows keep their row labels" #("m" "n")
+      (and fig (lanes-of fig 0 0)))))
+
+(test-group ":display"
+  (let ((fig (keys-fig "(score s :note-names yes"
+                       "  (group \"G\" :display ((P \"Kempur\")) gong))")))
+    (test-equal "the lane label" #("G" "Kempur")
+      (and fig (lanes-of fig 0 0)))
+    (test-equal "the note text" '("Kempur" "G")
+      (and fig (texts fig 0 0 0)))
+    (test-equal "lane_width counts the form shown" "4.1em"
+      (and fig (size-of fig 'lane_width))))
+  (let ((fig (keys-fig "(score s :display ((G \"Gong\"))"
+                       "  (group \"U\" m) (group \"G\" gong))")))
+    (test-equal "on a score: the stroke group shows it, the pitched group is unchanged"
+      (list #("i2" "a1" "u1") #("Gong" "P"))
+      (and fig (list (lanes-of fig 0 0) (lanes-of fig 0 1))))
+    (test-equal "without note names, the text stays null" '(null null)
+      (and fig (texts fig 0 1 0))))
+  (let ((fig (keys-fig "(score s (group \"G\" :keys all :display ((P \"Kempur\")) gong))")))
+    (test-equal "with :keys all" #("G" "GL" "Kempur" "T")
+      (and fig (lanes-of fig 0 0))))
+  (let ((fig (keys-fig "(score s :note-names yes"
+                       "  (group \"D\" :display ((dag \"Dg\")) d))")))
+    (test-equal "kendang: the lane label" #("Dg" "dug")
+      (and fig (lanes-of fig 0 0)))
+    (test-equal "kendang: a stroke written two pulses long shows the form"
+      "Dg"
+      (and fig (field (car (events-of fig 0 0 0)) 'text))))
+  (let ((fig (keys-fig "(score s :note-names yes"
+                       "  (group \"G\" :rows parts :display ((P \"Kempur\")) gong))")))
+    (test-equal "parts rows: the row label stays, the text changes"
+      (list #("gong") '("Kempur" "G"))
+      (and fig (list (lanes-of fig 0 0) (texts fig 0 0 0)))))
+  (let ((fig (keys-fig "(score s :note-names yes"
+                       "  (group \"G\" :rows single :display ((G \"Gong\")) gong))")))
+    (test-equal "a single row: the text changes" '("P" "Gong")
+      (and fig (texts fig 0 0 0)))))
+
+(test-group ":row-labels no"
+  (let ((fig (keys-fig "(score s (group \"U\" :row-labels no m) (group \"G\" gong))")))
+    (test-equal "every lane \"\", the events in their lanes as before"
+      (list #("" "" "") '(2 1 0))
+      (and fig (list (lanes-of fig 0 0) (lane-numbers fig 0 0 0))))
+    (test-equal "the other group keeps its labels" #("G" "P")
+      (and fig (lanes-of fig 0 1)))
+    (test-equal "lane_width from the labels shown" "1.5em"
+      (and fig (size-of fig 'lane_width))))
+  (let ((fig (keys-fig "(score s :row-labels no (group \"U\" m) (group \"G\" gong))")))
+    (test-equal "on a score: every group" (list #("" "" "") #("" ""))
+      (and fig (list (lanes-of fig 0 0) (lanes-of fig 0 1))))
+    (test-equal "no group shows row labels: lane_width 0.0em" "0.0em"
+      (and fig (size-of fig 'lane_width))))
+  (let ((fig (keys-fig "(score s :row-labels no :note-names yes"
+                       "  (group \"P\" :rows parts m n)"
+                       "  (group \"S\" :rows single d))")))
+    (test-equal "parts and single rows" (list #("" "") #(""))
+      (and fig (list (lanes-of fig 0 0) (lanes-of fig 0 1))))
+    (test-equal "parts and single rows: lane_width 0.0em" "0.0em"
+      (and fig (size-of fig 'lane_width))))
+  (let ((fig (keys-fig "(score s :row-labels no (group \"U\" :keys all m))")))
+    (test-equal "with :keys all: one \"\" per key" (make-vector 10 "")
+      (and fig (lanes-of fig 0 0)))))
+
+(test-group ":key-numbers"
+  (let ((fig (keys-fig "(score s (group \"U\" :key-numbers yes m) (group \"G\" gong))")))
+    (test-equal "used: each lane's key, from 1, skipping the keys not shown"
+      #("5" "4" "3")
+      (and fig (key-numbers-of fig 0 0)))
+    (test-equal "a stroke group: null" 'null
+      (and fig (key-numbers-of fig 0 1)))
+    (test-equal "key_width: one digit" "1.5em"
+      (and fig (size-of fig 'key_width))))
+  (let ((fig (keys-fig "(score s (group \"U\" :key-numbers yes m n))")))
+    (test-equal "two parts" #("5" "4" "3" "2")
+      (and fig (key-numbers-of fig 0 0))))
+  (let ((fig (keys-fig "(score s (group \"U\" :keys all :key-numbers yes m))")))
+    (test-equal "all: from 1 to the last key, highest at the top"
+      #("10" "9" "8" "7" "6" "5" "4" "3" "2" "1")
+      (and fig (key-numbers-of fig 0 0)))
+    (test-equal "key_width: two digits" "2.0em"
+      (and fig (size-of fig 'key_width))))
+  (let ((fig (keys-fig "(score s (group \"U\" :keys (u1 e2) :key-numbers yes m))")))
+    (test-equal "a range" #("7" "6" "5" "4" "3")
+      (and fig (key-numbers-of fig 0 0))))
+  (let ((fig (keys-fig "(score s (group \"U\" m) (group \"G\" gong))")))
+    (test-equal "not asked: null everywhere" '(null null)
+      (and fig (list (key-numbers-of fig 0 0) (key-numbers-of fig 0 1))))
+    (test-equal "no group shows key numbers: key_width 0.0em" "0.0em"
+      (and fig (size-of fig 'key_width))))
+  (let ((fig (keys-fig "(score s :key-numbers yes :note-names yes"
+                       "  (group \"U\" m)"
+                       "  (group \"P\" :rows parts n)"
+                       "  (group \"S\" :rows single d)"
+                       "  (group \"G\" gong))")))
+    (test-equal "on a score: only the pitched notes group" '(#("5" "4" "3") null null null)
+      (and fig (map (lambda (g) (key-numbers-of fig 0 g)) '(0 1 2 3)))))
+  (let ((fig (keys-fig "(score s :octave-numbers no"
+                       "  (group \"U\" :key-numbers yes :row-labels no m))")))
+    (test-equal "without row labels: the numbers stay"
+      (list #("" "" "") #("5" "4" "3"))
+      (and fig (list (lanes-of fig 0 0) (key-numbers-of fig 0 0))))
+    (test-equal "without row labels: lane_width 0.0em, key_width as before"
+      '("0.0em" "1.5em")
+      (and fig (list (size-of fig 'lane_width) (size-of fig 'key_width)))))
+  (let ((fig (keys-fig "(score s :system-length 2"
+                       "  (group \"U\" :key-numbers yes m))")))
+    (test-equal "the same numbers in every system" '(#("5" "4" "3") #("5" "4" "3"))
+      (and fig (list (key-numbers-of fig 0 0) (key-numbers-of fig 1 0))))))
+
+(test-group "strokes: one column wide"
+  (let ((fig (keys-fig "(score s :note-names yes (group \"U\" m)"
+                       "  (group \"G\" gong) (group \"D\" d))")))
+    (test-equal "pitched notes keep their widths"
+      '((0 1 2 #f) (1 2 1 #f) (3 1 0 #f))
+      (and fig (timing (events-of fig 0 0 0))))
+    (test-equal "gong: one column each, where the stroke starts"
+      '((0 1 1 #f) (2 1 0 #f))
+      (and fig (timing (events-of fig 0 1 0))))
+    (test-equal "the text by written duration: two pulses show the display form"
+      '("P" "G")
+      (and fig (texts fig 0 1 0)))
+    (test-equal "kendang: D for dag:2, d for a one-pulse dag"
+      (list (list 0 1 0 "D" grey #f) (list 2 1 1 "dug" grey #f)
+            (list 3 1 0 "d" grey #f))
+      (and fig (shapes fig 0 2 0))))
+  (let ((fig (keys-fig "(score s :note-names yes"
+                       "  (group \"P\" :rows parts d)"
+                       "  (group \"S\" :rows single gong))")))
+    (test-equal "on a parts row" '((0 1 0 "D" ) (2 1 0 "dug") (3 1 0 "d"))
+      (and fig (map (lambda (e) (list (field e 'start) (field e 'dur)
+                                      (field e 'lane) (field e 'text)))
+                    (events-of fig 0 0 0))))
+    (test-equal "on a single row" '((0 1 0 #f) (2 1 0 #f))
+      (and fig (timing (events-of fig 0 1 0)))))
+  (let ((fig (keys-fig "(score s :system-length 1 (group \"G\" gong))")))
+    (test-equal "across system breaks: never cut, nothing continued"
+      '(((0 1 1 #f)) () ((0 1 0 #f)) ())
+      (and fig (map (lambda (s) (timing (events-of fig s 0 0))) '(0 1 2 3)))))
+  (let ((fig (layout-or-false
+              (layout (apply piece-of
+                             (append keys-lines
+                                     '("(part :instrument ugal :name h i2:1/2 a1 - - - - - -)"
+                                       "(score s (group \"H\" h) (group \"G\" gong))")))))))
+    (test-equal "half-pulse columns: one column is half a pulse"
+      (list 2 '((0 1 1 #f) (4 1 0 #f)))
+      (and fig (list (field fig 'steps_per_pulse)
+                     (timing (events-of fig 0 1 0)))))))
+
+(test-group "strokes: no dashes under :holds dash"
+  (let ((fig (keys-fig "(score s :note-names yes :holds dash (group \"U\" m)"
+                       "  (group \"G\" gong) (group \"D\" d))")))
+    (test-equal "pitched notes are still held"
+      (list (list 0 1 2 "u" dung-fill #f) (list 1 1 1 "a" dang-fill #f)
+            (dash 2 1) (list 3 1 0 "i" ding-fill #f))
+      (and fig (shapes fig 0 0 0)))
+    (test-equal "gong: no dashes"
+      (list (list 0 1 1 "P" grey #f) (list 2 1 0 "G" grey #f))
+      (and fig (shapes fig 0 1 0)))
+    (test-equal "kendang: no dashes"
+      (list (list 0 1 0 "D" grey #f) (list 2 1 1 "dug" grey #f)
+            (list 3 1 0 "d" grey #f))
+      (and fig (shapes fig 0 2 0))))
+  (let ((fig (keys-fig "(score s :note-names yes :holds dash"
+                       "  (group \"S\" :rows single gong))")))
+    (test-equal "on a single row: no dashes"
+      (list (list 0 1 0 "P" grey #f) (list 2 1 0 "G" grey #f))
+      (and fig (shapes fig 0 0 0)))))
 
 (test-end "layout")
 
