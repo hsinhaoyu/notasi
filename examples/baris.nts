@@ -27,11 +27,9 @@
   (dung :alias (u nung) :display "nung" :damped "nu'")
   (dang :alias (a nang) :display "nang" :damped "na'"))
 
-;; Gilak's two gongs are both written G in Tenzer's figure.
-(strokes gong-strokes  G (GL :display "G") P T)
-(instrument gong gong-strokes  G GL P T)
-
-;; gilak comes from the template; its gong part plays this gong.
+;; The gongs and gilak come from the template. Tenzer writes both gongs,
+;; gong lanang (GL) and gong wadon (G), as G: his scores below show GL as
+;; "G" with :display, while the colour score keeps them apart.
 
 ;; Each drum is played with two hands: left-hand strokes (pak, kap) and
 ;; right-hand strokes (dug, du', dag, da'). du' and da' are strokes of
@@ -96,7 +94,8 @@
   (group "Reyong" :subtitle "sangsih, polos"  sangsih polos)
   (group "Ugal" :subtitle "main melody" :rows parts  ugal)
   (group "Calung" :subtitle "core melody" :rows parts  calung)
-  (group "" :rows parts  (kempli :label "Kempli") (gong :label "Gong & Kempur"))
+  (group "" :rows parts :display ((GL "G"))
+    (kempli :label "Kempli") (gong :label "Gong & Kempur"))
   (group "Kendang lanang" :rows parts
     (lanang-lh :label "LH") (lanang-rh :label "RH"))
   (group "Kendang wadon" :rows parts
@@ -118,3 +117,13 @@
     :pulse-label "Beats (Clap)" :breaks ((1 3))
     :caption "Singing the composite drum part (for one person)"
   (group "Kendang" :rows single  lanang-lh lanang-rh wadon-lh wadon-rh))
+
+;; The same cycle in colour, as the Jaya Semara score draws it: colours
+;; for pitch, a row for each key or stroke, the gong last, one system.
+(score colour
+  (group "Reyong" :subtitle "polos, sangsih"  polos sangsih)
+  (group "Ugal"  ugal)
+  (group "Calung"  calung)
+  (group "Gong, kempli"  gong kempli)
+  (group "Kendang lanang"  lanang-lh lanang-rh)
+  (group "Kendang wadon"  wadon-lh wadon-rh))

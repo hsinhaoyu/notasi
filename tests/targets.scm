@@ -1,5 +1,6 @@
 ;;; Acceptance test of iteration 2 (milestone feat/targets): the two
-;;; targets, Gold's Jaya Semara and Tenzer's Baris, read and draw.
+;;; targets, Gold's Jaya Semara and Tenzer's Baris, read and draw; and of
+;;; iteration 3 (milestone feat/examples), Baris's colour score (below).
 ;;;
 ;;; Written from doc/iterations/02-gold-and-tenzer/README.md (the
 ;;; acceptance test and milestone 3's decisions), the targets in its
@@ -26,6 +27,33 @@
 ;;; - An SVG is a file starting with "<svg" or "<?xml", as in
 ;;;   tests/command.scm.
 ;;;
+;;;
+;;; Extended for the acceptance test of iteration 3 (milestone
+;;; feat/examples), written from doc/iterations/03-refining-the-examples/
+;;; README.md (milestone 3's decisions), 01-notation.md (score options,
+;;; `:display'), 02-piece.md (the score and group records), 04-layout.md
+;;; (lanes, `display', "Golden tests") and ADR 0040, not from the
+;;; implementation:
+;;; - Baris has a fifth score, `colour', after the four Tenzer-style
+;;;   ones; it renders and has its golden file baris_colour.json.
+;;; - Baris's gong instrument keeps the template's strokes: GL's own
+;;;   display form is "GL".  The four Tenzer-style scores' gong group
+;;;   shows GL as "G" (`:display ((GL "G"))'); `colour' does not.
+;;; - `colour' has Jaya Semara's look: gong-last numbering, every group
+;;;   with notes rows, colour fill, no note names, keys used and grid
+;;;   background; one system (no system-length, no breaks); two kendang
+;;;   groups, "Kendang lanang" and "Kendang wadon", holding the parts on
+;;;   the instruments kendang-lanang and kendang-wadon.  Its figure has one
+;;;   system, and the gong group's lanes include "G" and "GL".
+;;; Choices made where the docs are not explicit:
+;;; - The gong group of a score is the group with a part on the instrument
+;;;   `gong'; the gong group in the figure is the one at the same index.
+;;; - A Tenzer-style score without a gong group (some excerpts have no
+;;;   gongs, and `:display' must name a stroke of the group's instruments)
+;;;   is not checked for `:display'; `full' must have one.
+;;; - A kendang group's parts are compared with the instrument's parts as
+;;;   sets (the order within the group is not checked).
+;;;
 ;;; Run from the repo root: guile --fresh-auto-compile -L . tests/targets.scm
 
 (use-modules (srfi srfi-1)
@@ -36,6 +64,7 @@
              (ice-9 match)
              (rnrs bytevectors)
              (notasi command)
+             (notasi layout)
              (notasi piece)
              (notasi reader))
 
@@ -104,7 +133,40 @@
 ;;; The targets: example name and its scores, as the targets name them.
 (define targets
   '(("jaya-semara" (full kotekan))
-    ("baris" (full polos-alone sangsih-alone kendang-composite))))
+    ("baris" (full polos-alone sangsih-alone kendang-composite colour))))
+
+;;; Baris's scores in Tenzer's style (iteration 2's).
+(define tenzer-scores '(full polos-alone sangsih-alone kendang-composite))
+
+(define (instrument-named pc name)
+  (find (lambda (i) (eq? (instrument-name i) name)) (piece-instruments pc)))
+
+(define (group-parts group) (map car (group-members group)))
+
+(define (group-on-instrument? group name)
+  (any (lambda (p) (eq? name (instrument-name (part-instrument p))))
+       (group-parts group)))
+
+(define (gong-group-index score)
+  "The index of SCORE's group holding a part on the instrument gong, or #f."
+  (list-index (lambda (g) (group-on-instrument? g 'gong)) (score-groups score)))
+
+(define (group-labelled score label)
+  (find (lambda (g) (equal? label (group-label g))) (score-groups score)))
+
+(define (part-names-on pc instrument)
+  "The names of PC's parts on INSTRUMENT, sorted."
+  (sort (map part-name
+             (filter (lambda (p) (eq? instrument (instrument-name (part-instrument p))))
+                     (piece-parts pc)))
+        (lambda (a b) (string<? (symbol->string a) (symbol->string b)))))
+
+(define (group-part-names group)
+  (sort (map part-name (group-parts group))
+        (lambda (a b) (string<? (symbol->string a) (symbol->string b)))))
+
+(define (ref alist key)
+  (match (assq key alist) ((_ . v) v) (#f #f)))
 
 (test-begin "targets")
 
@@ -183,6 +245,84 @@
              (svg-file? out))))
        scores)))
    targets))
+
+;;; ------------------------------------------------------------------
+;;; Baris's gongs: the template's GL, shown as "G" in Tenzer's scores
+
+(test-group "baris gongs"
+  (let ((pc (read-example "baris")))
+    (test-assert "(baris reads)" (piece? pc))
+    (when pc
+      (let* ((gong (instrument-named pc 'gong))
+             (gl (and gong (find (lambda (d) (eq? 'GL (degree-name d)))
+                                 (scale-degrees (instrument-scale gong))))))
+        (test-assert "the instrument gong has the stroke GL" gl)
+        (test-equal "GL's own display form is \"GL\"" "GL"
+          (and gl (degree-display gl))))
+      (for-each
+       (lambda (name)
+         (let* ((score (piece-score pc name))
+                (i (and score (gong-group-index score)))
+                (group (and i (list-ref (score-groups score) i))))
+           (test-assert (format #f "(baris has the score ~a)" name) score)
+           (when (or group (eq? name 'full))
+             (test-equal (format #f "~a: the gong group shows GL as \"G\"" name)
+               "G" (and group (ref (group-display group) 'GL))))))
+       tenzer-scores)
+      (let* ((score (piece-score pc 'colour))
+             (i (and score (gong-group-index score)))
+             (group (and i (list-ref (score-groups score) i))))
+        (test-assert "colour: has a gong group" group)
+        (test-assert "colour: the gong group has no display for GL"
+          (and group (not (assq 'GL (group-display group)))))))))
+
+;;; ------------------------------------------------------------------
+;;; Baris's colour score: Jaya Semara's look, one system, two kendang groups
+
+(test-group "baris colour"
+  (let* ((pc (read-example "baris"))
+         (score (and pc (piece-score pc 'colour))))
+    (test-assert "baris has the score colour" score)
+    (when score
+      (test-equal "numbering gong-last" 'gong-last (score-numbering score))
+      (test-equal "no system-length" #f (score-system-length score))
+      (test-equal "no breaks" '() (score-breaks score))
+      (for-each
+       (lambda (g)
+         (let ((label (format #f "group ~s: " (group-label g))))
+           (test-equal (string-append label "rows notes") 'notes (group-rows g))
+           (test-equal (string-append label "fill colour") 'colour (group-fill g))
+           (test-equal (string-append label "no note names") #f (group-note-names? g))
+           (test-equal (string-append label "keys used") 'used (group-keys g))
+           (test-equal (string-append label "background grid") 'grid (group-background g))))
+       (score-groups score))
+      (for-each
+       (match-lambda
+         ((label instrument)
+          (let ((g (group-labelled score label)))
+            (test-assert (string-append "a group labelled " label) g)
+            (test-assert (format #f "(baris has parts on ~a)" instrument)
+              (pair? (part-names-on pc instrument)))
+            (test-equal (format #f "~a holds the parts on ~a" label instrument)
+              (part-names-on pc instrument)
+              (and g (group-part-names g))))))
+       '(("Kendang lanang" kendang-lanang)
+         ("Kendang wadon" kendang-wadon)))
+      (let* ((fig (guard (e (#t #f)) (layout-score pc score)))
+             (systems (and fig (ref fig 'systems)))
+             (i (gong-group-index score)))
+        (test-assert "layout-score lays it out" fig)
+        (test-equal "its figure has one system" 1
+          (and (vector? systems) (vector-length systems)))
+        (test-assert "(it has a gong group)" i)
+        (when (and (vector? systems) (> (vector-length systems) 0) i)
+          (let* ((groups (ref (vector-ref systems 0) 'groups))
+                 (lanes (and (vector? groups) (< i (vector-length groups))
+                             (vector->list (ref (vector-ref groups i) 'lanes)))))
+            (test-assert "the gong group's lanes include \"G\""
+              (and lanes (member "G" lanes)))
+            (test-assert "the gong group's lanes include \"GL\""
+              (and lanes (member "GL" lanes)))))))))
 
 (remove-tree tmp-dir)
 
