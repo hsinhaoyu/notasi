@@ -7266,6 +7266,41 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
   (test-equal "a score's :keys before its groups" '(bad-option 14)
     (score-error "(score s :keys none (group \"U\" nosuch))")))
 
+;;; ------------------------------------------------------------------
+;;; Slice feat/drawing-output (04, "Slices (iteration 3)", slice 4;
+;;; 01, "Rules"; 03, [score-options]; ADR 0040): a score name may not
+;;; contain `_', so that a file drawn from it, NAME_SCORE, can be split.
+;;; A name containing `_' is bad-form at the score's line; names with
+;;; `-' read as before.
+;;; Choice where the docs are silent: `_' anywhere in the name (first,
+;;; last, the whole name) counts.
+
+(test-group "[score-options] a score name containing `_'"
+  (table-tests 'bad-form
+   (list
+    (list "`_' inside the name" 14
+          (scores+ "(score second_cycle (group \"U\" ugal))"))
+    (list "`_' at the start" 14
+          (scores+ "(score _full (group \"U\" ugal))"))
+    (list "`_' at the end" 14
+          (scores+ "(score full_ (group \"U\" ugal))"))
+    (list "the name `_' alone" 14
+          (scores+ "(score _ (group \"U\" ugal))"))
+    (list "with options: still the score's line" 14
+          (scores+ "(score a_b :title \"T\" (group \"U\" ugal))"))
+    (list "the second score: its own line" 15
+          (scores+ "(score full (group \"U\" ugal))"
+                   "(score polos_alone (group \"P\" polos))"))
+    (list "a score on several lines: the line it starts on" 15
+          (scores+ "(score full (group \"U\" ugal))"
+                   "(score a_b"
+                   "  (group \"P\" polos))"))))
+  (let ((pc (read-scores+ "(score second-cycle (group \"U\" ugal))"
+                          "(score polos-alone-2 (group \"P\" polos))")))
+    (test-equal "names with `-' read, kept as written"
+      '(second-cycle polos-alone-2)
+      (and pc (map score-name (piece-scores pc))))))
+
 (define runner (test-runner-current))
 (test-end "reader")
 

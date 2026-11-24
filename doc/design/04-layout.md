@@ -505,7 +505,12 @@ with the examples, golden files and manual pages it affects.
    LOW and HIGH are written as in a part: a note's name, an alias name,
    or a key number (`(a1 u2)`, `(dang1 dung2)`, `(4 8)`).
 4. `feat/drawing-output`: `NAME_SCORE` file names and no `_` in score
-   names (ADR 0040); the sans-serif font (ADR 0045).
+   names (ADR 0040); the sans-serif font (ADR 0045). Decided for this slice:
+   `(choose-font families)` in `(notasi typst)` returns the first of
+   Helvetica, Arial, DejaVu Sans and Liberation Sans among FAMILIES, or
+   "Libertinus Serif"; `(installed-fonts)` lists the families `typst
+   fonts` prints; `write-entry-file` takes `#:font` (default
+   "Libertinus Serif"); `render-piece` passes it the font chosen.
 
 ## Golden tests
 
