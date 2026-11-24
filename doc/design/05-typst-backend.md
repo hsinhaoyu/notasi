@@ -16,9 +16,9 @@ lines, pulse lines by group and grey note borders (ADR 0041) since
 `feat/drawing-lines`; the key-number column and row labels left out
 (ADR 0047) since `feat/drawing-rows`; a sans-serif font for standalone
 figures (ADR 0045) and file names `NAME_SCORE` (ADR 0040) since
-`feat/drawing-output`. Planned (iteration 4): the command line as a
-contract for editors, and `notasi --version` (ADR 0048); see "The
-command line as a contract".
+`feat/drawing-output`. The command line as a contract for editors,
+and `notasi --version` (ADR 0048), since iteration 4's
+`feat/emacs-preview-draw`; see "The command line as a contract".
 
 ## Responsibility
 
@@ -486,7 +486,8 @@ one file doesn't overwrite one picture with another.
 
 ### The command line as a contract
 
-**Planned** (iteration 4, ADR 0048). Editor packages (08) draw by
+**Implemented** (iteration 4's `feat/emacs-preview-draw`, ADR 0048).
+Editor packages (08) draw by
 running `notasi render` and reading what comes back, never by loading
 notasi's modules. What they read is a contract; changing any of it
 changes the editor package in the same PR:

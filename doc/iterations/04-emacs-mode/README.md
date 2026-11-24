@@ -95,7 +95,7 @@ Each milestone, or each slice of one, is its own branch and PR into
    indented by 2 and option lines by 4, and `make check-emacs` finding
    the macOS app and installing package-lint itself (08).
 2. **`feat/emacs-preview`**, in three slices:
-   1. `feat/emacs-preview-draw`: finding notasi, `notasi --version`
+   1. `feat/emacs-preview-draw` (done): finding notasi, `notasi --version`
       and its check, drawing, the preview window and header line,
       `C-c C-c`, `C-c C-p`, `C-c C-o`, cleaning up.
    2. `feat/emacs-preview-live`: redrawing on a pause and on saving,
