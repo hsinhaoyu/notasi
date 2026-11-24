@@ -7301,6 +7301,51 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
       '(second-cycle polos-alone-2)
       (and pc (map score-name (piece-scores pc))))))
 
+;;; fix/score-error-times: errors found while checking a score give the
+;;; position as a cycle and a pulse when the piece has a colotomy, like
+;;; every other error (01, "Rules"; 03, "Error reporting").
+(define (gilak-score-message . lines)
+  "The message of reading a gilak piece (one-pulse pickup) with LINES."
+  (let ((c (catch-syntax-error
+            (lambda ()
+              (read-piece-string
+               (string-join (append (list "(piece \"G\" :colotomy gilak :pickup 1)"
+                                          "(use gong-kebyar)")
+                                    lines)
+                            "\n"))))))
+    (and (exception-with-message? c) (exception-message c))))
+
+(test-group "score errors: positions with the cycle"
+  (test-assert "outside-keys in the pickup: cycle 0, pulse 8"
+    (let ((m (gilak-score-message
+              "(part :instrument ugal a1 || o2 i2 e2 o2 | a1 o2 i2 a1 ||)"
+              "(score s (group \"U\" :keys (i2 e2) ugal))")))
+      (and m (string-contains m "cycle 0, pulse 8"))))
+  (test-assert "notes-collide in cycle 1: cycle 1, pulse 3"
+    (let ((m (gilak-score-message
+              "(part :instrument reyong :name a - || - i3 _ - | - - - - ||)"
+              "(part :instrument reyong :name b - || - - o3 - | - - - - ||)"
+              "(score s :note-names yes (group \"R\" :rows single a b))")))
+      (and m (string-contains m "cycle 1, pulse 3"))))
+  (test-assert "pattern-names-overlap: cycle 1, pulse 2"
+    (let ((m (gilak-score-message
+              "(pattern p :instrument reyong :short \"p\" i3 o3)"
+              "(part :instrument reyong :name a - || @p @p - - - - ||)"
+              "(part :instrument reyong :name b - || - @p @p - - - ||)"
+              "(score s :pattern-names short (group \"R\" a b))")))
+      (and m (string-contains m "cycle 1, pulse 2"))))
+  (test-assert "without a colotomy, still a pulse number"
+    (let ((c (catch-syntax-error
+              (lambda ()
+                (read-piece-string
+                 (string-join
+                  '("(piece \"P\")" "(use gong-kebyar)"
+                    "(part :instrument ugal a1 o2 i2)"
+                    "(score s (group \"U\" :keys (i2 e2) ugal))")
+                  "\n"))))))
+      (and (exception-with-message? c)
+           (string-contains (exception-message c) "part `ugal', pulse 1:")))))
+
 (define runner (test-runner-current))
 (test-end "reader")
 

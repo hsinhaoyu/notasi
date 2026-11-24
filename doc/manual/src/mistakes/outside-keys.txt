@@ -1,1 +1,1 @@
-outside-keys.nts:5: part `ugal', pulse 1: `dang1' is outside the keys shown, `ding2' to `deng2' (:keys)
+outside-keys.nts:5: part `ugal', cycle 0, pulse 8: `dang1' is outside the keys shown, `ding2' to `deng2' (:keys)
