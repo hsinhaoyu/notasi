@@ -25,6 +25,7 @@
 (require 'lisp-mode)
 (require 'subr-x)
 (require 'seq)
+(require 'flymake)
 
 (defgroup notasi nil
   "Write Balinese gamelan notation with notasi."
@@ -48,6 +49,10 @@
 
 (defface notasi-bar '((t :inherit font-lock-delimiter-face))
   "Face for bar marks in the music, `|' and `||'."
+  :group 'notasi)
+
+(defface notasi-preview-error '((t :inherit error))
+  "Face of the preview's header line when a drawing fails."
   :group 'notasi)
 
 (defface notasi-pattern '((t :inherit font-lock-function-name-face))
@@ -266,6 +271,15 @@ TICK is `buffer-chars-modified-tick' when that drawing started.")
 (defvar-local notasi-mode--timer nil
   "The timer that redraws when the writing pauses.")
 
+(defvar-local notasi-mode--mistake nil
+  "The last drawing's mistake, as (BEG END TEXT), or nil.")
+
+(defvar-local notasi-mode--echoed nil
+  "The problems already shown in the echo area for this buffer.")
+
+(defconst notasi-mode--manual-pointer " — see the manual's chapter on Emacs"
+  "What follows the sentence saying what is wrong, other than a mistake.")
+
 (defconst notasi-mode--follow-choice "follow the cursor"
   "The choice in \[notasi-choose-score] that follows the cursor again.")
 
@@ -406,10 +420,12 @@ that has gone is forgotten."
                          #'notasi-mode--refit nil t)
                (current-buffer))))))
 
-(defun notasi-mode--set-header (preview text)
-  "Show TEXT in the header line of the buffer PREVIEW."
+(defun notasi-mode--set-header (preview text &optional face)
+  "Show TEXT in the header line of the buffer PREVIEW, in FACE if given."
   (with-current-buffer preview
-    (setq header-line-format (string-replace "%" "%%" text))
+    (let ((escaped (string-replace "%" "%%" text)))
+      (setq header-line-format
+            (if face (propertize escaped 'face face) escaped)))
     (force-mode-line-update)))
 
 (defun notasi-mode--image-width (preview)
@@ -508,6 +524,103 @@ Return its name."
                     (file-name-nondirectory buffer-file-name)
                     (or line "notasi failed"))))
 
+(defun notasi-mode--uses ()
+  "Return the buffer's top-level (use X) forms, as a list of (X BEG . END)."
+  (save-excursion
+    (save-match-data
+      (goto-char (point-min))
+      (let (uses)
+        (while (re-search-forward "^(use[ \t\n]+" nil t)
+          (let ((beg (match-beginning 0)))
+            ;; `syntax-ppss' moves point and changes the match data.
+            (when (= 0 (save-excursion (save-match-data (car (syntax-ppss beg)))))
+              (let ((name (ignore-errors (read (current-buffer))))
+                    (end (save-excursion
+                           (goto-char beg)
+                           (condition-case nil
+                               (progn (forward-sexp) (point))
+                             (scan-error (line-end-position))))))
+                (push (cons (if (symbolp name) (symbol-name name) name)
+                            (cons beg end))
+                      uses)))))
+        (nreverse uses)))))
+
+(defun notasi-mode--use-for (file)
+  "Return the bounds (BEG . END) of the (use …) form that loads FILE.
+That is the form naming FILE without its folder and .nts; or the first
+\(use …) form; or the first line, when there is none."
+  (let ((uses (notasi-mode--uses)))
+    (or (cdr (seq-find (lambda (use)
+                         (and (stringp (car use))
+                              (equal (file-name-base (car use))
+                                     (file-name-base file))))
+                       uses))
+        (cdr (car uses))
+        (save-excursion
+          (goto-char (point-min))
+          (cons (point) (line-end-position))))))
+
+(defun notasi-mode--line-bounds (line)
+  "Return the bounds (BEG . END) of LINE, counted from 1, in the buffer."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (forward-line (max 0 (1- line)))
+      (cons (line-beginning-position) (line-end-position)))))
+
+(defun notasi-mode--failure (output)
+  "Return what notasi's OUTPUT, from a failed drawing, says is wrong.
+Either (mistake HEADER BEG END TEXT), for a mistake in the notation
+to mark from BEG to END, or (problem SENTENCE) for any other problem."
+  (let ((line (or (car (split-string (string-trim output) "\n" t)) "")))
+    (if (and (not (string-prefix-p "notasi: " line))
+             (string-match "\\`\\(.+?\\):\\([0-9]+\\): \\(.*\\)" line))
+        (let* ((file (match-string 1 line))
+               (number (string-to-number (match-string 2 line)))
+               (said (match-string 3 line))
+               (piece (equal file (file-name-nondirectory
+                                   (notasi-mode--hidden-file))))
+               (bounds (if piece
+                           (notasi-mode--line-bounds number)
+                         (notasi-mode--use-for file))))
+          (list 'mistake (notasi-mode--message output)
+                (car bounds) (cdr bounds)
+                (if piece said line)))
+      (list 'problem
+            (concat (if (string-empty-p line)
+                        "notasi failed"
+                      (string-remove-prefix "notasi: " line))
+                    notasi-mode--manual-pointer)))))
+
+(defun notasi-mode--report (mistake)
+  "Keep MISTAKE, (BEG END TEXT) or nil, and tell Flymake about it."
+  (setq notasi-mode--mistake mistake)
+  (when flymake-mode
+    (flymake-start nil t)))
+
+(defun notasi-mode--problem (sentence)
+  "Show SENTENCE, a problem other than a mistake, in a red header line.
+It is shown in the echo area too, the first time it comes up."
+  (notasi-mode--set-header (notasi-mode--preview t) sentence
+                           'notasi-preview-error)
+  (unless (member sentence notasi-mode--echoed)
+    (push sentence notasi-mode--echoed)
+    (message "%s" sentence))
+  (notasi-mode--report nil))
+
+(defun notasi-flymake (report-fn &rest _)
+  "Report the last drawing's mistake to Flymake with REPORT-FN.
+A Flymake backend: it runs nothing, since each drawing finds the
+mistakes."
+  (funcall report-fn
+           (and notasi-mode--mistake
+                (pcase-let ((`(,beg ,end ,text) notasi-mode--mistake))
+                  (list (flymake-make-diagnostic
+                         (current-buffer)
+                         (min beg (point-max)) (min end (point-max))
+                         :error text))))))
+
 (defun notasi-mode--sentinel (source score out tick)
   "Return a sentinel for a drawing of SCORE in SOURCE's buffer to OUT.
 TICK is the buffer's `buffer-chars-modified-tick' when it started."
@@ -535,9 +648,16 @@ TICK is the buffer's `buffer-chars-modified-tick' when it started."
                      preview (if notasi-mode--note
                                  (concat header "  " notasi-mode--note)
                                header))
-                    (setq notasi-mode--note nil))
-                (notasi-mode--set-header
-                 preview (notasi-mode--message output))))))))))
+                    (setq notasi-mode--note nil
+                          notasi-mode--echoed nil)
+                    (notasi-mode--report nil))
+                (pcase (notasi-mode--failure output)
+                  (`(mistake ,header ,beg ,end ,text)
+                   (notasi-mode--set-header preview header
+                                            'notasi-preview-error)
+                   (notasi-mode--report (list beg end text)))
+                  (`(problem ,sentence)
+                   (notasi-mode--problem sentence)))))))))))
 
 (defun notasi-preview-redraw ()
   "Draw the score again, from the text as it is now, saved or not.
@@ -549,8 +669,8 @@ Return the drawing's process, or nil when nothing is drawn."
           (preview (notasi-mode--preview t)))
       (if (not program)
           (progn
-            (notasi-mode--set-header
-             preview "Can't find notasi: see the manual's chapter on Emacs")
+            (notasi-mode--problem
+             (concat "Can't find notasi" notasi-mode--manual-pointer))
             nil)
         (notasi-mode--check-version program)
         (let* ((score (notasi-mode--target))
@@ -734,6 +854,8 @@ indent their body by 2, and a line of options (starting with `:') by
     (add-hook 'after-change-functions #'notasi-mode--changed nil t)
     (add-hook 'after-save-hook #'notasi-mode--saved nil t)
     (add-hook 'post-command-hook #'notasi-mode--follow nil t)
+    (setq-local flymake-diagnostic-functions '(notasi-flymake))
+    (flymake-mode 1)
     ;; `find-file' shows the buffer only after the mode has run.
     (run-at-time 0 nil #'notasi-mode--open (current-buffer))))
 
