@@ -82,8 +82,8 @@
          (match-string-no-properties 0))))
 
 (defun notasi-mode--indent-function (indent-point state)
-  "Indent like `lisp-indent-function', with notasi's forms like `defun'.
-INDENT-POINT and STATE are as for `lisp-indent-function'.  The forms
+  "Indent like function `lisp-indent-function', notasi's forms like `defun'.
+INDENT-POINT and STATE are as for function `lisp-indent-function'.  The forms
 in `notasi-mode--body-forms' indent their body by 2.  Nothing is put
 on the symbols, so Emacs Lisp elsewhere is unaffected."
   (if (member (notasi-mode--list-head (nth 1 state)) notasi-mode--body-forms)
