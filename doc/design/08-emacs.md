@@ -112,8 +112,9 @@ it on a fresh Emacs.
 4. **The header line** shows the piece's title and the score's name
    (`Jaya Semara: pangecet — full`), and "drawing…" while a drawing is
    being made. Nothing else shows that a process runs.
-5. **Closing the `.nts` buffer** closes its preview and removes its
-   temporary files.
+5. **Closing the `.nts` buffer** closes its preview, buffer and
+   window (unless that window is the frame's only one), and removes
+   its temporary files.
 
 The preview is a read-only buffer, `*notasi: NAME*`, showing only the
 picture under its header line.

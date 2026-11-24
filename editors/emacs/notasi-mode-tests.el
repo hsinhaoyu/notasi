@@ -1451,6 +1451,37 @@ folder; no hidden file is left."
          (should-not (file-exists-p outdir))
          (should-not (notasi-mode-tests--hidden-files dir)))))))
 
+(ert-deftest notasi-mode-test-kill-buffer-closes-preview-window ()
+  "Killing the .nts buffer closes its preview's window, so no split is
+left showing another buffer."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let* ((buffer (plist-get ctx :buffer))
+            (preview (notasi-mode-tests--preview (plist-get ctx :file))))
+       (should (get-buffer-window preview))
+       (should (= (length (window-list)) 2))
+       (with-current-buffer buffer (set-buffer-modified-p nil))
+       (kill-buffer buffer)
+       (should-not (buffer-live-p preview))
+       (should (= (length (window-list)) 1))))
+   :select t))
+
+(ert-deftest notasi-mode-test-kill-buffer-keeps-only-window ()
+  "When the preview is the frame's only window, killing the .nts buffer
+kills the preview but leaves the window."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let* ((buffer (plist-get ctx :buffer))
+            (preview (notasi-mode-tests--preview (plist-get ctx :file))))
+       (select-window (get-buffer-window preview))
+       (delete-other-windows)
+       (with-current-buffer buffer (set-buffer-modified-p nil))
+       (kill-buffer buffer)
+       (should-not (buffer-live-p preview))
+       (should (= (length (window-list)) 1))
+       (should (window-live-p (selected-window)))))
+   :select t))
+
 (ert-deftest notasi-mode-test-kill-buffer-while-drawing ()
   "Killing the .nts buffer during a drawing stops it and cleans up."
   (notasi-mode-tests--with-piece
