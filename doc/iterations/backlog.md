@@ -91,3 +91,14 @@ for iteration 4's goal:
 - **Several mistakes at once**, collected by the reader instead of
   stopping at the first
   ([mistakes shown in the text](04-emacs-mode/design_ideas/2026-11-24-errors.md)).
+
+In the Emacs package (08):
+
+- **Completion, Eldoc and Imenu**, and where completion gets its facts
+  (`notasi describe` above, or reading the forms in Emacs Lisp)
+  ([help while writing](04-emacs-mode/design_ideas/2026-11-24-editing-help.md)).
+- **A preview that scrolls with the cursor** in a long piece, and
+  **highlighting a pattern's notes** in the picture
+  ([live preview](04-emacs-mode/design_ideas/2026-11-24-live-preview.md)).
+- **MELPA**, once the package has been used for a while
+  ([the package](04-emacs-mode/design_ideas/2026-11-24-package.md)).
