@@ -18,7 +18,7 @@ golden:
 	$(GUILE) $(GUILE_FLAGS) tests/golden.scm --update
 
 # Draw every score of each example in examples/ with render-piece, to
-# build/preview/NAME.png (or NAME.SCORE.png for a file with scores), for a
+# build/preview/NAME.png (or NAME_SCORE.png for a file with scores), for a
 # person to check how figures look. Needs typst.
 preview:
 	@mkdir -p build/preview
@@ -30,14 +30,14 @@ clean:
 
 # The user manual (doc/manual/), built with mdBook into doc/manual/book/.
 # Draw every figure a manual page shows as figures/NAME.svg from
-# examples/NAME.nts, or figures/NAME.SCORE.svg from its score SCORE
+# examples/NAME.nts, or figures/NAME_SCORE.svg from its score SCORE
 # (needs Guile and Typst), then build the book.
 MANUAL_SRC = doc/manual/src
 
 manual-figures:
 	@mkdir -p $(MANUAL_SRC)/figures
-	@for f in $$(grep -oh 'figures/[a-z0-9.-]*\.svg' $(MANUAL_SRC)/*.md | sed 's|figures/||; s|\.svg$$||' | sort -u); do \
-	  n=$${f%%.*}; s=$${f#$$n}; s=$${s#.}; \
+	@for f in $$(grep -oh 'figures/[a-z0-9_-]*\.svg' $(MANUAL_SRC)/*.md | sed 's|figures/||; s|\.svg$$||' | sort -u); do \
+	  n=$${f%%_*}; s=$${f#$$n}; s=$${s#_}; \
 	  scripts/notasi render $(MANUAL_SRC)/examples/$$n.nts $${s:+--score $$s} \
 	    -o $(MANUAL_SRC)/figures/$$f.svg >/dev/null || exit 1; \
 	done

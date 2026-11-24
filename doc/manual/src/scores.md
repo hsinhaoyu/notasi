@@ -105,11 +105,11 @@ A score can print part of a piece, and choose where its lines break:
 
 The first score, `whole`, starts a new line at each cycle:
 
-![The whole piece, a cycle on each line](figures/scores-excerpt.whole.svg)
+![The whole piece, a cycle on each line](figures/scores-excerpt_whole.svg)
 
 The second, `second`, prints one cycle, counted with the gong on 1:
 
-![The second cycle alone](figures/scores-excerpt.second.svg)
+![The second cycle alone](figures/scores-excerpt_second.svg)
 
 | Setting | Where | What it does |
 |---|---|---|
