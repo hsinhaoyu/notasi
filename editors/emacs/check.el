@@ -23,6 +23,12 @@
 (setq native-comp-enable-subr-trampolines nil
       native-comp-jit-compilation nil)
 
+;; Bound below before checkdoc is loaded; declared so that compiling
+;; this file (as package-vc does) gives no warning.
+(defvar checkdoc-create-error-function)
+(defvar package-lint-main-file)
+(declare-function package-lint-batch-and-exit "package-lint")
+
 (defun notasi-check-checkdoc ()
   "Run checkdoc on the files on the command line; exit 1 on any warning."
   (require 'checkdoc)

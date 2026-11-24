@@ -847,8 +847,8 @@ to the environment.  With SELECT, the file is opened with `find-file'
 in a frame with one window; otherwise with `find-file-noselect'.  The
 first drawing, made on opening, is waited for.
 
-FUNCTION is called in the file's buffer, with a plist: :buffer, :dir (the file's folder),
-:file, :log (the fake's log) and :input (the text it was last given).
+FUNCTION is called in the file's buffer, with a plist: :buffer, :dir
+\(the file's folder), :file, :log (the fake's log) and :input (the text it was last given).
 Afterwards the buffer is killed and the folders removed."
   (let* ((dir (make-temp-file "notasi-mode-piece" t))
          (aux (make-temp-file "notasi-mode-aux" t))
@@ -2702,6 +2702,256 @@ fresh Emacs loading a copy of the package from outside any clone."
             (should (string-search notasi-mode-tests--manual-pointer red))
             (should (= marks 0))))
       (delete-directory tmp t))))
+
+;;;; Documentation (feat/emacs-docs)
+
+;; Written from 08 ("Documentation", "Decided when `feat/emacs-docs'
+;; started") before the README section, the manual's chapter, the
+;; Commentary and the docstring: the README's Emacs configuration
+;; reads as Lisp and installs from the right place, the manual's
+;; "Keys and settings" page names every setting and key, the chapter
+;; is in the manual, and the docstring and Commentary point to it.
+
+(defconst notasi-mode-tests--readme
+  (expand-file-name "README.md" notasi-mode-tests--repo)
+  "The repository's README.")
+
+(defconst notasi-mode-tests--manual-src
+  (expand-file-name "doc/manual/src/" notasi-mode-tests--repo)
+  "The manual's source directory.")
+
+(defconst notasi-mode-tests--chapter-pages
+  '("emacs-installing.md" "emacs-first-score.md" "emacs-mistakes.md"
+    "emacs-several-scores.md" "emacs-keys-and-settings.md"
+    "emacs-problems.md")
+  "The pages of the manual's chapter \"Writing in Emacs\", in order.")
+
+(defconst notasi-mode-tests--vc-plist
+  '(:url "https://github.com/hsinhaoyu/notasi"
+    :lisp-dir "editors/emacs"
+    :branch "dev")
+  "What the README's configuration must install the package from.")
+
+(defun notasi-mode-tests--file-text (file)
+  "Return the text of FILE, or nil if it doesn't exist."
+  (when (file-exists-p file)
+    (with-temp-buffer
+      (insert-file-contents file)
+      (buffer-string))))
+
+(defun notasi-mode-tests--squeeze (text)
+  "Return TEXT with each run of whitespace made one space.
+So a phrase found in TEXT may be split across lines."
+  (replace-regexp-in-string "[ \t\n]+" " " text))
+
+(defun notasi-mode-tests--readme-section (heading)
+  "Return README's section under the `## ' HEADING, or nil.
+It runs to the next `## ' heading or the end of the file."
+  (let ((text (notasi-mode-tests--file-text notasi-mode-tests--readme)))
+    (when (and text
+               (string-match (concat "^## " (regexp-quote heading) "[ \t]*$")
+                             text))
+      (let* ((start (match-end 0))
+             (end (and (string-match "^## " text start) (match-beginning 0))))
+        (substring text start end)))))
+
+(defun notasi-mode-tests--elisp-blocks (text)
+  "Return the contents of TEXT's fenced code blocks marked elisp.
+A block is marked `elisp' or `emacs-lisp'."
+  (let ((start 0) blocks)
+    (while (string-match
+            "^```\\(?:elisp\\|emacs-lisp\\)[ \t]*\n\\(\\(?:.*\n\\)*?\\)```"
+            text start)
+      (push (match-string 1 text) blocks)
+      (setq start (match-end 0)))
+    (nreverse blocks)))
+
+(defun notasi-mode-tests--read-all (text)
+  "Read every Lisp form in TEXT and return them in a list.
+A form that can't be read signals an error."
+  (with-temp-buffer
+    (insert text)
+    (goto-char (point-min))
+    (let (forms)
+      (forward-comment (buffer-size))
+      (while (not (eobp))
+        (push (read (current-buffer)) forms)
+        (forward-comment (buffer-size)))
+      (nreverse forms))))
+
+(defun notasi-mode-tests--subforms (pred form)
+  "Return every list within FORM, FORM included, that satisfies PRED."
+  (let (found)
+    (named-let walk ((x form))
+      (when (consp x)
+        (when (and (proper-list-p x) (funcall pred x))
+          (push x found))
+        (walk (car x))
+        (walk (cdr x))))
+    (nreverse found)))
+
+(defun notasi-mode-tests--readme-forms ()
+  "Return the forms read from README's Emacs code blocks."
+  (let ((section (notasi-mode-tests--readme-section "Using notasi in Emacs")))
+    (and section
+         (apply #'append
+                (mapcar #'notasi-mode-tests--read-all
+                        (notasi-mode-tests--elisp-blocks section))))))
+
+(defun notasi-mode-tests--should-install-from (plist)
+  "Check that PLIST has the `:url', `:lisp-dir' and `:branch' of 08."
+  (should (listp plist))
+  (dolist (key '(:url :lisp-dir :branch))
+    (should (equal (list key (plist-get plist key))
+                   (list key (plist-get notasi-mode-tests--vc-plist key))))))
+
+(ert-deftest notasi-mode-test-readme-has-emacs-section ()
+  "README has a section \"Using notasi in Emacs\" with Lisp code blocks."
+  (let ((section (notasi-mode-tests--readme-section "Using notasi in Emacs")))
+    (should section)
+    (should (notasi-mode-tests--elisp-blocks section))))
+
+(ert-deftest notasi-mode-test-readme-code-reads ()
+  "Every elisp code block in README's Emacs section reads as Lisp."
+  (let ((section (notasi-mode-tests--readme-section "Using notasi in Emacs")))
+    (should section)
+    (dolist (block (notasi-mode-tests--elisp-blocks section))
+      (should-not (condition-case err
+                      (progn (notasi-mode-tests--read-all block) nil)
+                    (error (list 'unreadable block err)))))))
+
+(ert-deftest notasi-mode-test-readme-use-package ()
+  "README configures Emacs 30 with `use-package' and `:vc' from `dev'."
+  (let* ((forms (notasi-mode-tests--readme-forms))
+         (found (notasi-mode-tests--subforms
+                 (lambda (x) (and (eq (car x) 'use-package)
+                                  (eq (cadr x) 'notasi-mode)
+                                  (memq :vc x)))
+                 forms)))
+    (should found)
+    (dolist (form found)
+      (notasi-mode-tests--should-install-from (cadr (memq :vc form))))))
+
+(ert-deftest notasi-mode-test-readme-package-vc-install ()
+  "README configures Emacs 29 with `package-vc-install' from `dev'."
+  (let* ((forms (notasi-mode-tests--readme-forms))
+         (found (notasi-mode-tests--subforms
+                 (lambda (x)
+                   (and (eq (car x) 'package-vc-install)
+                        (pcase (cadr x)
+                          (`(quote (notasi-mode . ,_)) t))))
+                 forms)))
+    (should found)
+    (dolist (form found)
+      (pcase-let ((`(quote (notasi-mode . ,plist)) (cadr form)))
+        (notasi-mode-tests--should-install-from plist)))))
+
+(defun notasi-mode-tests--settings ()
+  "Return the package's settings: the variables of the `notasi' group."
+  (mapcar #'car
+          (seq-filter (lambda (member) (eq (cadr member) 'custom-variable))
+                      (get 'notasi 'custom-group))))
+
+(defun notasi-mode-tests--own-keys (map &optional prefix)
+  "Return the keys bound to commands in MAP itself, not its parents.
+Prefix keymaps are followed; PREFIX is the key sequence leading to MAP.
+Each key is a string like \"C-c C-c\"."
+  (let ((own (copy-keymap map))
+        keys)
+    (set-keymap-parent own nil)
+    (map-keymap
+     (lambda (event binding)
+       (let ((key (vconcat prefix (vector event))))
+         (cond ((memq event '(menu-bar tool-bar remap)))
+               ((keymapp binding)
+                (setq keys (append (notasi-mode-tests--own-keys binding key)
+                                   keys)))
+               ((commandp binding)
+                (push (key-description key) keys)))))
+     own)
+    keys))
+
+(ert-deftest notasi-mode-test-settings-and-keys-known ()
+  "The package has settings and keys for the page to name."
+  (should (memq 'notasi-program (notasi-mode-tests--settings)))
+  (should (member "C-c C-c" (notasi-mode-tests--own-keys notasi-mode-map))))
+
+(ert-deftest notasi-mode-test-manual-names-settings ()
+  "The manual's \"Keys and settings\" page names every setting."
+  (let ((page (notasi-mode-tests--file-text
+               (expand-file-name "emacs-keys-and-settings.md"
+                                 notasi-mode-tests--manual-src))))
+    (should page)
+    (dolist (setting (notasi-mode-tests--settings))
+      (ert-info ((format "setting `%s'" setting))
+        (should (string-search (format "`%s`" setting) page))))))
+
+(ert-deftest notasi-mode-test-manual-names-keys ()
+  "The manual's \"Keys and settings\" page names every key of the mode."
+  (let ((page (notasi-mode-tests--file-text
+               (expand-file-name "emacs-keys-and-settings.md"
+                                 notasi-mode-tests--manual-src))))
+    (should page)
+    (dolist (key (notasi-mode-tests--own-keys notasi-mode-map))
+      (ert-info ((format "key %s" key))
+        (should (string-search (format "`%s`" key) page))))))
+
+(ert-deftest notasi-mode-test-manual-has-chapter ()
+  "SUMMARY.md has the part \"Writing in Emacs\" with its six pages."
+  (let ((summary (notasi-mode-tests--file-text
+                  (expand-file-name "SUMMARY.md"
+                                    notasi-mode-tests--manual-src))))
+    (should summary)
+    (should (string-match "^# Writing in Emacs[ \t]*$" summary))
+    (let* ((start (match-end 0))
+           (end (and (string-match "^# " summary start) (match-beginning 0)))
+           (part (substring summary start end))
+           (pos 0)
+           links)
+      (while (string-match "^[ \t]*- \\[[^]\n]+\\](\\([^)\n]+\\))" part pos)
+        (push (match-string 1 part) links)
+        (setq pos (match-end 0)))
+      (should (equal (nreverse links) notasi-mode-tests--chapter-pages)))
+    (dolist (page notasi-mode-tests--chapter-pages)
+      (ert-info ((format "page %s" page))
+        (should (file-exists-p
+                 (expand-file-name page notasi-mode-tests--manual-src)))))))
+
+(ert-deftest notasi-mode-test-introduction-points-to-chapter ()
+  "The manual's Introduction links to the chapter's first page."
+  (let ((intro (notasi-mode-tests--file-text
+                (expand-file-name "introduction.md"
+                                  notasi-mode-tests--manual-src))))
+    (should intro)
+    (should (string-match-p "\\[[^]]+\\](emacs-installing\\.md)" intro))))
+
+(ert-deftest notasi-mode-test-docstring-describes-preview ()
+  "The mode's docstring describes the preview and points to the manual.
+The raw docstring is checked, since the expanded one lists the
+key bindings, and so the commands, whatever the text says."
+  (let ((raw (notasi-mode-tests--squeeze (documentation 'notasi-mode t))))
+    (should (string-search "preview" raw))
+    (should (string-search "Writing in Emacs" raw))
+    (should (string-search "\\{notasi-mode-map}" raw))))
+
+(defun notasi-mode-tests--commentary ()
+  "Return the package's Commentary, without its comment starts."
+  (let ((text (notasi-mode-tests--file-text notasi-mode-tests--package-file)))
+    (string-match "^;;; Commentary:[ \t]*$" text)
+    (let* ((start (match-end 0))
+           (end (and (string-match "^;;; Code:" text start)
+                     (match-beginning 0))))
+      (notasi-mode-tests--squeeze
+       (replace-regexp-in-string "^;+" "" (substring text start end))))))
+
+(ert-deftest notasi-mode-test-commentary-describes-preview ()
+  "The Commentary describes the preview, its settings and the chapter."
+  (let ((commentary (notasi-mode-tests--commentary)))
+    (should (string-search "preview" commentary))
+    (should (string-search "Writing in Emacs" commentary))
+    (dolist (setting (notasi-mode-tests--settings))
+      (ert-info ((format "setting `%s'" setting))
+        (should (string-search (symbol-name setting) commentary))))))
 
 (provide 'notasi-mode-tests)
 

@@ -1,10 +1,10 @@
 # 08 — The Emacs package
 
-Status: partly implemented (iteration 4): milestone 1,
-`feat/emacs-package` (the package, writing, `make check-emacs`), and
-milestone 2, `feat/emacs-preview`, in its three slices (the preview,
-the score shown, how a drawing is made, mistakes, finding notasi); the
-documentation is planned. ADRs 0048 (the command line it depends on),
+Status: implemented (iteration 4): milestone 1, `feat/emacs-package`
+(the package, writing, `make check-emacs`); milestone 2,
+`feat/emacs-preview`, in its three slices (the preview, the score
+shown, how a drawing is made, mistakes, finding notasi); and milestone
+3, `feat/emacs-docs` (the documentation). ADRs 0048 (the command line it depends on),
 0049 (installing) and 0050 (the package).
 
 ## Responsibility
@@ -21,8 +21,12 @@ nothing from `notasi/`, and notasi never needs it.
 ## The package
 
 **Implemented** (`feat/emacs-package`, ADR 0050). Installing from
-GitHub is not tried yet: the acceptance test of `feat/emacs-docs` tries
-it on a fresh Emacs.
+GitHub's `dev` with `package-vc-install` was tried on a fresh Emacs
+init directory in `feat/emacs-docs`: the package installs, finds the
+clone's `scripts/notasi`, and draws `examples/jaya-semara.nts`. The
+package's files compile with no warnings there, `check.el` and the
+tests included, since `package-vc` compiles every file in
+`editors/emacs/`.
 
 - **Where it lives:** `editors/emacs/notasi-mode.el`, in the notasi
   repository; more files beside it (`notasi-mode-*.el`) only if it
@@ -257,7 +261,7 @@ notasi and the real test (`feat/emacs-preview-draw`).
 
 ## Documentation
 
-**Planned.** The reader knows Emacs; the documentation takes them from
+**Implemented** (`feat/emacs-docs`). The reader knows Emacs; the documentation takes them from
 nothing to a drawn score.
 
 - **README:** a short "Using notasi in Emacs" section: what to install,
@@ -267,9 +271,48 @@ nothing to a drawn score.
   manual's style: installing (Guile and Typst, with the commands of 07;
   then the package); a first score in Emacs; when something is wrong;
   several scores in one file; the settings and keys; problems ("nothing
-  is drawn", "notasi can't be found", "it is slow"). Few screenshots,
-  of the preview only. The manual's first page points to the chapter
-  in one sentence.
+  is drawn", "notasi can't be found", "it is slow"). The manual's
+  first page points to the chapter in one sentence.
+
+Decided when `feat/emacs-docs` started:
+
+- **README:** the section comes after "Drawing a score". It says to
+  install Guile 3.0 and Typst 0.15.1 (linking to the manual's
+  commands), gives one block of configuration, `use-package :vc` for
+  Emacs 30 and later and `package-vc-install` for Emacs 29, both with
+  `:url "https://github.com/hsinhaoyu/notasi"`, `:lisp-dir
+  "editors/emacs"` and `:branch "dev"` (until notasi is released to
+  `main`), and says to open a `.nts` file. It links to the manual's
+  chapter. The layout list loses "(in progress)".
+- **The manual's chapter** is a part of its own, "Writing in Emacs",
+  of six short pages: Installing (Guile, Typst, the package); Your
+  first score in Emacs; When something is wrong (the marked line and
+  the red header); Several scores in one file (following the cursor,
+  `C-c C-s`); Keys and settings; Problems. The Introduction points to
+  it in one sentence.
+- **No screenshots** for now: where a page shows what appears beside
+  the text, it shows the drawn figure `make manual` generates
+  (`figures/NAME.svg`). Screenshots are in the backlog.
+- **Installing Guile and Typst:** Guile with `brew install guile` or
+  `sudo apt install guile-3.0`; Typst 0.15.1 from its GitHub release,
+  downloaded with `curl` and unpacked into `~/.local/bin` as CI does,
+  with the file names for macOS (Apple silicon, Intel) and Linux. Not
+  `brew install typst`, which installs the newest Typst.
+- **Tests:** ERT tests check that the README's Emacs code blocks read
+  as Lisp and use that `:url`, `:lisp-dir` and `:branch`; that the
+  manual's "Keys and settings" page names every setting and every key
+  of `notasi-mode-map`; and that the mode's docstring mentions the
+  preview and its keys. `tests/readme.scm` checks that README has the
+  section and links to the manual.
+- **The package's Commentary and the mode's docstring** describe the
+  preview, its keys and settings, and point to the manual's chapter.
+- **The acceptance test on a fresh Emacs:** a script installs the
+  package with `package-vc-install` from GitHub's `dev` into a
+  throwaway Emacs init directory and checks that
+  `examples/jaya-semara.nts`, opened from that clone, is drawn; then
+  the user runs the acceptance test's steps 1–5 by hand, following
+  only the README and the manual. The iteration is accepted after
+  that run.
 
 ## Not in this design
 

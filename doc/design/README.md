@@ -29,7 +29,7 @@ book.typ + book.notasi.json ──typst compile──▶ PDF
 | Typst backend | `(notasi typst)`, `typst/notasi.typ` | [05-typst-backend.md](05-typst-backend.md) |
 | Scores in Typst documents | `scripts/notasi`, `typst/` package | [06-documents.md](06-documents.md) |
 | Environment, installation, testing (open questions) | — | [07-environment.md](07-environment.md) |
-| The Emacs package (partly implemented) | `editors/emacs/` | [08-emacs.md](08-emacs.md) |
+| The Emacs package | `editors/emacs/` | [08-emacs.md](08-emacs.md) |
 
 ## Build order
 
@@ -79,7 +79,7 @@ See [its README](../iterations/04-emacs-mode/README.md).
    check-emacs` and its CI job, `editors/` shipped to `main`
 2. **Implemented.** `feat/emacs-preview`: the preview; three slices, see
    [08-emacs.md](08-emacs.md#slices)
-3. `feat/emacs-docs`: the acceptance test: the README, the manual's
+3. **Implemented.** `feat/emacs-docs`: the acceptance test: the README, the manual's
    chapter, and the test on a fresh Emacs
 
 ### Deferred
@@ -119,7 +119,7 @@ Each decision's context and consequences are in its record in
 25. The JSON contract is version 3: [0043](../decisions/0043-json-contract-version-3.md) (replaces [0036](../decisions/0036-json-contract-version-2.md))
 26. Cycle lines are heavier than pulse lines: [0037](../decisions/0037-cycle-lines-are-heavier.md)
 27. The notasi command line is a contract for editors: [0048](../decisions/0048-the-command-line-is-a-contract-for-editors.md)
-28. An Emacs package ships with notasi and only runs the command: [0050](../decisions/0050-an-emacs-package-ships-with-notasi.md) (partly implemented)
+28. An Emacs package ships with notasi and only runs the command: [0050](../decisions/0050-an-emacs-package-ships-with-notasi.md)
 
 Proposed, not yet agreed:
 

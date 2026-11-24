@@ -102,3 +102,6 @@ In the Emacs package (08):
   ([live preview](04-emacs-mode/design_ideas/2026-11-24-live-preview.md)).
 - **MELPA**, once the package has been used for a while
   ([the package](04-emacs-mode/design_ideas/2026-11-24-package.md)).
+- **Screenshots of the preview** in the manual's chapter "Writing in
+  Emacs", which shows only drawn figures for now
+  ([documentation](04-emacs-mode/design_ideas/2026-11-24-documentation.md)).

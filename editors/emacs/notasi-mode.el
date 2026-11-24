@@ -11,14 +11,30 @@
 ;;; Commentary:
 
 ;; A major mode for notasi's notation files (.nts), which notate
-;; Balinese gamelan music as s-expressions.  It highlights the forms
-;; and, in the music of parts, patterns and colotomies, the notes,
-;; holds, rests, bars and pattern calls, each in a face of its own.
-;; Forms such as `score' and `pattern' indent their body by 2, and a
-;; line of options by 4.
+;; Balinese gamelan music as s-expressions.
 ;;
-;; notasi is at https://github.com/hsinhaoyu/notasi; its manual
-;; explains the notation.
+;; Writing: the forms are highlighted, and in the music of parts,
+;; patterns and colotomies, the notes, holds, rests, bars and pattern
+;; calls each have a face of their own.  Forms such as `score' and
+;; `pattern' indent their body by 2, and a line of options by 4.
+;;
+;; The preview: opening a .nts file shows its score, drawn by notasi,
+;; in a window beside the text.  A second after you stop typing, the
+;; picture is drawn again, without saving; it shows the score the
+;; cursor is in.  A mistake in the notation is marked on its line
+;; through Flymake, and the preview keeps the last good picture under
+;; a red header line.  Keys: C-c C-c redraws, C-c C-p shows or hides
+;; the preview, C-c C-s stays on one score, C-c C-o writes the score to
+;; a PDF, PNG or SVG file.
+;;
+;; Settings (M-x customize-group RET notasi): `notasi-program',
+;; `notasi-preview-side', `notasi-preview-on-open',
+;; `notasi-auto-preview' and `notasi-preview-delay'.
+;;
+;; The preview needs Guile 3.0 and Typst 0.15.1.  Installed from
+;; notasi's repository, the package finds notasi in it.  See the
+;; manual's chapter "Writing in Emacs", at
+;; https://hsinhaoyu.github.io/notasi/emacs-installing.html
 
 ;;; Code:
 
@@ -851,6 +867,13 @@ face: `notasi-note', `notasi-hold', `notasi-rest', `notasi-bar' and
 `notasi-pattern'.  `piece', `score', `pattern' and the other forms
 indent their body by 2, and a line of options (starting with `:') by
 4.
+
+In a buffer visiting a file, the preview shows the score beside the
+text, drawn by notasi: again a second after you stop typing (see
+`notasi-preview-delay'), and on saving, for the score the cursor is
+in.  A mistake in the notation is marked on its line through Flymake,
+and the preview keeps the last good picture under a red header line.
+The manual's chapter \"Writing in Emacs\" explains it all.
 
 \\{notasi-mode-map}"
   :group 'notasi
