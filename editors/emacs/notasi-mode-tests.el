@@ -847,8 +847,8 @@ to the environment.  With SELECT, the file is opened with `find-file'
 in a frame with one window; otherwise with `find-file-noselect'.  The
 first drawing, made on opening, is waited for.
 
-FUNCTION is called in the file's buffer, with a plist: :buffer, :dir (the file's folder),
-:file, :log (the fake's log) and :input (the text it was last given).
+FUNCTION is called in the file's buffer, with a plist: :buffer, :dir
+\(the file's folder), :file, :log (the fake's log) and :input (the text it was last given).
 Afterwards the buffer is killed and the folders removed."
   (let* ((dir (make-temp-file "notasi-mode-piece" t))
          (aux (make-temp-file "notasi-mode-aux" t))
