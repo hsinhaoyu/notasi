@@ -16,7 +16,9 @@ lines, pulse lines by group and grey note borders (ADR 0041) since
 `feat/drawing-lines`; the key-number column and row labels left out
 (ADR 0047) since `feat/drawing-rows`; a sans-serif font for standalone
 figures (ADR 0045) and file names `NAME_SCORE` (ADR 0040) since
-`feat/drawing-output`.
+`feat/drawing-output`. Planned (iteration 4): the command line as a
+contract for editors, and `notasi --version` (ADR 0048); see "The
+command line as a contract".
 
 ## Responsibility
 
@@ -481,6 +483,40 @@ and the message, and exits with status 1. OUT defaults to
 `PIECE.pdf` for the first score and `PIECE_NAME.pdf` with `--score`
 (ADR 0040), so drawing several scores of
 one file doesn't overwrite one picture with another.
+
+### The command line as a contract
+
+**Planned** (iteration 4, ADR 0048). Editor packages (08) draw by
+running `notasi render` and reading what comes back, never by loading
+notasi's modules. What they read is a contract; changing any of it
+changes the editor package in the same PR:
+
+- **Invocation:** `notasi render PIECE.nts [--score NAME] -o OUT`, with
+  OUT's extension `.svg`, `.png` or `.pdf`, and the options in any
+  order.
+- **Exit status:** 0 when the picture was written; 1 for a problem
+  with the piece or the drawing; 2 when the command was used wrongly.
+- **On success:** OUT's path, on one line, to standard output, and
+  nothing to standard error.
+- **A mistake in the notation:** one line to standard error,
+  `FILE:LINE: message`, where FILE is the file the mistake is in (the
+  piece as given on the command line, or a template it uses) and LINE
+  its line, counted from 1. notasi stops at the first mistake, so
+  there is one such line. The message's wording is free; its form is
+  not.
+- **Any other problem** (Typst missing or failing, a file that can't
+  be read, a score the piece doesn't have): one line to standard
+  error starting `notasi: `, saying what is wrong. Exit status 1, as
+  for a mistake; the form of the line tells them apart.
+
+A Guile that can't be found is not notasi's to report: the script
+can't start, and the shell says so.
+
+**`notasi --version`** prints `notasi VERSION` on one line to standard
+output and exits with status 0, where VERSION is notasi's version
+(`0.4.0`, or `0.4.0-dev` on `dev`, as the tags are written without
+the `v`). It is kept in one place, in `(notasi command)`, and set when
+a version is tagged. `notasi --help` lists it in the usage.
 
 The logic is in the module `(notasi command)`:
 `(run-notasi args)` takes the arguments after the program name (a list

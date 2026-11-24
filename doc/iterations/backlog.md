@@ -73,3 +73,21 @@ Neither target needs them; the design leaves room for them.
 - **Choosing the font** of a standalone figure (`:font` on a score, or
   `notasi render --font`), beyond ADR 0045's list: later, if asked for
   ([sans-serif](03-refining-the-examples/design_ideas/2026-11-23-sans-serif.md)).
+
+## Later, from iteration 4
+
+Changes to notasi itself that the Emacs package could use, not needed
+for iteration 4's goal:
+
+- **`notasi describe FILE`**: the instruments, notes, patterns and
+  scores of a piece as data, for completion, Eldoc and Imenu, which
+  come in a later iteration
+  ([help while writing](04-emacs-mode/design_ideas/2026-11-24-editing-help.md)).
+- **A faster check** that finds mistakes without drawing (skipping
+  Typst), and **a Guile process kept running** between drawings
+  (`notasi serve`): not needed while a drawing takes about 0.6 s
+  ([how a drawing is made](04-emacs-mode/design_ideas/2026-11-24-drawing.md),
+  [live preview](04-emacs-mode/design_ideas/2026-11-24-live-preview.md)).
+- **Several mistakes at once**, collected by the reader instead of
+  stopping at the first
+  ([mistakes shown in the text](04-emacs-mode/design_ideas/2026-11-24-errors.md)).
