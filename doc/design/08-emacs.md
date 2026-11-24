@@ -1,10 +1,10 @@
 # 08 — The Emacs package
 
-Status: partly implemented (iteration 4): milestone 1,
-`feat/emacs-package` (the package, writing, `make check-emacs`), and
-milestone 2, `feat/emacs-preview`, in its three slices (the preview,
-the score shown, how a drawing is made, mistakes, finding notasi); the
-documentation is planned. ADRs 0048 (the command line it depends on),
+Status: implemented (iteration 4): milestone 1, `feat/emacs-package`
+(the package, writing, `make check-emacs`); milestone 2,
+`feat/emacs-preview`, in its three slices (the preview, the score
+shown, how a drawing is made, mistakes, finding notasi); and milestone
+3, `feat/emacs-docs` (the documentation). ADRs 0048 (the command line it depends on),
 0049 (installing) and 0050 (the package).
 
 ## Responsibility
@@ -21,8 +21,12 @@ nothing from `notasi/`, and notasi never needs it.
 ## The package
 
 **Implemented** (`feat/emacs-package`, ADR 0050). Installing from
-GitHub is not tried yet: the acceptance test of `feat/emacs-docs` tries
-it on a fresh Emacs.
+GitHub's `dev` with `package-vc-install` was tried on a fresh Emacs
+init directory in `feat/emacs-docs`: the package installs, finds the
+clone's `scripts/notasi`, and draws `examples/jaya-semara.nts`. The
+package's files compile with no warnings there, `check.el` and the
+tests included, since `package-vc` compiles every file in
+`editors/emacs/`.
 
 - **Where it lives:** `editors/emacs/notasi-mode.el`, in the notasi
   repository; more files beside it (`notasi-mode-*.el`) only if it
@@ -257,7 +261,7 @@ notasi and the real test (`feat/emacs-preview-draw`).
 
 ## Documentation
 
-**Planned.** The reader knows Emacs; the documentation takes them from
+**Implemented** (`feat/emacs-docs`). The reader knows Emacs; the documentation takes them from
 nothing to a drawn score.
 
 - **README:** a short "Using notasi in Emacs" section: what to install,

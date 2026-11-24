@@ -1,7 +1,7 @@
 # 07 — Environment, installation and testing
 
 Status: mostly open questions. Iteration 4 (ADR 0049): CI for the
-Emacs package is implemented; what Emacs users install is planned.
+Emacs package and what Emacs users install are implemented.
 This answers question 2 for Emacs users only. Each question, once decided, gets an
 ADR and this document is updated to describe the choice.
 
@@ -23,7 +23,7 @@ at the right versions:
 | Guile 3.0 | everyone | runs notasi and its tests |
 | Typst | everyone who draws, and contributors | draws the figures (05, 06); pinned to 0.15.1 |
 | mdBook | contributors | builds the user manual (ADR 0014) |
-| Emacs 29.1 or later | Emacs users of `notasi-mode`, and contributors to it | runs the package (08); planned, iteration 4 |
+| Emacs 29.1 or later | Emacs users of `notasi-mode`, and contributors to it | runs the package (08); since iteration 4 |
 
 Typst is pre-1.0 and has breaking changes in most releases, usually
 small (05, "Version pinning"). Whatever is decided below has to pin
@@ -54,7 +54,8 @@ its version.
 
 ## Emacs users
 
-**Planned** (iteration 4, ADR 0049).
+**Implemented** (iteration 4, ADR 0049; the manual's chapter "Writing in
+Emacs", `feat/emacs-docs`).
 
 - **notasi** comes with the Emacs package (08): installed from GitHub
   with `package-vc` or `use-package :vc`, the whole repository is

@@ -103,6 +103,7 @@ Each milestone, or each slice of one, is its own branch and PR into
    3. `feat/emacs-preview-errors` (done): mistakes through Flymake, the red
       header and the last good picture, mistakes in templates, other
       problems.
-3. **`feat/emacs-docs`**, the acceptance test: the README's section,
+3. **`feat/emacs-docs`** (built; the acceptance test's run by hand is
+   still to do), the acceptance test: the README's section,
    the manual's chapter "Writing in Emacs", and the acceptance test
    run on a fresh Emacs.
