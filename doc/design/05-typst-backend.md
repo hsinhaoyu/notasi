@@ -1,6 +1,6 @@
 # 05 — Typst backend and JSON contract
 
-Status: implemented (iteration 2). Implemented (v1, all three
+Status: implemented (iterations 2 and 3). Implemented (v1, all three
 slices, see "Slices"): the JSON writer, figure files, the entry file,
 running Typst, `render-piece`, the template and the `notasi render`
 command; contract version 2 (ADR 0036) with the template's header rows
