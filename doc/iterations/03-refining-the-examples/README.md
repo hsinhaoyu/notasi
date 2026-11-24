@@ -105,7 +105,16 @@ Each milestone, or each slice of one, is its own branch and PR into
    2. `feat/drawing-lines`
    3. `feat/drawing-rows`
    4. `feat/drawing-output`
-3. **`feat/examples`**, the acceptance test, with no slices: Jaya
+3. **`feat/examples`** (done), the acceptance test, with no slices: Jaya
    Semara and Baris refined in the new notation, Baris's `colour` score
    (two kendang groups, `:display` for Tenzer's gongs), golden files,
    and the drawings checked by eye.
+
+   Decided when it started:
+   - Baris keeps the template's gong strokes (`GL` for the gong
+     lanang); its four Tenzer-style scores show both gongs as "G" with
+     `:display ((GL "G"))`. They keep the cycle row and its "Cycle"
+     label as drawn.
+   - Baris's `colour` score has the Jaya Semara score's look: every new
+     option at its default, `:numbering gong-last`, one system, and two
+     kendang groups, "Kendang lanang" and "Kendang wadon".
