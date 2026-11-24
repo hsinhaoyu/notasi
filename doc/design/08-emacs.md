@@ -43,16 +43,45 @@ nothing from `notasi/`, and notasi never needs it.
 
 ## Writing
 
-**Planned.**
+**Planned** (milestone `feat/emacs-package`).
 
 - `notasi-mode` is derived from `lisp-data-mode`: moving by forms,
-  `show-paren-mode`, commenting and Lisp indentation come with it, so
-  `pattern` and `part` bodies line up.
-- **Highlighting:** the forms (`piece`, `use`, `scale`, `strokes`,
-  `instrument`, `colotomy`, `pattern`, `part`, `score`, `group`, `rep`
-  …), keywords (`:instrument`, `:short` …), strings and comments; and
-  in parts and patterns, notes, holds (`_`) and rests (`-`) in faces of
-  their own, so a part's rhythm is easy to see.
+  `show-paren-mode`, commenting (`;`) and Lisp indentation come with
+  it.
+- **Indentation:** `piece`, `scale`, `strokes`, `instrument`,
+  `colotomy`, `part`, `pattern`, `score`, `group` and `rep` indent their
+  body by 2, like `defun`, so
+
+      (score full :fill none
+        (group "Ugal" ugal))
+
+      (pattern pokok-ugal :instrument ugal
+        _ i2 _ a1 _ e2 _ o2)
+
+  Everything else (`use`, `(@ …)`, chords) follows Lisp's usual rule. This applies in
+  `notasi-mode` buffers only; Emacs Lisp elsewhere is unaffected.
+- **Highlighting:**
+  - the form names (`piece`, `use`, `scale`, `strokes`, `instrument`,
+    `colotomy`, `pattern`, `part`, `score`, `group`, `rep`, `@`) in
+    `font-lock-keyword-face`, `:keywords` in `font-lock-builtin-face`,
+    strings and comments as in Lisp;
+  - in the music, the tokens after the options of `part`, `pattern`
+    and `colotomy` (inside `rep`, chords and colotomy parts too),
+    faces of the mode's own:
+
+    | Face | Tokens |
+    |---|---|
+    | `notasi-note` | notes, by name or number, with or without a duration (`a1`, `5`, `o3:1/4`, `GL:1`) |
+    | `notasi-hold` | holds, `_` and `_:D` |
+    | `notasi-rest` | rests, `-` and `-:D` |
+    | `notasi-bar` | `|` and `||` |
+    | `notasi-pattern` | pattern calls, `@NAME`, and the name in `(@ NAME …)` |
+
+  - names outside the music (an option's value such as
+    `:instrument ugal`, a pattern's or score's name, the notes listed
+    in an `instrument` form) are not in these faces.
+  - Every face is in the `notasi` customisation group, so users can
+    change it.
 
 ## The preview
 
@@ -194,6 +223,11 @@ in one sentence, and still draws.
   errors, and runs `checkdoc` and `package-lint`. It is separate from
   `make check`, which doesn't need Emacs. CI runs it in a job of its
   own (07).
+  - It runs `$(EMACS)`, by default `emacs`, or, when that isn't on the
+    PATH, `/Applications/Emacs.app/Contents/MacOS/Emacs` if it exists.
+  - `package-lint` is installed from MELPA into
+    `build/emacs-packages/` the first time, and reused after; CI does
+    the same. Nothing is added to the user's Emacs configuration.
 - The tests cover the logic: finding scores, finding notasi, reading
   messages, cleaning up. What batch mode can't show (the windows and
   the picture) is checked by hand, from a short checklist in each
