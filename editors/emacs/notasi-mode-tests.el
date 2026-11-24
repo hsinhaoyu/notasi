@@ -2379,6 +2379,11 @@ in the `notasi' group, with a docstring."
        (should (equal flymake-diagnostic-functions '(notasi-flymake)))))
    :select t))
 
+(ert-deftest notasi-mode-test-flymake-backend-always-safe ()
+  "`notasi-flymake' runs nothing, so it is marked safe for buffers Emacs
+doesn't trust; Flymake in Emacs 31 runs no other backend there."
+  (should (function-get 'notasi-flymake 'flymake-always-safe)))
+
 (ert-deftest notasi-mode-test-flymake-off-without-file ()
   "In a `notasi-mode' buffer that visits no file, `flymake-mode' stays off."
   (let ((notasi-program notasi-mode-tests--fake))

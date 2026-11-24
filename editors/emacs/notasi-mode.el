@@ -546,9 +546,9 @@ Return its name."
         (nreverse uses)))))
 
 (defun notasi-mode--use-for (file)
-  "Return the bounds (BEG . END) of the (use …) form that loads FILE.
+  "Return the bounds (BEG . END) of the use form for the template FILE.
 That is the form naming FILE without its folder and .nts; or the first
-\(use …) form; or the first line, when there is none."
+use form; or the first line, when there is none."
   (let ((uses (notasi-mode--uses)))
     (or (cdr (seq-find (lambda (use)
                          (and (stringp (car use))
@@ -570,7 +570,7 @@ That is the form naming FILE without its folder and .nts; or the first
       (cons (line-beginning-position) (line-end-position)))))
 
 (defun notasi-mode--failure (output)
-  "Return what notasi's OUTPUT, from a failed drawing, says is wrong.
+  "Return the problem in OUTPUT, notasi's output from a failed drawing.
 Either (mistake HEADER BEG END TEXT), for a mistake in the notation
 to mark from BEG to END, or (problem SENTENCE) for any other problem."
   (let ((line (or (car (split-string (string-trim output) "\n" t)) "")))
@@ -620,6 +620,10 @@ mistakes."
                          (current-buffer)
                          (min beg (point-max)) (min end (point-max))
                          :error text))))))
+
+;; It runs no program and evaluates nothing in the buffer, so it is safe in
+;; buffers Emacs doesn't trust (Emacs 31 runs no other backend there).
+(function-put 'notasi-flymake 'flymake-always-safe t)
 
 (defun notasi-mode--sentinel (source score out tick)
   "Return a sentinel for a drawing of SCORE in SOURCE's buffer to OUT.
