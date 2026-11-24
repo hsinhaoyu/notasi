@@ -1,8 +1,8 @@
 # 07 — Environment, installation and testing
 
-Status: mostly open questions. Planned (iteration 4, ADR 0049): what
-Emacs users install, and CI for the Emacs package; this answers
-question 2 for Emacs users only. Each question, once decided, gets an
+Status: mostly open questions. Iteration 4 (ADR 0049): CI for the
+Emacs package is implemented; what Emacs users install is planned.
+This answers question 2 for Emacs users only. Each question, once decided, gets an
 ADR and this document is updated to describe the choice.
 
 ## Responsibility

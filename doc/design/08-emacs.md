@@ -19,8 +19,9 @@ nothing from `notasi/`, and notasi never needs it.
 
 ## The package
 
-**Implemented** (`feat/emacs-package`, ADR 0050), except installing
-from GitHub, which works once the package is on `dev`.
+**Implemented** (`feat/emacs-package`, ADR 0050). Installing from
+GitHub is not tried yet: the acceptance test of `feat/emacs-docs` tries
+it on a fresh Emacs.
 
 - **Where it lives:** `editors/emacs/notasi-mode.el`, in the notasi
   repository; more files beside it (`notasi-mode-*.el`) only if it
