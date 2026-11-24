@@ -24,6 +24,7 @@
 
 (require 'lisp-mode)
 (require 'subr-x)
+(require 'seq)
 
 (defgroup notasi nil
   "Write Balinese gamelan notation with notasi."
@@ -224,6 +225,22 @@ decide."
                  (const :tag "Where Emacs decides" nil))
   :group 'notasi)
 
+(defcustom notasi-preview-on-open t
+  "Non-nil means opening a .nts file opens its preview and draws it."
+  :type 'boolean
+  :group 'notasi)
+
+(defcustom notasi-auto-preview t
+  "Non-nil means the picture is redrawn when the writing pauses, and on saving.
+With nil, \[notasi-preview-redraw] still redraws."
+  :type 'boolean
+  :group 'notasi)
+
+(defcustom notasi-preview-delay 1
+  "Seconds without a change to the text after which the picture is redrawn."
+  :type 'number
+  :group 'notasi)
+
 (defvar notasi-mode--versions (make-hash-table :test #'equal)
   "The version of each notasi program already asked, by file name.")
 
@@ -235,6 +252,22 @@ decide."
 
 (defvar-local notasi-mode--note nil
   "A note for the header line after the next drawing, or nil.")
+
+(defvar-local notasi-mode--chosen nil
+  "The score chosen with \[notasi-choose-score], or nil to follow the cursor.")
+
+(defvar-local notasi-mode--shown nil
+  "The score the preview shows, or nil for a piece without scores.")
+
+(defvar-local notasi-mode--pictures nil
+  "The picture kept for each score drawn: an alist of (SCORE FILE . TICK).
+TICK is `buffer-chars-modified-tick' when that drawing started.")
+
+(defvar-local notasi-mode--timer nil
+  "The timer that redraws when the writing pauses.")
+
+(defconst notasi-mode--follow-choice "follow the cursor"
+  "The choice in \[notasi-choose-score] that follows the cursor again.")
 
 (defvar-local notasi-mode--image-file nil
   "In a preview buffer, the picture it shows.")
@@ -306,10 +339,54 @@ above the current buffer's file."
   (or (notasi-mode--top-level-match "^(piece[ \t\n]+\"\\([^\"]*\\)\"")
       (file-name-nondirectory buffer-file-name)))
 
+(defun notasi-mode--scores ()
+  "Return the buffer's scores, as a list of (NAME BEG END), in order."
+  (save-excursion
+    (save-match-data
+      (goto-char (point-min))
+      (let (scores)
+        (while (re-search-forward "^(score[ \t\n]+\\([^ \t\n()\"]+\\)" nil t)
+          (let ((beg (match-beginning 0))
+                (name (match-string-no-properties 1)))
+            ;; `syntax-ppss' moves point and changes the match data.
+            (when (= 0 (save-excursion (save-match-data (car (syntax-ppss beg)))))
+              (push (list name beg
+                          (save-excursion
+                            (goto-char beg)
+                            (condition-case nil
+                                (progn (forward-sexp) (point))
+                              (scan-error (point-max)))))
+                    scores))))
+        (nreverse scores)))))
+
 (defun notasi-mode--first-score ()
   "Return the name of the first score in the buffer, or nil."
-  (notasi-mode--top-level-match
-   "^(score[ \t\n]+\\([^ \t\n()\"]+\\)"))
+  (car (car (notasi-mode--scores))))
+
+(defun notasi-mode--target ()
+  "Return the score the preview should show, or nil when there are none.
+In order: the score chosen with \[notasi-choose-score]; the score the
+cursor is in; the score shown last; the first score.  A chosen score
+that has gone is forgotten."
+  (let ((scores (notasi-mode--scores)))
+    (when (and notasi-mode--chosen (not (assoc notasi-mode--chosen scores)))
+      (setq notasi-mode--chosen nil))
+    (or notasi-mode--chosen
+        (car (seq-find (lambda (score)
+                         (and (>= (point) (nth 1 score))
+                              (< (point) (nth 2 score))))
+                       scores))
+        (and notasi-mode--shown (assoc notasi-mode--shown scores)
+             notasi-mode--shown)
+        (car (car scores)))))
+
+(defun notasi-mode--header (score)
+  "Return the header line for a good drawing of SCORE."
+  (let ((title (notasi-mode--title)))
+    (cond ((null score) title)
+          ((equal score notasi-mode--chosen)
+           (format "%s — %s (chosen)" title score))
+          (t (format "%s — %s" title score)))))
 
 ;;;; The preview: its buffer and window
 
@@ -431,9 +508,9 @@ Return its name."
                     (file-name-nondirectory buffer-file-name)
                     (or line "notasi failed"))))
 
-(defun notasi-mode--sentinel (source header out)
-  "Return a sentinel for a drawing of SOURCE's buffer to OUT.
-HEADER is the header line for a good drawing."
+(defun notasi-mode--sentinel (source score out tick)
+  "Return a sentinel for a drawing of SCORE in SOURCE's buffer to OUT.
+TICK is the buffer's `buffer-chars-modified-tick' when it started."
   (lambda (process _event)
     (unless (process-live-p process)
       (let ((output (with-current-buffer (process-buffer process)
@@ -448,7 +525,9 @@ HEADER is the header line for a good drawing."
             (let ((preview (notasi-mode--preview t)))
               (if (and (eq (process-status process) 'exit)
                        (= (process-exit-status process) 0))
-                  (progn
+                  (let ((header (notasi-mode--header score)))
+                    (setf (alist-get score notasi-mode--pictures nil nil #'equal)
+                          (cons out tick))
                     (with-current-buffer preview
                       (setq notasi-mode--image-file out))
                     (notasi-mode--put-image preview)
@@ -474,23 +553,98 @@ Return the drawing's process, or nil when nothing is drawn."
              preview "Can't find notasi: see the manual's chapter on Emacs")
             nil)
         (notasi-mode--check-version program)
-        (let* ((score (notasi-mode--first-score))
-               (title (notasi-mode--title))
-               (header (if score (format "%s — %s" title score) title))
+        (let* ((score (notasi-mode--target))
+               (header (notasi-mode--header score))
                (out (notasi-mode--out-file score))
+               (tick (buffer-chars-modified-tick))
                (hidden (notasi-mode--write-hidden-file))
                (default-directory (file-name-directory buffer-file-name)))
           (setq notasi-mode--process
                 (make-process
                  :name "notasi"
                  :buffer (generate-new-buffer " *notasi-output*")
-                 :command (list program "render"
-                                (file-name-nondirectory hidden) "-o" out)
+                 :command (append
+                           (list program "render" (file-name-nondirectory hidden))
+                           (and score (not (equal score (notasi-mode--first-score)))
+                                (list "--score" score))
+                           (list "-o" out))
                  :connection-type 'pipe
                  :noquery t
-                 :sentinel (notasi-mode--sentinel (current-buffer) header out)))
+                 :sentinel (notasi-mode--sentinel (current-buffer) score out tick)))
+          (setq notasi-mode--shown score)
           (notasi-mode--set-header preview (concat header "  drawing…"))
           notasi-mode--process)))))
+
+(defun notasi-mode--show-kept (score)
+  "Show the picture kept for SCORE, if any; return non-nil if there is one."
+  (let ((kept (cdr (assoc score notasi-mode--pictures))))
+    (when (and kept (file-exists-p (car kept)))
+      (let ((preview (notasi-mode--preview t)))
+        (with-current-buffer preview
+          (setq notasi-mode--image-file (car kept)))
+        (notasi-mode--put-image preview)
+        (notasi-mode--set-header preview (notasi-mode--header score))
+        t))))
+
+(defun notasi-mode--switch (score)
+  "Show SCORE: its kept picture at once, drawn again if the text changed."
+  (notasi-mode--stop)
+  (setq notasi-mode--shown score)
+  (if (notasi-mode--show-kept score)
+      (unless (= (cddr (assoc score notasi-mode--pictures))
+                 (buffer-chars-modified-tick))
+        (notasi-preview-redraw))
+    (notasi-preview-redraw)))
+
+(defun notasi-mode--follow ()
+  "After a command, show the score the preview should show, if it changed."
+  (when (and buffer-file-name (notasi-mode--preview))
+    (let ((target (notasi-mode--target)))
+      (unless (equal target notasi-mode--shown)
+        (notasi-mode--switch target)))))
+
+(defun notasi-mode--changed (&rest _)
+  "Redraw when the writing pauses for `notasi-preview-delay' seconds."
+  (when notasi-auto-preview
+    (when (timerp notasi-mode--timer)
+      (cancel-timer notasi-mode--timer))
+    (setq notasi-mode--timer
+          (run-at-time notasi-preview-delay nil
+                       (lambda (buffer)
+                         (when (buffer-live-p buffer)
+                           (with-current-buffer buffer
+                             (setq notasi-mode--timer nil)
+                             (notasi-preview-redraw))))
+                       (current-buffer)))))
+
+(defun notasi-mode--saved ()
+  "Redraw when the file is saved."
+  (when notasi-auto-preview
+    (when (timerp notasi-mode--timer)
+      (cancel-timer notasi-mode--timer)
+      (setq notasi-mode--timer nil))
+    (notasi-preview-redraw)))
+
+(defun notasi-choose-score (score)
+  "Show SCORE in the preview, whatever score the cursor is in.
+With nil (\"follow the cursor\" when asked), show the score the
+cursor is in again."
+  (interactive
+   (let ((choice (completing-read
+                  "Show the score: "
+                  (append (mapcar #'car (notasi-mode--scores))
+                          (list notasi-mode--follow-choice))
+                  nil t)))
+     (list (unless (equal choice notasi-mode--follow-choice) choice))))
+  (setq notasi-mode--chosen score)
+  (let ((target (notasi-mode--target)))
+    (if (and (equal target notasi-mode--shown)
+             (not (process-live-p notasi-mode--process))
+             (notasi-mode--show-kept target))
+        (unless (= (cddr (assoc target notasi-mode--pictures))
+                   (buffer-chars-modified-tick))
+          (notasi-preview-redraw))
+      (notasi-mode--switch target))))
 
 (defun notasi-preview-toggle ()
   "Show the preview of the score, or hide it if it is shown."
@@ -528,6 +682,8 @@ The score is drawn from the text as it is now, saved or not."
 
 (defun notasi-mode--clean-up ()
   "Stop drawing, and remove the preview and the temporary files."
+  (when (timerp notasi-mode--timer)
+    (cancel-timer notasi-mode--timer))
   (notasi-mode--stop)
   (when buffer-file-name
     (let ((preview (notasi-mode--preview)))
@@ -538,7 +694,8 @@ The score is drawn from the text as it is now, saved or not."
 
 (defun notasi-mode--open (buffer)
   "Show BUFFER's preview, if BUFFER is shown, and draw it."
-  (when (and (buffer-live-p buffer) (buffer-local-value 'buffer-file-name buffer))
+  (when (and notasi-preview-on-open
+             (buffer-live-p buffer) (buffer-local-value 'buffer-file-name buffer))
     (with-current-buffer buffer
       (when (get-buffer-window buffer)
         (with-selected-window (get-buffer-window buffer)
@@ -551,7 +708,8 @@ The score is drawn from the text as it is now, saved or not."
   :parent lisp-data-mode-map
   "C-c C-c" #'notasi-preview-redraw
   "C-c C-p" #'notasi-preview-toggle
-  "C-c C-o" #'notasi-write-score)
+  "C-c C-o" #'notasi-write-score
+  "C-c C-s" #'notasi-choose-score)
 
 ;;;###autoload
 (define-derived-mode notasi-mode lisp-data-mode "notasi"
@@ -573,6 +731,9 @@ indent their body by 2, and a line of options (starting with `:') by
   (setq-local font-lock-defaults '(notasi-mode--font-lock-keywords))
   (when buffer-file-name
     (add-hook 'kill-buffer-hook #'notasi-mode--clean-up nil t)
+    (add-hook 'after-change-functions #'notasi-mode--changed nil t)
+    (add-hook 'after-save-hook #'notasi-mode--saved nil t)
+    (add-hook 'post-command-hook #'notasi-mode--follow nil t)
     ;; `find-file' shows the buffer only after the mode has run.
     (run-at-time 0 nil #'notasi-mode--open (current-buffer))))
 
