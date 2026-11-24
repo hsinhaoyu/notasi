@@ -1,7 +1,7 @@
 # Design idea: help while writing
 
-Status: proposed in discussion (2026-11-24). Not the design until
-promoted.
+Status: agreed in discussion (2026-11-24); see "Settled". Not the
+design until promoted.
 
 ## The idea
 
@@ -39,3 +39,14 @@ picture. Everything here uses what Emacs users already know.
   one source of truth.
 - Is this milestone needed for the iteration's goal, or can it come
   after the preview? Suggested: keep it, after the preview.
+
+## Settled (2026-11-24)
+
+- **Completion, Eldoc and Imenu are not in this iteration.** Its goal
+  is the preview; they come in a later iteration. The milestone
+  `feat/emacs-help` and the acceptance test's step 6 are dropped.
+- **Highlighting and indentation stay**, in the first milestone, with
+  the mode derived from `lisp-data-mode`.
+- **Where completion gets its facts** (`notasi describe`, or reading
+  the forms in Emacs Lisp) is left open, for the iteration that adds
+  completion.

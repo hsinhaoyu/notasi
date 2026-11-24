@@ -1,7 +1,7 @@
 # Design idea: finding notasi
 
-Status: proposed in discussion (2026-11-24). Not the design until
-promoted.
+Status: agreed in discussion (2026-11-24); see "Settled". Not the
+design until promoted.
 
 ## The problem
 
@@ -38,3 +38,12 @@ missing (notasi's own error tells it which).
   was released with? That needs `notasi --version`, which doesn't
   exist. Suggested: add it; it is small, and lets the mode say
   "this notasi is older than the package" instead of failing oddly.
+
+## Settled (2026-11-24)
+
+- **`notasi --version`** is added in this iteration: it prints notasi's
+  version, and the mode uses it to say when the notasi it found is
+  older than the package.
+- **Installing Guile and Typst** (at the pinned version) is in the
+  manual's chapter, with the commands for macOS (Homebrew) and
+  Debian/Ubuntu ([documentation](2026-11-24-documentation.md)).

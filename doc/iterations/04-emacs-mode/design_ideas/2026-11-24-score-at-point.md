@@ -1,7 +1,7 @@
 # Design idea: the score the cursor is in
 
-Status: proposed in discussion (2026-11-24). Not the design until
-promoted.
+Status: agreed in discussion (2026-11-24); see "Settled". Not the
+design until promoted.
 
 ## The idea
 
@@ -29,3 +29,11 @@ forms in Emacs Lisp; it doesn't need notasi for this.
   per score in the temporary folder.
 - `C-c C-s` "stays on" a score: how does the user go back to following
   the cursor? Suggested: choose "follow the cursor" in the same list.
+
+## Settled (2026-11-24)
+
+- **One picture per score** is kept in the temporary folder, so
+  switching back to a score is instant (and redrawn if the text has
+  changed since).
+- **`C-c C-s`** lists the scores and "follow the cursor"; choosing
+  that undoes a fixed choice.

@@ -1,7 +1,7 @@
 # Design idea: documentation
 
-Status: proposed in discussion (2026-11-24). Not the design until
-promoted.
+Status: agreed in discussion (2026-11-24); see "Settled". Not the
+design until promoted.
 
 ## The idea
 
@@ -34,3 +34,12 @@ gets them from nothing to a drawn score as quickly as possible.
 - The manual is for musicians and so far doesn't assume any editor.
   Should the first pages mention Emacs, or only the new chapter?
   Suggested: one sentence on the first page pointing to the chapter.
+
+## Settled (2026-11-24)
+
+- **Screenshots:** few, and of the preview only.
+- **The first page** gets one sentence pointing to the chapter
+  "Writing in Emacs".
+- **The chapter** drops section 5, "Writing faster": completion, Eldoc
+  and Imenu are not in this iteration
+  ([help while writing](2026-11-24-editing-help.md), "Settled").

@@ -29,9 +29,7 @@ follows only the README and the manual:
    mistake is shown on its line with notasi's message, and fixing it
    brings the picture back;
 5. moves the cursor into `(score kotekan …)`, and the picture switches
-   to that score;
-6. gets completion for note names, pattern names and instruments while
-   typing a part.
+   to that score.
 
 `make check` and `make check-emacs` pass, in CI too.
 
@@ -49,7 +47,7 @@ What the user sees:
 - [Mistakes shown in the text](design_ideas/2026-11-24-errors.md):
   through Flymake, with the last good picture kept.
 - [Help while writing](design_ideas/2026-11-24-editing-help.md):
-  highlighting, indentation, completion, Eldoc, Imenu.
+  highlighting and indentation; completion, Eldoc and Imenu later.
 
 How it works:
 
@@ -70,15 +68,16 @@ Shipping it:
 
 ## Promotion
 
-To be planned when the ideas are agreed. Likely:
+In dependency order (ADR 0023). No change to 01–04 or 06:
 
-- a new design document, `08-emacs.md`, for the package;
-- `05-typst-backend.md`: the parts of `notasi render` the package
-  depends on (options, exit codes, the error format) become a stated
-  contract;
-- `07-environment.md`: installing notasi, Guile and Typst for Emacs
-  users;
-- the build order in `doc/design/README.md`.
+1. `05-typst-backend.md`: `notasi render`'s options, exit codes and
+   error format become a stated contract, and `notasi --version`.
+2. `07-environment.md`: installing Guile and Typst for Emacs users.
+3. `08-emacs.md`, a new design document: the package, the preview,
+   the score at point, mistakes, finding notasi, testing.
+4. The build order in `doc/design/README.md`.
+
+Promoted so far: none.
 
 ## Milestones
 
@@ -89,7 +88,6 @@ Proposed; settled at promotion.
    indentation, `make check-emacs`, and CI.
 2. **`feat/emacs-preview`**: drawing and the preview window, the score
    at point, errors through Flymake. Probably in slices.
-3. **`feat/emacs-help`**: completion, Eldoc, Imenu.
-4. **`feat/emacs-docs`**, the acceptance test: installation in the
+3. **`feat/emacs-docs`**, the acceptance test: installation in the
    README, the manual chapter, and the acceptance test run on a fresh
    Emacs.

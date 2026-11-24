@@ -1,7 +1,7 @@
 # Design idea: the score appears and follows the text
 
-Status: proposed in discussion (2026-11-24). Not the design until
-promoted.
+Status: agreed in discussion (2026-11-24); see "Settled". Not the
+design until promoted.
 
 ## The idea
 
@@ -58,3 +58,10 @@ Not for this iteration; for the backlog at promotion:
 - A faster check that finds mistakes without drawing (skipping Typst).
 - A Guile process kept running between drawings (see `notasi serve`
   in [How a drawing is made](2026-11-24-drawing.md)).
+
+## Settled (2026-11-24)
+
+- **One second** is right: a drawing takes about 0.6 s (see
+  [How a drawing is made](2026-11-24-drawing.md), "Settled").
+- **`C-c C-o`** (write the score to a file) is in this iteration.
+- **Scrolling the preview to follow the cursor** is later.
