@@ -1,6 +1,6 @@
 # 03 — Reader and validation
 
-Status: implemented (iteration 2): milestone 1 (`feat/music`), all
+Status: implemented (iterations 2 and 3): iteration 2's milestone 1 (`feat/music`), all
 five slices (see "Slices (iteration 2)"), and the **[scores]** cases
 and step 12 with milestone 2 (`feat/scores`, 04 "Slices (iteration
 2)"). No form or option raises `not-implemented` any more; the kind is

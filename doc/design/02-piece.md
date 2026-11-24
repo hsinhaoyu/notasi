@@ -1,6 +1,6 @@
 # 02 — Piece
 
-Status: implemented (iteration 2). `degree` (with `damped`) and
+Status: implemented (iterations 2 and 3). `degree` (with `damped`) and
 `instrument` (without `show-names?`) since `feat/music-syntax`; times as
 exact rationals in pulses, with `part-end` and `events-at` taking a
 time, since `feat/music-durations`; `pickup`, `colotomies`,
@@ -228,8 +228,7 @@ group                                  every setting filled in (ADR 0033)
 - `(group-lanes group)` (**Implemented**): the notes actually used by the
   group's member parts, as a list of note records, each once. Determines
   the rows of a group with `rows` `notes` and `keys` `used`; with `all`
-  or a range, layout takes the instrument's keys instead (04,
-  **Planned**). Pitched notes come from one
+  or a range, layout takes the instrument's keys instead (04). Pitched notes come from one
   instrument (invariant 6) and are sorted highest first. Strokes follow
   the instrument's order. With several stroke instruments, each
   instrument's lanes come as a block, in the order its first part

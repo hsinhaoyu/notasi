@@ -1,6 +1,6 @@
 # 04 — Layout
 
-Status: implemented (iteration 2): milestone 2, all five slices
+Status: implemented (iterations 2 and 3): iteration 2's milestone 2, all five slices
 (`feat/scores-form`, `feat/scores-contract`, `feat/scores-rows`,
 `feat/scores-overlays`, `feat/scores-range`, see "Slices (iteration
 2)"). `layout-score` lays out a score as contract version 3. "Note
@@ -471,7 +471,7 @@ examples, golden files and manual pages it affects.
 
 ## Slices (iteration 3)
 
-**Planned.** Milestone 2 of iteration 3 (`feat/drawing`) is built in
+**Implemented.** Milestone 2 of iteration 3 (`feat/drawing`) is built in
 four slices, each its own branch and PR into `dev`, started with
 `/start-milestone <branch>`, after milestone 1 (`feat/syntax`). Each
 changes the reader's checks (03, **[score-options]**), the records
@@ -532,8 +532,6 @@ no figure.
 ## Open questions
 
 - A legend: one swatch per degree, beside the figure or in the caption.
-- Drawing the full range of an instrument (all its keys as lanes),
-  rather than only the notes used.
 
 More colour schemes and systems one cycle long are in the
 [backlog](../iterations/backlog.md).
