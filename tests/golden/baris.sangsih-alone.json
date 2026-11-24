@@ -27,7 +27,8 @@
             "text": "1"
           }
         ],
-        "pulses": ["1", null, null, null, "2", null, null, null]
+        "pulses": ["1", null, null, null, "2", null, null, null],
+        "pulse_lines": true
       },
       "lines": ["none", "none", "none", "none", "cycle", "none", "none", "none"],
       "groups": [
@@ -114,7 +115,9 @@
               ]
             }
           ],
-          "overlays": []
+          "overlays": [],
+          "pulse_lines": true,
+          "row_lines": true
         }
       ]
     },
@@ -125,7 +128,8 @@
         "cycle_label": "Cycle",
         "pulse_label": "Beats (Clap)",
         "cycles": [],
-        "pulses": ["3", null, null, null, "4", null, null, null, "5", null, null, null, "6", null, null, null, "7", null, null, null, "8", null, null, null, "1", null, null, null]
+        "pulses": ["3", null, null, null, "4", null, null, null, "5", null, null, null, "6", null, null, null, "7", null, null, null, "8", null, null, null, "1", null, null, null],
+        "pulse_lines": true
       },
       "lines": ["none", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none"],
       "groups": [
@@ -392,7 +396,9 @@
               ]
             }
           ],
-          "overlays": []
+          "overlays": [],
+          "pulse_lines": true,
+          "row_lines": true
         }
       ]
     }
