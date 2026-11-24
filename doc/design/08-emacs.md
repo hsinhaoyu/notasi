@@ -2,9 +2,9 @@
 
 Status: partly implemented (iteration 4): milestone 1,
 `feat/emacs-package` (the package, writing, `make check-emacs`), and
-slices 1 and 2 of the preview, `feat/emacs-preview-draw` and
-`feat/emacs-preview-live` (the preview, the score shown, how a drawing
-is made, finding notasi); mistakes and the documentation are planned. ADRs 0048 (the command line it depends on),
+milestone 2, `feat/emacs-preview`, in its three slices (the preview,
+the score shown, how a drawing is made, mistakes, finding notasi); the
+documentation is planned. ADRs 0048 (the command line it depends on),
 0049 (installing) and 0050 (the package).
 
 ## Responsibility
@@ -183,7 +183,7 @@ one-second pause is enough, and notasi needs no process kept running.
 
 ## Mistakes
 
-**Planned.** `notasi render` exits with status 1 and prints
+**Implemented** (`feat/emacs-preview-errors`). `notasi render` exits with status 1 and prints
 `FILE:LINE: message` for a mistake in the notation, or a line starting
 `notasi: ` for any other problem (05).
 
@@ -332,7 +332,7 @@ own branch and PR into `dev`, started with `/start-milestone <branch>`:
      `notasi-auto-preview` are on or off; `notasi-preview-delay` is a
      number of seconds, 1 by default. With `notasi-auto-preview` off,
      neither a pause nor saving redraws; `C-c C-c` still does.
-3. `feat/emacs-preview-errors`: mistakes through Flymake, the red
+3. **Implemented.** `feat/emacs-preview-errors`: mistakes through Flymake, the red
    header and the last good picture, mistakes in templates, and the
    other problems.
    Decided for this slice:
