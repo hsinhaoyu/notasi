@@ -32,6 +32,12 @@
 ;;;   come before or after PIECE.nts and -o.  `--score' as the last
 ;;;   argument is the "without a value" usage error; its message is
 ;;;   not checked to name --score.  An unknown score's message names it.
+;;; - Default OUT with --score (slice feat/drawing-output; 05, "The
+;;;   `notasi' command"; ADR 0040): PIECE_NAME.pdf in the piece's
+;;;   folder; without --score, PIECE.pdf.  Tested on a copy of gilak in
+;;;   its own folder, so the files there are only this test's: the old
+;;;   name PIECE.NAME.pdf must not be written, and an unknown score
+;;;   writes no PIECE_NAME.pdf.
 ;;; - scripts/notasi is run by its absolute path from inside the
 ;;;   temporary folder, with a relative PIECE.nts and OUT, so it must
 ;;;   find the project (and the gong-kebyar template) from its own
@@ -226,10 +232,10 @@ each string in ALSO."
   (for-each
    (lambda (args)
      (let* ((score (car args))
-            (out (tmp-path (string-append "gilak." score ".pdf")))
+            (out (tmp-path (string-append "gilak_" score ".pdf")))   ; ADR 0040
             (r (apply run (cdr args))))
        (test-equal (string-append score ": exits with status 0") 0 (status-of r))
-       (test-equal (string-append score ": prints PIECE.NAME.pdf and a newline")
+       (test-equal (string-append score ": prints PIECE_NAME.pdf and a newline")
          (string-append out "\n") (stdout-of r))
        (test-equal (string-append score ": prints nothing to stderr") "" (stderr-of r))
        (test-assert (string-append score ": writes a PDF there") (pdf-file? out))))
@@ -255,6 +261,42 @@ each string in ALSO."
            (not (same-bytes? full second))))
     (test-assert "without --score, the first score (full) is drawn"
       (same-bytes? full first))))
+
+;;; ------------------------------------------------------------------
+;;; Default OUT with --score: PIECE_NAME.pdf (slice feat/drawing-output,
+;;; ADR 0040)
+
+(define named-dir (tmp-path "named"))
+(mkdir named-dir)
+(define (named-path name) (string-append named-dir "/" name))
+(define named-gilak (named-path "gilak.nts"))
+(copy-file (string-append repo-dir "/examples/gilak.nts") named-gilak)
+
+(test-group "render --score, default OUT PIECE_NAME.pdf"
+  (for-each
+   (lambda (args)
+     (let* ((score (car args))
+            (out (named-path (string-append "gilak_" score ".pdf")))
+            (r (apply run (cdr args))))
+       (test-equal (string-append score ": exits with status 0") 0 (status-of r))
+       (test-equal (string-append score ": prints PIECE_NAME.pdf, in the piece's folder, and a newline")
+         (string-append out "\n") (stdout-of r))
+       (test-equal (string-append score ": prints nothing to stderr") "" (stderr-of r))
+       (test-assert (string-append score ": writes a PDF there") (pdf-file? out))
+       (test-assert (string-append score ": doesn't write PIECE.NAME.pdf")
+         (not (file-exists? (named-path (string-append "gilak." score ".pdf")))))))
+   `(("second-cycle" "render" ,named-gilak "--score" "second-cycle")
+     ("full" "render" "--score" "full" ,named-gilak)))
+  (let* ((out (named-path "gilak.pdf"))
+         (r (run "render" named-gilak)))
+    (test-equal "without --score: exits with status 0" 0 (status-of r))
+    (test-equal "without --score: prints PIECE.pdf" (string-append out "\n")
+      (stdout-of r))
+    (test-assert "without --score: writes a PDF there" (pdf-file? out)))
+  (let ((r (run "render" named-gilak "--score" "nope")))
+    (test-equal "unknown score: exits with status 1" 1 (status-of r))
+    (test-assert "unknown score: writes no PIECE_NAME.pdf"
+      (not (file-exists? (named-path "gilak_nope.pdf"))))))
 
 ;;; ------------------------------------------------------------------
 ;;; A notation mistake: the reader's message exactly, status 1
@@ -303,7 +345,7 @@ each string in ALSO."
                           (run "render" piece "-o" out) out))
 
   ;; A score the piece doesn't have: "notasi: " and the message.
-  (let ((out (tmp-path "gilak.nope.pdf")))
+  (let ((out (tmp-path "gilak_nope.pdf")))
     (other-problem-checks "unknown score" (run "render" gilak "--score" "nope")
                           out "nope"))
 

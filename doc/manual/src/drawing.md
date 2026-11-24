@@ -83,7 +83,11 @@ the first. To draw another, name it with `--score`:
 scripts/notasi render gilak.nts --score second
 ```
 
-This writes `gilak.second.pdf`.
+This writes `gilak_second.pdf`.
+
+Standalone drawings use a plain sans-serif font found on your computer
+(Helvetica, Arial, DejaVu Sans or Liberation Sans), so they may look a
+little different from one computer to another.
 
 ## When something goes wrong
 

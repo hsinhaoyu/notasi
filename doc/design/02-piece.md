@@ -13,8 +13,8 @@ the `pattern` and `pattern-span` records since `feat/music-patterns`;
 default since `feat/drawing-header`, and the score's and group's
 `background` since `feat/drawing-lines`, and the group's `keys`,
 `octave-numbers?`, `key-numbers?`, `row-labels?` and `display`,
-`note-label`'s `#:octave?` and invariant 10 since `feat/drawing-rows`.
-Tests in `tests/piece.scm`. Planned for iteration 3: invariant 9.
+`note-label`'s `#:octave?` and invariant 10 since `feat/drawing-rows`,
+and invariant 9 since `feat/drawing-output`. Tests in `tests/piece.scm`.
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -272,7 +272,7 @@ construction, since events are built from the tokens.
    `note-names?` true.
 8. Part names are unique in the piece, generated parts included, and
    score names are unique.
-9. **Planned**: score names contain no `_` (ADR 0040).
+9. Score names contain no `_` (ADR 0040).
 10. In a group whose `keys` is a range, every note its parts
     play in the score's range is within it; the range's notes are keys
     of the group's instrument, the lower first. A group whose `keys` is

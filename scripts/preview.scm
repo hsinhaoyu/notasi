@@ -1,6 +1,6 @@
 ;;; scripts/preview.scm -- `make preview': draw every score of every
 ;;; example to build/preview/, NAME.png for a file with only the default
-;;; score and NAME.SCORE.png for each score otherwise, matching the
+;;; score and NAME_SCORE.png for each score otherwise (ADR 0040), matching the
 ;;; golden files (05, "Version pinning"; 04, "Golden tests").
 ;;;
 ;;; Run from the repo root: guile -L . scripts/preview.scm
@@ -23,7 +23,7 @@
          (draw nts (string-append "build/preview/" name ".png") #f)
          (for-each (lambda (score)
                      (draw nts
-                           (string-append "build/preview/" name "."
+                           (string-append "build/preview/" name "_"
                                           (symbol->string (score-name score))
                                           ".png")
                            (score-name score)))

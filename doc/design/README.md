@@ -65,7 +65,7 @@ See [its README](../iterations/03-refining-the-examples/README.md).
 
 1. **Implemented.** `feat/syntax`: parts with `:instrument`, colotomy parts as `part`
    forms, `gilak` and `bapang` in the template
-2. `feat/drawing`: the drawing; four slices, see
+2. **Implemented.** `feat/drawing`: the drawing; four slices, see
    [04-layout.md](04-layout.md#slices-iteration-3)
 3. `feat/examples`: the acceptance test: Jaya Semara and Baris refined,
    and Baris's colour score

@@ -1645,6 +1645,10 @@ must be among the keys shown: `outside-keys' at the earliest."
 print."
   (match form
     ((('score name . items) . line)
+     (when (string-index (symbol->string name) #\_)
+       (syntax-error 'bad-form line
+                     "a score's name can't contain `_': a file drawn from score `~a' would be named PIECE_~a (ADR 0040); use `-'"
+                     name name))
      (match (split-options items line)
        ((options . groups)
         (let* ((opts (score-settings options line))

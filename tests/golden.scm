@@ -2,8 +2,8 @@
 ;;; See doc/design/04-layout.md, "Golden tests".
 ;;; - Each examples/NAME.nts has one figure per score.  A file with only
 ;;;   the default score (no `score' form) has tests/golden/NAME.json; a
-;;;   file with scores has tests/golden/NAME.SCORE.json for each of its
-;;;   scores.  Each figure, laid out with layout-score, must match its
+;;;   file with scores has tests/golden/NAME_SCORE.json for each of its
+;;;   scores (ADR 0040; NAME.SCORE.json before feat/drawing-output).  Each figure, laid out with layout-score, must match its
 ;;;   saved copy as text, exactly as write-figure writes it.  A figure
 ;;;   with no saved copy fails, and so does a saved copy with no figure.
 ;;; - With --update (make golden), rewrite every saved copy with
@@ -15,12 +15,17 @@
 ;;;
 ;;; Slice feat/scores-range (04, slice 5 and "Golden tests"): one figure
 ;;; per score, named as above (examples/gilak.nts has two scores, so its
-;;; figures are gilak.full.json and gilak.second-cycle.json).
+;;; figures were gilak.full.json and gilak.second-cycle.json).
+;;;
+;;; Slice feat/drawing-output (04, "Slices (iteration 3)", slice 4, and
+;;; "Golden tests"; ADR 0040): a file with scores names its figures
+;;; NAME_SCORE.json (gilak_full.json, gilak_second-cycle.json); a file
+;;; with only the default score keeps NAME.json.
 ;;; Choices made where the docs are not explicit:
 ;;; - "Only the default score" means the piece's only score has no
 ;;;   source location (03, step 12: the default score's location is #f).
 ;;; - An example that can't be read fails one test, and its saved
-;;;   copies (NAME.json, NAME.*.json) count neither as figures nor as
+;;;   copies (NAME.json, NAME_*.json) count neither as figures nor as
 ;;;   orphans; --update then keeps them and exits non-zero.
 ;;;
 ;;; Run from the repo root: guile -L . tests/golden.scm [--update]
@@ -67,7 +72,7 @@ sorted.  No names if DIR doesn't exist."
   (if (default-score-only? piece)
       (list (list name piece (car (piece-scores piece))))
       (map (lambda (score)
-             (list (string-append name "." (symbol->string (score-name score)))
+             (list (string-append name "_" (symbol->string (score-name score)))
                    piece score))
            (piece-scores piece))))
 
@@ -109,7 +114,7 @@ file so that the comparison goes through write-figure."
   "Is GOLDEN a saved copy of an example that can't be read?"
   (any (lambda (name)
          (or (string=? golden name)
-             (string-prefix? (string-append name ".") golden)))
+             (string-prefix? (string-append name "_") golden)))
        unreadable))
 
 (define orphans

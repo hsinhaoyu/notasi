@@ -66,11 +66,12 @@ as the message."
 
 (define (default-output piece score)
   "PIECE's folder and name with .pdf, and the score's name when one was
-chosen: songs/gilak.nts → songs/gilak.pdf, or songs/gilak.full.pdf."
+chosen: songs/gilak.nts → songs/gilak.pdf, or songs/gilak_full.pdf
+(ADR 0040)."
   (string-append (if (string-suffix? ".nts" piece)
                      (string-drop-right piece 4)
                      piece)
-                 (if score (string-append "." score) "")
+                 (if score (string-append "_" score) "")
                  ".pdf"))
 
 (define (render piece score out)

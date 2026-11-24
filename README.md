@@ -31,7 +31,7 @@ Design documents, decisions and iterations' design ideas are on the `dev` branch
 
     scripts/notasi render piece.nts            # writes piece.pdf
     scripts/notasi render piece.nts -o out.png # or .svg
-    scripts/notasi render piece.nts --score excerpt  # writes piece.excerpt.pdf
+    scripts/notasi render piece.nts --score excerpt  # writes piece_excerpt.pdf
 
 Needs Guile 3.0 and Typst 0.15.1. See "Drawing a score" in the manual.
 
@@ -55,5 +55,5 @@ Requires Guile 3.0, and Typst 0.15.1 (the tested version) for drawing
 figures. Run code from the repo root with `guile -L .`.
 
 `make preview` draws every score of each piece in `examples/` with
-Typst, to `build/preview/NAME.png` (or `NAME.SCORE.png` for a piece with
+Typst, to `build/preview/NAME.png` (or `NAME_SCORE.png` for a piece with
 scores), so you can check how it looks.

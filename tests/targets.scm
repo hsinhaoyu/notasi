@@ -13,7 +13,8 @@
 ;;;   pickup, and a generated `gong' part (origin `colotomy').
 ;;; - Each of the three has its golden files in tests/golden/, named per
 ;;;   04: NAME.json for a piece with only the default score, else
-;;;   NAME.SCORE.json for each score.  (tests/golden.scm compares them.)
+;;;   NAME_SCORE.json for each score (ADR 0040, since feat/drawing-output;
+;;;   NAME.SCORE.json before).  (tests/golden.scm compares them.)
 ;;; - run-notasi draws each score of the two targets to an SVG in a
 ;;;   temporary folder, with `render FILE --score NAME -o OUT', exiting 0.
 ;;;   Needs Typst on the PATH.
@@ -57,7 +58,7 @@
   (match (piece-scores pc)
     (((? (lambda (s) (not (score-location s))))) (list name))
     (scores (map (lambda (s)
-                   (string-append name "." (symbol->string (score-name s))))
+                   (string-append name "_" (symbol->string (score-name s))))
                  scores))))
 
 (define (golden-path name) (string-append "tests/golden/" name ".json"))
@@ -148,7 +149,7 @@
      ((name scores)
       (for-each
        (lambda (score)
-         (let ((path (golden-path (string-append name "." (symbol->string score)))))
+         (let ((path (golden-path (string-append name "_" (symbol->string score)))))
            (test-assert (string-append path " exists") (file-exists? path))))
        scores)))
    targets)
@@ -171,7 +172,7 @@
       (for-each
        (lambda (score)
          (let* ((label (string-append name " --score " (symbol->string score)))
-                (out (tmp-path (string-append name "." (symbol->string score) ".svg")))
+                (out (tmp-path (string-append name "_" (symbol->string score) ".svg")))
                 (r (run "render" (string-append "examples/" name ".nts")
                         "--score" (symbol->string score) "-o" out)))
            (test-equal (string-append label ": exits with status 0")

@@ -11,7 +11,7 @@ GNU Guile 3.0 project for notating and visualizing Balinese gamelan music. `(not
 - Run all tests: `make check` (exits non-zero if any test file fails)
 - Run one test file: `guile --fresh-auto-compile -L . tests/<name>.scm`
 - Remove SRFI-64 logs: `make clean`
-- Draw every score of each example to `build/preview/` (`NAME.png`, or `NAME.SCORE.png` for a file with scores) for a visual check: `make preview` (needs Typst)
+- Draw every score of each example to `build/preview/` (`NAME.png`, or `NAME_SCORE.png` for a file with scores) for a visual check: `make preview` (needs Typst)
 
 Typst is pinned to **0.15.1** (05, "Version pinning"); CI installs exactly that version. `tests/template.scm` needs `typst` on the PATH.
 
@@ -82,7 +82,7 @@ Deferred work is in `doc/iterations/backlog.md`.
 - Read `doc/manual/STYLE.md` before writing a page. It sets the reader, the tone and the outline.
 - Examples are files in `doc/manual/src/examples/`, shown with `{{#include ...}}`. `tests/manual.scm` (under `make check`) checks that each one reads and is used by a page.
 - Mistakes shown on a page are files in `doc/manual/src/mistakes/`: `NAME.nts` and the exact error message in `NAME.txt`. `tests/manual.scm` checks that each fails with that message, so a changed error message means updating its `.txt`.
-- A page can show a drawn score as `![…](figures/NAME.svg)`, or another score of the example as `figures/NAME.SCORE.svg`: `make manual` draws it from `src/examples/NAME.nts` with `scripts/notasi render` (and `--score SCORE`) before building. `figures/` is generated, never committed; `tests/manual.scm` checks each figure has its example.
+- A page can show a drawn score as `![…](figures/NAME.svg)`, or another score of the example as `figures/NAME_SCORE.svg`: `make manual` draws it from `src/examples/NAME.nts` with `scripts/notasi render` (and `--score SCORE`) before building. `figures/` is generated, never committed; `tests/manual.scm` checks each figure has its example.
 - `make manual` builds it (needs `mdbook`, Guile and Typst); CI builds it on every PR and deploys it to GitHub Pages when `main` changes.
 
 ## Git workflow
@@ -123,5 +123,5 @@ Tests use SRFI-64. Each `tests/*.scm` file is a standalone script that `make che
 
 What to test:
 - Unit tests, one file per module: reader token handling and every error case listed in `doc/design/03-reader.md`, piece derived functions, layout decisions (lanes, system splitting, colours), JSON serialiser escaping.
-- Golden tests: for each score of each file in `examples/`, the generated JSON is compared with `tests/golden/` (`NAME.json` for a file with only the default score, `NAME.SCORE.json` otherwise). When an output change is intended, regenerate them with `make golden` and review the diff in the PR.
+- Golden tests: for each score of each file in `examples/`, the generated JSON is compared with `tests/golden/` (`NAME.json` for a file with only the default score, `NAME_SCORE.json` otherwise). When an output change is intended, regenerate them with `make golden` and review the diff in the PR.
 - Typst template test: `tests/template.scm` compiles every golden figure with `typst/notasi.typ` and fails on an error or a warning. Changes to the template are also checked by eye with `make preview`.

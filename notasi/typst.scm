@@ -19,6 +19,8 @@
   #:use-module (srfi srfi-1)
   #:export (write-figure
             write-entry-file
+            choose-font
+            installed-fonts
             compile-typst
             render-piece))
 
@@ -46,12 +48,12 @@ and leaves PATH as it was."
 
 ;;; The entry file of a standalone figure (05, "The entry file and
 ;;; running Typst"), reading the figure from JSON-NAME.
-(define (entry-text json-name)
+(define (entry-text json-name font)
   (string-append
    "#import \"notasi.typ\": score\n"
    "#set page(width: auto, height: auto, margin: 14pt, fill: white)\n"
    "#let data = json(\"" json-name "\")\n"
-   "#set text(font: \"Libertinus Serif\",\n"
+   "#set text(font: \"" font "\",\n"
    "  size: if data.sizes.font_size == none { 8pt } else { eval(data.sizes.font_size) })\n"
    "#if data.title != \"\" {\n"
    "  block(below: if data.subtitle == none { 1em } else { 0.4em },\n"
@@ -65,11 +67,35 @@ and leaves PATH as it was."
    "  block(above: 1em, text(style: \"italic\", data.caption))\n"
    "}\n"))
 
-(define (write-entry-file path json-name)
+(define* (write-entry-file path json-name #:key (font "Libertinus Serif"))
   "Write the entry file Typst compiles to PATH: it draws the figure in
 JSON-NAME (relative to PATH's folder) with the template notasi.typ, with
-the piece's title above it."
-  (write-text path (entry-text json-name)))
+the piece's title above it, in the font family FONT."
+  (write-text path (entry-text json-name font)))
+
+;;; Standalone figures use a sans serif found on the machine, the first
+;;; of these, and Libertinus Serif, built into Typst, when none is
+;;; (ADR 0045).
+(define sans-fonts '("Helvetica" "Arial" "DejaVu Sans" "Liberation Sans"))
+
+(define (choose-font families)
+  "The font family for a standalone figure: the first of `sans-fonts'
+in FAMILIES (a list of strings), else \"Libertinus Serif\"."
+  (or (find (lambda (font) (member font families)) sans-fonts)
+      "Libertinus Serif"))
+
+(define (installed-fonts)
+  "The font families Typst can use here, as `typst fonts' lists them; '()
+if Typst can't be run."
+  (match (typst-program)
+    (#f '())
+    (program
+     (guard (e (#t '()))
+       (let* ((port (open-pipe* OPEN_READ program "fonts"))
+              (text (get-string-all port)))
+         (close-pipe port)
+         (filter (lambda (line) (not (string-null? line)))
+                 (map string-trim-both (string-split text #\newline))))))))
 
 ;;; ------------------------------------------------------------------
 ;;; Running Typst
@@ -163,7 +189,8 @@ score the piece doesn't have is an &error."
       (lambda ()
         (write-figure figure (in-vicinity dir "piece.json"))
         (copy-file template (in-vicinity dir "notasi.typ"))
-        (write-entry-file (in-vicinity dir "piece.typ") "piece.json")
+        (write-entry-file (in-vicinity dir "piece.typ") "piece.json"
+                          #:font (choose-font (installed-fonts)))
         (compile-typst (in-vicinity dir "piece.typ") out-path))
       (lambda ()
         (unless keep-in (remove-tree dir))))))

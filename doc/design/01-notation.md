@@ -10,8 +10,8 @@ inside a colotomy (ADR 0038), and `gilak` and `bapang` in the
 Labelled number rows (ADR 0039) and the pickup shown as cycle 0 since
 `feat/drawing-header`; `:background` (ADR 0041) since
 `feat/drawing-lines`; `:keys`, `:octave-numbers`, `:display`,
-`:key-numbers` and `:row-labels` since `feat/drawing-rows`. Planned for
-iteration 3: no `_` in score names (ADR 0040).
+`:key-numbers` and `:row-labels` since `feat/drawing-rows`; no `_` in
+score names (ADR 0040) since `feat/drawing-output`.
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -544,7 +544,7 @@ written.
 
 - Score names are unique in a file. Group labels need not be.
 - A score name may not contain `_`, so that a file drawn from it,
-  `NAME_SCORE` (ADR 0040), can be split (**Planned**).
+  `NAME_SCORE` (ADR 0040), can be split.
 - Every part a group names must exist, written or generated.
 - Within one score a part is in at most one group. A group's parts are
   either all pitched, on the same instrument (ADR 0011), or all on stroke
@@ -582,8 +582,7 @@ with every option at its default.
 
 `notasi render FILE --score NAME` prints the score NAME. Without
 `--score`, the first score in the file is printed. A file drawn from a
-chosen score is named `FILE_NAME.pdf` (**Planned**, ADR 0040; today
-`FILE.NAME.pdf`).
+chosen score is named `FILE_NAME.pdf` (ADR 0040).
 
 ## Reading Gold's cipher in this notation
 

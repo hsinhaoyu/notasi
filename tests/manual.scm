@@ -6,9 +6,12 @@
 ;;;   with exactly the message in NAME.txt, and a page includes both.
 ;;; - Every figure a page shows (figures/NAME.svg, drawn by `make manual')
 ;;;   has an example, examples/NAME.nts, to draw it from.  A figure of
-;;;   another score, figures/NAME.SCORE.svg (drawn with --score SCORE),
+;;;   another score, figures/NAME_SCORE.svg (drawn with --score SCORE),
 ;;;   needs examples/NAME.nts and a score SCORE in it (slice
-;;;   feat/scores-range; 05, "The `notasi' command").
+;;;   feat/scores-range; 05, "The `notasi' command"; named NAME_SCORE
+;;;   since feat/drawing-output, ADR 0040).  A page showing a figure
+;;;   by the old name, figures/NAME.SCORE.svg, fails: make manual no
+;;;   longer draws it.
 ;;; - Files in a templates/ folder under examples/ or mistakes/ are
 ;;;   templates, not pieces: they are read through the pieces that use
 ;;;   them, and each must be included by a page.
@@ -87,17 +90,23 @@ the file reads without a notasi error."
   (filter template-file? (append (files-under examples-dir ".nts")
                                  (files-under mistakes-dir ".nts"))))
 (define pages (files-under src ".md"))
-(define figure-pattern "figures/([a-z0-9-]+)(\\.([a-z0-9-]+))?\\.svg")
+(define figure-pattern "figures/([a-z0-9-]+)(_([a-z0-9-]+))?\\.svg")
+(define old-figure-pattern "figures/[a-z0-9-]+\\.[a-z0-9-]+\\.svg")
+
+(define (old-figures page)
+  "The figures/NAME.SCORE.svg images PAGE shows, by the name used
+before ADR 0040."
+  (map match:substring (list-matches old-figure-pattern (slurp page))))
 
 (define (figures page)
   "The examples/NAME.nts files PAGE's figures/NAME.svg and
-figures/NAME.SCORE.svg images need."
+figures/NAME_SCORE.svg images need."
   (map (lambda (m)
          (string-append examples-dir "/" (match:substring m 1) ".nts"))
        (list-matches figure-pattern (slurp page))))
 
 (define (score-figures page)
-  "(EXAMPLE . SCORE) for each figures/NAME.SCORE.svg image PAGE shows,
+  "(EXAMPLE . SCORE) for each figures/NAME_SCORE.svg image PAGE shows,
 SCORE a symbol."
   (filter-map (lambda (m)
                 (and (match:substring m 3)
@@ -166,6 +175,16 @@ SCORE a symbol."
                                   " of " (car f) ", which has it")
         (has-score? (car f) (cdr f))))
     (score-figures page)))
+ pages)
+
+(for-each
+ (lambda (page)
+   (for-each
+    (lambda (f)
+      (test-assert (string-append page " shows " f
+                                  ", named NAME_SCORE.svg since ADR 0040")
+        #f))
+    (old-figures page)))
  pages)
 
 (define runner (test-runner-current))

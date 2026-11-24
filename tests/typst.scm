@@ -75,6 +75,30 @@
 ;;; doesn't have is an &error (not a notation mistake) whose message
 ;;; names the score and the file; like other failures, it writes no
 ;;; output and leaves nothing in TMPDIR.
+;;;
+;;; Slice feat/drawing-output (04, "Slices (iteration 3)", slice 4; 05,
+;;; "The entry file and running Typst"; ADR 0045): the sans-serif font.
+;;; - (choose-font FAMILIES) returns the first of Helvetica, Arial,
+;;;   DejaVu Sans and Liberation Sans (in that order, whatever FAMILIES'
+;;;   order) that is in FAMILIES, else "Libertinus Serif".
+;;; - (installed-fonts) is the list of families `typst fonts' prints.
+;;; - write-entry-file takes #:font (default "Libertinus Serif") and
+;;;   writes only that family; render-piece passes it the font chosen,
+;;;   so Typst gives no font warning.
+;;; Choices where the docs are silent:
+;;; - choose-font matches family names exactly: "Helvetica Neue" is not
+;;;   Helvetica, and "helvetica" isn't either.
+;;; - installed-fonts is compared with `typst fonts' as a set (one
+;;;   family per line, run here with the same PATH); order is free.
+;;; - The font is checked as `#set text(font: "F",' (the size may follow
+;;;   on the next line, as it does today).
+;;; - "The rest of the entry file as 05 says": the text with #:font F
+;;;   is the default text with "Libertinus Serif" replaced by F.
+;;; - "No Typst warning about fonts": the kept piece.typ is compiled
+;;;   here with `typst compile' and its standard error must hold no
+;;;   "unknown font family" (and, more strictly, no "warning:").  The
+;;;   check is shown to work on an entry file with a family no machine
+;;;   has.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -82,6 +106,7 @@
              (ice-9 exceptions)
              (ice-9 ftw)
              (ice-9 match)
+             (ice-9 popen)
              (ice-9 textual-ports)
              (rnrs bytevectors)
              (notasi json)
@@ -596,8 +621,12 @@ write-entry-file, compile it to NAME.png and return the PNG's
     (test-equal "keep-in: piece.json is the figure, as write-figure writes it"
       (expected-figure-text example-path)
       (and (file-exists? (kept "piece.json")) (read-text (kept "piece.json"))))
+    ;; In the font chosen from those installed (ADR 0045).
     (test-equal "keep-in: piece.typ is the entry file for piece.json"
-      (entry-file-text "piece.json")
+      (let ((path (tmp-path "entry-with-font.typ")))
+        (write-entry-file path "piece.json"
+                          #:font (choose-font (installed-fonts)))
+        (read-text path))
       (and (file-exists? (kept "piece.typ")) (read-text (kept "piece.typ"))))
     (test-equal "keep-in: notasi.typ is a copy of the template"
       (read-text template-path)
@@ -719,6 +748,163 @@ write-entry-file, compile it to NAME.png and return the PNG's
       (not (file-exists? out)))
     (test-assert "unsupported extension: leaves nothing in TMPDIR"
       (render-tmp-empty?))))
+
+;;; ==================================================================
+;;; Slice feat/drawing-output: the font (ADR 0045)
+
+(define sans-candidates '("Helvetica" "Arial" "DejaVu Sans" "Liberation Sans"))
+
+(define (choose-font-of families)
+  "choose-font of FAMILIES, or the exception it raises."
+  (guard (e (#t e)) (choose-font families)))
+
+(define (shell-quote str)
+  (string-append "'" str "'"))
+
+(define (command-output command)
+  "Run COMMAND with sh; return what it prints (standard output and
+standard error together), or #f if it can't be run."
+  (guard (e (#t #f))
+    (let* ((port (open-input-pipe command))
+           (text (get-string-all port)))
+      (close-pipe port)
+      text)))
+
+(define (typst-families)
+  "The families `typst fonts' prints, one per line; #f without Typst."
+  (let ((text (and (typst-on-path? (or (getenv "PATH") ""))
+                   (command-output "typst fonts 2>/dev/null"))))
+    (and text
+         (filter (lambda (l) (not (string-null? l)))
+                 (map string-trim-both (string-split text #\newline))))))
+
+(define (typst-stderr typ out)
+  "Compile TYP to OUT with `typst compile', --root TYP's folder; return
+what Typst prints on standard error."
+  (command-output
+   (string-append "typst compile --root " (shell-quote (dirname typ)) " "
+                  (shell-quote typ) " " (shell-quote out)
+                  " 2>&1 >/dev/null")))
+
+(define (font-warning? text)
+  (and (string? text)
+       (or (string-contains-ci text "unknown font family")
+           (string-contains-ci text "warning:"))
+       #t))
+
+(define (entry-file-text/font json-name font)
+  "What write-entry-file writes for JSON-NAME with #:font FONT, or #f if
+it raises."
+  (guard (c (#t #f))
+    (let ((path (tmp-path (string-append "entry-font-" font "-" json-name ".typ"))))
+      (write-entry-file path json-name #:font font)
+      (read-text path))))
+
+(define (string-replace-all str from to)
+  "STR with every FROM replaced by TO."
+  (let loop ((start 0) (acc '()))
+    (let ((i (string-contains str from start)))
+      (if i
+          (loop (+ i (string-length from))
+                (cons* to (substring str start i) acc))
+          (string-concatenate-reverse acc (substring str start))))))
+
+(test-group "choose-font"
+  (for-each
+   (match-lambda
+     ((name want families)
+      (test-equal name want (choose-font-of families))))
+   `(("no families: Libertinus Serif" "Libertinus Serif" ())
+     ("none of the four: Libertinus Serif" "Libertinus Serif"
+      ("Times New Roman" "Courier" "Libertinus Serif"))
+     ("Helvetica alone" "Helvetica" ("Helvetica"))
+     ("Arial alone" "Arial" ("Arial"))
+     ("DejaVu Sans alone" "DejaVu Sans" ("DejaVu Sans"))
+     ("Liberation Sans alone" "Liberation Sans" ("Liberation Sans"))
+     ("all four: Helvetica" "Helvetica"
+      ("Liberation Sans" "DejaVu Sans" "Arial" "Helvetica"))
+     ("the list's order, not FAMILIES': Arial before DejaVu Sans" "Arial"
+      ("Times" "DejaVu Sans" "Liberation Sans" "Arial"))
+     ("DejaVu Sans before Liberation Sans" "DejaVu Sans"
+      ("Liberation Sans" "DejaVu Sans"))
+     ("among other families" "Liberation Sans"
+      ("Al Bayan" "Liberation Sans" "Zapfino"))
+     ("an exact name: Helvetica Neue is not Helvetica" "Libertinus Serif"
+      ("Helvetica Neue" "Arial Black" "DejaVu Sans Mono"))
+     ("an exact name: case counts" "Libertinus Serif"
+      ("helvetica" "ARIAL")))))
+
+(test-group "installed-fonts"
+  (let ((fonts (guard (e (#t e)) (installed-fonts))))
+    (test-assert "a list of strings"
+      (and (list? fonts) (every string? fonts)))
+    (let ((want (typst-families)))
+      (when want
+        (test-assert "non-empty where Typst is installed"
+          (and (list? fonts) (pair? fonts)))
+        (test-assert "holds Libertinus Serif, built into Typst"
+          (and (list? fonts) (member "Libertinus Serif" fonts) #t))
+        (test-assert "the families `typst fonts' prints"
+          (and (list? fonts)
+               (lset= string=? want fonts)))))))
+
+(test-group "write-entry-file #:font"
+  (for-each
+   (lambda (font)
+     (let ((text (entry-file-text/font "figure.json" font)))
+       (test-assert (string-append font ": sets the text font to " font)
+         (contains-all? text
+                        (list (string-append "#set text(font: \"" font "\","))))
+       (test-assert (string-append font ": names no other family")
+         (and (string? text)
+              (every (lambda (other)
+                       (or (string=? other font)
+                           (not (string-contains text other))))
+                     (cons "Libertinus Serif" sans-candidates))))
+       (test-equal (string-append font ": the rest as without #:font")
+         (let ((plain (entry-file-text "figure.json")))
+           (and plain (string-replace-all plain "Libertinus Serif" font)))
+         text)))
+   sans-candidates)
+  (test-equal "#:font \"Libertinus Serif\" is the default text"
+    (entry-file-text "figure.json")
+    (entry-file-text/font "figure.json" "Libertinus Serif"))
+  (let ((text (entry-file-text "figure.json")))
+    (test-assert "without #:font: font \"Libertinus Serif\""
+      (contains-all? text '("#set text(font: \"Libertinus Serif\",")))
+    (test-assert "without #:font: no sans-serif family"
+      (and (string? text)
+           (not (any (lambda (f) (string-contains text f)) sans-candidates))))))
+
+(test-group "render-piece: the font"
+  (let ((keep (make-subdir "keep-font"))
+        (out (render-path "font.pdf"))
+        (chosen (guard (e (#t #f)) (choose-font (installed-fonts)))))
+    (with-render-tmp
+     (lambda ()
+       (exception-from
+        (lambda () (render-piece example-path out #:keep-in keep)))))
+    (let ((typ (string-append keep "/piece.typ")))
+      (test-assert "(the font chosen for this machine is known)" (string? chosen))
+      (test-equal "piece.typ is the entry file with the font chosen"
+        (and chosen (entry-file-text/font "piece.json" chosen))
+        (and (file-exists? typ) (read-text typ)))
+      (test-assert "(the check sees a font warning: an unknown family)"
+        (let ((dir (make-subdir "font-warning")))
+          (copy-file template-path (string-append dir "/notasi.typ"))
+          (write-text (string-append dir "/figure.json")
+                      (expected-figure-text example-path))
+          (write-text (string-append dir "/entry.typ")
+                      (string-replace-all (spec-entry-text "figure.json")
+                                          "Libertinus Serif" "No Such Family Sans"))
+          (font-warning? (typst-stderr (string-append dir "/entry.typ")
+                                       (string-append dir "/entry.pdf")))))
+      (test-assert "drawing piece.typ gives no font warning"
+        (and (file-exists? typ)
+             (let ((err (typst-stderr typ (string-append keep "/again.pdf"))))
+               (and (string? err) (not (font-warning? err))))))))
+  (test-assert "render-piece leaves nothing in TMPDIR"
+    (render-tmp-empty?)))
 
 (cleanup)
 

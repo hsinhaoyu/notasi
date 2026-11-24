@@ -10,8 +10,9 @@ Contract version 3 (ADR 0043) with the header labels and the pickup's
 cycle mark since `feat/drawing-header`; each group's lines and the
 lighter stroke grey (ADR 0041) since `feat/drawing-lines`; strokes one
 column wide (ADR 0042), `:keys`, `:octave-numbers`, `:display`, key
-numbers and row labels left out (ADR 0047) since `feat/drawing-rows`.
-Planned for iteration 3: golden files named `NAME_SCORE` (ADR 0040).
+numbers and row labels left out (ADR 0047) since `feat/drawing-rows`;
+golden files named `NAME_SCORE` (ADR 0040) since `feat/drawing-output`.
+Iteration 3's layout is implemented.
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -504,15 +505,20 @@ with the examples, golden files and manual pages it affects.
    keys they play, while a range written on such a group is an error.
    LOW and HIGH are written as in a part: a note's name, an alias name,
    or a key number (`(a1 u2)`, `(dang1 dung2)`, `(4 8)`).
-4. `feat/drawing-output`: `NAME_SCORE` file names and no `_` in score
-   names (ADR 0040); the sans-serif font (ADR 0045).
+4. **Implemented.** `feat/drawing-output`: `NAME_SCORE` file names and no `_` in score
+   names (ADR 0040); the sans-serif font (ADR 0045). Decided for this slice:
+   `(choose-font families)` in `(notasi typst)` returns the first of
+   Helvetica, Arial, DejaVu Sans and Liberation Sans among FAMILIES, or
+   "Libertinus Serif"; `(installed-fonts)` lists the families `typst
+   fonts` prints; `write-entry-file` takes `#:font` (default
+   "Libertinus Serif"); `render-piece` passes it the font chosen.
 
 ## Golden tests
 
 Each example has one saved figure per score, in `tests/golden/`: a file
 with only the default score keeps its plain name (`NAME.json`); a file
-with scores has `NAME.SCORE.json` for each (**Planned**, ADR 0040:
-`NAME_SCORE.json`). `make golden` rewrites them
+with scores has `NAME_SCORE.json` for each (ADR 0040). `make golden`
+rewrites them
 (**Implemented**), and `make check` fails on
 any difference, on a figure with no saved copy, and on a saved copy with
 no figure.
