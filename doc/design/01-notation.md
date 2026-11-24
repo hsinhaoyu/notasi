@@ -8,8 +8,9 @@ milestone 2 (`feat/scores`); parts written with `:instrument`, also
 inside a colotomy (ADR 0038), and `gilak` and `bapang` in the
 `gong-kebyar` template (ADR 0046) since iteration 3's `feat/syntax`.
 Labelled number rows (ADR 0039) and the pickup shown as cycle 0 since
-`feat/drawing-header`. Planned for iteration 3: `:keys`, `:octave-numbers`, `:background` (ADR 0041)
-and a group's own stroke names (`:display`); no `_` in score names
+`feat/drawing-header`; `:background` (ADR 0041) since
+`feat/drawing-lines`. Planned for iteration 3: `:keys`,
+`:octave-numbers` and a group's own stroke names (`:display`); no `_` in score names
 (ADR 0040); `:key-numbers` and `:row-labels`.
 
 Everything in this document is **Implemented** unless it says otherwise.
@@ -515,7 +516,7 @@ In the grid:
 | `:key-numbers yes/no` | score, group | `no` | A column of key numbers to the left of the row labels: each row's key on its instrument, from 1 (on the ugal, `a1` is key 4). Pitched keys only. **Planned** (iteration 3). |
 | `:row-labels yes/no` | score, group | `yes` | The column of row labels (note names, stroke names or parts' labels); with `no` the column is left out. **Planned** (iteration 3). |
 | `:display ((STROKE STRING) ...)` | score, group | none | Show these strokes with these forms in this score, in row labels and note names, instead of their own display forms: `:display ((GL "G"))`. **Planned** (iteration 3). |
-| `:background grid/vertical/horizontal/empty` | score, group | `grid` | The lines behind the notes: pulse lines and a line between every two rows (`grid`), pulse lines only (`vertical`), row lines only (`horizontal`), or neither (`empty`). The lines between groups and the cycle lines are always drawn. **Planned** (ADR 0041); today every score is drawn as `vertical`. |
+| `:background grid/vertical/horizontal/empty` | score, group | `grid` | The lines behind the notes: pulse lines and a line between every two rows (`grid`), pulse lines only (`vertical`), row lines only (`horizontal`), or neither (`empty`). The lines between groups and the cycle lines are always drawn (ADR 0041). |
 
 Colour and size (ADR 0032):
 
