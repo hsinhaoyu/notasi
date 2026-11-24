@@ -137,12 +137,16 @@ FACES is the value of a `face' property: nil, a face or a list."
 
 (defun notasi-mode-tests--with-loaddefs (function)
   "Generate the package's autoloads in a temporary file; call FUNCTION.
-FUNCTION is called with the file name of the generated loaddefs."
+FUNCTION is called with the file name of the generated loaddefs.  The
+package is copied into the same temporary directory first, as it is
+when installed, so the autoloads name it by a file name that the
+directory on `load-path' resolves."
   (let* ((out (make-temp-file "notasi-mode-autoloads" t))
          (file (expand-file-name "notasi-mode-autoloads.el" out)))
     (unwind-protect
         (progn
-          (loaddefs-generate notasi-mode-tests--dir file)
+          (copy-file notasi-mode-tests--package-file (file-name-as-directory out))
+          (loaddefs-generate out file)
           (funcall function file))
       (delete-directory out t))))
 
@@ -160,7 +164,7 @@ Nothing is required: the mode is an autoload until it is used."
   (notasi-mode-tests--with-loaddefs
    (lambda (file)
      (let ((result (notasi-mode-tests--run-emacs
-                    "-L" notasi-mode-tests--dir "-l" file
+                    "-L" (file-name-directory file) "-l" file
                     "--eval"
                     "(princ (format \"%S %S\"
                                     (autoloadp (symbol-function 'notasi-mode))
@@ -172,7 +176,7 @@ Nothing is required: the mode is an autoload until it is used."
   (notasi-mode-tests--with-loaddefs
    (lambda (file)
      (let ((result (notasi-mode-tests--run-emacs
-                    "-L" notasi-mode-tests--dir "-l" file
+                    "-L" (file-name-directory file) "-l" file
                     "--eval"
                     "(princ (assoc-default \"piece.nts\" auto-mode-alist
                                            #'string-match))")))
@@ -191,7 +195,7 @@ turns on `notasi-mode'."
                (insert "(piece \"Gilak\" :colotomy gilak :pickup 1)\n"))
              (let ((result
                     (notasi-mode-tests--run-emacs
-                     "-L" notasi-mode-tests--dir "-l" file
+                     "-L" (file-name-directory file) "-l" file
                      "--eval"
                      (format "(princ (buffer-local-value
                                        'major-mode (find-file-noselect %S)))"
