@@ -10,10 +10,11 @@ the `pattern` and `pattern-span` records since `feat/music-patterns`;
 `scores`, the `score` and `group` records and `piece-score` since
 `feat/scores-form`, and `note-display #:damped?` since
 `feat/scores-rows`, and the score's `cycle-label` and the "Pulse"
-default since `feat/drawing-header`. Tests in `tests/piece.scm`.
+default since `feat/drawing-header`, and the score's and group's
+`background` since `feat/drawing-lines`. Tests in `tests/piece.scm`.
 Planned for iteration
 3: the group's `keys`, `octave-numbers?`,
-`key-numbers?`, `row-labels?`, `display` and `background`; `note-label`'s `#:octave?`; invariants 9 and
+`key-numbers?`, `row-labels?` and `display`; `note-label`'s `#:octave?`; invariants 9 and
 10.
 
 Everything in this document is **Implemented** unless it says otherwise.
@@ -148,6 +149,9 @@ score
   cycle-numbers? : boolean
   pulse-numbers? : boolean
   numbering      : symbol              gong-last | gong-first
+  background     : symbol              the score's own
+                                       `:background`, else grid; the
+                                       header's pulse lines (04)
   cycle-label    : string | #f         "Cycle" unless `:cycle-label`;
                                        #f for ""
   pulse-label    : string | #f         "Pulse" unless `:pulse-label`;
@@ -186,7 +190,7 @@ group                                  every setting filled in (ADR 0033)
   display       : list of (symbol . string)   **Planned**: stroke name
                                        and the form shown for it in this
                                        score (`:display`); '() for none
-  background    : symbol               **Planned**: grid | vertical |
+  background    : symbol               grid | vertical |
                                        horizontal | empty
   scheme        : symbol               e.g. by-degree
   palette       : symbol | list of string   a palette name or "#rrggbb"s

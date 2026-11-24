@@ -27,7 +27,8 @@
             "text": "1"
           }
         ],
-        "pulses": ["16", null, null, null, "1", null, null, null, "2", null, null, null, "3", null, null, null, "4", null, null, null, "5", null, null, null, "6", null, null, null, "7", null, null, null, "8", null, null, null, "9", null, null, null, "10", null, null, null, "11", null, null, null, "12", null, null, null, "13", null, null, null, "14", null, null, null, "15", null, null, null, "16", null, null, null]
+        "pulses": ["16", null, null, null, "1", null, null, null, "2", null, null, null, "3", null, null, null, "4", null, null, null, "5", null, null, null, "6", null, null, null, "7", null, null, null, "8", null, null, null, "9", null, null, null, "10", null, null, null, "11", null, null, null, "12", null, null, null, "13", null, null, null, "14", null, null, null, "15", null, null, null, "16", null, null, null],
+        "pulse_lines": true
       },
       "lines": ["none", "none", "none", "none", "cycle", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none", "pulse", "none", "none", "none"],
       "groups": [
@@ -676,7 +677,9 @@
               "text": "norot",
               "continued": false
             }
-          ]
+          ],
+          "pulse_lines": true,
+          "row_lines": true
         },
         {
           "label": "Ugal",
@@ -787,7 +790,9 @@
               "text": "pokok",
               "continued": false
             }
-          ]
+          ],
+          "pulse_lines": true,
+          "row_lines": true
         },
         {
           "label": "Panyacah",
@@ -970,7 +975,9 @@
               "text": "fill",
               "continued": false
             }
-          ]
+          ],
+          "pulse_lines": true,
+          "row_lines": true
         },
         {
           "label": "Jublag",
@@ -1081,7 +1088,9 @@
               "text": "pokok",
               "continued": false
             }
-          ]
+          ],
+          "pulse_lines": true,
+          "row_lines": true
         },
         {
           "label": "Jegogan",
@@ -1156,7 +1165,9 @@
               "text": "jegogan",
               "continued": false
             }
-          ]
+          ],
+          "pulse_lines": true,
+          "row_lines": true
         },
         {
           "label": "Gong, kempli",
@@ -1171,7 +1182,7 @@
                   "dur": 4,
                   "lane": 0,
                   "text": "G",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1180,7 +1191,7 @@
                   "dur": 4,
                   "lane": 1,
                   "text": "P",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1189,7 +1200,7 @@
                   "dur": 4,
                   "lane": 2,
                   "text": "T",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1198,7 +1209,7 @@
                   "dur": 4,
                   "lane": 1,
                   "text": "P",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1207,7 +1218,7 @@
                   "dur": 4,
                   "lane": 0,
                   "text": "G",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 }
@@ -1221,7 +1232,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1230,7 +1241,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1239,7 +1250,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1248,7 +1259,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1257,7 +1268,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1266,7 +1277,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1275,7 +1286,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1284,7 +1295,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1293,7 +1304,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1302,7 +1313,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1311,7 +1322,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1320,7 +1331,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1329,7 +1340,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1338,7 +1349,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1347,7 +1358,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1356,7 +1367,7 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -1365,14 +1376,16 @@
                   "dur": 4,
                   "lane": 3,
                   "text": "K",
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 }
               ]
             }
           ],
-          "overlays": []
+          "overlays": [],
+          "pulse_lines": true,
+          "row_lines": true
         }
       ]
     }

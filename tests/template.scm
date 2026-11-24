@@ -1196,6 +1196,605 @@ prints no warning.  Typst's output is shown when either fails."
 }
 ")
 
+;;; Slice feat/drawing-lines (05, "JSON contract (version 3)" and the
+;;; template's Planned Lines, Frame and Note borders bullets; ADRs 0041,
+;;; 0043, 0044): two hand-written figures with this slice's keys,
+;;; `header.pulse_lines` after `pulses` and each group's `pulse_lines`
+;;; and `row_lines` after `overlays`.  The first has two systems, the
+;;; header's pulse lines off in the first and on in the second, groups on
+;;; `notes`, `parts` and `single` rows and a stroke group, one for each
+;;; background (grid, horizontal, vertical, empty), strokes in
+;;; `#e6e6e6`, events with `fill` null (`:fill none`, and a "-"),
+;;; overlays over a group with row lines, and notes, a stroke and an
+;;; overlay cut by the system break and continued.  The second has both
+;;; header rows off with `pulse_lines` false, and a group of one row
+;;; with both flags true.  Only compiling without a warning is tested;
+;;; the lines, the frame and the note borders are checked by eye (make
+;;; preview).  These figures have no `key_numbers` or `key_width`: those
+;;; are slice feat/drawing-rows.
+
+(define v3-lines
+  "{
+  \"version\": 3,
+  \"title\": \"Lines\",
+  \"subtitle\": \"pulse and row lines by group\",
+  \"steps_per_pulse\": 2,
+  \"sizes\": {
+    \"font_size\": null,
+    \"label_width\": \"7.0em\",
+    \"lane_width\": \"4.6em\",
+    \"cell_width\": \"2em\",
+    \"cell_height\": \"2em\"
+  },
+  \"systems\": [
+    {
+      \"start\": 0,
+      \"steps\": 8,
+      \"header\": {
+        \"cycle_label\": \"Cycle\",
+        \"pulse_label\": \"Pulse\",
+        \"cycles\": [
+          {
+            \"column\": 0,
+            \"text\": \"0\"
+          },
+          {
+            \"column\": 2,
+            \"text\": \"1\"
+          }
+        ],
+        \"pulses\": [
+          \"4\",
+          null,
+          \"1\",
+          null,
+          \"2\",
+          null,
+          \"3\",
+          null
+        ],
+        \"pulse_lines\": false
+      },
+      \"lines\": [
+        \"none\",
+        \"none\",
+        \"pulse\",
+        \"none\",
+        \"pulse\",
+        \"none\",
+        \"pulse\",
+        \"none\"
+      ],
+      \"groups\": [
+        {
+          \"label\": \"Ugal\",
+          \"subtitle\": \"grid\",
+          \"lanes\": [
+            \"e2\",
+            \"o2\",
+            \"i2\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"ugal\",
+              \"events\": [
+                {
+                  \"start\": 0,
+                  \"dur\": 2,
+                  \"lane\": 2,
+                  \"text\": null,
+                  \"fill\": \"#fbb4ae\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                },
+                {
+                  \"start\": 2,
+                  \"dur\": 2,
+                  \"lane\": 1,
+                  \"text\": \"o\",
+                  \"fill\": \"#b3cde3\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                },
+                {
+                  \"start\": 4,
+                  \"dur\": 1,
+                  \"lane\": 0,
+                  \"text\": \"e\",
+                  \"fill\": null,
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                },
+                {
+                  \"start\": 6,
+                  \"dur\": 2,
+                  \"lane\": 1,
+                  \"text\": null,
+                  \"fill\": \"#b3cde3\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                }
+              ]
+            }
+          ],
+          \"overlays\": [],
+          \"pulse_lines\": true,
+          \"row_lines\": true
+        },
+        {
+          \"label\": \"Reyong\",
+          \"subtitle\": \"horizontal\",
+          \"lanes\": [
+            \"polos\",
+            \"sangsih\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"polos\",
+              \"events\": [
+                {
+                  \"start\": 0,
+                  \"dur\": 4,
+                  \"lane\": 0,
+                  \"text\": \"i\",
+                  \"fill\": \"#fbb4ae\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                },
+                {
+                  \"start\": 4,
+                  \"dur\": 4,
+                  \"lane\": 0,
+                  \"text\": \"o\",
+                  \"fill\": \"#b3cde3\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                }
+              ]
+            },
+            {
+              \"name\": \"sangsih\",
+              \"events\": [
+                {
+                  \"start\": 0,
+                  \"dur\": 2,
+                  \"lane\": 1,
+                  \"text\": \"e\",
+                  \"fill\": null,
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                },
+                {
+                  \"start\": 2,
+                  \"dur\": 2,
+                  \"lane\": 1,
+                  \"text\": \"-\",
+                  \"fill\": null,
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                }
+              ]
+            }
+          ],
+          \"overlays\": [
+            {
+              \"start\": 0,
+              \"dur\": 4,
+              \"row\": 0,
+              \"rows\": 2,
+              \"text\": \"P\",
+              \"continued\": false
+            },
+            {
+              \"start\": 4,
+              \"dur\": 4,
+              \"row\": 0,
+              \"rows\": 2,
+              \"text\": \"Pair long\",
+              \"continued\": false
+            }
+          ],
+          \"pulse_lines\": false,
+          \"row_lines\": true
+        },
+        {
+          \"label\": \"Kendang\",
+          \"subtitle\": \"vertical\",
+          \"lanes\": [
+            \"\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"kendang\",
+              \"events\": [
+                {
+                  \"start\": 0,
+                  \"dur\": 1,
+                  \"lane\": 0,
+                  \"text\": \"D\",
+                  \"fill\": \"#e6e6e6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                },
+                {
+                  \"start\": 2,
+                  \"dur\": 1,
+                  \"lane\": 0,
+                  \"text\": \"d\",
+                  \"fill\": \"#e6e6e6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                },
+                {
+                  \"start\": 4,
+                  \"dur\": 2,
+                  \"lane\": 0,
+                  \"text\": \"dug\",
+                  \"fill\": \"#e6e6e6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                }
+              ]
+            }
+          ],
+          \"overlays\": [],
+          \"pulse_lines\": true,
+          \"row_lines\": false
+        },
+        {
+          \"label\": \"Gong\",
+          \"subtitle\": \"empty\",
+          \"lanes\": [
+            \"G\",
+            \"K\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"gong\",
+              \"events\": [
+                {
+                  \"start\": 6,
+                  \"dur\": 2,
+                  \"lane\": 0,
+                  \"text\": \"G\",
+                  \"fill\": \"#e6e6e6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                }
+              ]
+            },
+            {
+              \"name\": \"kempli\",
+              \"events\": [
+                {
+                  \"start\": 0,
+                  \"dur\": 1,
+                  \"lane\": 1,
+                  \"text\": null,
+                  \"fill\": \"#e6e6e6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                },
+                {
+                  \"start\": 2,
+                  \"dur\": 1,
+                  \"lane\": 1,
+                  \"text\": null,
+                  \"fill\": \"#e6e6e6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                },
+                {
+                  \"start\": 4,
+                  \"dur\": 1,
+                  \"lane\": 1,
+                  \"text\": null,
+                  \"fill\": \"#e6e6e6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                },
+                {
+                  \"start\": 6,
+                  \"dur\": 1,
+                  \"lane\": 1,
+                  \"text\": null,
+                  \"fill\": \"#e6e6e6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                }
+              ]
+            }
+          ],
+          \"overlays\": [],
+          \"pulse_lines\": false,
+          \"row_lines\": false
+        }
+      ]
+    },
+    {
+      \"start\": 8,
+      \"steps\": 8,
+      \"header\": {
+        \"cycle_label\": null,
+        \"pulse_label\": \"Pulse\",
+        \"cycles\": null,
+        \"pulses\": [
+          \"4\",
+          null,
+          \"1\",
+          null,
+          \"2\",
+          null,
+          \"3\",
+          null
+        ],
+        \"pulse_lines\": true
+      },
+      \"lines\": [
+        \"none\",
+        \"none\",
+        \"pulse\",
+        \"none\",
+        \"pulse\",
+        \"none\",
+        \"cycle\",
+        \"none\"
+      ],
+      \"groups\": [
+        {
+          \"label\": \"Ugal\",
+          \"subtitle\": \"grid\",
+          \"lanes\": [
+            \"e2\",
+            \"o2\",
+            \"i2\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"ugal\",
+              \"events\": [
+                {
+                  \"start\": 0,
+                  \"dur\": 2,
+                  \"lane\": 1,
+                  \"text\": null,
+                  \"fill\": \"#b3cde3\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": true
+                },
+                {
+                  \"start\": 2,
+                  \"dur\": 6,
+                  \"lane\": 2,
+                  \"text\": null,
+                  \"fill\": \"#fbb4ae\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                }
+              ]
+            }
+          ],
+          \"overlays\": [],
+          \"pulse_lines\": true,
+          \"row_lines\": true
+        },
+        {
+          \"label\": \"Reyong\",
+          \"subtitle\": \"horizontal\",
+          \"lanes\": [
+            \"polos\",
+            \"sangsih\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"polos\",
+              \"events\": [
+                {
+                  \"start\": 0,
+                  \"dur\": 2,
+                  \"lane\": 0,
+                  \"text\": null,
+                  \"fill\": \"#b3cde3\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": true
+                },
+                {
+                  \"start\": 2,
+                  \"dur\": 2,
+                  \"lane\": 1,
+                  \"text\": \"i\",
+                  \"fill\": null,
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                }
+              ]
+            },
+            {
+              \"name\": \"sangsih\",
+              \"events\": []
+            }
+          ],
+          \"overlays\": [
+            {
+              \"start\": 0,
+              \"dur\": 2,
+              \"row\": 0,
+              \"rows\": 2,
+              \"text\": \"Pair long\",
+              \"continued\": true
+            }
+          ],
+          \"pulse_lines\": false,
+          \"row_lines\": true
+        },
+        {
+          \"label\": \"Kendang\",
+          \"subtitle\": \"vertical\",
+          \"lanes\": [
+            \"\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"kendang\",
+              \"events\": [
+                {
+                  \"start\": 0,
+                  \"dur\": 2,
+                  \"lane\": 0,
+                  \"text\": null,
+                  \"fill\": \"#e6e6e6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": true
+                }
+              ]
+            }
+          ],
+          \"overlays\": [],
+          \"pulse_lines\": true,
+          \"row_lines\": false
+        },
+        {
+          \"label\": \"Gong\",
+          \"subtitle\": \"empty\",
+          \"lanes\": [
+            \"G\",
+            \"K\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"gong\",
+              \"events\": []
+            },
+            {
+              \"name\": \"kempli\",
+              \"events\": [
+                {
+                  \"start\": 0,
+                  \"dur\": 1,
+                  \"lane\": 1,
+                  \"text\": null,
+                  \"fill\": \"#e6e6e6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                },
+                {
+                  \"start\": 4,
+                  \"dur\": 1,
+                  \"lane\": 1,
+                  \"text\": null,
+                  \"fill\": \"#e6e6e6\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                }
+              ]
+            }
+          ],
+          \"overlays\": [],
+          \"pulse_lines\": false,
+          \"row_lines\": false
+        }
+      ]
+    }
+  ],
+  \"caption\": null
+}
+")
+
+(define v3-lines-off
+  "{
+  \"version\": 3,
+  \"title\": \"\",
+  \"subtitle\": null,
+  \"steps_per_pulse\": 1,
+  \"sizes\": {
+    \"font_size\": null,
+    \"label_width\": \"3.0em\",
+    \"lane_width\": \"2.0em\",
+    \"cell_width\": \"2em\",
+    \"cell_height\": \"2em\"
+  },
+  \"systems\": [
+    {
+      \"start\": 0,
+      \"steps\": 8,
+      \"header\": {
+        \"cycle_label\": null,
+        \"pulse_label\": null,
+        \"cycles\": null,
+        \"pulses\": null,
+        \"pulse_lines\": false
+      },
+      \"lines\": [
+        \"none\",
+        \"pulse\",
+        \"pulse\",
+        \"pulse\",
+        \"cycle\",
+        \"pulse\",
+        \"pulse\",
+        \"pulse\"
+      ],
+      \"groups\": [
+        {
+          \"label\": \"A\",
+          \"subtitle\": null,
+          \"lanes\": [
+            \"i2\",
+            \"a1\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"a\",
+              \"events\": [
+                {
+                  \"start\": 0,
+                  \"dur\": 8,
+                  \"lane\": 0,
+                  \"text\": null,
+                  \"fill\": \"#fbb4ae\",
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                }
+              ]
+            }
+          ],
+          \"overlays\": [],
+          \"pulse_lines\": false,
+          \"row_lines\": false
+        },
+        {
+          \"label\": \"B\",
+          \"subtitle\": null,
+          \"lanes\": [
+            \"i2\"
+          ],
+          \"voices\": [
+            {
+              \"name\": \"b\",
+              \"events\": [
+                {
+                  \"start\": 1,
+                  \"dur\": 1,
+                  \"lane\": 0,
+                  \"text\": \"i\",
+                  \"fill\": null,
+                  \"text_color\": \"#222222\",
+                  \"continued\": false
+                }
+              ]
+            }
+          ],
+          \"overlays\": [],
+          \"pulse_lines\": true,
+          \"row_lines\": true
+        }
+      ]
+    }
+  ],
+  \"caption\": null
+}
+")
+
 ;;; The tests.
 
 (test-begin "template")
@@ -1229,7 +1828,11 @@ prints no warning.  Typst's output is shown when either fails."
       (check-figure "version 3: the pickup alone on a system"
                     "v3-pickup-alone.json" v3-pickup-alone)
       (check-figure "version 3: labels null, rows on and off"
-                    "v3-labels-off.json" v3-labels-off))
+                    "v3-labels-off.json" v3-labels-off)
+      (check-figure "version 3: pulse and row lines by group, strokes #e6e6e6"
+                    "v3-lines.json" v3-lines)
+      (check-figure "version 3: every line flag off, a one-row group with both on"
+                    "v3-lines-off.json" v3-lines-off))
     (test-assert "typst is installed (CI installs 0.15.1)" #f))
 
 (define runner (test-runner-current))

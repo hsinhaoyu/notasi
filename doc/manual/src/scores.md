@@ -44,6 +44,7 @@ own instead.
 | `:palette NAME` | score or group | The colours of the notes: `pastel1` (the default), `set2`, `dark2` and others, or a list of colours such as `("#e41a1c" "#377eb8")`. |
 | `:colors ((ding "#000000"))` | score or group | A colour for one degree, in every octave. |
 | `:cell-width "2em"`, `:cell-height "2em"` | score | The size of a square. |
+| `:background grid` / `vertical` / `horizontal` / `empty` | score or group | The lines behind the notes: pulse lines and lines between rows (`grid`, the default), pulse lines only (`vertical`), lines between rows only (`horizontal`), or neither (`empty`). The lines between groups and at each new cycle are always drawn. |
 
 ## Rows of names
 

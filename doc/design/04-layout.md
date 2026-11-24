@@ -7,9 +7,9 @@ Status: implemented (iteration 2): milestone 2, all five slices
 style" is built from a score's options. Modules: `(notasi style)`, `(notasi layout)`; tests
 in `tests/style.scm`, `tests/layout.scm` and `tests/golden.scm`.
 Contract version 3 (ADR 0043) with the header labels and the pickup's
-cycle mark since `feat/drawing-header`. Planned for iteration 3: each
-group's lines; strokes one
-column wide (ADR 0042); a lighter stroke grey (ADR 0041); `:keys`,
+cycle mark since `feat/drawing-header`; each group's lines and the
+lighter stroke grey (ADR 0041) since `feat/drawing-lines`. Planned for
+iteration 3: strokes one column wide (ADR 0042); `:keys`,
 `:octave-numbers` and `:display`; key numbers and row labels left out
 (ADR 0047); golden files named `NAME_SCORE` (ADR 0040).
 
@@ -47,9 +47,9 @@ in this order:
 | figure | `version` (3, ADR 0043), `title`, `subtitle`, `steps_per_pulse`, `sizes`, `systems`, `caption` |
 | sizes | `font_size`, `label_width`, `lane_width`, `cell_width`, `cell_height` (**Planned**, version 3: `key_width` after `label_width`) |
 | system | `start`, `steps`, `header`, `lines`, `groups` |
-| header | `cycle_label`, `pulse_label`, `cycles`, `pulses` (**Planned**: then `pulse_lines`, `feat/drawing-lines`) |
+| header | `cycle_label`, `pulse_label`, `cycles`, `pulses`, `pulse_lines` |
 | cycle mark | `column`, `text` |
-| group | `label`, `subtitle`, `lanes`, `voices`, `overlays` (**Planned**, version 3: `key_numbers` after `lanes`, then `pulse_lines`, `row_lines` at the end) |
+| group | `label`, `subtitle`, `lanes`, `voices`, `overlays`, `pulse_lines`, `row_lines` (**Planned**: `key_numbers` after `lanes`, `feat/drawing-rows`) |
 | voice | `name`, `events` |
 | event | `start`, `dur`, `lane`, `text`, `fill`, `text_color`, `continued` |
 | overlay | `start`, `dur`, `row`, `rows`, `text`, `continued` |
@@ -125,13 +125,13 @@ Layout works out every header number and every line, for every column:
   replace version 2's `header.label`): the score's labels ("Cycle" and
   "Pulse" by default), each `null` when it is `""` or its row is not
   shown.
-- **Planned** (ADR 0043): `header.pulse_lines`, from the score's
+- (ADR 0043) `header.pulse_lines`, from the score's
   `background`: whether pulse lines run through the header rows.
 - `lines`: one entry per column, for the line at its left edge: `cycle`
   where a cycle starts (just after the gong), `pulse` where another
   pulse starts, `none` elsewhere. Without a colotomy there are no
   `cycle` lines. Cycle lines are always drawn; whether a group draws
-  its pulse lines is the group's `pulse_lines` (**Planned**, below).
+  its pulse lines is the group's `pulse_lines` (below).
 
 ### Groups and rows
 
@@ -191,7 +191,7 @@ Layout works out every header number and every line, for every column:
   (`du` or `du'`). Pitched notes keep their widths.
 - **Planned** (iteration 3): a stroke in a group's `display` shows that
   form instead of its own, as text and in its lane label.
-- **Planned** (ADRs 0041, 0043): each group carries `pulse_lines` and
+- (ADRs 0041, 0043) Each group carries `pulse_lines` and
   `row_lines` from its `background`: `grid` both, `vertical` pulse
   lines only, `horizontal` row lines only, `empty` neither. Row lines
   are drawn between the rows of every kind of group.
@@ -278,9 +278,9 @@ picks colours (ADR 0005).
   ((c + 0.055)/1.055)^2.4; L = 0.2126 R + 0.7152 G + 0.0722 B; and the
   ratio of two luminances is (L1 + 0.05)/(L2 + 0.05), lighter over
   darker. So strong colours get white text and light ones dark text.
-- **Strokes are grey boxes** (`fill` `#cccccc`, ADRs 0019 and 0021;
-  **Planned**, ADR 0041: a lighter grey, so the note border shows
-  against it, chosen by eye, clearly grey and no palette's colour),
+- **Strokes are grey boxes** (`fill` `#e6e6e6`, ADRs 0019, 0021 and
+  0041: lighter than before, so the note border shows against it;
+  clearly grey and no palette's colour),
   with the stroke's display form (or its name) as text, in the colour
   `text-color-for` gives (near-black on this grey). The text is shown
   when the group has `note-names?` (ADR 0031).
@@ -486,9 +486,15 @@ with the examples, golden files and manual pages it affects.
    `feat/drawing-lines`; `key_numbers`, `key_width` with
    `feat/drawing-rows`), since version 3 isn't released until the
    iteration ends.
-2. `feat/drawing-lines`: `:background` (row lines, pulse lines by
+2. **Implemented.** `feat/drawing-lines`: `:background` (row lines, pulse lines by
    group, ADR 0041); the frame line (ADR 0044); grey note borders and
-   the lighter stroke grey (ADR 0041).
+   the lighter stroke grey (ADR 0041). Decided for this slice: the stroke grey is
+   `#e6e6e6` (no palette's colour; text near-black), checked by eye; the
+   border's width and grey are the template's, judged by eye. Each
+   group's `pulse_lines` and `row_lines` come after `overlays`, and
+   `header.pulse_lines` after `pulses`. The score record gets
+   `background` (its own `:background`, else `grid`; 02), from which
+   the header's `pulse_lines` comes.
 3. `feat/drawing-rows`: `:keys` and `outside-keys`; `:octave-numbers`;
    `:display`; `:key-numbers` and `:row-labels` (ADR 0047); strokes one
    column wide (ADR 0042).

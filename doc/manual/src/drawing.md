@@ -49,10 +49,14 @@ This is what you get:
   heavier line marks where each cycle begins,
   just after the gong (see
   [Pulses and durations](pulses-and-durations.md)).
-- A **note** is a coloured square in its row. A held note (`_`) is a
-  longer block. Each pitch has its own colour, the same in every
-  octave and on every instrument, so you can follow a melody by colour.
-- **Gongs and drums** are grey squares. Their row labels say which
+- A **note** is a coloured square in its row, with a thin grey edge. A
+  held note (`_`) is a longer block. Each pitch has its own colour, the
+  same in every octave and on every instrument, so you can follow a
+  melody by colour.
+- Thin lines run between the rows, and a darker line separates the row
+  labels from the music. A score can choose which lines it draws (see
+  `:background` in [Scores](scores.md)).
+- **Gongs and drums** are light grey squares. Their row labels say which
   stroke each row is.
 - The **kempli** block is added by notasi, one stroke on every pulse
   (see [Gong cycles](gong-cycles.md)).

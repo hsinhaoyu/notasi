@@ -66,7 +66,7 @@
 
 (define white "#ffffff")
 (define near-black "#222222")
-(define stroke-grey "#cccccc")         ; strokes have no pitch to colour
+(define stroke-grey "#e6e6e6")         ; strokes have no pitch to colour
 
 (define (color? x)
   (and (string? x)

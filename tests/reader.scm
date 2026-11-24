@@ -6720,6 +6720,114 @@ colotomy, 4 pulses."
     (score-error "(score s" "  (group \"U\" ugal)"
                  "  (group \"G\" :cycle-label \"Gong\" gong))")))
 
+;;; ==================================================================
+;;; [score-options] :background (iteration 3, milestone 2, slice
+;;; feat/drawing-lines)
+;;; ==================================================================
+;;;
+;;; 04, "Slices (iteration 3)" slice 2; 01, `:background` (score,
+;;; group; default `grid`); 02, the group's `background`; 03,
+;;; [score-options] and step 12; ADR 0041. The reader reads
+;;; `:background grid|vertical|horizontal|empty` on a score and on a
+;;; group; each group's `background` is its own, else the score's, else
+;;; `grid` (ADR 0033), read with `group-background`. Any other value is
+;;; `bad-option`, at the line where it is written.
+;;; Choices made where the docs are not explicit:
+;;; - The value is a symbol: a string ("grid"), a list, a number and
+;;;   other symbols (`none`, `yes`, `Grid`) are `bad-option`.
+;;; - `duplicate-option` is at the line of the form that repeats it
+;;;   (score or group), as for `:rows` and `:fill`.
+;;; - The score record is not tested for a `background` of its own: 02
+;;;   gives it none (layout's `header.pulse_lines` is tested in
+;;;   tests/layout.scm, from text).
+
+(define (score-backgrounds pc name)
+  "The `background` of each group of score NAME, in order."
+  (map group-background (score-groups (score-named pc name))))
+
+(test-group "[score-options] :background: reading"
+  (let ((pc (read-scores+)))
+    (test-equal "the default score: every group grid"
+      (map (const 'grid) (score-groups (score-named pc 'default)))
+      (and pc (score-backgrounds pc 'default))))
+  (let ((pc (read-scores+ "(score s (group \"U\" ugal) (group \"R\" polos sangsih))")))
+    (test-equal "not written: grid" '(grid grid)
+      (and pc (score-backgrounds pc 's))))
+  (for-each
+   (lambda (value)
+     (let ((pc (read-scores+ (string-append "(score s :background "
+                                            (symbol->string value))
+                             "  (group \"U\" ugal)"
+                             "  (group \"G\" gong))")))
+       (test-equal (string-append "on a score, " (symbol->string value)
+                                  ": every group takes it")
+         (list value value)
+         (and pc (score-backgrounds pc 's)))))
+   '(grid vertical horizontal empty))
+  (for-each
+   (lambda (value)
+     (let ((pc (read-scores+ "(score s"
+                             (string-append "  (group \"U\" :background "
+                                            (symbol->string value) " ugal)")
+                             "  (group \"G\" gong))")))
+       (test-equal (string-append "on a group, " (symbol->string value)
+                                  ": the others keep grid")
+         (list value 'grid)
+         (and pc (score-backgrounds pc 's)))))
+   '(grid vertical horizontal empty))
+  (let ((pc (read-scores+ "(score s :background horizontal"
+                          "  (group \"U\" :background empty ugal)"
+                          "  (group \"R\" :background grid polos sangsih)"
+                          "  (group \"G\" gong))")))
+    (test-equal "a group's own value overrides the score's"
+      '(empty grid horizontal)
+      (and pc (score-backgrounds pc 's))))
+  (let ((pc (read-scores+ "(score s :background empty :rows parts :note-names yes"
+                          "  (group \"R\" :background vertical polos sangsih)"
+                          "  (group \"G\" :rows single gong))")))
+    (test-equal "on parts and single rows" '(vertical empty)
+      (and pc (score-backgrounds pc 's))))
+  (let ((pc (read-scores+ "(score one :background vertical (group \"U\" ugal))"
+                          "(score two (group \"U\" ugal))")))
+    (test-equal "each score its own: one's background isn't the other's"
+      '((vertical) (grid))
+      (and pc (list (score-backgrounds pc 'one) (score-backgrounds pc 'two)))))
+  (let ((pc (read-scores+ "(score s :background empty"
+                          "  (group \"U\" :background horizontal ugal))")))
+    (test-equal ":background changes no other setting"
+      (list (default-group-settings "U"))
+      (and pc (map group-settings (score-groups (score-named pc 's)))))))
+
+(test-group "[score-options] :background: errors"
+  (for-each
+   (match-lambda
+     ((name value)
+      (test-equal (string-append "on a score: " name) '(bad-option 14)
+        (score-error (string-append "(score s :background " value
+                                    " (group \"U\" ugal))")))
+      (test-equal (string-append "on a group: " name) '(bad-option 15)
+        (string-error
+         (one-group (string-append "(group \"U\" :background " value " ugal)"))))))
+   (list
+    (list "not a choice: none" "none")
+    (list "not a choice: lines" "lines")
+    (list "yes" "yes")
+    (list "capitalised: Grid" "Grid")
+    (list "a string" "\"grid\"")
+    (list "a number" "1")
+    (list "a list" "(grid)")
+    (list "a key with no value" ":note-names yes")))
+  (test-equal ":background not a choice: no part, no time"
+    '(bad-option 14 #f #f)
+    (error-fields (scores+ "(score s :background none (group \"U\" ugal))")))
+  (test-equal "on a later group, at that group's line" '(bad-option 16)
+    (score-error "(score s" "  (group \"U\" ugal)"
+                 "  (group \"G\" :background dots gong))"))
+  (test-equal "duplicate-option: :background" '(duplicate-option 14)
+    (score-error "(score s :background grid :background empty (group \"U\" ugal))"))
+  (test-equal "duplicate-option on a group: :background" '(duplicate-option 15)
+    (string-error (one-group "(group \"U\" :background grid :background grid ugal)"))))
+
 (define runner (test-runner-current))
 (test-end "reader")
 

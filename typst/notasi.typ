@@ -22,10 +22,11 @@
   if e.fill == none {
     name
   } else {
-    // A thin white border keeps neighbouring notes apart, so repeated
-    // strokes don't merge into what looks like one held note.
+    // A thin grey border, the same on every edge (ADR 0041): centred on
+    // the block's edge, so two touching notes share one line. It keeps
+    // repeated strokes apart and outlines a note against the paper.
     block(width: 100%, height: 100%, fill: rgb(e.fill),
-      stroke: 0.5pt + white, name)
+      stroke: 0.5pt + luma(150), name)
   }
 }
 
@@ -50,6 +51,11 @@
   let cells = ()
   let overlays = ()
   let row = 0
+  // For each grid row: whether pulse lines cross it, and whether a row
+  // line runs under it (ADRs 0041, 0043). A figure without the flags
+  // draws pulse lines and no row lines.
+  let header-pulses = header.at("pulse_lines", default: true)
+  let row-lines = ()
   // A number is centred over its pulse: it spans steps_per_pulse
   // columns from its column, or what is left of the system (ADR 0044).
   let k = data.steps_per_pulse
@@ -64,6 +70,7 @@
         colspan: span(m.column), align: center + horizon,
         text(weight: "bold", m.text)))
     }
+    row-lines.push((pulse: header-pulses, under: false))
     row += 1
   }
   if header.pulses != none {
@@ -77,8 +84,10 @@
           align: center + horizon, text(weight: "bold", p)))
       }
     }
+    row-lines.push((pulse: header-pulses, under: false))
     row += 1
   }
+  let first-group-row = row
 
   for g in sys.groups {
     let lanes = g.lanes
@@ -113,9 +122,20 @@
             radius: 0pt, text(fill: rgb("#222222"), o.text))))
       }
     }
+    let pulses = g.at("pulse_lines", default: true)
+    let rules = g.at("row_lines", default: false)
+    for i in range(lanes.len()) {
+      row-lines.push((pulse: pulses, under: rules and i < lanes.len() - 1))
+    }
     row += lanes.len()
   }
   cells.push(grid.hline(y: row, stroke: 0.8pt + luma(120)))
+  // The frame between the lane labels and the grid, beside the groups
+  // (ADR 0044).
+  if row > first-group-row {
+    cells.push(grid.vline(x: first, start: first-group-row, end: row,
+      stroke: 0.8pt + luma(120)))
+  }
   let rows-count = calc.max(row, 1)
 
   let cols = ((_len(sizes.label_width), _len(sizes.lane_width))
@@ -123,7 +143,19 @@
   let rows = (_len(sizes.cell_height),) * rows-count
 
   let background = grid(columns: cols, rows: rows,
-    stroke: (x, y) => if x >= first { _line(sys.lines.at(x - first)) },
+    stroke: (x, y) => {
+      let info = row-lines.at(y, default: (pulse: true, under: false))
+      let left = if x >= first {
+        let kind = sys.lines.at(x - first)
+        // Cycle lines always; pulse lines where the row has them.
+        if kind == "cycle" or info.pulse { _line(kind) }
+      }
+      let under = if x >= first and info.under {
+        (bottom: 0.5pt + luma(170))
+      }
+      if left == none { under } else if under == none { left }
+      else { left + under }
+    },
     ..range(cols.len() * rows-count).map(_ => []))
 
   let foreground = grid(columns: cols, rows: rows, ..cells)

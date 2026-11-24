@@ -430,18 +430,40 @@
 
 ;;; Strokes are light grey boxes (ADRs 0019 and 0021).
 (test-group "by-degree: strokes"
-  (let ((stroke-looks (list (list "#cccccc" "D" dark)
-                            (list "#cccccc" "dug" dark)
-                            (list "#cccccc" "du" dark))))
+  (let ((stroke-looks (list (list "#e6e6e6" "D" dark)
+                            (list "#e6e6e6" "dug" dark)
+                            (list "#e6e6e6" "du" dark))))
     (test-equal "kendang: grey box, display form or name, near-black"
       stroke-looks (looks (default-style) kendang))
-    (test-equal "gong" (list (list "#cccccc" "G" dark)) (looks (default-style) gong))
+    (test-equal "gong" (list (list "#e6e6e6" "G" dark)) (looks (default-style) gong))
     (test-equal "palette does not affect strokes"
       stroke-looks (looks (make-style #:palette 'set1) kendang))
     (test-equal "degree-colors naming a stroke leave it grey"
       stroke-looks
       (looks (make-style #:degree-colors '((dag . "#000000") (du . "#ffffff")))
              kendang))))
+
+;;; Slice feat/drawing-lines (04, "Note style" and "Slices (iteration
+;;; 3)" slice 2's decided bullet; ADR 0041): strokes are a lighter grey,
+;;; `#e6e6e6`, so the grey note border shows against it, with near-black
+;;; text. The old "#cccccc" tests above break with this slice.
+(test-group "by-degree: strokes in the lighter grey"
+  (let ((stroke-looks (list (list "#e6e6e6" "D" dark)
+                            (list "#e6e6e6" "dug" dark)
+                            (list "#e6e6e6" "du" dark))))
+    (test-equal "kendang: #e6e6e6, display form or name, near-black"
+      stroke-looks (looks (default-style) kendang))
+    (test-equal "gong" (list (list "#e6e6e6" "G" dark)) (looks (default-style) gong))
+    (test-equal "palette does not affect strokes"
+      stroke-looks (looks (make-style #:palette 'dark2) kendang))
+    (test-equal "degree-colors naming a stroke leave it #e6e6e6"
+      stroke-looks
+      (looks (make-style #:degree-colors '((dag . "#000000") (du . "#ffffff")))
+             kendang)))
+  (test-equal "#e6e6e6 takes near-black text" dark (text-color-for "#e6e6e6"))
+  (test-assert "#e6e6e6 is no palette's colour"
+    (not (any (lambda (name) (member "#e6e6e6" (palette-colors name)))
+              (palette-names)))))
 
 ;;; ------------------------------------------------------------------
 ;;; Custom schemes

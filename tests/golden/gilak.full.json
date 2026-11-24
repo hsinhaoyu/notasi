@@ -23,7 +23,8 @@
             "text": "0"
           }
         ],
-        "pulses": ["8"]
+        "pulses": ["8"],
+        "pulse_lines": true
       },
       "lines": ["none"],
       "groups": [
@@ -47,7 +48,9 @@
               ]
             }
           ],
-          "overlays": []
+          "overlays": [],
+          "pulse_lines": true,
+          "row_lines": true
         },
         {
           "label": "Gong",
@@ -62,14 +65,16 @@
                   "dur": 1,
                   "lane": 0,
                   "text": null,
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 }
               ]
             }
           ],
-          "overlays": []
+          "overlays": [],
+          "pulse_lines": true,
+          "row_lines": true
         }
       ]
     },
@@ -85,7 +90,8 @@
             "text": "1"
           }
         ],
-        "pulses": ["1", "2", "3", "4", "5", "6", "7", "8"]
+        "pulses": ["1", "2", "3", "4", "5", "6", "7", "8"],
+        "pulse_lines": true
       },
       "lines": ["none", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse"],
       "groups": [
@@ -172,7 +178,9 @@
               ]
             }
           ],
-          "overlays": []
+          "overlays": [],
+          "pulse_lines": true,
+          "row_lines": true
         },
         {
           "label": "G.",
@@ -187,7 +195,7 @@
                   "dur": 1,
                   "lane": 1,
                   "text": null,
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -196,7 +204,7 @@
                   "dur": 1,
                   "lane": 2,
                   "text": null,
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -205,7 +213,7 @@
                   "dur": 1,
                   "lane": 2,
                   "text": null,
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -214,14 +222,16 @@
                   "dur": 1,
                   "lane": 0,
                   "text": null,
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 }
               ]
             }
           ],
-          "overlays": []
+          "overlays": [],
+          "pulse_lines": true,
+          "row_lines": true
         }
       ]
     },
@@ -237,7 +247,8 @@
             "text": "2"
           }
         ],
-        "pulses": ["1", "2", "3", "4", "5", "6", "7", "8"]
+        "pulses": ["1", "2", "3", "4", "5", "6", "7", "8"],
+        "pulse_lines": true
       },
       "lines": ["none", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse"],
       "groups": [
@@ -324,7 +335,9 @@
               ]
             }
           ],
-          "overlays": []
+          "overlays": [],
+          "pulse_lines": true,
+          "row_lines": true
         },
         {
           "label": "G.",
@@ -339,7 +352,7 @@
                   "dur": 1,
                   "lane": 1,
                   "text": null,
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -348,7 +361,7 @@
                   "dur": 1,
                   "lane": 2,
                   "text": null,
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -357,7 +370,7 @@
                   "dur": 1,
                   "lane": 2,
                   "text": null,
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -366,14 +379,16 @@
                   "dur": 1,
                   "lane": 0,
                   "text": null,
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 }
               ]
             }
           ],
-          "overlays": []
+          "overlays": [],
+          "pulse_lines": true,
+          "row_lines": true
         }
       ]
     },
@@ -389,7 +404,8 @@
             "text": "3"
           }
         ],
-        "pulses": ["1", "2", "3", "4", "5", "6", "7", "8"]
+        "pulses": ["1", "2", "3", "4", "5", "6", "7", "8"],
+        "pulse_lines": true
       },
       "lines": ["none", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse", "pulse"],
       "groups": [
@@ -476,7 +492,9 @@
               ]
             }
           ],
-          "overlays": []
+          "overlays": [],
+          "pulse_lines": true,
+          "row_lines": true
         },
         {
           "label": "G.",
@@ -491,7 +509,7 @@
                   "dur": 1,
                   "lane": 1,
                   "text": null,
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -500,7 +518,7 @@
                   "dur": 1,
                   "lane": 2,
                   "text": null,
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -509,7 +527,7 @@
                   "dur": 1,
                   "lane": 2,
                   "text": null,
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 },
@@ -518,14 +536,16 @@
                   "dur": 1,
                   "lane": 0,
                   "text": null,
-                  "fill": "#cccccc",
+                  "fill": "#e6e6e6",
                   "text_color": "#222222",
                   "continued": false
                 }
               ]
             }
           ],
-          "overlays": []
+          "overlays": [],
+          "pulse_lines": true,
+          "row_lines": true
         }
       ]
     }

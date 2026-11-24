@@ -11,9 +11,9 @@ iteration 2's `feat/scores-contract`, and overlays since
 `(notasi typst)`, `(notasi command)` (Guile), `typst/notasi.typ` (Typst
 template), `scripts/notasi` (the command). Contract version 3 (ADR
 0043) with the template's header labels and centred numbers (ADR 0044)
-since iteration 3's `feat/drawing-header`. Planned for iteration 3:
-the frame (ADR 0044), row lines, pulse lines by group and grey note
-borders (ADR 0041); the key-number column and row labels left out
+since iteration 3's `feat/drawing-header`; the frame (ADR 0044), row
+lines, pulse lines by group and grey note borders (ADR 0041) since
+`feat/drawing-lines`. Planned for iteration 3: the key-number column and row labels left out
 (ADR 0047); a sans-serif font for standalone figures (ADR 0045); file
 names `NAME_SCORE` (ADR 0040).
 
@@ -29,14 +29,15 @@ must work in both places; see "Typst template design", points 6 and 7.
 
 ## JSON contract (version 3)
 
-**Implemented** for the header (ADR 0043, `feat/drawing-header`); the
-rest **Planned**, added by the later slices of `feat/drawing`. Version 2
+**Implemented** for the header (ADR 0043, `feat/drawing-header`) and
+the lines (`feat/drawing-lines`); the rest **Planned**, added by
+`feat/drawing-rows`. Version 2
 below, with these changes (04 lists the keys in order):
 
 - `version` is 3.
 - `header.label` becomes `header.cycle_label` and `header.pulse_label`,
-  each a string or `null`. **Planned:** `header.pulse_lines` (boolean)
-  says whether pulse lines run through the header rows.
+  each a string or `null`. `header.pulse_lines` (boolean) says whether
+  pulse lines run through the header rows.
 - Each group gets `pulse_lines` and `row_lines` (booleans): whether its
   rows show pulse lines, and lines between its rows.
 - Each group gets `key_numbers`, one string per lane or `null`, and
@@ -320,7 +321,7 @@ above:
   pulse number spans `steps_per_pulse` columns from its entry, and a
   cycle number spans the first pulse of its cycle, so the two line up.
   No `·` in the other columns.
-- **Lines:** cycle lines and the rules between groups are always drawn.
+- **Lines** (**Implemented**): cycle lines and the rules between groups are always drawn.
   Pulse lines are drawn through the header when `header.pulse_lines` is
   true, and through a group's rows when its `pulse_lines` is. When a
   group's `row_lines` is true, a thin line (`0.5pt`, `luma(170)`, like
@@ -332,12 +333,12 @@ above:
   `key_numbers` is `null` leaves the column empty. A column of width
   `"0.0em"` takes no space, so with neither column the group label sits
   next to the grid.
-- **Frame:** a vertical line at the left edge of the grid, between the
+- **Frame** (**Implemented**): a vertical line at the left edge of the grid, between the
   lane labels and the first column, like the rules between groups
   (`0.8pt`, `luma(120)`), from the first group's rule to the last, in
   every system. The template draws it; `lines[0]` stays `none`.
-- **Note borders:** each block has a thin grey border (starting point
-  `0.5pt`, `luma(150)`, judged by eye), the same on every edge: drawn
+- **Note borders** (**Implemented**): each block has a thin grey
+  border (`0.5pt`, `luma(150)`), the same on every edge: drawn
   centred on the block's edge, as Typst draws a stroke, so two touching
   blocks share one line. A cut note's pieces have a border all round;
   a continuation is still shown only by having no text. An event whose
