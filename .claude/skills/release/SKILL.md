@@ -33,6 +33,9 @@ tests/iterations.scm
 because they check `doc/decisions/` and `doc/iterations/`.
 If a new test reads a dev-only path, add it here.
 
+`editors/` (the Emacs package) is not dev-only: it ships to `main`
+with notasi and the same version tag (ADR 0050).
+
 ## Steps
 
 1. **What's new.** `git fetch --prune origin --tags`. Compare the last

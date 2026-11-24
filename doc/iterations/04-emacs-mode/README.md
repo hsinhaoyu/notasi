@@ -85,10 +85,15 @@ Each milestone, or each slice of one, is its own branch and PR into
 `dev`, started with `/start-milestone <branch>` (see
 [08-emacs.md](../../design/08-emacs.md)).
 
-1. **`feat/emacs-package`**: the package (`editors/emacs/`, headers,
+1. **`feat/emacs-package`** (done): the package (`editors/emacs/`, headers,
    autoloads, the `notasi` customisation group), the major mode with
    highlighting and indentation, `make check-emacs` and its CI job,
    `.gitignore`, and `editors/` shipped to `main` by `/release`.
+   Decided when it started: the five music faces (`notasi-note`,
+   `notasi-hold`, `notasi-rest`, `notasi-bar`, `notasi-pattern`),
+   music highlighted only in parts, patterns and colotomies, body
+   indented by 2 and option lines by 4, and `make check-emacs` finding
+   the macOS app and installing package-lint itself (08).
 2. **`feat/emacs-preview`**, in three slices:
    1. `feat/emacs-preview-draw`: finding notasi, `notasi --version`
       and its check, drawing, the preview window and header line,
