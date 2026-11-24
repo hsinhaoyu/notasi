@@ -99,7 +99,7 @@ Each milestone, or each slice of one, is its own branch and PR into
      containing the new form with the user's instrument
      (`(part :instrument gong ...)`); the wording is the code's, and
      the manual shows it as a mistake.
-2. **`feat/drawing`** (01–05), in four slices, see
+2. **`feat/drawing`** (done) (01–05), in four slices, see
    [04-layout.md](../../design/04-layout.md#slices-iteration-3):
    1. `feat/drawing-header`
    2. `feat/drawing-lines`

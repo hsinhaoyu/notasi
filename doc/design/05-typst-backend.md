@@ -14,9 +14,9 @@ template), `scripts/notasi` (the command). Contract version 3 (ADR
 since iteration 3's `feat/drawing-header`; the frame (ADR 0044), row
 lines, pulse lines by group and grey note borders (ADR 0041) since
 `feat/drawing-lines`; the key-number column and row labels left out
-(ADR 0047) since `feat/drawing-rows`. Planned for iteration 3: a
-sans-serif font for standalone figures (ADR 0045); file
-names `NAME_SCORE` (ADR 0040).
+(ADR 0047) since `feat/drawing-rows`; a sans-serif font for standalone
+figures (ADR 0045) and file names `NAME_SCORE` (ADR 0040) since
+`feat/drawing-output`.
 
 ## Responsibility
 
@@ -377,7 +377,7 @@ folder), exactly:
 ```typst
 #import "notasi.typ": score
 #set page(width: auto, height: auto, margin: 14pt, fill: white)
-#set text(font: "Libertinus Serif", size: 8pt)   // Planned: FONT, see below
+#set text(font: "FONT", size: 8pt)   // FONT: see below
 #let data = json("JSON-NAME")
 #if data.title != "" {
   block(below: 1em, text(weight: "bold", size: 1.2em, data.title))
@@ -388,17 +388,14 @@ folder), exactly:
 - The title is shown in bold above the score, without "Figure 1:"
   numbering: a piece on its own page isn't a numbered figure. An empty
   title shows nothing. (`caption`, `null` for now, is not used.)
-- **Planned** (ADR 0045): the font is a sans serif found on the machine,
-  the first of Helvetica, Arial, DejaVu Sans and Liberation Sans (the
-  list is settled by eye), or Libertinus Serif when none is installed.
-  `(notasi typst)` asks `typst fonts` once and passes the family found
-  to `write-entry-file` (`#:font`, default Libertinus Serif), which
-  writes only that family, so Typst never warns about a missing one.
-  A figure may look a little different from machine to machine.
-  Until then:
-- The font is Libertinus Serif, which is built into Typst, so a figure
-  looks the same on every machine; 8pt keeps labels small next to the
-  2em squares.
+- The font (ADR 0045) is a sans serif found on the machine, the first
+  of Helvetica, Arial, DejaVu Sans and Liberation Sans, or Libertinus
+  Serif, built into Typst, when none is installed: `(choose-font
+  families)`. `render-piece` asks `typst fonts` once (`(installed-fonts)`)
+  and passes the family found to `write-entry-file` (`#:font`, default
+  Libertinus Serif), which writes only that family, so Typst never
+  warns about a missing one. A figure may look a little different from
+  machine to machine. 8pt keeps labels small next to the 2em squares.
 
 `(compile-typst typ-path out-path)` runs `typst compile` on TYP-PATH,
 writing OUT-PATH, and returns OUT-PATH. The format comes from
@@ -481,8 +478,8 @@ notasi render --help
 the file (or the default score) is drawn. `--score` without a value is a
 usage error (status 2); a score the piece doesn't have prints `notasi: `
 and the message, and exits with status 1. OUT defaults to
-`PIECE.pdf` for the first score and `PIECE.NAME.pdf` with `--score`
-(**Planned**, ADR 0040: `PIECE_NAME.pdf`), so drawing several scores of
+`PIECE.pdf` for the first score and `PIECE_NAME.pdf` with `--score`
+(ADR 0040), so drawing several scores of
 one file doesn't overwrite one picture with another.
 
 The logic is in the module `(notasi command)`:
@@ -501,8 +498,8 @@ The user manual shows drawn scores: `make manual` first draws each
 (`![…](figures/NAME.svg)`) to `doc/manual/src/figures/NAME.svg` with
 `notasi render`, then builds the book. `figures/` is generated, not
 committed, so pictures never go stale. A page can show
-another score of the example as `figures/NAME.SCORE.svg` (**Planned**,
-ADR 0040: `figures/NAME_SCORE.svg`), drawn with `--score SCORE`. The manual's CI job installs
+another score of the example as `figures/NAME_SCORE.svg` (ADR 0040),
+drawn with `--score SCORE`. The manual's CI job installs
 Guile and Typst 0.15.1 for this; `tests/manual.scm` checks that every
 image a page shows has an example to draw it from.
 
@@ -515,8 +512,8 @@ compiles the examples with it; upgrading Typst is a deliberate change
 to the pin, with the golden figures and template checked again.
 
 `make preview` (`scripts/preview.scm`) draws each example's every score
-to `build/preview/NAME.png`, or `NAME.SCORE.png` for a file with scores
-(**Planned**, ADR 0040: `NAME_SCORE.png`), matching the golden files
+to `build/preview/NAME.png`, or `NAME_SCORE.png` for a file with scores
+(ADR 0040), matching the golden files
 (04).
 
 ## Slices

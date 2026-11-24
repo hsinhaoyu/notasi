@@ -138,7 +138,7 @@ notasi draws the first unless you name another with `--score`:
 scripts/notasi render gilak.nts --score second
 ```
 
-This writes `gilak.second.pdf`, so the pictures of different scores
+This writes `gilak_second.pdf`, so the pictures of different scores
 don't overwrite each other.
 
 ## The rules
