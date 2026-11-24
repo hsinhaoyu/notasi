@@ -12,7 +12,13 @@
 #       writes a small SVG to OUT, prints OUT on one line to standard
 #       output and exits 0; or, when FILE's text contains MISTAKE,
 #       prints "FILE:3: a mistake" to standard error (FILE as given)
-#       and exits 1, writing nothing.
+#       and exits 1, writing nothing.  Before that case, two others:
+#       when it contains NOTASI-PROBLEM, prints "notasi: typst is not
+#       installed" to standard error and exits 1 (a problem that is not
+#       a mistake in the notation); when it contains
+#       "TEMPLATE-MISTAKE NAME", prints "NAME.nts:2: a mistake in a
+#       template" to standard error and exits 1 (a mistake in a
+#       template the piece uses).  Both write nothing.
 #   anything else: "notasi: " and what is wrong, to standard error; exit 2.
 #
 # For the tests, these environment variables, when set:
@@ -67,6 +73,18 @@ fi
 
 [ -n "$FAKE_NOTASI_INPUT" ] && cat "$file" > "$FAKE_NOTASI_INPUT"
 [ -n "$FAKE_NOTASI_SLEEP" ] && sleep "$FAKE_NOTASI_SLEEP"
+
+if grep -q NOTASI-PROBLEM "$file"; then
+    echo "notasi: typst is not installed" >&2
+    exit 1
+fi
+
+# TEMPLATE-MISTAKE contains MISTAKE, so it is checked first.
+template=$(sed -n 's/.*TEMPLATE-MISTAKE \([^ ]*\).*/\1/p' "$file" | head -n 1)
+if [ -n "$template" ]; then
+    echo "$template.nts:2: a mistake in a template" >&2
+    exit 1
+fi
 
 if grep -q MISTAKE "$file"; then
     echo "$file:3: a mistake" >&2
