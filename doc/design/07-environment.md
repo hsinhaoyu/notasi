@@ -68,8 +68,9 @@ its version.
   it.
 - **Emacs 29.1** is the oldest supported.
 - **CI** checks the package in a job of its own, running
-  `make check-emacs` on Emacs 29.1 and on the newest Emacs release. It
-  installs `package-lint` from MELPA. `make check` does not need Emacs.
+  `make check-emacs` on Emacs 29.1 and on the newest Emacs release
+  (31.1). It installs `package-lint` from MELPA. `make check` does not
+  need Emacs. **Implemented** (`feat/emacs-package`).
 - Before the iteration is accepted, the acceptance test is run by hand
   on a fresh Emacs, following only the README and the manual (the
   "README test" of question 3, done once, by hand).

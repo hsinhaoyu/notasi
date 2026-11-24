@@ -1,7 +1,10 @@
 # 08 — The Emacs package
 
-Status: planned (iteration 4), not implemented. ADRs 0048 (the command
-line it depends on), 0049 (installing) and 0050 (the package).
+Status: partly implemented (iteration 4): milestone 1,
+`feat/emacs-package` (the package, writing, `make check-emacs`); the
+preview, the score shown, drawing, mistakes, finding notasi and the
+documentation are planned. ADRs 0048 (the command line it depends on),
+0049 (installing) and 0050 (the package).
 
 ## Responsibility
 
@@ -16,7 +19,8 @@ nothing from `notasi/`, and notasi never needs it.
 
 ## The package
 
-**Planned** (ADR 0050).
+**Implemented** (`feat/emacs-package`, ADR 0050), except installing
+from GitHub, which works once the package is on `dev`.
 
 - **Where it lives:** `editors/emacs/notasi-mode.el`, in the notasi
   repository; more files beside it (`notasi-mode-*.el`) only if it
@@ -43,7 +47,7 @@ nothing from `notasi/`, and notasi never needs it.
 
 ## Writing
 
-**Planned** (milestone `feat/emacs-package`).
+**Implemented** (`feat/emacs-package`).
 
 - `notasi-mode` is derived from `lisp-data-mode`: moving by forms,
   `show-paren-mode`, commenting (`;`) and Lisp indentation come with
@@ -216,7 +220,9 @@ in one sentence, and still draws.
 
 ## Testing
 
-**Planned.**
+**Implemented** (`feat/emacs-package`): the ERT tests of the package and
+writing, and `make check-emacs` with its CI job. **Planned**: the fake
+notasi and the real test, with the preview.
 
 - **ERT tests** in `editors/emacs/notasi-mode-tests.el`, run with
   `emacs -Q --batch`, so no one's configuration matters.

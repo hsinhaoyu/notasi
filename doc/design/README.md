@@ -75,7 +75,7 @@ See [its README](../iterations/03-refining-the-examples/README.md).
 
 See [its README](../iterations/04-emacs-mode/README.md).
 
-1. `feat/emacs-package`: the package and the major mode, `make
+1. **Implemented.** `feat/emacs-package`: the package and the major mode, `make
    check-emacs` and its CI job, `editors/` shipped to `main`
 2. `feat/emacs-preview`: the preview; three slices, see
    [08-emacs.md](08-emacs.md#slices)
