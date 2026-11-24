@@ -8,6 +8,13 @@
 ;; autoloads, the `notasi' customisation group, the major mode,
 ;; indentation and highlighting.
 ;;
+;; The tests under "The preview: drawing" were written the same way,
+;; from 08 ("The preview", "How a drawing is made", "Finding notasi",
+;; "Testing" and "Slices", item 1), for the slice
+;; feat/emacs-preview-draw.  They run the fake notasi beside this file,
+;; `fake-notasi', so they need neither Guile nor Typst; one real test
+;; draws with scripts/notasi when both are installed.
+;;
 ;; Run from the repository root with:
 ;;
 ;;   emacs -Q --batch -L editors/emacs -l ert \
@@ -106,6 +113,14 @@ FACES is the value of a `face' property: nil, a face or a list."
   (with-temp-buffer
     (insert-file-contents notasi-mode-tests--package-file)
     (should (equal (package-desc-version (package-buffer-info)) '(0 4 0)))))
+
+(ert-deftest notasi-mode-test-version-constant-matches-header ()
+  "`notasi-mode-version', which the version check compares with, is the
+Version: header's."
+  (with-temp-buffer
+    (insert-file-contents notasi-mode-tests--package-file)
+    (should (equal (version-to-list notasi-mode-version)
+                   (package-desc-version (package-buffer-info))))))
 
 (ert-deftest notasi-mode-test-package-requires-emacs-29-1 ()
   "The package requires Emacs 29.1."
@@ -586,6 +601,917 @@ like any unknown function of the same length."
   (notasi-mode-tests--should-not-have-music-face
    "(colotomy gilak 8\n  (part :instrument gong  -:3 GL:1 P - P G))"
    '("(colotomy ^gilak" "gilak ^8" ":instrument ^gong")))
+
+;;;; The preview: drawing (slice feat/emacs-preview-draw)
+
+;; Written from 08 before the code.  Choices where 08 leaves room:
+;;
+;; - The fake notasi (`fake-notasi') logs each run (its working folder
+;;   and arguments) to $FAKE_NOTASI_LOG, copies the text it was given to
+;;   $FAKE_NOTASI_INPUT, waits $FAKE_NOTASI_SLEEP seconds when asked,
+;;   and prints $FAKE_NOTASI_VERSION for --version.  The tests set these
+;;   through `process-environment', so the mode must start its
+;;   processes while the test's binding is in effect (it does, if the
+;;   commands start them before returning).
+;; - The picture is found as an image `display' property (a text
+;;   property or an overlay) in the preview buffer, and its SVG text is
+;;   read from its :data, or else from its :file.
+;; - The header line is read from `header-line-format' by a small
+;;   reader of mode line constructs (strings, symbols, lists, :eval,
+;;   :propertize, conditionals), since `format-mode-line' gives "" in
+;;   batch Emacs.  "drawing…" may also be written "drawing...".
+;; - "The preview says" (the version message) means the preview's
+;;   header line or its text, checked once the first drawing is done.
+;; - `--version' runs once for each program: every version test uses
+;;   its own copy of the fake, so the tests don't share what the mode
+;;   remembers about a program.
+;; - Finding notasi in a folder above the .nts file (step 4) is tested
+;;   in a fresh Emacs that loads a copy of the package from a temporary
+;;   folder, so step 3 (scripts/notasi in the package's own clone)
+;;   finds nothing; nothing about how the mode remembers its own file
+;;   is assumed.  `notasi-find-program' uses the current buffer's file.
+;; - `notasi-write-score' takes the file to write as an argument, so it
+;;   can be called from Lisp; interactively it asks for it.
+;; - A buffer in `notasi-mode' that visits no file draws nothing.
+;; - The real test draws a copy of examples/jaya-semara.nts in a
+;;   temporary folder (its template is found by notasi), so nothing is
+;;   written in examples/.
+;; - Windows: batch Emacs has one frame, 80 columns by 25 lines, where
+;;   windows can be split and buffers displayed, so opening, showing
+;;   and hiding the preview are tested; that it goes to the right or
+;;   below, and that the picture refits when the window is resized
+;;   (redisplay doesn't run in batch), are checked by hand.
+
+(require 'cl-lib)
+
+(defvar notasi-program)
+
+(defconst notasi-mode-tests--fake
+  (expand-file-name "fake-notasi" notasi-mode-tests--dir)
+  "The fake notasi the tests draw with.")
+
+(defconst notasi-mode-tests--repo
+  (file-name-as-directory
+   (expand-file-name "../.." notasi-mode-tests--dir))
+  "The notasi repository, the clone the package is loaded from.")
+
+(defconst notasi-mode-tests--gilak
+  "(piece \"Gilak: pangawit\" :colotomy gilak :pickup 1)
+
+(use gong-kebyar)
+
+(score full :fill none
+  (group \"Ugal\" ugal))
+
+(score second
+  (group \"Ugal\" ugal))
+"
+  "A piece with two scores; the first is `full'.")
+
+(defconst notasi-mode-tests--no-score
+  "(piece \"Gilak: pangawit\" :colotomy gilak :pickup 1)
+
+(use gong-kebyar)
+"
+  "A piece with no `score' forms.")
+
+;;;;; Helpers for drawing
+
+(defun notasi-mode-tests--wait (&optional process timeout)
+  "Wait for PROCESS to finish, or, without it, for every process.
+Give up after TIMEOUT seconds (10 by default) with an error.  Then let
+the sentinels run."
+  (let ((end (+ (float-time) (or timeout 10)))
+        (busy (lambda ()
+                (if process
+                    (process-live-p process)
+                  (seq-some #'process-live-p (process-list))))))
+    (while (and (funcall busy) (< (float-time) end))
+      (accept-process-output nil 0.05))
+    (when (funcall busy)
+      (error "A drawing still runs after %s seconds" (or timeout 10)))
+    (dotimes (_ 5) (accept-process-output nil 0.02))))
+
+(defun notasi-mode-tests--runs (log)
+  "Return the runs of the fake notasi recorded in LOG.
+Each is a list (FOLDER ARG...), oldest first."
+  (when (file-exists-p log)
+    (with-temp-buffer
+      (insert-file-contents log)
+      (mapcar (lambda (line) (split-string line "\t"))
+              (split-string (buffer-string) "\n" t)))))
+
+(defun notasi-mode-tests--render-runs (log)
+  "Return the runs of `notasi render' recorded in LOG."
+  (seq-filter (lambda (run) (equal (cadr run) "render"))
+              (notasi-mode-tests--runs log)))
+
+(defun notasi-mode-tests--version-runs (log)
+  "Return the runs of `notasi --version' recorded in LOG."
+  (seq-filter (lambda (run) (member "--version" (cdr run)))
+              (notasi-mode-tests--runs log)))
+
+(defun notasi-mode-tests--option (run option)
+  "Return the value after OPTION in RUN's arguments, or nil."
+  (cadr (member option (cdr run))))
+
+(defun notasi-mode-tests--piece-arg (run)
+  "Return the PIECE.nts argument of the render RUN."
+  (let ((args (cddr run)) found)
+    (while args
+      (if (member (car args) '("-o" "--output" "--score"))
+          (setq args (cddr args))
+        (setq found (car args) args nil)))
+    found))
+
+(defun notasi-mode-tests--out (run)
+  "Return the absolute OUT of the render RUN."
+  (expand-file-name (or (notasi-mode-tests--option run "-o")
+                        (notasi-mode-tests--option run "--output"))
+                    (car run)))
+
+(defun notasi-mode-tests--preview (file)
+  "Return the preview buffer of FILE, or nil."
+  (get-buffer (format "*notasi: %s*" (file-name-nondirectory file))))
+
+(defun notasi-mode-tests--format (format)
+  "Return the text of the mode line construct FORMAT, in plain text.
+`format-mode-line' gives \"\" in batch Emacs, so the usual constructs
+are read here: strings (with %% for %), symbols, lists, (:eval FORM),
+(:propertize ELT ...), (SYMBOL THEN ELSE) and (WIDTH ELT)."
+  (pcase format
+    ('nil "")
+    ((pred stringp)
+     (string-replace "%%" "%" (substring-no-properties format)))
+    ((pred symbolp)
+     (if (boundp format) (notasi-mode-tests--format (symbol-value format)) ""))
+    (`(:eval ,form) (notasi-mode-tests--format (eval form t)))
+    (`(:propertize ,elt . ,_) (notasi-mode-tests--format elt))
+    (`(,(and (pred integerp)) ,elt) (notasi-mode-tests--format elt))
+    (`(,(and (pred symbolp) (pred (not keywordp)) sym) ,then . ,else)
+     (if (and (boundp sym) (symbol-value sym))
+         (notasi-mode-tests--format then)
+       (mapconcat #'notasi-mode-tests--format else "")))
+    ((pred consp) (mapconcat #'notasi-mode-tests--format format ""))
+    (_ "")))
+
+(defun notasi-mode-tests--header (preview)
+  "Return the header line of the buffer PREVIEW, as plain text."
+  (with-current-buffer preview
+    (notasi-mode-tests--format header-line-format)))
+
+(defun notasi-mode-tests--says (preview)
+  "Return what the buffer PREVIEW says: its header line and its text."
+  (concat (notasi-mode-tests--header preview) "\n"
+          (with-current-buffer preview
+            (buffer-substring-no-properties (point-min) (point-max)))))
+
+(defun notasi-mode-tests--image-in (display)
+  "Return the image spec in the `display' property DISPLAY, or nil."
+  (cond ((eq (car-safe display) 'image) display)
+        ((and (consp display) (consp (car display)))
+         (seq-find (lambda (d) (eq (car-safe d) 'image)) display))))
+
+(defun notasi-mode-tests--image (preview)
+  "Return the image spec the buffer PREVIEW shows, or nil."
+  (with-current-buffer preview
+    (or (seq-some (lambda (o)
+                    (notasi-mode-tests--image-in (overlay-get o 'display)))
+                  (overlays-in (point-min) (point-max)))
+        (let ((pos (point-min)) found)
+          (while (and (not found) (< pos (point-max)))
+            (setq found (notasi-mode-tests--image-in
+                         (get-text-property pos 'display))
+                  pos (1+ pos)))
+          found))))
+
+(defun notasi-mode-tests--image-text (image)
+  "Return the SVG text of the image spec IMAGE."
+  (or (plist-get (cdr image) :data)
+      (let ((file (plist-get (cdr image) :file)))
+        (and file (file-exists-p file)
+             (with-temp-buffer
+               (insert-file-contents file)
+               (buffer-string))))))
+
+(defun notasi-mode-tests--shown (file)
+  "Return the SVG text of the picture FILE's preview shows, or nil."
+  (let* ((preview (notasi-mode-tests--preview file))
+         (image (and preview (notasi-mode-tests--image preview))))
+    (and image (notasi-mode-tests--image-text image))))
+
+(defun notasi-mode-tests--hidden-files (dir)
+  "Return the hidden `.notasi-preview-*' files in DIR."
+  (directory-files dir nil "\\`\\.notasi-preview-"))
+
+(defun notasi-mode-tests--drawing-p (text)
+  "Return non-nil if TEXT says a drawing is being made."
+  (string-match-p "drawing\\(…\\|\\.\\.\\.\\)" text))
+
+(defun notasi-mode-tests--copy-fake ()
+  "Copy the fake notasi to a new folder of its own, as `notasi'.
+Return the copy's file name."
+  (let ((copy (expand-file-name
+               "notasi" (make-temp-file "notasi-mode-fake" t))))
+    (copy-file notasi-mode-tests--fake copy)
+    (set-file-modes copy #o755)
+    copy))
+
+(defun notasi-mode-tests--wait-for-first-drawing (log)
+  "Wait until a drawing has been started (LOG records it), then for it."
+  (unless (fboundp 'notasi-preview-redraw)
+    (error "notasi-mode can't draw yet: no `notasi-preview-redraw'"))
+  (let ((end (+ (float-time) 10)))
+    (while (and (null (notasi-mode-tests--render-runs log))
+                (< (float-time) end))
+      (accept-process-output nil 0.05)))
+  (notasi-mode-tests--wait))
+
+(cl-defun notasi-mode-tests--with-piece
+    (function &key (text notasi-mode-tests--gilak) (name "gilak.nts")
+              (program notasi-mode-tests--fake) env select)
+  "Open a .nts file holding TEXT and call FUNCTION.
+The file, NAME, is in a temporary folder of its own; the mode draws
+with PROGRAM (`notasi-program'), with ENV (strings \"VAR=VALUE\") added
+to the environment.  With SELECT, the file is opened with `find-file'
+in a frame with one window; otherwise with `find-file-noselect'.  The
+first drawing, made on opening, is waited for.
+
+FUNCTION is called in the file's buffer, with a plist: :buffer, :dir (the file's folder),
+:file, :log (the fake's log) and :input (the text it was last given).
+Afterwards the buffer is killed and the folders removed."
+  (let* ((dir (make-temp-file "notasi-mode-piece" t))
+         (aux (make-temp-file "notasi-mode-aux" t))
+         (file (expand-file-name name dir))
+         (log (expand-file-name "fake.log" aux))
+         (input (expand-file-name "input.nts" aux))
+         (process-environment
+          (append (list (concat "FAKE_NOTASI_LOG=" log)
+                        (concat "FAKE_NOTASI_INPUT=" input))
+                  env process-environment))
+         (notasi-program program)
+         buffer)
+    (with-temp-file file (insert text))
+    (unwind-protect
+        (progn
+          (delete-other-windows)
+          (setq buffer (if select (find-file file) (find-file-noselect file)))
+          (notasi-mode-tests--wait-for-first-drawing log)
+          (with-current-buffer buffer
+            (funcall function (list :buffer buffer :dir dir :file file
+                                    :log log :input input))))
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer (set-buffer-modified-p nil))
+        (kill-buffer buffer))
+      (ignore-errors (notasi-mode-tests--wait))
+      (delete-other-windows)
+      (delete-directory dir t)
+      (delete-directory aux t))))
+
+(defun notasi-mode-tests--run-emacs-for (form &rest args)
+  "Run FORM in a fresh `emacs -Q --batch' with ARGS before it.
+FORM's value is printed and read back; return it."
+  (let* ((result (apply #'notasi-mode-tests--run-emacs
+                        (append args
+                                (list "--eval"
+                                      (format "(progn (princ \"\\nRESULT:\") (prin1 %S))"
+                                              form)))))
+         (out (cdr result))
+         (at (string-search "\nRESULT:" out)))
+    (unless (and (eq (car result) 0) at)
+      (error "Emacs failed: %s"
+             (string-join (seq-take (split-string out "\n" t) 3) "; ")))
+    (car (read-from-string out (+ at (length "\nRESULT:"))))))
+
+(defun notasi-mode-tests--same-file-p (a b)
+  "Return non-nil if A and B name the same file."
+  (and a b (equal (file-truename a) (file-truename b))))
+
+;;;;; Finding notasi
+
+(ert-deftest notasi-mode-test-find-program-setting-wins ()
+  "`notasi-program', when set, is the notasi run, before the PATH's."
+  (let* ((bin (make-temp-file "notasi-mode-bin" t))
+         (on-path (expand-file-name "notasi" bin)))
+    (unwind-protect
+        (progn
+          (copy-file notasi-mode-tests--fake on-path)
+          (set-file-modes on-path #o755)
+          (let ((notasi-program notasi-mode-tests--fake)
+                (exec-path (list bin)))
+            (with-temp-buffer
+              (should (equal (notasi-find-program)
+                             notasi-mode-tests--fake)))))
+      (delete-directory bin t))))
+
+(ert-deftest notasi-mode-test-find-program-on-path ()
+  "Without `notasi-program', `notasi' on the PATH is the notasi run."
+  (let* ((bin (make-temp-file "notasi-mode-bin" t))
+         (on-path (expand-file-name "notasi" bin)))
+    (unwind-protect
+        (progn
+          (copy-file notasi-mode-tests--fake on-path)
+          (set-file-modes on-path #o755)
+          (let ((notasi-program nil)
+                (exec-path (list bin)))
+            (with-temp-buffer
+              (should (notasi-mode-tests--same-file-p
+                       (notasi-find-program) on-path)))))
+      (delete-directory bin t))))
+
+(ert-deftest notasi-mode-test-find-program-package-clone ()
+  "With nothing set and no notasi on the PATH, scripts/notasi in the
+clone the package was loaded from is run, before one above the file."
+  (let* ((empty (make-temp-file "notasi-mode-empty" t))
+         (proj (make-temp-file "notasi-mode-proj" t))
+         (scripts (expand-file-name "scripts" proj))
+         (nts (expand-file-name "songs/gilak.nts" proj)))
+    (unwind-protect
+        (progn
+          (make-directory scripts)
+          (make-directory (file-name-directory nts))
+          (copy-file notasi-mode-tests--fake (expand-file-name "notasi" scripts))
+          (set-file-modes (expand-file-name "notasi" scripts) #o755)
+          (with-temp-file nts (insert notasi-mode-tests--no-score))
+          (let ((notasi-program nil)
+                (exec-path (list empty)))
+            (with-temp-buffer
+              (setq buffer-file-name nts
+                    default-directory (file-name-directory nts))
+              (unwind-protect
+                  (should (notasi-mode-tests--same-file-p
+                           (notasi-find-program)
+                           (expand-file-name "scripts/notasi"
+                                             notasi-mode-tests--repo)))
+                (setq buffer-file-name nil)))))
+      (delete-directory empty t)
+      (delete-directory proj t))))
+
+(ert-deftest notasi-mode-test-find-program-above-the-file ()
+  "When the package's own folder holds no clone, scripts/notasi in a
+folder above the .nts file is run.  Tested in a fresh Emacs loading a
+copy of the package from a folder outside any clone."
+  (let* ((tmp (make-temp-file "notasi-mode-above" t))
+         (lisp (expand-file-name "pkg/lisp" tmp))
+         (empty (expand-file-name "empty" tmp))
+         (proj (expand-file-name "proj" tmp))
+         (program (expand-file-name "scripts/notasi" proj))
+         (near (expand-file-name "songs/gilak.nts" proj))
+         (far (expand-file-name "a/b/c/gilak.nts" proj)))
+    (unwind-protect
+        (progn
+          (make-directory lisp t)
+          (make-directory empty t)
+          (make-directory (file-name-directory program) t)
+          (make-directory (file-name-directory near) t)
+          (make-directory (file-name-directory far) t)
+          (copy-file notasi-mode-tests--package-file
+                     (file-name-as-directory lisp))
+          (copy-file notasi-mode-tests--fake program)
+          (set-file-modes program #o755)
+          (dolist (nts (list near far))
+            (with-temp-file nts (insert notasi-mode-tests--no-score)))
+          (let ((found
+                 (notasi-mode-tests--run-emacs-for
+                  `(progn
+                     (setq exec-path (list ,empty))
+                     (require 'notasi-mode)
+                     (mapcar (lambda (nts)
+                               (with-temp-buffer
+                                 (setq buffer-file-name nts
+                                       default-directory
+                                       (file-name-directory nts))
+                                 (prog1 (notasi-find-program)
+                                   (setq buffer-file-name nil))))
+                             (list ,near ,far)))
+                  "-L" lisp)))
+            (should (= (length found) 2))
+            (dolist (f found)
+              (should (notasi-mode-tests--same-file-p f program)))))
+      (delete-directory tmp t))))
+
+(ert-deftest notasi-mode-test-find-program-none ()
+  "When no notasi is found anywhere, `notasi-find-program' returns nil."
+  (let* ((tmp (make-temp-file "notasi-mode-none" t))
+         (lisp (expand-file-name "pkg/lisp" tmp))
+         (empty (expand-file-name "empty" tmp))
+         (nts (expand-file-name "songs/gilak.nts" tmp)))
+    (unwind-protect
+        (progn
+          (make-directory lisp t)
+          (make-directory empty t)
+          (make-directory (file-name-directory nts) t)
+          (copy-file notasi-mode-tests--package-file
+                     (file-name-as-directory lisp))
+          (with-temp-file nts (insert notasi-mode-tests--no-score))
+          (should
+           (equal (notasi-mode-tests--run-emacs-for
+                   `(progn
+                      (setq exec-path (list ,empty))
+                      (require 'notasi-mode)
+                      (with-temp-buffer
+                        (setq buffer-file-name ,nts
+                              default-directory ,(file-name-directory nts))
+                        (prog1 (list (notasi-find-program))
+                          (setq buffer-file-name nil))))
+                   "-L" lisp)
+                  '(nil))))
+      (delete-directory tmp t))))
+
+;;;;; How a drawing is made
+
+(ert-deftest notasi-mode-test-redraw-returns-the-process ()
+  "`notasi-preview-redraw' returns the drawing's process."
+  (notasi-mode-tests--with-piece
+   (lambda (_)
+     (let ((p (notasi-preview-redraw)))
+       (should (processp p))
+       (notasi-mode-tests--wait p)
+       (should (eq (process-status p) 'exit))
+       (should (= (process-exit-status p) 0))))))
+
+(ert-deftest notasi-mode-test-draws-unsaved-text-from-hidden-file ()
+  "A drawing runs notasi in the file's folder on the hidden file
+.notasi-preview-FILE, which holds the buffer's text, unsaved."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (with-current-buffer (plist-get ctx :buffer)
+       (goto-char (point-max))
+       (insert ";; written, not saved\n")
+       (notasi-mode-tests--wait (notasi-preview-redraw))
+       (let ((run (car (last (notasi-mode-tests--render-runs
+                              (plist-get ctx :log))))))
+         (should run)
+         (should (file-equal-p (car run) (plist-get ctx :dir)))
+         (let ((piece (notasi-mode-tests--piece-arg run)))
+           (should (equal (file-name-nondirectory piece)
+                          ".notasi-preview-gilak.nts"))
+           (should (file-equal-p
+                    (file-name-directory (expand-file-name piece (car run)))
+                    (plist-get ctx :dir)))))
+       (should (equal (with-temp-buffer
+                        (insert-file-contents (plist-get ctx :input))
+                        (buffer-string))
+                      (buffer-string)))
+       ;; The file itself is not saved.
+       (should (buffer-modified-p))
+       (should (equal (with-temp-buffer
+                        (insert-file-contents (plist-get ctx :file))
+                        (buffer-string))
+                      notasi-mode-tests--gilak))))))
+
+(ert-deftest notasi-mode-test-hidden-file-removed ()
+  "The hidden file is gone once a drawing is done."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (with-current-buffer (plist-get ctx :buffer)
+       (notasi-mode-tests--wait (notasi-preview-redraw))
+       (should-not (notasi-mode-tests--hidden-files (plist-get ctx :dir)))))))
+
+(ert-deftest notasi-mode-test-output-in-temporary-folder ()
+  "The picture is DIR/NAME.svg for the first score's NAME, in a folder
+made for the buffer, not beside the file."
+  (skip-unless (image-type-available-p 'svg))
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let* ((run (car (last (notasi-mode-tests--render-runs
+                             (plist-get ctx :log)))))
+            (out (notasi-mode-tests--out run)))
+       (should (equal (file-name-nondirectory out) "full.svg"))
+       (should-not (file-in-directory-p out (plist-get ctx :dir)))
+       (should (file-exists-p out))))))
+
+(ert-deftest notasi-mode-test-output-piece-svg-without-score ()
+  "Without a `score' form, the picture is DIR/piece.svg."
+  (skip-unless (image-type-available-p 'svg))
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let ((run (car (last (notasi-mode-tests--render-runs
+                            (plist-get ctx :log))))))
+       (should (equal (file-name-nondirectory (notasi-mode-tests--out run))
+                      "piece.svg"))))
+   :text notasi-mode-tests--no-score))
+
+(ert-deftest notasi-mode-test-draws-first-score-without-score-option ()
+  "The first score is drawn, so `--score' is never passed."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (with-current-buffer (plist-get ctx :buffer)
+       (notasi-mode-tests--wait (notasi-preview-redraw)))
+     (let ((runs (notasi-mode-tests--render-runs (plist-get ctx :log))))
+       (should runs)
+       (dolist (run runs)
+         (should-not (member "--score" run)))))))
+
+(ert-deftest notasi-mode-test-new-drawing-stops-running-one ()
+  "A drawing still running when a new one starts is stopped, and the
+picture and header line are the new drawing's."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (with-current-buffer (plist-get ctx :buffer)
+       (let ((slow (let ((process-environment
+                          (cons "FAKE_NOTASI_SLEEP=5" process-environment)))
+                     (notasi-preview-redraw))))
+         (should (process-live-p slow))
+         (let ((fast (notasi-preview-redraw)))
+           (should-not (eq slow fast))
+           (notasi-mode-tests--wait fast)
+           (should-not (process-live-p slow))
+           ;; The stopped drawing's sentinel changes nothing.
+           (dotimes (_ 10) (accept-process-output nil 0.02))
+           (let ((header (notasi-mode-tests--header
+                          (notasi-mode-tests--preview
+                           (plist-get ctx :file)))))
+             (should (string-search "Gilak: pangawit — full" header))
+             (should-not (notasi-mode-tests--drawing-p header)))
+           (should (notasi-mode-tests--shown (plist-get ctx :file)))))))))
+
+(ert-deftest notasi-mode-test-picture-reloaded-fresh ()
+  "Each drawing's picture is shown, not an earlier one."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (with-current-buffer (plist-get ctx :buffer)
+       (should (string-search
+                (format "%d lines" (count-lines (point-min) (point-max)))
+                (notasi-mode-tests--shown (plist-get ctx :file))))
+       (goto-char (point-max))
+       (insert ";; one\n;; two\n;; three\n")
+       (notasi-mode-tests--wait (notasi-preview-redraw))
+       (should (string-search
+                (format "%d lines" (count-lines (point-min) (point-max)))
+                (notasi-mode-tests--shown (plist-get ctx :file))))))))
+
+;;;;; The preview buffer and its header line
+
+(ert-deftest notasi-mode-test-preview-buffer ()
+  "The preview is a read-only buffer, *notasi: FILE*, showing the picture."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let ((preview (notasi-mode-tests--preview (plist-get ctx :file))))
+       (should (buffer-live-p preview))
+       (should (equal (buffer-name preview) "*notasi: gilak.nts*"))
+       (should (buffer-local-value 'buffer-read-only preview))
+       (should (string-search "fake-notasi"
+                              (notasi-mode-tests--shown
+                               (plist-get ctx :file))))))))
+
+(ert-deftest notasi-mode-test-header-title-and-score ()
+  "The header line is TITLE — NAME, NAME the first score's."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let ((header (notasi-mode-tests--header
+                    (notasi-mode-tests--preview (plist-get ctx :file)))))
+       (should (string-search "Gilak: pangawit — full" header))
+       (should-not (notasi-mode-tests--drawing-p header))))))
+
+(ert-deftest notasi-mode-test-header-title-alone-without-score ()
+  "Without `score' forms, the header line is the title alone."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let ((header (notasi-mode-tests--header
+                    (notasi-mode-tests--preview (plist-get ctx :file)))))
+       (should (string-search "Gilak: pangawit" header))
+       (should-not (string-search "—" header))))
+   :text notasi-mode-tests--no-score))
+
+(ert-deftest notasi-mode-test-header-says-drawing ()
+  "The header line says \"drawing…\" while a drawing is made, and not after."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let ((preview (notasi-mode-tests--preview (plist-get ctx :file))))
+       (with-current-buffer (plist-get ctx :buffer)
+         (let ((p (let ((process-environment
+                         (cons "FAKE_NOTASI_SLEEP=1" process-environment)))
+                    (notasi-preview-redraw))))
+           (should (process-live-p p))
+           (should (notasi-mode-tests--drawing-p
+                    (notasi-mode-tests--header preview)))
+           (notasi-mode-tests--wait p)
+           (should-not (notasi-mode-tests--drawing-p
+                        (notasi-mode-tests--header preview)))))))))
+
+;;;;; A failed drawing
+
+(ert-deftest notasi-mode-test-failure-keeps-picture-and-shows-message ()
+  "A failed drawing keeps the last picture, and the header line shows
+notasi's message with the real file's name for the hidden file's."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let* ((file (plist-get ctx :file))
+            (preview (notasi-mode-tests--preview file))
+            (before (notasi-mode-tests--shown file)))
+       (should before)
+       (with-current-buffer (plist-get ctx :buffer)
+         (goto-char (point-max))
+         (insert ";; MISTAKE\n")
+         (let ((p (notasi-preview-redraw)))
+           (notasi-mode-tests--wait p)
+           (should (= (process-exit-status p) 1))))
+       (should (equal (notasi-mode-tests--shown file) before))
+       (let ((header (notasi-mode-tests--header preview)))
+         (should (string-search "gilak.nts:3: a mistake" header))
+         (should-not (string-search ".notasi-preview" header))
+         (should-not (notasi-mode-tests--drawing-p header)))
+       (should-not (notasi-mode-tests--hidden-files (plist-get ctx :dir)))))))
+
+(ert-deftest notasi-mode-test-good-drawing-after-failure ()
+  "After a failed drawing, a good one shows its picture and the title."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let ((preview (notasi-mode-tests--preview (plist-get ctx :file))))
+       (with-current-buffer (plist-get ctx :buffer)
+         (goto-char (point-max))
+         (insert ";; MISTAKE\n")
+         (notasi-mode-tests--wait (notasi-preview-redraw))
+         (delete-region (line-beginning-position 0) (point-max))
+         (notasi-mode-tests--wait (notasi-preview-redraw)))
+       (let ((header (notasi-mode-tests--header preview)))
+         (should (string-search "Gilak: pangawit — full" header))
+         (should-not (string-search "mistake" header)))))))
+
+;;;;; notasi --version
+
+(defconst notasi-mode-tests--older-message
+  "This notasi (0.3.0) is older than notasi-mode (0.4.0)"
+  "What the preview says when notasi 0.3.0 is found.")
+
+(ert-deftest notasi-mode-test-older-notasi-said-and-still-draws ()
+  "An older notasi is said in the preview, and the score is still drawn."
+  (let ((program (notasi-mode-tests--copy-fake)))
+    (unwind-protect
+        (notasi-mode-tests--with-piece
+         (lambda (ctx)
+           (let ((preview (notasi-mode-tests--preview (plist-get ctx :file))))
+             (should (string-search notasi-mode-tests--older-message
+                                    (notasi-mode-tests--says preview)))
+             (should (notasi-mode-tests--shown (plist-get ctx :file)))))
+         :program program :env '("FAKE_NOTASI_VERSION=0.3.0"))
+      (delete-directory (file-name-directory program) t))))
+
+(ert-deftest notasi-mode-test-same-version-not-said ()
+  "notasi 0.4.0-dev is not older than the package: nothing is said."
+  (let ((program (notasi-mode-tests--copy-fake)))
+    (unwind-protect
+        (notasi-mode-tests--with-piece
+         (lambda (ctx)
+           (should (notasi-mode-tests--version-runs (plist-get ctx :log)))
+           (should-not
+            (string-search "older"
+                           (notasi-mode-tests--says
+                            (notasi-mode-tests--preview
+                             (plist-get ctx :file))))))
+         :program program)
+      (delete-directory (file-name-directory program) t))))
+
+(ert-deftest notasi-mode-test-versions-compared-as-numbers ()
+  "notasi 0.10.0 is newer than 0.4.0: versions are compared as numbers."
+  (let ((program (notasi-mode-tests--copy-fake)))
+    (unwind-protect
+        (notasi-mode-tests--with-piece
+         (lambda (ctx)
+           (should (notasi-mode-tests--version-runs (plist-get ctx :log)))
+           (should-not
+            (string-search "older"
+                           (notasi-mode-tests--says
+                            (notasi-mode-tests--preview
+                             (plist-get ctx :file))))))
+         :program program :env '("FAKE_NOTASI_VERSION=0.10.0"))
+      (delete-directory (file-name-directory program) t))))
+
+(ert-deftest notasi-mode-test-version-run-once-per-program ()
+  "`notasi --version' is run once for a program, however often it draws."
+  (let ((program (notasi-mode-tests--copy-fake)))
+    (unwind-protect
+        (notasi-mode-tests--with-piece
+         (lambda (ctx)
+           (with-current-buffer (plist-get ctx :buffer)
+             (notasi-mode-tests--wait (notasi-preview-redraw))
+             (notasi-mode-tests--wait (notasi-preview-redraw)))
+           (should (= (length (notasi-mode-tests--render-runs
+                               (plist-get ctx :log)))
+                      3))
+           (should (= (length (notasi-mode-tests--version-runs
+                               (plist-get ctx :log)))
+                      1)))
+         :program program)
+      (delete-directory (file-name-directory program) t))))
+
+;;;;; Opening a file, and the preview window
+
+(ert-deftest notasi-mode-test-opening-file-opens-preview-and-draws ()
+  "Opening a .nts file turns on the mode, opens the preview beside the
+text, and draws; the text's window stays selected."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let* ((buffer (plist-get ctx :buffer))
+            (preview (notasi-mode-tests--preview (plist-get ctx :file))))
+       (should (eq (buffer-local-value 'major-mode buffer) 'notasi-mode))
+       (should (buffer-live-p preview))
+       (should (get-buffer-window preview))
+       (should (eq (window-buffer (selected-window)) buffer))
+       (should (string-search "fake-notasi"
+                              (notasi-mode-tests--shown
+                               (plist-get ctx :file))))))
+   :select t))
+
+(ert-deftest notasi-mode-test-opening-file-noselect-draws ()
+  "Visiting a .nts file without showing it still draws its preview."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (should (eq (buffer-local-value 'major-mode (plist-get ctx :buffer))
+                 'notasi-mode))
+     (should (notasi-mode-tests--render-runs (plist-get ctx :log)))
+     (should (notasi-mode-tests--shown (plist-get ctx :file))))))
+
+(ert-deftest notasi-mode-test-picture-fits-window-width ()
+  "The picture is no wider than the preview window."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let* ((preview (notasi-mode-tests--preview (plist-get ctx :file)))
+            (window (get-buffer-window preview))
+            (image (notasi-mode-tests--image preview)))
+       (should window)
+       (should image)
+       (let ((width (or (plist-get (cdr image) :max-width)
+                        (plist-get (cdr image) :width))))
+         (should (numberp width))
+         (should (<= width (window-body-width window t))))))
+   :select t))
+
+(ert-deftest notasi-mode-test-toggle-hides-and-shows-preview ()
+  "`notasi-preview-toggle' hides the preview window, then shows it."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let* ((buffer (plist-get ctx :buffer))
+            (preview (notasi-mode-tests--preview (plist-get ctx :file))))
+       (should (get-buffer-window preview))
+       (with-selected-window (get-buffer-window buffer)
+         (notasi-preview-toggle))
+       (should-not (get-buffer-window preview))
+       (should (get-buffer-window buffer))
+       (with-selected-window (get-buffer-window buffer)
+         (notasi-preview-toggle))
+       (should (get-buffer-window preview))
+       (should (get-buffer-window buffer))))
+   :select t))
+
+(ert-deftest notasi-mode-test-toggle-shows-hidden-preview ()
+  "When the preview window isn't shown, `notasi-preview-toggle' shows it."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let* ((buffer (plist-get ctx :buffer))
+            (preview (notasi-mode-tests--preview (plist-get ctx :file))))
+       (delete-other-windows (get-buffer-window buffer))
+       (should-not (get-buffer-window preview))
+       (with-selected-window (get-buffer-window buffer)
+         (notasi-preview-toggle))
+       (should (get-buffer-window preview))))
+   :select t))
+
+;;;;; Writing the score to a file
+
+(ert-deftest notasi-mode-test-write-score ()
+  "`notasi-write-score' writes the current score to the file named."
+  (let* ((outdir (make-temp-file "notasi-mode-write" t))
+         (target (expand-file-name "gilak-full.pdf" outdir)))
+    (unwind-protect
+        (notasi-mode-tests--with-piece
+         (lambda (ctx)
+           (with-current-buffer (plist-get ctx :buffer)
+             (let ((p (notasi-write-score target)))
+               (notasi-mode-tests--wait (and (processp p) p))))
+           (should (file-exists-p target))
+           (let ((run (car (last (notasi-mode-tests--render-runs
+                                  (plist-get ctx :log))))))
+             (should (equal (notasi-mode-tests--out run) target)))
+           (should-not (notasi-mode-tests--hidden-files (plist-get ctx :dir)))))
+      (delete-directory outdir t))))
+
+;;;;; Keys, commands and settings
+
+(ert-deftest notasi-mode-test-preview-keys ()
+  "C-c C-c redraws, C-c C-p shows or hides the preview, C-c C-o writes."
+  (should (eq (lookup-key notasi-mode-map (kbd "C-c C-c"))
+              'notasi-preview-redraw))
+  (should (eq (lookup-key notasi-mode-map (kbd "C-c C-p"))
+              'notasi-preview-toggle))
+  (should (eq (lookup-key notasi-mode-map (kbd "C-c C-o"))
+              'notasi-write-score)))
+
+(ert-deftest notasi-mode-test-preview-commands ()
+  "The three commands are commands with docstrings."
+  (dolist (command '(notasi-preview-redraw notasi-preview-toggle
+                     notasi-write-score))
+    (should (commandp command))
+    (should (documentation command))))
+
+(ert-deftest notasi-mode-test-find-program-documented ()
+  "`notasi-find-program' is a function with a docstring."
+  (should (functionp 'notasi-find-program))
+  (should (documentation 'notasi-find-program)))
+
+(ert-deftest notasi-mode-test-preview-settings ()
+  "`notasi-program' and `notasi-preview-side' are settings in the
+`notasi' group, with docstrings; `notasi-program' is unset at first."
+  (dolist (setting '(notasi-program notasi-preview-side))
+    (should (custom-variable-p setting))
+    (should (assq setting (get 'notasi 'custom-group)))
+    (should (documentation-property setting 'variable-documentation)))
+  (should (null (eval (car (get 'notasi-program 'standard-value)) t))))
+
+;;;;; Cleaning up
+
+(ert-deftest notasi-mode-test-kill-buffer-cleans-up ()
+  "Killing the .nts buffer kills its preview and removes the temporary
+folder; no hidden file is left."
+  (let (outdir preview dir)
+    (notasi-mode-tests--with-piece
+     (lambda (ctx)
+       (let ((run (car (last (notasi-mode-tests--render-runs
+                              (plist-get ctx :log))))))
+         (setq outdir (file-name-directory (notasi-mode-tests--out run))
+               preview (notasi-mode-tests--preview (plist-get ctx :file))
+               dir (plist-get ctx :dir))
+         (should (file-directory-p outdir))
+         (should (buffer-live-p preview))
+         (with-current-buffer (plist-get ctx :buffer)
+           (set-buffer-modified-p nil))
+         (kill-buffer (plist-get ctx :buffer))
+         (should-not (buffer-live-p preview))
+         (should-not (file-exists-p outdir))
+         (should-not (notasi-mode-tests--hidden-files dir)))))))
+
+(ert-deftest notasi-mode-test-kill-buffer-while-drawing ()
+  "Killing the .nts buffer during a drawing stops it and cleans up."
+  (notasi-mode-tests--with-piece
+   (lambda (ctx)
+     (let* ((run (car (last (notasi-mode-tests--render-runs
+                             (plist-get ctx :log)))))
+            (outdir (file-name-directory (notasi-mode-tests--out run)))
+            (p (with-current-buffer (plist-get ctx :buffer)
+                 (let ((process-environment
+                        (cons "FAKE_NOTASI_SLEEP=5" process-environment)))
+                   (notasi-preview-redraw)))))
+       (should (process-live-p p))
+       (with-current-buffer (plist-get ctx :buffer)
+         (set-buffer-modified-p nil))
+       (kill-buffer (plist-get ctx :buffer))
+       (dotimes (_ 10) (accept-process-output nil 0.02))
+       (should-not (process-live-p p))
+       (should-not (notasi-mode-tests--preview (plist-get ctx :file)))
+       (should-not (file-exists-p outdir))
+       (should-not (notasi-mode-tests--hidden-files (plist-get ctx :dir)))))))
+
+(ert-deftest notasi-mode-test-no-file-no-drawing ()
+  "A `notasi-mode' buffer that visits no file draws nothing."
+  (let ((notasi-program notasi-mode-tests--fake)
+        (before (process-list)))
+    (with-temp-buffer
+      (insert notasi-mode-tests--gilak)
+      (notasi-mode)
+      (dotimes (_ 5) (accept-process-output nil 0.02))
+      (should (equal (process-list) before))
+      (should-not (seq-find (lambda (b)
+                              (string-prefix-p "*notasi: " (buffer-name b)))
+                            (buffer-list))))))
+
+;;;;; A real drawing
+
+(ert-deftest notasi-mode-test-real-drawing ()
+  "scripts/notasi draws jaya-semara.nts (a copy, in a temporary folder).
+Skipped when Guile or Typst is missing."
+  (skip-unless (and (executable-find "guile") (executable-find "typst")))
+  (unless (fboundp 'notasi-preview-redraw)
+    (error "notasi-mode can't draw yet: no `notasi-preview-redraw'"))
+  (let* ((dir (make-temp-file "notasi-mode-real" t))
+         (file (expand-file-name "jaya-semara.nts" dir))
+         (notasi-program (expand-file-name "scripts/notasi"
+                                           notasi-mode-tests--repo))
+         buffer)
+    (unwind-protect
+        (progn
+          (copy-file (expand-file-name "examples/jaya-semara.nts"
+                                       notasi-mode-tests--repo)
+                     file)
+          ;; Opening the file draws it.
+          (setq buffer (find-file-noselect file))
+          (let ((end (+ (float-time) 120)))
+            (while (and (not (notasi-mode-tests--shown file))
+                        (< (float-time) end))
+              (accept-process-output nil 0.1)))
+          (notasi-mode-tests--wait nil 120)
+          (let ((preview (notasi-mode-tests--preview file)))
+            (should (buffer-live-p preview))
+            (should (string-search "Jaya Semara: pangecet — full"
+                                   (notasi-mode-tests--header preview)))
+            (should (string-match-p "<svg"
+                                    (or (notasi-mode-tests--shown file) ""))))
+          (should-not (notasi-mode-tests--hidden-files dir)))
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer (set-buffer-modified-p nil))
+        (kill-buffer buffer))
+      (ignore-errors (notasi-mode-tests--wait nil 120))
+      (delete-directory dir t))))
 
 (provide 'notasi-mode-tests)
 

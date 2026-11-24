@@ -23,6 +23,7 @@
 ;;; Code:
 
 (require 'lisp-mode)
+(require 'subr-x)
 
 (defgroup notasi nil
   "Write Balinese gamelan notation with notasi."
@@ -196,7 +197,361 @@ Set the match data to it, and `notasi-mode--face' to its face."
     (notasi-mode--next-music-token 0 notasi-mode--face))
   "Font lock keywords for `notasi-mode'.")
 
+;;;; The preview: settings and state
+
+(defconst notasi-mode-version "0.4.0"
+  "The package's version, as in its Version: header.")
+
+(defconst notasi-mode--load-file (or load-file-name buffer-file-name)
+  "The file this package was loaded from.")
+
+(defcustom notasi-program nil
+  "The notasi command to draw with, or nil to find it.
+When nil, the mode runs `notasi' on the PATH, else scripts/notasi in
+the clone this package was installed from, else scripts/notasi in a
+folder above the .nts file."
+  :type '(choice (const :tag "Find it" nil) (file :tag "Program"))
+  :group 'notasi)
+
+(defcustom notasi-preview-side 'auto
+  "Where the preview window goes.
+`auto' puts it to the right when the frame is wide enough, below
+otherwise; `right' and `below' always put it there; nil lets Emacs
+decide."
+  :type '(choice (const :tag "Right if wide enough, else below" auto)
+                 (const :tag "Right" right)
+                 (const :tag "Below" below)
+                 (const :tag "Where Emacs decides" nil))
+  :group 'notasi)
+
+(defvar notasi-mode--versions (make-hash-table :test #'equal)
+  "The version of each notasi program already asked, by file name.")
+
+(defvar-local notasi-mode--process nil
+  "The drawing being made for this buffer, if any.")
+
+(defvar-local notasi-mode--out-dir nil
+  "The temporary folder this buffer's pictures are drawn into.")
+
+(defvar-local notasi-mode--note nil
+  "A note for the header line after the next drawing, or nil.")
+
+(defvar-local notasi-mode--image-file nil
+  "In a preview buffer, the picture it shows.")
+
+;;;; The preview: finding notasi
+
+(defun notasi-mode--executable (file)
+  "Return FILE if it is an executable file, else nil."
+  (and file (file-regular-p file) (file-executable-p file) file))
+
+(defun notasi-find-program ()
+  "Return the notasi program to draw with, or nil if there is none.
+In order: `notasi-program'; `notasi' on the PATH; scripts/notasi in
+the clone this package was installed from; scripts/notasi in a folder
+above the current buffer's file."
+  (or (notasi-mode--executable
+       (and notasi-program (expand-file-name notasi-program)))
+      (executable-find "notasi")
+      (and notasi-mode--load-file
+           (notasi-mode--executable
+            (expand-file-name "../../scripts/notasi"
+                              (file-name-directory notasi-mode--load-file))))
+      (let ((above (and buffer-file-name
+                        (locate-dominating-file
+                         (file-name-directory buffer-file-name)
+                         (lambda (dir)
+                           (notasi-mode--executable
+                            (expand-file-name "scripts/notasi" dir)))))))
+        (and above (expand-file-name "scripts/notasi" above)))))
+
+(defun notasi-mode--version-of (program)
+  "Return PROGRAM's version, as `notasi --version' prints it, or nil."
+  (with-temp-buffer
+    (and (eq 0 (ignore-errors (call-process program nil t nil "--version")))
+         (progn (goto-char (point-min))
+                (looking-at "notasi \\([0-9][^ \n]*\\)"))
+         (match-string 1))))
+
+(defun notasi-mode--check-version (program)
+  "Ask PROGRAM its version, once; note it here if it is older than ours."
+  (unless (gethash program notasi-mode--versions)
+    (let ((version (or (notasi-mode--version-of program) "unknown")))
+      (puthash program version notasi-mode--versions)
+      (when (and (not (equal version "unknown"))
+                 (version< (string-remove-suffix "-dev" version)
+                           notasi-mode-version))
+        (setq notasi-mode--note
+              (format "This notasi (%s) is older than notasi-mode (%s)"
+                      version notasi-mode-version))))))
+
+;;;; The preview: the piece
+
+(defun notasi-mode--top-level-match (regexp)
+  "Return group 1 of the first match of REGEXP at the top level, or nil."
+  (save-excursion
+    (save-match-data
+      (goto-char (point-min))
+      (let (found)
+        (while (and (not found) (re-search-forward regexp nil t))
+          (let ((beg (match-beginning 0))
+                (name (match-string-no-properties 1)))
+            ;; `syntax-ppss' moves point and changes the match data.
+            (when (= 0 (save-excursion (save-match-data (car (syntax-ppss beg)))))
+              (setq found name))))
+        found))))
+
+(defun notasi-mode--title ()
+  "Return the piece's title, or the file's name when it has none."
+  (or (notasi-mode--top-level-match "^(piece[ \t\n]+\"\\([^\"]*\\)\"")
+      (file-name-nondirectory buffer-file-name)))
+
+(defun notasi-mode--first-score ()
+  "Return the name of the first score in the buffer, or nil."
+  (notasi-mode--top-level-match
+   "^(score[ \t\n]+\\([^ \t\n()\"]+\\)"))
+
+;;;; The preview: its buffer and window
+
+(defun notasi-mode--preview-name ()
+  "Return the name of this buffer's preview buffer."
+  (format "*notasi: %s*" (file-name-nondirectory buffer-file-name)))
+
+(defun notasi-mode--preview (&optional create)
+  "Return this buffer's preview buffer; with CREATE, make it if needed."
+  (let ((name (notasi-mode--preview-name)))
+    (or (get-buffer name)
+        (and create
+             (with-current-buffer (get-buffer-create name)
+               (special-mode)
+               (setq-local cursor-type nil)
+               (add-hook 'window-size-change-functions
+                         #'notasi-mode--refit nil t)
+               (current-buffer))))))
+
+(defun notasi-mode--set-header (preview text)
+  "Show TEXT in the header line of the buffer PREVIEW."
+  (with-current-buffer preview
+    (setq header-line-format (string-replace "%" "%%" text))
+    (force-mode-line-update)))
+
+(defun notasi-mode--image-width (preview)
+  "Return the width in pixels the picture in PREVIEW may take."
+  (let ((window (get-buffer-window preview t)))
+    (if window
+        (window-body-width window t)
+      (frame-text-width))))
+
+(defun notasi-mode--put-image (preview)
+  "Show the picture of the buffer PREVIEW, fitted to its window."
+  (with-current-buffer preview
+    (when (and notasi-mode--image-file
+               (file-exists-p notasi-mode--image-file))
+      (let* ((file notasi-mode--image-file)
+             (svg (string-suffix-p ".svg" file))
+             (data (with-temp-buffer
+                     (set-buffer-multibyte nil)
+                     (insert-file-contents-literally file)
+                     (buffer-string)))
+             (image (list 'image :type (if svg 'svg 'png) :data data
+                          :max-width (notasi-mode--image-width preview)))
+             (inhibit-read-only t))
+        (erase-buffer)
+        (insert (propertize " " 'display image))
+        (goto-char (point-min))))))
+
+(defun notasi-mode--refit (frame)
+  "Fit the pictures of the previews shown in FRAME to their windows."
+  (dolist (window (window-list frame 'no-minibuffer))
+    (let ((buffer (window-buffer window)))
+      (when (buffer-local-value 'notasi-mode--image-file buffer)
+        (notasi-mode--put-image buffer)))))
+
+(defun notasi-mode--display-action ()
+  "Return the `display-buffer' action that puts the preview in place."
+  (let ((side (if (eq notasi-preview-side 'auto)
+                  (if (>= (frame-width) 160) 'right 'below)
+                notasi-preview-side)))
+    (pcase side
+      ('right '((display-buffer-in-direction) (direction . right)
+                (inhibit-same-window . t)))
+      ('below '((display-buffer-in-direction) (direction . below)
+                (inhibit-same-window . t)))
+      (_ '(nil (inhibit-same-window . t))))))
+
+(defun notasi-mode--show-preview ()
+  "Show this buffer's preview in a window beside it, without selecting it."
+  (let ((preview (notasi-mode--preview t)))
+    (unless (get-buffer-window preview)
+      (display-buffer preview (notasi-mode--display-action)))
+    (notasi-mode--put-image preview)))
+
+;;;; The preview: drawing
+
+(defun notasi-mode--hidden-file ()
+  "Return the hidden file beside this buffer's file that is drawn."
+  (expand-file-name (concat ".notasi-preview-"
+                            (file-name-nondirectory buffer-file-name))
+                    (file-name-directory buffer-file-name)))
+
+(defun notasi-mode--write-hidden-file ()
+  "Write the buffer's text, saved or not, to the hidden file.
+Return its name."
+  (let ((hidden (notasi-mode--hidden-file)))
+    (save-restriction
+      (widen)
+      (let ((coding-system-for-write 'utf-8))
+        (write-region (point-min) (point-max) hidden nil 'silent)))
+    hidden))
+
+(defun notasi-mode--delete-hidden-file ()
+  "Delete the hidden file, if it is there."
+  (let ((hidden (notasi-mode--hidden-file)))
+    (when (file-exists-p hidden)
+      (delete-file hidden))))
+
+(defun notasi-mode--stop ()
+  "Stop the drawing being made, if any."
+  (when (process-live-p notasi-mode--process)
+    (delete-process notasi-mode--process))
+  (setq notasi-mode--process nil))
+
+(defun notasi-mode--out-file (name)
+  "Return the file to draw the score NAME (or the piece) into."
+  (unless (and notasi-mode--out-dir (file-directory-p notasi-mode--out-dir))
+    (setq notasi-mode--out-dir (make-temp-file "notasi-preview-" t)))
+  (expand-file-name (concat (or name "piece")
+                            (if (image-type-available-p 'svg) ".svg" ".png"))
+                    notasi-mode--out-dir))
+
+(defun notasi-mode--message (output)
+  "Return notasi's message in OUTPUT, with the hidden file's name replaced."
+  (let ((line (car (split-string (string-trim output) "\n" t))))
+    (string-replace (file-name-nondirectory (notasi-mode--hidden-file))
+                    (file-name-nondirectory buffer-file-name)
+                    (or line "notasi failed"))))
+
+(defun notasi-mode--sentinel (source header out)
+  "Return a sentinel for a drawing of SOURCE's buffer to OUT.
+HEADER is the header line for a good drawing."
+  (lambda (process _event)
+    (unless (process-live-p process)
+      (let ((output (with-current-buffer (process-buffer process)
+                      (buffer-string))))
+        (kill-buffer (process-buffer process))
+        (when (and (buffer-live-p source)
+                   (buffer-local-value 'buffer-file-name source)
+                   (eq process (buffer-local-value 'notasi-mode--process source)))
+          (with-current-buffer source
+            (setq notasi-mode--process nil)
+            (notasi-mode--delete-hidden-file)
+            (let ((preview (notasi-mode--preview t)))
+              (if (and (eq (process-status process) 'exit)
+                       (= (process-exit-status process) 0))
+                  (progn
+                    (with-current-buffer preview
+                      (setq notasi-mode--image-file out))
+                    (notasi-mode--put-image preview)
+                    (notasi-mode--set-header
+                     preview (if notasi-mode--note
+                                 (concat header "  " notasi-mode--note)
+                               header))
+                    (setq notasi-mode--note nil))
+                (notasi-mode--set-header
+                 preview (notasi-mode--message output))))))))))
+
+(defun notasi-preview-redraw ()
+  "Draw the score again, from the text as it is now, saved or not.
+Return the drawing's process, or nil when nothing is drawn."
+  (interactive)
+  (when buffer-file-name
+    (notasi-mode--stop)
+    (let ((program (notasi-find-program))
+          (preview (notasi-mode--preview t)))
+      (if (not program)
+          (progn
+            (notasi-mode--set-header
+             preview "Can't find notasi: see the manual's chapter on Emacs")
+            nil)
+        (notasi-mode--check-version program)
+        (let* ((score (notasi-mode--first-score))
+               (title (notasi-mode--title))
+               (header (if score (format "%s — %s" title score) title))
+               (out (notasi-mode--out-file score))
+               (hidden (notasi-mode--write-hidden-file))
+               (default-directory (file-name-directory buffer-file-name)))
+          (setq notasi-mode--process
+                (make-process
+                 :name "notasi"
+                 :buffer (generate-new-buffer " *notasi-output*")
+                 :command (list program "render"
+                                (file-name-nondirectory hidden) "-o" out)
+                 :connection-type 'pipe
+                 :noquery t
+                 :sentinel (notasi-mode--sentinel (current-buffer) header out)))
+          (notasi-mode--set-header preview (concat header "  drawing…"))
+          notasi-mode--process)))))
+
+(defun notasi-preview-toggle ()
+  "Show the preview of the score, or hide it if it is shown."
+  (interactive)
+  (let* ((preview (and buffer-file-name (notasi-mode--preview)))
+         (window (and preview (get-buffer-window preview))))
+    (cond
+     (window (delete-window window))
+     (buffer-file-name
+      (notasi-mode--show-preview)
+      (unless preview (notasi-preview-redraw))))))
+
+(defun notasi-write-score (file)
+  "Write the score to FILE, a .pdf, .png or .svg file.
+The score is drawn from the text as it is now, saved or not."
+  (interactive
+   (list (read-file-name "Write the score to (.pdf, .png, .svg): ")))
+  (unless buffer-file-name
+    (user-error "This buffer has no file, so it can't be drawn"))
+  (let ((program (or (notasi-find-program)
+                     (user-error "Can't find notasi: see the manual's chapter on Emacs")))
+        (file (expand-file-name file)))
+    (notasi-mode--stop)
+    (let ((hidden (notasi-mode--write-hidden-file))
+          (default-directory (file-name-directory buffer-file-name)))
+      (unwind-protect
+          (with-temp-buffer
+            (if (eq 0 (call-process program nil t nil "render"
+                                    (file-name-nondirectory hidden) "-o" file))
+                (message "Wrote %s" file)
+              (let ((output (buffer-string)))
+                (with-current-buffer (get-file-buffer buffer-file-name)
+                  (message "%s" (notasi-mode--message output))))))
+        (notasi-mode--delete-hidden-file)))))
+
+(defun notasi-mode--clean-up ()
+  "Stop drawing, and remove the preview and the temporary files."
+  (notasi-mode--stop)
+  (when buffer-file-name
+    (let ((preview (notasi-mode--preview)))
+      (when preview (kill-buffer preview)))
+    (ignore-errors (notasi-mode--delete-hidden-file)))
+  (when (and notasi-mode--out-dir (file-directory-p notasi-mode--out-dir))
+    (delete-directory notasi-mode--out-dir t)))
+
+(defun notasi-mode--open (buffer)
+  "Show BUFFER's preview, if BUFFER is shown, and draw it."
+  (when (and (buffer-live-p buffer) (buffer-local-value 'buffer-file-name buffer))
+    (with-current-buffer buffer
+      (when (get-buffer-window buffer)
+        (with-selected-window (get-buffer-window buffer)
+          (notasi-mode--show-preview)))
+      (notasi-preview-redraw))))
+
 ;;;; The mode
+
+(defvar-keymap notasi-mode-map
+  :parent lisp-data-mode-map
+  "C-c C-c" #'notasi-preview-redraw
+  "C-c C-p" #'notasi-preview-toggle
+  "C-c C-o" #'notasi-write-score)
 
 ;;;###autoload
 (define-derived-mode notasi-mode lisp-data-mode "notasi"
@@ -215,7 +570,11 @@ indent their body by 2, and a line of options (starting with `:') by
   (setq-local lisp-indent-function #'notasi-mode--indent-function)
   (setq-local comment-start ";")
   (setq-local indent-tabs-mode nil)
-  (setq-local font-lock-defaults '(notasi-mode--font-lock-keywords)))
+  (setq-local font-lock-defaults '(notasi-mode--font-lock-keywords))
+  (when buffer-file-name
+    (add-hook 'kill-buffer-hook #'notasi-mode--clean-up nil t)
+    ;; `find-file' shows the buffer only after the mode has run.
+    (run-at-time 0 nil #'notasi-mode--open (current-buffer))))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.nts\\'" . notasi-mode))

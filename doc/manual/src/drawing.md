@@ -96,3 +96,11 @@ If the piece has a mistake, notasi prints the same messages as in
 it again.
 
 If Typst isn't installed, notasi says so and tells you where to get it.
+
+## Which notasi you have
+
+```text
+scripts/notasi --version
+```
+
+prints notasi's version, for example `notasi 0.4.0-dev`.

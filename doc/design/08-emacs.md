@@ -1,9 +1,10 @@
 # 08 — The Emacs package
 
 Status: partly implemented (iteration 4): milestone 1,
-`feat/emacs-package` (the package, writing, `make check-emacs`); the
-preview, the score shown, drawing, mistakes, finding notasi and the
-documentation are planned. ADRs 0048 (the command line it depends on),
+`feat/emacs-package` (the package, writing, `make check-emacs`), and
+slice 1 of the preview, `feat/emacs-preview-draw` (the preview, how a
+drawing is made, finding notasi); redrawing as the user writes, the
+score shown, mistakes and the documentation are planned. ADRs 0048 (the command line it depends on),
 0049 (installing) and 0050 (the package).
 
 ## Responsibility
@@ -98,7 +99,13 @@ it on a fresh Emacs.
 
 ## The preview
 
-**Planned.**
+**Implemented** (`feat/emacs-preview-draw`): opening a file (point 1,
+always, without the setting), the picture fitting its window, the
+header line, closing the buffer, the preview buffer, `C-c C-c`,
+`C-c C-p`, `C-c C-o`, and the settings `notasi-program` and
+`notasi-preview-side`. **Planned** (`feat/emacs-preview-live`):
+redrawing as the user writes and on saving (point 2), `C-c C-s`, and
+the other three settings. Until then the first score is drawn.
 
 1. **Opening a `.nts` file** turns on `notasi-mode`, opens a preview
    window beside the text (to the right when the frame is wide enough,
@@ -156,7 +163,7 @@ text has changed since.
 
 ## How a drawing is made
 
-**Planned.** Hidden from the user:
+**Implemented** (`feat/emacs-preview-draw`). Hidden from the user:
 
 - **Unsaved text.** The mode writes the buffer's text to a hidden file
   beside the `.nts` file, `.notasi-preview-NAME.nts`, so local
@@ -204,7 +211,8 @@ one-second pause is enough, and notasi needs no process kept running.
 
 ## Finding notasi
 
-**Planned.** The mode runs the first `notasi` it finds:
+**Implemented** (`feat/emacs-preview-draw`). The mode runs the first
+`notasi` it finds:
 
 1. `notasi-program`, if the user set it;
 2. `notasi` on the PATH;
@@ -221,9 +229,9 @@ in one sentence, and still draws.
 
 ## Testing
 
-**Implemented** (`feat/emacs-package`): the ERT tests of the package and
-writing, and `make check-emacs` with its CI job. **Planned**: the fake
-notasi and the real test, with the preview.
+**Implemented**: the ERT tests of the package and writing, and
+`make check-emacs` with its CI job (`feat/emacs-package`); the fake
+notasi and the real test (`feat/emacs-preview-draw`).
 
 - **ERT tests** in `editors/emacs/notasi-mode-tests.el`, run with
   `emacs -Q --batch`, so no one's configuration matters.
@@ -275,9 +283,35 @@ highlighting a pattern's notes in the picture, and MELPA are later
 Milestone 2 (`feat/emacs-preview`) is built in three slices, each its
 own branch and PR into `dev`, started with `/start-milestone <branch>`:
 
-1. `feat/emacs-preview-draw`: finding notasi (with `notasi --version`
+1. **Implemented.** `feat/emacs-preview-draw`: finding notasi (with `notasi --version`
    and its check), how a drawing is made, the preview window and its
    header line, `C-c C-c`, `C-c C-p`, `C-c C-o`, and cleaning up.
+   Decided for this slice:
+   - **Opening a file** opens the preview and draws, always; slice 2
+     adds `notasi-preview-on-open` to turn it off.
+   - **Settings:** `notasi-program` and `notasi-preview-side` come in
+     this slice; the other three with slice 2.
+   - **The score drawn** is the first in the file (no `--score`). The
+     header line is `TITLE — NAME`, or `TITLE` alone when the file has
+     no `score` forms.
+   - **A failed drawing** keeps the last picture and shows notasi's
+     message, uncoloured, in the header line; slice 3 adds Flymake, the
+     red header and showing other problems once.
+   - **Names:** the commands `notasi-preview-redraw` (`C-c C-c`),
+     `notasi-preview-toggle` (`C-c C-p`) and `notasi-write-score`
+     (`C-c C-o`); `(notasi-find-program)`, the program or nil; the
+     preview buffer `*notasi: FILE*` (`*notasi: jaya-semara.nts*`);
+     the hidden file `.notasi-preview-FILE` (`.notasi-preview-jaya-semara.nts`);
+     the picture `DIR/NAME.svg`, or `DIR/piece.svg` without a score
+     name. `notasi-preview-redraw` returns the drawing's process.
+   - **`notasi --version`** prints `notasi 0.4.0-dev` on `dev`, from
+     `notasi-version` in `(notasi command)`. The mode runs it once per
+     program found; when its numbers (ignoring `-dev`) are older than
+     the package's, the preview's header line says "This notasi (0.3.0)
+     is older than notasi-mode (0.4.0)" after the title, until the next
+     drawing, and the score is still drawn.
+   - **The picture fits** the preview's width, and refits when the
+     window changes size.
 2. `feat/emacs-preview-live`: redrawing on a pause and on saving, the
    settings, the score shown, and `C-c C-s`.
 3. `feat/emacs-preview-errors`: mistakes through Flymake, the red

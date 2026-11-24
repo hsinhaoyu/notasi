@@ -9,7 +9,12 @@
   #:use-module (notasi typst)
   #:use-module (ice-9 exceptions)
   #:use-module (ice-9 match)
-  #:export (run-notasi))
+  #:export (run-notasi notasi-version))
+
+(define notasi-version
+  ;; notasi's version (05, "The command line as a contract"): the
+  ;; version being built, with -dev until it is tagged.
+  "0.4.0-dev")
 
 (define usage "usage: notasi render PIECE.nts [--score NAME] [-o OUT]")
 
@@ -20,16 +25,21 @@ Draw a piece of notation as a score.
 
   render PIECE.nts    draw PIECE.nts; by default to PIECE.pdf beside it
   --score NAME        draw the score NAME instead of the first one; by
-                      default to PIECE.NAME.pdf
+                      default to PIECE_NAME.pdf
   -o, --output OUT    write OUT instead; its extension (.pdf, .png or
                       .svg) chooses the format
-  --help              show this help"))
+  --help              show this help
+  --version           show notasi's version"))
 
 (define (say port . lines)
   (for-each (lambda (line) (display line port) (newline port)) lines))
 
 (define (show-help)
   (say (current-output-port) help)
+  0)
+
+(define (show-version)
+  (say (current-output-port) (string-append "notasi " notasi-version))
   0)
 
 (define (usage-error what)
@@ -122,6 +132,7 @@ a mistake in using the command."
   (match args
     (() (usage-error "no subcommand"))
     (("--help" . _) (show-help))
+    (("--version" . _) (show-version))
     (("render" . rest) (render-command rest))
     (((? option? option) . _)
      (usage-error (string-append "unknown option `" option "'")))
