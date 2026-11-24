@@ -387,6 +387,45 @@ each string in ALSO."
  '(("--help") ("render" "--help")))
 
 ;;; ------------------------------------------------------------------
+;;; --version (05, "The command line as a contract"; ADR 0048; slice
+;;; feat/emacs-preview-draw).  Choices: stdout is exactly
+;;; "notasi VERSION\n", VERSION being N.N.N or N.N.N-dev; --version is
+;;; tested alone.  `notasi --help' names --version, and gives the
+;;; default OUT with --score as PIECE_NAME.pdf (ADR 0040), not the old
+;;; PIECE.NAME.pdf.
+
+(define (version-line? text)
+  "Is TEXT \"notasi VERSION\" and one newline, VERSION N.N.N[-dev]?"
+  (and (string-prefix? "notasi " text)
+       (string-suffix? "\n" text)
+       (let* ((version (substring text 7 (- (string-length text) 1)))
+              (parts (string-split version #\-))
+              (numbers (string-split (car parts) #\.)))
+         (and (or (null? (cdr parts))
+                  (equal? (cdr parts) '("dev")))
+              (= 3 (length numbers))
+              (every (lambda (n)
+                       (and (not (string-null? n))
+                            (string-every char-numeric? n)))
+                     numbers)))))
+
+(test-group "--version"
+  (let ((r (run "--version")))
+    (test-equal "exits with status 0" 0 (status-of r))
+    (test-assert "prints notasi VERSION and a newline"
+      (version-line? (stdout-of r)))
+    (test-equal "prints nothing to stderr" "" (stderr-of r))))
+
+(test-group "--help and --version"
+  (let ((r (run "--help")))
+    (test-assert "--help mentions --version"
+      (string-contains (stdout-of r) "--version"))
+    (test-assert "--help gives the default OUT with --score as PIECE_NAME.pdf"
+      (string-contains (stdout-of r) "PIECE_NAME.pdf"))
+    (test-assert "--help doesn't give the old PIECE.NAME.pdf"
+      (not (string-contains (stdout-of r) "PIECE.NAME.pdf")))))
+
+;;; ------------------------------------------------------------------
 ;;; scripts/notasi
 
 (test-group "scripts/notasi"

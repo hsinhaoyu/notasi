@@ -278,6 +278,32 @@ own branch and PR into `dev`, started with `/start-milestone <branch>`:
 1. `feat/emacs-preview-draw`: finding notasi (with `notasi --version`
    and its check), how a drawing is made, the preview window and its
    header line, `C-c C-c`, `C-c C-p`, `C-c C-o`, and cleaning up.
+   Decided for this slice:
+   - **Opening a file** opens the preview and draws, always; slice 2
+     adds `notasi-preview-on-open` to turn it off.
+   - **Settings:** `notasi-program` and `notasi-preview-side` come in
+     this slice; the other three with slice 2.
+   - **The score drawn** is the first in the file (no `--score`). The
+     header line is `TITLE — NAME`, or `TITLE` alone when the file has
+     no `score` forms.
+   - **A failed drawing** keeps the last picture and shows notasi's
+     message, uncoloured, in the header line; slice 3 adds Flymake, the
+     red header and showing other problems once.
+   - **Names:** the commands `notasi-preview-redraw` (`C-c C-c`),
+     `notasi-preview-toggle` (`C-c C-p`) and `notasi-write-score`
+     (`C-c C-o`); `(notasi-find-program)`, the program or nil; the
+     preview buffer `*notasi: FILE*` (`*notasi: jaya-semara.nts*`);
+     the hidden file `.notasi-preview-FILE` (`.notasi-preview-jaya-semara.nts`);
+     the picture `DIR/NAME.svg`, or `DIR/piece.svg` without a score
+     name. `notasi-preview-redraw` returns the drawing's process.
+   - **`notasi --version`** prints `notasi 0.4.0-dev` on `dev`, from
+     `notasi-version` in `(notasi command)`. The mode runs it once per
+     program found; when its numbers (ignoring `-dev`) are older than
+     the package's, the preview's header line says "This notasi (0.3.0)
+     is older than notasi-mode (0.4.0)" after the title, until the next
+     drawing, and the score is still drawn.
+   - **The picture fits** the preview's width, and refits when the
+     window changes size.
 2. `feat/emacs-preview-live`: redrawing on a pause and on saving, the
    settings, the score shown, and `C-c C-s`.
 3. `feat/emacs-preview-errors`: mistakes through Flymake, the red

@@ -1,0 +1,87 @@
+#!/bin/sh
+# fake-notasi -- a stand-in for scripts/notasi in notasi-mode's tests.
+#
+# It follows the command line's contract (doc/design/05-typst-backend.md,
+# "The command line as a contract"; ADR 0048) closely enough for the
+# package, so its tests need neither Guile nor Typst.  It changes when
+# the contract does (doc/design/08-emacs.md, "Testing").
+#
+#   fake-notasi --version
+#       prints "notasi 0.4.0-dev" and exits 0.
+#   fake-notasi render FILE [--score NAME] -o OUT    (options in any order)
+#       writes a small SVG to OUT, prints OUT on one line to standard
+#       output and exits 0; or, when FILE's text contains MISTAKE,
+#       prints "FILE:3: a mistake" to standard error (FILE as given)
+#       and exits 1, writing nothing.
+#   anything else: "notasi: " and what is wrong, to standard error; exit 2.
+#
+# For the tests, these environment variables, when set:
+#   FAKE_NOTASI_VERSION  the version --version prints (to act as an
+#                        older notasi, e.g. 0.3.0)
+#   FAKE_NOTASI_LOG      a file to which each run appends one line: the
+#                        working folder, then each argument, separated
+#                        by tabs
+#   FAKE_NOTASI_INPUT    a file to which render copies FILE's text, so a
+#                        test can see what it was given
+#   FAKE_NOTASI_SLEEP    seconds render waits before drawing, so a test
+#                        can start a drawing while another runs
+
+if [ -n "$FAKE_NOTASI_LOG" ]; then
+    {
+        printf '%s' "$PWD"
+        for arg in "$@"; do printf '\t%s' "$arg"; done
+        printf '\n'
+    } >> "$FAKE_NOTASI_LOG"
+fi
+
+usage() {
+    echo "notasi: $1" >&2
+    echo "usage: notasi render PIECE.nts [--score NAME] [-o OUT]" >&2
+    exit 2
+}
+
+case "$1" in
+    --version)
+        echo "notasi ${FAKE_NOTASI_VERSION:-0.4.0-dev}"
+        exit 0 ;;
+    render) shift ;;
+    *) usage "expected render or --version" ;;
+esac
+
+file= score= out=
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -o|--output) [ $# -ge 2 ] || usage "$1 needs a value"; out=$2; shift 2 ;;
+        --score) [ $# -ge 2 ] || usage "$1 needs a value"; score=$2; shift 2 ;;
+        -*) usage "unknown option $1" ;;
+        *) [ -z "$file" ] || usage "more than one PIECE.nts"; file=$1; shift ;;
+    esac
+done
+[ -n "$file" ] || usage "no PIECE.nts"
+[ -n "$out" ] || usage "this fake needs -o OUT"
+
+if [ ! -r "$file" ]; then
+    echo "notasi: cannot read $file" >&2
+    exit 1
+fi
+
+[ -n "$FAKE_NOTASI_INPUT" ] && cat "$file" > "$FAKE_NOTASI_INPUT"
+[ -n "$FAKE_NOTASI_SLEEP" ] && sleep "$FAKE_NOTASI_SLEEP"
+
+if grep -q MISTAKE "$file"; then
+    echo "$file:3: a mistake" >&2
+    exit 1
+fi
+
+# The picture says how many lines it was drawn from, so a test can tell
+# one drawing from the next.
+lines=$(grep -c '' "$file")
+cat > "$out" <<EOF
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="50" viewBox="0 0 200 50">
+<desc>fake-notasi: ${score:-first score}, $lines lines</desc>
+<rect width="200" height="50" fill="white"/>
+<text x="10" y="30">${score:-first score}</text>
+</svg>
+EOF
+echo "$out"
+exit 0
