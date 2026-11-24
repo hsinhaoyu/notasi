@@ -29,6 +29,7 @@ book.typ + book.notasi.json ──typst compile──▶ PDF
 | Typst backend | `(notasi typst)`, `typst/notasi.typ` | [05-typst-backend.md](05-typst-backend.md) |
 | Scores in Typst documents | `scripts/notasi`, `typst/` package | [06-documents.md](06-documents.md) |
 | Environment, installation, testing (open questions) | — | [07-environment.md](07-environment.md) |
+| The Emacs package (planned) | `editors/emacs/` | [08-emacs.md](08-emacs.md) |
 
 ## Build order
 
@@ -59,7 +60,7 @@ See [its README](../iterations/02-gold-and-tenzer/README.md).
 3. **Implemented.** `feat/targets`: the acceptance test: Jaya Semara and Baris as
    examples
 
-### Iteration 3: refining the examples (building)
+### Iteration 3: refining the examples (done, tagged v0.3.0-dev)
 
 See [its README](../iterations/03-refining-the-examples/README.md).
 
@@ -69,6 +70,17 @@ See [its README](../iterations/03-refining-the-examples/README.md).
    [04-layout.md](04-layout.md#slices-iteration-3)
 3. **Implemented.** `feat/examples`: the acceptance test: Jaya Semara and Baris refined,
    and Baris's colour score
+
+### Iteration 4: writing music in Emacs (building)
+
+See [its README](../iterations/04-emacs-mode/README.md).
+
+1. `feat/emacs-package`: the package and the major mode, `make
+   check-emacs` and its CI job, `editors/` shipped to `main`
+2. `feat/emacs-preview`: the preview; three slices, see
+   [08-emacs.md](08-emacs.md#slices)
+3. `feat/emacs-docs`: the acceptance test: the README, the manual's
+   chapter, and the test on a fresh Emacs
 
 ### Deferred
 
@@ -106,6 +118,8 @@ Each decision's context and consequences are in its record in
 24. Expansion is its own module: [0035](../decisions/0035-expansion-is-its-own-module.md) (planned)
 25. The JSON contract is version 2: [0036](../decisions/0036-json-contract-version-2.md) (planned)
 26. Cycle lines are heavier than pulse lines: [0037](../decisions/0037-cycle-lines-are-heavier.md) (planned)
+27. The notasi command line is a contract for editors: [0048](../decisions/0048-the-command-line-is-a-contract-for-editors.md) (planned)
+28. An Emacs package ships with notasi and only runs the command: [0050](../decisions/0050-an-emacs-package-ships-with-notasi.md) (planned)
 
 Proposed, not yet agreed:
 

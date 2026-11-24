@@ -1,6 +1,6 @@
 # Iteration 4: writing music in Emacs
 
-Status: deciding
+Status: building
 
 ## Goal
 
@@ -77,17 +77,27 @@ In dependency order (ADR 0023). No change to 01–04 or 06:
    the score at point, mistakes, finding notasi, testing.
 4. The build order in `doc/design/README.md`.
 
-Promoted so far: `05-typst-backend.md` (ADR 0048), `07-environment.md` (ADR 0049).
+Promoted so far: `05-typst-backend.md` (ADR 0048), `07-environment.md` (ADR 0049), `08-emacs.md` (ADR 0050) and the build order. Promotion is complete.
 
 ## Milestones
 
-Proposed; settled at promotion.
+Each milestone, or each slice of one, is its own branch and PR into
+`dev`, started with `/start-milestone <branch>` (see
+[08-emacs.md](../../design/08-emacs.md)).
 
-1. **`feat/emacs-package`**: the package skeleton (headers, autoloads,
-   customisation group), the major mode with highlighting and
-   indentation, `make check-emacs`, and CI.
-2. **`feat/emacs-preview`**: drawing and the preview window, the score
-   at point, errors through Flymake. Probably in slices.
-3. **`feat/emacs-docs`**, the acceptance test: installation in the
-   README, the manual chapter, and the acceptance test run on a fresh
-   Emacs.
+1. **`feat/emacs-package`**: the package (`editors/emacs/`, headers,
+   autoloads, the `notasi` customisation group), the major mode with
+   highlighting and indentation, `make check-emacs` and its CI job,
+   `.gitignore`, and `editors/` shipped to `main` by `/release`.
+2. **`feat/emacs-preview`**, in three slices:
+   1. `feat/emacs-preview-draw`: finding notasi, `notasi --version`
+      and its check, drawing, the preview window and header line,
+      `C-c C-c`, `C-c C-p`, `C-c C-o`, cleaning up.
+   2. `feat/emacs-preview-live`: redrawing on a pause and on saving,
+      the settings, the score shown, `C-c C-s`.
+   3. `feat/emacs-preview-errors`: mistakes through Flymake, the red
+      header and the last good picture, mistakes in templates, other
+      problems.
+3. **`feat/emacs-docs`**, the acceptance test: the README's section,
+   the manual's chapter "Writing in Emacs", and the acceptance test
+   run on a fresh Emacs.
