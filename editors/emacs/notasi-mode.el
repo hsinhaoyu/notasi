@@ -84,11 +84,29 @@
 (defun notasi-mode--indent-function (indent-point state)
   "Indent like function `lisp-indent-function', notasi's forms like `defun'.
 INDENT-POINT and STATE are as for function `lisp-indent-function'.  The forms
-in `notasi-mode--body-forms' indent their body by 2.  Nothing is put
-on the symbols, so Emacs Lisp elsewhere is unaffected."
-  (if (member (notasi-mode--list-head (nth 1 state)) notasi-mode--body-forms)
-      (lisp-indent-defform state indent-point)
-    (lisp-indent-function indent-point state)))
+in `notasi-mode--body-forms' indent their body by 2, and a line of
+options (starting with `:') by 4.  Nothing is put on the symbols, so
+Emacs Lisp elsewhere is unaffected."
+  (cond
+   ((not (member (notasi-mode--list-head (nth 1 state)) notasi-mode--body-forms))
+    (lisp-indent-function indent-point state))
+   (t
+    (let ((column (save-excursion (goto-char (nth 1 state)) (current-column)))
+          (options-line
+           (save-excursion (goto-char indent-point)
+                           (skip-chars-forward " \t")
+                           (eq (char-after) ?:))))
+      ;; Options on a line of their own go to 4, so they stand apart
+      ;; from the body at 2.  A piece has only options, so they are its
+      ;; body.  The result is a list, so that Emacs works out each line
+      ;; again instead of reusing this one's column for the next.
+      (list (+ column
+               (if (and options-line
+                        (not (equal (notasi-mode--list-head (nth 1 state))
+                                    "piece")))
+                   (* 2 lisp-body-indent)
+                 lisp-body-indent))
+            (nth 1 state))))))
 
 ;;;; The music
 
@@ -194,6 +212,7 @@ indent their body by 2.
   :syntax-table notasi-mode-syntax-table
   (setq-local lisp-indent-function #'notasi-mode--indent-function)
   (setq-local comment-start ";")
+  (setq-local indent-tabs-mode nil)
   (setq-local font-lock-defaults '(notasi-mode--font-lock-keywords)))
 
 ;;;###autoload

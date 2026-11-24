@@ -58,7 +58,15 @@ nothing from `notasi/`, and notasi never needs it.
       (pattern pokok-ugal :instrument ugal
         _ i2 _ a1 _ e2 _ o2)
 
-  Everything else (`use`, `(@ …)`, chords) follows Lisp's usual rule. This applies in
+  A line of options in such a form (a line starting with `:key`) is
+  indented by 4, so the options stand apart from the body (except in
+  `piece`, whose options are all it has):
+
+      (pattern panyacah-fill :instrument panyacah :short "fill"
+          :long "Panyacah: 6 1 5 6 2 3 1 2"
+        a3 i3 u3 a3 o3 e3 i3 o3)
+
+  Everything else (`use`, `(@ …)`, chords) follows Lisp's usual rule. Indentation uses spaces, never tabs. This applies in
   `notasi-mode` buffers only; Emacs Lisp elsewhere is unaffected.
 - **Highlighting:**
   - the form names (`piece`, `use`, `scale`, `strokes`, `instrument`,

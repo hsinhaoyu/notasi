@@ -322,6 +322,17 @@ turns on `notasi-mode'."
                   #'notasi-mode "(instrument ugal selisir\no1 e1 u1 a1 i2)")
                  "(instrument ugal selisir\n  o1 e1 u1 a1 i2)")))
 
+(ert-deftest notasi-mode-test-indent-option-lines ()
+  "A line of options in a form's body is indented by 4, the body by 2."
+  (should (equal (notasi-mode-tests--indent
+                  #'notasi-mode
+                  "(pattern panyacah-fill :instrument panyacah :short \"fill\"\n:long \"Panyacah\"\na3 i3 u3)")
+                 "(pattern panyacah-fill :instrument panyacah :short \"fill\"\n    :long \"Panyacah\"\n  a3 i3 u3)"))
+  (should (equal (notasi-mode-tests--indent
+                  #'notasi-mode
+                  "(score full :fill none\n:caption \"A\" :breaks ((1 3))\n(group \"Ugal\"\n:short \"U.\"\nugal))")
+                 "(score full :fill none\n    :caption \"A\" :breaks ((1 3))\n  (group \"Ugal\"\n      :short \"U.\"\n    ugal))")))
+
 (ert-deftest notasi-mode-test-indent-other-forms-as-lisp ()
   "Other forms (`use', pattern calls, chords) follow Lisp's usual rule,
 as in `lisp-data-mode'."
