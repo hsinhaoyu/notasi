@@ -1,6 +1,9 @@
 # Iteration 3: refining the examples
 
-Status: building
+Status: done
+
+Accepted on 2026-11-24 and tagged `v0.3.0-dev` on `dev`. Not released:
+`/release` (v0.3.0 on `main`) was skipped, and can still be run.
 
 ## Goal
 
