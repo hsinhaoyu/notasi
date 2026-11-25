@@ -540,6 +540,12 @@ Return its name."
                     (file-name-nondirectory buffer-file-name)
                     (or line "notasi failed"))))
 
+(defun notasi-mode--score-option (score)
+  "Return the `--score' option that draws SCORE, as a list.
+It is empty for the first score in the file, which is drawn without it."
+  (and score (not (equal score (notasi-mode--first-score)))
+       (list "--score" score)))
+
 (defun notasi-mode--uses ()
   "Return the buffer's top-level (use X) forms, as a list of (X BEG . END)."
   (save-excursion
@@ -705,8 +711,7 @@ Return the drawing's process, or nil when nothing is drawn."
                  :buffer (generate-new-buffer " *notasi-output*")
                  :command (append
                            (list program "render" (file-name-nondirectory hidden))
-                           (and score (not (equal score (notasi-mode--first-score)))
-                                (list "--score" score))
+                           (notasi-mode--score-option score)
                            (list "-o" out))
                  :connection-type 'pipe
                  :noquery t
@@ -798,8 +803,9 @@ cursor is in again."
       (unless preview (notasi-preview-redraw))))))
 
 (defun notasi-write-score (file)
-  "Write the score to FILE, a .pdf, .png or .svg file.
-The score is drawn from the text as it is now, saved or not."
+  "Write the score the preview shows to FILE, a .pdf, .png or .svg file.
+That is the score chosen with \\[notasi-choose-score], or else the one the
+cursor is in.  It is drawn from the text as it is now, saved or not."
   (interactive
    (list (read-file-name "Write the score to (.pdf, .png, .svg): ")))
   (unless buffer-file-name
@@ -808,15 +814,20 @@ The score is drawn from the text as it is now, saved or not."
                      (user-error "Can't find notasi: see the manual's chapter on Emacs")))
         (file (expand-file-name file)))
     (notasi-mode--stop)
-    (let ((hidden (notasi-mode--write-hidden-file))
+    (let ((source (current-buffer))
+          (args (append (list "render"
+                              (file-name-nondirectory
+                               (notasi-mode--hidden-file)))
+                        (notasi-mode--score-option (notasi-mode--target))
+                        (list "-o" file)))
           (default-directory (file-name-directory buffer-file-name)))
+      (notasi-mode--write-hidden-file)
       (unwind-protect
           (with-temp-buffer
-            (if (eq 0 (call-process program nil t nil "render"
-                                    (file-name-nondirectory hidden) "-o" file))
+            (if (eq 0 (apply #'call-process program nil t nil args))
                 (message "Wrote %s" file)
               (let ((output (buffer-string)))
-                (with-current-buffer (get-file-buffer buffer-file-name)
+                (with-current-buffer source
                   (message "%s" (notasi-mode--message output))))))
         (notasi-mode--delete-hidden-file)))))
 

@@ -1713,6 +1713,70 @@ and ENV added to the environment."
     (notasi-mode-tests--with-piece
      function :text notasi-mode-tests--three :select t :env env)))
 
+;;;;; Writing the score shown to a file
+
+(defun notasi-mode-tests--write-run (ctx file)
+  "Write the score with `notasi-write-score' to FILE; return its render run.
+CTX is the plist of `notasi-mode-tests--with-piece'."
+  (let ((before (notasi-mode-tests--count (plist-get ctx :log))))
+    (notasi-write-score file)
+    (should (file-exists-p file))
+    (let ((runs (notasi-mode-tests--runs-after (plist-get ctx :log) before)))
+      (should (= (length runs) 1))
+      (car runs))))
+
+(ert-deftest notasi-mode-test-write-score-at-cursor ()
+  "`notasi-write-score' writes the score the cursor is in, not the first."
+  (let ((outdir (make-temp-file "notasi-mode-write" t)))
+    (unwind-protect
+        (notasi-mode-tests--with-live-piece
+         (lambda (ctx)
+           (notasi-mode-tests--move "(score kotekan")
+           (notasi-mode-tests--must-draw (plist-get ctx :log))
+           (let ((run (notasi-mode-tests--write-run
+                       ctx (expand-file-name "kotekan.pdf" outdir))))
+             (should (equal (notasi-mode-tests--score-of run) "kotekan")))))
+      (delete-directory outdir t))))
+
+(ert-deftest notasi-mode-test-write-score-chosen ()
+  "`notasi-write-score' writes the score chosen with `notasi-choose-score'."
+  (let ((outdir (make-temp-file "notasi-mode-write" t)))
+    (unwind-protect
+        (notasi-mode-tests--with-live-piece
+         (lambda (ctx)
+           (notasi-choose-score "third")
+           (notasi-mode-tests--wait)
+           (notasi-mode-tests--move "(score kotekan")
+           (let ((run (notasi-mode-tests--write-run
+                       ctx (expand-file-name "third.svg" outdir))))
+             (should (equal (notasi-mode-tests--score-of run) "third")))))
+      (delete-directory outdir t))))
+
+(ert-deftest notasi-mode-test-write-score-first-no-option ()
+  "`notasi-write-score' writes the first score without `--score'."
+  (let ((outdir (make-temp-file "notasi-mode-write" t)))
+    (unwind-protect
+        (notasi-mode-tests--with-live-piece
+         (lambda (ctx)
+           (let ((run (notasi-mode-tests--write-run
+                       ctx (expand-file-name "full.png" outdir))))
+             (should-not (member "--score" run)))))
+      (delete-directory outdir t))))
+
+(ert-deftest notasi-mode-test-write-score-mistake ()
+  "`notasi-write-score' shows notasi's message when the drawing fails."
+  (let ((outdir (make-temp-file "notasi-mode-write" t)))
+    (unwind-protect
+        (notasi-mode-tests--with-piece
+         (lambda (_ctx)
+           (let ((since (notasi-mode-tests--messages-end)))
+             (notasi-write-score (expand-file-name "out.pdf" outdir))
+             (should (= 1 (notasi-mode-tests--echoed
+                           since "gilak.nts:3: a mistake"))))
+           (should-not (file-exists-p (expand-file-name "out.pdf" outdir))))
+         :text (concat notasi-mode-tests--gilak ";; MISTAKE\n"))
+      (delete-directory outdir t))))
+
 ;;;;; Settings and keys
 
 (ert-deftest notasi-mode-test-live-settings ()

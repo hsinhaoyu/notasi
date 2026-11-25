@@ -4,7 +4,8 @@ Status: implemented (iteration 4): milestone 1, `feat/emacs-package`
 (the package, writing, `make check-emacs`); milestone 2,
 `feat/emacs-preview`, in its three slices (the preview, the score
 shown, how a drawing is made, mistakes, finding notasi); and milestone
-3, `feat/emacs-docs` (the documentation). ADRs 0048 (the command line it depends on),
+3, `feat/emacs-docs` (the documentation; the acceptance test's run by
+hand was deferred, see "Documentation"). ADRs 0048 (the command line it depends on),
 0049 (installing) and 0050 (the package).
 
 ## Responsibility
@@ -130,7 +131,7 @@ Commands, which nothing needs:
 | `C-c C-c` | redraw now |
 | `C-c C-p` | show or hide the preview |
 | `C-c C-s` | choose a score from a list, and stay on it; or "follow the cursor" |
-| `C-c C-o` | write the current score to a PDF, PNG or SVG file the user names |
+| `C-c C-o` | write the score shown (as in "The score shown") to a PDF, PNG or SVG file the user names |
 
 Settings (`M-x customize-group RET notasi`):
 
@@ -306,13 +307,13 @@ Decided when `feat/emacs-docs` started:
   section and links to the manual.
 - **The package's Commentary and the mode's docstring** describe the
   preview, its keys and settings, and point to the manual's chapter.
-- **The acceptance test on a fresh Emacs:** a script installs the
-  package with `package-vc-install` from GitHub's `dev` into a
-  throwaway Emacs init directory and checks that
-  `examples/jaya-semara.nts`, opened from that clone, is drawn; then
-  the user runs the acceptance test's steps 1–5 by hand, following
-  only the README and the manual. The iteration is accepted after
-  that run.
+- **The acceptance test on a fresh Emacs:** the package was installed
+  with `package-vc-install` from GitHub's `dev` into a throwaway Emacs
+  init directory, by hand (no script is kept), and
+  `examples/jaya-semara.nts`, opened from that clone, was drawn. The
+  run of the acceptance test's steps 1–5 by hand, following only the
+  README and the manual, was deferred when the iteration closed
+  (iteration 4's README, "Verification"); it is in the backlog.
 
 ## Not in this design
 
