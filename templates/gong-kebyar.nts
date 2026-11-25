@@ -33,6 +33,9 @@
 (colotomy gilak 8
   (part :instrument gong  -:3 GL:1 P - P G))
 
+(colotomy gilak-2 8
+  (part :instrument gong  -:3 G:1 P - P G))
+
 ;; Bapang, 16 pulses: kempur on 4 and 12, klentong on 8, gong on 16.
 (colotomy bapang 16
   (part :instrument gong  -:3 P:1 -:3 T:1 -:3 P:1 -:3 G:1))

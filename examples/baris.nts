@@ -10,7 +10,7 @@
 ;; The music is the same cycle as examples/tenzer1.nts: the ugal line is
 ;; identical, and the gongs are the gilak colotomy.
 
-(piece "Baris" :colotomy gilak :pickup 1)
+(piece "Baris" :colotomy gilak-2 :pickup 1)
 
 (use gong-kebyar)
 
@@ -43,10 +43,10 @@
 ;; Patterns: three quarter-beats against the four of the pulse. From
 ;; Tenzer's beat 5 the reyong repeats them across the pulse boundaries.
 
-(pattern nang-ni :instrument reyong :short "3" :long "nang - ni'"
-  a2:1/4 _ i3)
-(pattern ne-nong :instrument reyong :short "3" :long "ne' nong -"
-  e3:1/4 o3 _)
+(pattern nang-ni :instrument reyong :short "3" :long "na' - ni'"
+  a2:1/4 - i3)
+(pattern ne-nong :instrument reyong :short "3" :long "ne' no' -"
+  e3:1/4 o3 -)
 
 ;; ---------------------------------------------------------------
 ;; The music. Each part: the pickup (Tenzer's beat 1), ||, pulses 1-3
@@ -54,22 +54,28 @@
 ;; gong), ||. The kempli is implied; the gong part comes from gilak.
 
 ;; Reyong: four kettles, nang ning nong neng (a2 i3 o3 e3), in the
-;; reyong's range of Gold's figure 2.7 (e2 to u4).
+;; reyong's range of Gold's figure 2.7 (e2 to u4). Every stroke is a
+;; damped sixteenth, as in Tenzer's staff notation of the same cycle
+;; (polos C5/E5, sangsih F5/G5): the gaps are rests (-), not holds (_).
 (part :instrument reyong :name polos
-  a2:1/4 _ a2 i3 ||
-  _ a2 i3 _ | i3 a2 _ i3 | a2 _ a2 i3 |
-  _ (rep 5 @nang-ni) |
-  a2 _ a2 i3 ||)
+  a2:1/4 - a2 i3 ||
+  - a2 i3 - | i3 a2 - i3 | a2 - a2 i3 |
+  - (rep 5 @nang-ni) |
+  a2 - a2 i3 ||)
 
 (part :instrument reyong :name sangsih
-  e3:1/4 o3 e3 _ ||
-  o3 e3 _ o3 | _ e3 o3 _ | e3 o3 e3 _ |
+  e3:1/4 o3 e3 - ||
+  o3 e3 - o3 | - e3 o3 - | e3 o3 e3 - |
   o3 (rep 5 @ne-nong) |
-  e3 o3 e3 _ ||)
+  e3 o3 e3 - ||)
+
+(part :instrument pemade :name pemade-1 e3:1/2 e3 || o3 o3 i3 i3 e3 e3 o3 o3 e3 e3 o3 o3 i3 i3 e3 e3 ||)
+(part :instrument pemade :name pemade-2 a2:1/2 a2 || o3 o3 i3 i3 e3 e3 o3 o3 a2 a2 o3 o3 i3 i3 a2 a2 ||)
 
 ;; Ugal (main melody) and calung (core melody).
-(part :instrument ugal    a1 ||  o2 i2 e2 o2 | a1 o2 i2 a1 ||)
-(part :instrument calung  a2 ||  _ i2:2 o2 i2 a2:1 ||)
+(part :instrument ugal     a1 ||  o2 i2 e2 o2 | a1 o2 i2 a1 ||)
+(part :instrument calung   a2 ||  _ i2:2 o2 i2 a2:1 ||)
+(part :instrument jegogan  a1 ||  a1:3 o1:4 a1:1 ||)
 
 ;; Kendang, one part per hand.
 (part :instrument kendang-lanang :name lanang-lh
@@ -122,8 +128,32 @@
 ;; for pitch, a row for each key or stroke, the gong last, one system.
 (score colour
   (group "Reyong" :subtitle "polos, sangsih"  polos sangsih)
+  (group "Gangsa-1"  pemade-1)
+  (group "Gangsa-2"  pemade-2)  
   (group "Ugal"  ugal)
   (group "Calung"  calung)
+  (group "Jegogan"  jegogan)
   (group "Gong, kempli"  gong kempli)
   (group "Kendang lanang"  lanang-lh lanang-rh)
   (group "Kendang wadon"  wadon-lh wadon-rh))
+
+;; Collapsed: the colour score with each part on a single row, labelled
+;; at the left, every note's name written in its coloured cell. The
+;; reyong is not collapsed: one row per kettle, as in the colour score,
+;; colour only and no names, so the interlocking polos and sangsih can
+;; be read. Each drum's two
+;; hands share one row (they never strike together, as the composite
+;; drum score shows). The gongs and kempli keep one row per stroke, with
+;; their letters.
+(score collapsed :note-names yes :rows single
+    :caption "Source: Michael Tenzer, Balinese Gamelan Music, 3rd edition (Tuttle Publishing, 2011)."
+  (group "Reyong" :subtitle "polos, sangsih" :rows notes :note-names no
+    polos sangsih)
+  (group "Gangsa-1"         pemade-1)
+  (group "Gangsa-2"         pemade-2)
+  (group "Ugal"             ugal)
+  (group "Calung"           calung)
+  (group "Jegogan"          jegogan)
+  (group "Gong, kempli" :rows notes  gong kempli)
+  (group "Kendang lanang"   lanang-lh lanang-rh)
+  (group "Kendang wadon"    wadon-lh wadon-rh))

@@ -118,3 +118,17 @@
     :pattern-names short :pattern-level 1 :cycle-numbers no
   (group "Gangsa pemade" polos sangsih)
   (group "Jublag"        jublag))
+
+;; Collapsed: each part on a single row, labelled at the left, with every
+;; note's name written in its coloured cell. The pemade polos and sangsih
+;; are printed as two groups, so each gets its own label. The gongs and
+;; kempli keep one row per stroke (G, P, T, K), with their letters.
+(score collapsed :note-names yes :rows single
+    :caption "Source: Lisa Gold, Music in Bali: Experiencing Music, Expressing Culture (Oxford University Press, 2005)."
+  (group "Gangsa - Sangsih" sangsih)
+  (group "Gangsa - Polos"   polos)
+  (group "Panyacah"         panyacah)
+;;  (group "Ugal"             ugal)
+  (group "Jublag"           jublag)
+  (group "Jegogan"          jegogan)
+  (group "Gong, kempli" :rows notes  gong kempli))
