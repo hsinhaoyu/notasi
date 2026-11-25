@@ -103,7 +103,16 @@ Each milestone, or each slice of one, is its own branch and PR into
    3. `feat/emacs-preview-errors` (done): mistakes through Flymake, the red
       header and the last good picture, mistakes in templates, other
       problems.
-3. **`feat/emacs-docs`** (built; the acceptance test's run by hand is
-   still to do), the acceptance test: the README's section,
-   the manual's chapter "Writing in Emacs", and the acceptance test
-   run on a fresh Emacs.
+3. **`feat/emacs-docs`** (built; the acceptance test's run by hand was
+   deferred, see "Verification"), the acceptance test: the README's
+   section, the manual's chapter "Writing in Emacs", and the acceptance
+   test run on a fresh Emacs.
+
+## Verification
+
+- `make check` and `make check-emacs` pass, locally and in CI
+  (2026-11-25).
+- **The acceptance test has not been run by hand.** On 2026-11-25 the
+  user chose to close the iteration without it, to move on to
+  iteration 5. Steps 1 to 5 above are unchecked on a fresh Emacs; the
+  run is in the backlog ("Later, from iteration 4").
