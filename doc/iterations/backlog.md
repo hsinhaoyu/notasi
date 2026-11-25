@@ -76,6 +76,11 @@ Neither target needs them; the design leaves room for them.
 
 ## Later, from iteration 4
 
+- **Iteration 4's acceptance test, run by hand** on a fresh Emacs
+  (Emacs 30 or later, and Emacs 29), following only the README and the
+  manual: deferred when the iteration closed
+  ([iteration 4, "Verification"](04-emacs-mode/README.md#verification)).
+
 Changes to notasi itself that the Emacs package could use, not needed
 for iteration 4's goal:
 
