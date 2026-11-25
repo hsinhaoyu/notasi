@@ -1,0 +1,76 @@
+# Iteration 5: not named yet
+
+Status: deciding
+
+## Goal
+
+See Jaya Semara and Baris drawn in collapsed form, with annotation
+rows, and the gallery working: their drawings made and kept in
+`examples/gallery/images/`.
+
+## Acceptance test
+
+Proposed (2026-11-25), to be confirmed:
+
+1. `examples/gallery/jaya-semara.nts` and `examples/gallery/baris.nts`
+   each have a score in collapsed form (`:rows parts` or `compact`),
+   with the gong and kempli on two rows, and at least one group with an
+   annotation row naming its patterns.
+2. `make images` draws every score of both into
+   `examples/gallery/images/` as PNG, named `NAME_SCORE.png`, and
+   they are committed.
+3. CI fails when an image is out of date with its `.nts`.
+4. The README shows a gallery picture.
+
+## Agreed across the design ideas (2026-11-25)
+
+- **One JSON contract version for the iteration.** Part markers, the
+  annotation row and removing `:pattern-names` all change the figure
+  JSON. They share **contract version 4**: the first milestone that
+  changes the JSON opens it and writes its ADR; later milestones add to
+  it (as ADR 0047 did for version 3). It is fixed when the iteration is
+  released. Its group rows are `rows`/`row`, not `lanes`/`lane`
+  ([glossary](design_ideas/2026-11-25-glossary.md)).
+- **Removed options get no migration.** `:pattern-names` and
+  `:pattern-level` become unknown keys (`bad-option`), like any other.
+- **The examples move is promoted first**, so the other ideas cite the
+  new paths under `examples/`.
+
+## Design ideas
+
+Thinking, not the design (ADRs 0023, 0024), in
+[`design_ideas/`](design_ideas/):
+
+- [Bapang in two lengths, and what a colotomy is](design_ideas/2026-11-24-bapang-and-colotomy.md):
+  the template gets an 8-pulse and a 16-pulse bapang; the
+  documentation describes colotomies and their examples correctly.
+- [Saving the piece from the command line](design_ideas/2026-11-24-saving-the-piece.md):
+  an option to save the internal representation as an s-expression or
+  as JSON.
+- [Information about a piece](design_ideas/2026-11-24-piece-information.md):
+  optional composer, transcriber, source, contributor, performer,
+  notes, and their years.
+- [Collapsed rows](design_ideas/2026-11-25-collapsed-rows.md):
+  `:rows notes/parts/compact`: `parts` one row per part, `compact`
+  (replacing `single`) the parts merged into one line, with a row
+  added where keys sound together.
+- [Telling parts apart in one group](design_ideas/2026-11-25-parts-in-one-group.md):
+  polos and sangsih in one group are drawn alike; when asked
+  (`:part-marker`), a part gets a small symbol (dot, ring, cross)
+  and a coloured border.
+- [An annotation row](design_ideas/2026-11-25-annotation-row.md):
+  a text-only row above or below a group, showing one part's pattern
+  names, or annotations written on its patterns. It replaces
+  `:pattern-names`, which is removed.
+- [Drawing every score of a file](design_ideas/2026-11-25-render-all-scores.md):
+  `notasi render --all` draws all the scores in a `.nts`, each to its
+  own `NAME_SCORE` file or, with `--one-file`, one PDF with a page per
+  score; `--format` and `--list` too.
+- [The collection of examples](design_ideas/2026-11-25-examples-collection.md):
+  `examples/` holds `gallery/` and `manual/` (drawings committed),
+  `demos/` (tested) and `contrib/` (not tested).
+- [What a note shows](design_ideas/2026-11-25-note-label.md):
+  `:note-label none/pitch-name/pitch-display-name/key-number` replaces
+  `:note-names`.
+- [One glossary, used everywhere](design_ideas/2026-11-25-glossary.md):
+  one list of terms, the words not to use, and their names in code.
