@@ -80,7 +80,8 @@ See [its README](../iterations/04-emacs-mode/README.md).
 2. **Implemented.** `feat/emacs-preview`: the preview; three slices, see
    [08-emacs.md](08-emacs.md#slices)
 3. **Implemented.** `feat/emacs-docs`: the acceptance test: the README, the manual's
-   chapter, and the test on a fresh Emacs
+   chapter, and the install on a fresh Emacs (the acceptance test's run by
+   hand is deferred, see the backlog)
 
 ### Deferred
 

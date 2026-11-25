@@ -30,6 +30,7 @@ width. Make the window wider for a larger picture.
 
 `C-c C-o` asks for a file name and writes the score there: a PDF, PNG
 or SVG file, chosen by the name's ending (`pokok.pdf`, `pokok.png`).
+When the file has several scores, it writes the one the preview shows.
 
 ## The examples
 

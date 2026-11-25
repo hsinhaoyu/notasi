@@ -8,7 +8,7 @@ are there when you want them.
 | `C-c C-c` | draw the score again now |
 | `C-c C-p` | show or hide the preview window |
 | `C-c C-s` | stay on one score, or follow the cursor again (see [several scores](emacs-several-scores.md)) |
-| `C-c C-o` | write the score to a PDF, PNG or SVG file |
+| `C-c C-o` | write the score the preview shows to a PDF, PNG or SVG file |
 
 `C-h m` in a `.nts` file lists them too.
 
