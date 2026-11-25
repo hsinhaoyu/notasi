@@ -71,7 +71,7 @@ See [its README](../iterations/03-refining-the-examples/README.md).
 3. **Implemented.** `feat/examples`: the acceptance test: Jaya Semara and Baris refined,
    and Baris's colour score
 
-### Iteration 4: writing music in Emacs (building)
+### Iteration 4: writing music in Emacs (done, tagged v0.4.0-dev)
 
 See [its README](../iterations/04-emacs-mode/README.md).
 

@@ -1,6 +1,10 @@
 # Iteration 4: writing music in Emacs
 
-Status: building
+Status: done
+
+Closed on 2026-11-25 and tagged `v0.4.0-dev` on `dev`, without the
+acceptance test's run by hand (see "Verification"). Not released:
+`/release` (v0.4.0 on `main`) was skipped, and can still be run.
 
 ## Goal
 
