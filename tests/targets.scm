@@ -45,6 +45,9 @@
 ;;;   groups, "Kendang lanang" and "Kendang wadon", holding the parts on
 ;;;   the instruments kendang-lanang and kendang-wadon.  Its figure has one
 ;;;   system, and the gong group's lanes include "G" and "GL".
+;;;   Since 2026-11-26 Baris uses the template's `gilak-2', which strikes
+;;;   G where `gilak' strikes GL, so the lanes include "G" and not "GL".
+;;; - Jaya Semara and Baris each have a score `collapsed' (2026-11-26).
 ;;; Choices made where the docs are not explicit:
 ;;; - The gong group of a score is the group with a part on the instrument
 ;;;   `gong'; the gong group in the figure is the one at the same index.
@@ -132,8 +135,9 @@
 
 ;;; The targets: example name and its scores, as the targets name them.
 (define targets
-  '(("jaya-semara" (full kotekan))
-    ("baris" (full polos-alone sangsih-alone kendang-composite colour))))
+  '(("jaya-semara" (full kotekan collapsed))
+    ("baris" (full polos-alone sangsih-alone kendang-composite colour
+              collapsed))))
 
 ;;; Baris's scores in Tenzer's style (iteration 2's).
 (define tenzer-scores '(full polos-alone sangsih-alone kendang-composite))
@@ -321,8 +325,8 @@
                              (vector->list (ref (vector-ref groups i) 'lanes)))))
             (test-assert "the gong group's lanes include \"G\""
               (and lanes (member "G" lanes)))
-            (test-assert "the gong group's lanes include \"GL\""
-              (and lanes (member "GL" lanes)))))))))
+            (test-assert "the gong group's lanes don't include \"GL\" (gilak-2)"
+              (and lanes (not (member "GL" lanes))))))))))
 
 (remove-tree tmp-dir)
 

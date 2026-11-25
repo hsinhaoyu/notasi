@@ -44,7 +44,7 @@
               "events": [
                 {
                   "start": 0,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 3,
                   "text": null,
                   "fill": "#fed9a6",
@@ -62,7 +62,7 @@
                 },
                 {
                   "start": 3,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 2,
                   "text": null,
                   "fill": "#fbb4ae",
@@ -80,7 +80,7 @@
                 },
                 {
                   "start": 6,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 2,
                   "text": null,
                   "fill": "#fbb4ae",
@@ -98,7 +98,7 @@
                 },
                 {
                   "start": 9,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 3,
                   "text": null,
                   "fill": "#fed9a6",
@@ -116,7 +116,7 @@
                 },
                 {
                   "start": 12,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 3,
                   "text": null,
                   "fill": "#fed9a6",
@@ -134,7 +134,7 @@
                 },
                 {
                   "start": 15,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 2,
                   "text": null,
                   "fill": "#fbb4ae",
@@ -143,7 +143,7 @@
                 },
                 {
                   "start": 17,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 3,
                   "text": null,
                   "fill": "#fed9a6",
@@ -161,7 +161,7 @@
                 },
                 {
                   "start": 20,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 3,
                   "text": null,
                   "fill": "#fed9a6",
@@ -179,7 +179,7 @@
                 },
                 {
                   "start": 23,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 3,
                   "text": null,
                   "fill": "#fed9a6",
@@ -197,7 +197,7 @@
                 },
                 {
                   "start": 26,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 3,
                   "text": null,
                   "fill": "#fed9a6",
@@ -215,7 +215,7 @@
                 },
                 {
                   "start": 29,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 3,
                   "text": null,
                   "fill": "#fed9a6",
@@ -233,7 +233,7 @@
                 },
                 {
                   "start": 32,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 3,
                   "text": null,
                   "fill": "#fed9a6",
@@ -283,7 +283,7 @@
                 },
                 {
                   "start": 2,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 0,
                   "text": null,
                   "fill": "#ccebc5",
@@ -301,7 +301,7 @@
                 },
                 {
                   "start": 5,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 0,
                   "text": null,
                   "fill": "#ccebc5",
@@ -310,7 +310,7 @@
                 },
                 {
                   "start": 7,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 1,
                   "text": null,
                   "fill": "#b3cde3",
@@ -328,7 +328,7 @@
                 },
                 {
                   "start": 10,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 1,
                   "text": null,
                   "fill": "#b3cde3",
@@ -355,7 +355,7 @@
                 },
                 {
                   "start": 14,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 0,
                   "text": null,
                   "fill": "#ccebc5",
@@ -382,7 +382,7 @@
                 },
                 {
                   "start": 18,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 1,
                   "text": null,
                   "fill": "#b3cde3",
@@ -400,7 +400,7 @@
                 },
                 {
                   "start": 21,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 1,
                   "text": null,
                   "fill": "#b3cde3",
@@ -418,7 +418,7 @@
                 },
                 {
                   "start": 24,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 1,
                   "text": null,
                   "fill": "#b3cde3",
@@ -436,7 +436,7 @@
                 },
                 {
                   "start": 27,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 1,
                   "text": null,
                   "fill": "#b3cde3",
@@ -454,7 +454,7 @@
                 },
                 {
                   "start": 30,
-                  "dur": 2,
+                  "dur": 1,
                   "lane": 1,
                   "text": null,
                   "fill": "#b3cde3",
@@ -481,10 +481,366 @@
                 },
                 {
                   "start": 34,
+                  "dur": 1,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                }
+              ]
+            }
+          ],
+          "overlays": [],
+          "pulse_lines": true,
+          "row_lines": true
+        },
+        {
+          "label": "Gangsa-1",
+          "subtitle": null,
+          "lanes": ["neng3", "nong3", "ning3"],
+          "key_numbers": null,
+          "voices": [
+            {
+              "name": "pemade-1",
+              "events": [
+                {
+                  "start": 0,
                   "dur": 2,
                   "lane": 0,
                   "text": null,
                   "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 2,
+                  "dur": 2,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 4,
+                  "dur": 2,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 6,
+                  "dur": 2,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 8,
+                  "dur": 2,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#fbb4ae",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 10,
+                  "dur": 2,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#fbb4ae",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 12,
+                  "dur": 2,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 14,
+                  "dur": 2,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 16,
+                  "dur": 2,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 18,
+                  "dur": 2,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 20,
+                  "dur": 2,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 22,
+                  "dur": 2,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 24,
+                  "dur": 2,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 26,
+                  "dur": 2,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 28,
+                  "dur": 2,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#fbb4ae",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 30,
+                  "dur": 2,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#fbb4ae",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 32,
+                  "dur": 2,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 34,
+                  "dur": 2,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                }
+              ]
+            }
+          ],
+          "overlays": [],
+          "pulse_lines": true,
+          "row_lines": true
+        },
+        {
+          "label": "Gangsa-2",
+          "subtitle": null,
+          "lanes": ["neng3", "nong3", "ning3", "nang2"],
+          "key_numbers": null,
+          "voices": [
+            {
+              "name": "pemade-2",
+              "events": [
+                {
+                  "start": 0,
+                  "dur": 2,
+                  "lane": 3,
+                  "text": null,
+                  "fill": "#fed9a6",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 2,
+                  "dur": 2,
+                  "lane": 3,
+                  "text": null,
+                  "fill": "#fed9a6",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 4,
+                  "dur": 2,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 6,
+                  "dur": 2,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 8,
+                  "dur": 2,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#fbb4ae",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 10,
+                  "dur": 2,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#fbb4ae",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 12,
+                  "dur": 2,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 14,
+                  "dur": 2,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#ccebc5",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 16,
+                  "dur": 2,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 18,
+                  "dur": 2,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 20,
+                  "dur": 2,
+                  "lane": 3,
+                  "text": null,
+                  "fill": "#fed9a6",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 22,
+                  "dur": 2,
+                  "lane": 3,
+                  "text": null,
+                  "fill": "#fed9a6",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 24,
+                  "dur": 2,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 26,
+                  "dur": 2,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 28,
+                  "dur": 2,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#fbb4ae",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 30,
+                  "dur": 2,
+                  "lane": 2,
+                  "text": null,
+                  "fill": "#fbb4ae",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 32,
+                  "dur": 2,
+                  "lane": 3,
+                  "text": null,
+                  "fill": "#fed9a6",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 34,
+                  "dur": 2,
+                  "lane": 3,
+                  "text": null,
+                  "fill": "#fed9a6",
                   "text_color": "#222222",
                   "continued": false
                 }
@@ -654,9 +1010,61 @@
           "row_lines": true
         },
         {
+          "label": "Jegogan",
+          "subtitle": null,
+          "lanes": ["nang1", "nong1"],
+          "key_numbers": null,
+          "voices": [
+            {
+              "name": "jegogan",
+              "events": [
+                {
+                  "start": 0,
+                  "dur": 4,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#fed9a6",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 4,
+                  "dur": 12,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#fed9a6",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 16,
+                  "dur": 16,
+                  "lane": 1,
+                  "text": null,
+                  "fill": "#b3cde3",
+                  "text_color": "#222222",
+                  "continued": false
+                },
+                {
+                  "start": 32,
+                  "dur": 4,
+                  "lane": 0,
+                  "text": null,
+                  "fill": "#fed9a6",
+                  "text_color": "#222222",
+                  "continued": false
+                }
+              ]
+            }
+          ],
+          "overlays": [],
+          "pulse_lines": true,
+          "row_lines": true
+        },
+        {
           "label": "Gong, kempli",
           "subtitle": null,
-          "lanes": ["G", "GL", "P", "K"],
+          "lanes": ["G", "P", "K"],
           "key_numbers": null,
           "voices": [
             {
@@ -674,7 +1082,7 @@
                 {
                   "start": 16,
                   "dur": 1,
-                  "lane": 1,
+                  "lane": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -683,7 +1091,7 @@
                 {
                   "start": 20,
                   "dur": 1,
-                  "lane": 2,
+                  "lane": 1,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -692,7 +1100,7 @@
                 {
                   "start": 28,
                   "dur": 1,
-                  "lane": 2,
+                  "lane": 1,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -715,7 +1123,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 3,
+                  "lane": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -724,7 +1132,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 3,
+                  "lane": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -733,7 +1141,7 @@
                 {
                   "start": 8,
                   "dur": 1,
-                  "lane": 3,
+                  "lane": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -742,7 +1150,7 @@
                 {
                   "start": 12,
                   "dur": 1,
-                  "lane": 3,
+                  "lane": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -751,7 +1159,7 @@
                 {
                   "start": 16,
                   "dur": 1,
-                  "lane": 3,
+                  "lane": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -760,7 +1168,7 @@
                 {
                   "start": 20,
                   "dur": 1,
-                  "lane": 3,
+                  "lane": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -769,7 +1177,7 @@
                 {
                   "start": 24,
                   "dur": 1,
-                  "lane": 3,
+                  "lane": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -778,7 +1186,7 @@
                 {
                   "start": 28,
                   "dur": 1,
-                  "lane": 3,
+                  "lane": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -787,7 +1195,7 @@
                 {
                   "start": 32,
                   "dur": 1,
-                  "lane": 3,
+                  "lane": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",

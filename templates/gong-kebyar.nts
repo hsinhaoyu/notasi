@@ -33,6 +33,7 @@
 (colotomy gilak 8
   (part :instrument gong  -:3 GL:1 P - P G))
 
+;; Gilak with one gong, 8 pulses: gong on 4 and 8, kempur on 5 and 7.
 (colotomy gilak-2 8
   (part :instrument gong  -:3 G:1 P - P G))
 
