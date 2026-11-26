@@ -906,6 +906,196 @@ it raises."
   (test-assert "render-piece leaves nothing in TMPDIR"
     (render-tmp-empty?)))
 
+;;; ==================================================================
+;;; Milestone feat/render-all (iteration 5; 05, "The entry file and
+;;; running Typst", ADR 0061): #:ppi, render-score, render-one-file.
+;;; Choices where the spec leaves room:
+;;; - "#:ppi with a .pdf or .svg is an &error": an error that is only
+;;;   Guile rejecting an unknown keyword (or an unbound procedure, or
+;;;   the wrong number of arguments) doesn't count, so these tests fail
+;;;   until #:ppi is really handled.  No file is written.
+;;; - A PNG's resolution is checked on the one-inch page (exactly N
+;;;   pixels at N ppi) and, for render-piece and render-score, by
+;;;   width: at 72 ppi about half (within 2 pixels) of the default 144.
+;;; - render-one-file: the PDF's pages are counted as its `/Type/Page'
+;;;   objects (Typst 0.15.1 writes them uncompressed).  "One figure file
+;;;   per score" is checked with #:keep-in as the number of .json files
+;;;   kept.  The order of the pages isn't checked.
+
+(use-modules (ice-9 iconv)
+             (ice-9 regex))
+
+(define (new-error? e)
+  "#t if E is an &error raised on purpose: not an unbound variable, an
+unknown keyword or the wrong number of arguments."
+  (and (the-error? e)
+       (not (memq (exception-kind e)
+                  '(keyword-argument-error wrong-number-of-args
+                    unbound-variable)))
+       #t))
+
+(define (pdf-page-count path)
+  "The number of pages in the PDF file PATH, from its /Type/Page objects."
+  (let ((text (bytevector->string (read-bytes path) "ISO-8859-1")))
+    (length (list-matches "/Type[ \n\r]*/Page([^s]|$)" text))))
+
+(define (png-width path)
+  (and (png-file? path) (car (png-size path))))
+
+(define (about-half? small big)
+  "#t if SMALL is about half of BIG (within 2 pixels of it doubled)."
+  (and small big (<= (abs (- (* 2 small) big)) 2)))
+
+(test-group "compile-typst #:ppi"
+  (for-each
+   (lambda (ppi)
+     (let ((out (compile-path (string-append "inch-" (number->string ppi) ".png"))))
+       (test-equal (string-append "#:ppi " (number->string ppi)
+                                  ": a one-inch page is that many pixels")
+         (list ppi ppi)
+         (guard (e (#t #f))
+           (compile-typst (compile-path "inch.typ") out #:ppi ppi)
+           (png-size out)))))
+   '(72 300))
+  (let ((out (compile-path "inch-ret.png")))
+    (test-equal "#:ppi: returns OUT-PATH"
+      out
+      (guard (e (#t #f))
+        (compile-typst (compile-path "inch.typ") out #:ppi 72))))
+  (for-each
+   (lambda (name)
+     (let ((out (compile-path name)))
+       (test-assert (string-append "#:ppi for " name ": raises an &error")
+         (new-error? (exception-from
+                      (lambda ()
+                        (compile-typst (compile-path "entry.typ") out #:ppi 72)))))
+       (test-assert (string-append "#:ppi for " name ": writes no file")
+         (not (file-exists? out)))))
+   '("ppi.pdf" "ppi.svg")))
+
+(test-group "render-piece #:ppi"
+  (let ((at-72 (render-path "tenzer1-72.png"))
+        (at-144 (render-path "tenzer1-144.png"))
+        (plain (render-path "tenzer1-default.png")))
+    (test-equal "#:ppi 72: returns OUT-PATH"
+      at-72
+      (guard (e (#t #f))
+        (with-render-tmp (lambda () (render-piece example-path at-72 #:ppi 72)))))
+    (guard (e (#t #f))
+      (with-render-tmp (lambda () (render-piece example-path at-144 #:ppi 144))))
+    (guard (e (#t #f))
+      (with-render-tmp (lambda () (render-piece example-path plain))))
+    (test-assert "#:ppi 72: a PNG about half as wide as at 144"
+      (about-half? (png-width at-72) (png-width at-144)))
+    (test-assert "the default is 144 ppi"
+      (let ((w (png-width plain)))
+        (and w (eqv? w (png-width at-144)))))
+    (test-assert "#:ppi: leaves nothing in TMPDIR"
+      (render-tmp-empty?)))
+  (for-each
+   (lambda (name)
+     (let ((out (render-path name)))
+       (test-assert (string-append "#:ppi for " name ": raises an &error")
+         (new-error? (with-render-tmp
+                      (lambda ()
+                        (exception-from
+                         (lambda () (render-piece example-path out #:ppi 72)))))))
+       (test-assert (string-append "#:ppi for " name ": writes no file")
+         (not (file-exists? out)))
+       (test-assert (string-append "#:ppi for " name ": leaves nothing in TMPDIR")
+         (render-tmp-empty?))))
+   '("tenzer1-ppi.pdf" "tenzer1-ppi.svg")))
+
+;;; gilak has scores full and second-cycle.
+(define gilak-piece (guard (e (#t #f)) (read-piece-file gilak-path)))
+
+(test-group "render-score"
+  (test-assert "(gilak reads, with scores full and second-cycle)"
+    (and gilak-piece
+         (equal? '(full second-cycle)
+                 (map score-name (piece-scores gilak-piece)))))
+  (let ((out (render-path "score-second.pdf"))
+        (keep (make-subdir "keep-render-score")))
+    (test-equal "returns OUT-PATH"
+      out
+      (guard (e (#t #f))
+        (with-render-tmp
+         (lambda ()
+           (render-score gilak-piece (piece-score gilak-piece 'second-cycle) out
+                         #:keep-in keep)))))
+    (test-assert "writes a PDF" (pdf-file? out))
+    (test-assert "keep-in: piece.json is that score's figure"
+      (let ((want (score-figure-text gilak-path 'second-cycle))
+            (json (string-append keep "/piece.json")))
+        (and want (file-exists? json) (equal? want (read-text json)))))
+    (test-assert "leaves nothing in TMPDIR" (render-tmp-empty?)))
+  (let ((out (render-path "score-full.svg")))
+    (test-assert "the first score, to .svg: writes an SVG"
+      (begin
+        (guard (e (#t #f))
+          (with-render-tmp
+           (lambda ()
+             (render-score gilak-piece (car (piece-scores gilak-piece)) out))))
+        (svg-file? out))))
+  (let ((at-72 (render-path "score-72.png"))
+        (at-144 (render-path "score-144.png"))
+        (score (and gilak-piece (piece-score gilak-piece 'full))))
+    (guard (e (#t #f))
+      (with-render-tmp
+       (lambda () (render-score gilak-piece score at-72 #:ppi 72))))
+    (guard (e (#t #f))
+      (with-render-tmp
+       (lambda () (render-score gilak-piece score at-144))))
+    (test-assert "#:ppi 72: a PNG about half as wide as the default"
+      (about-half? (png-width at-72) (png-width at-144)))
+    (test-assert "#:ppi: leaves nothing in TMPDIR" (render-tmp-empty?))))
+
+(test-group "render-one-file"
+  (let ((out (render-path "gilak-all.pdf"))
+        (keep (make-subdir "keep-one-file")))
+    (test-equal "two scores: returns OUT-PATH"
+      out
+      (guard (e (#t #f))
+        (with-render-tmp
+         (lambda ()
+           (render-one-file gilak-piece (piece-scores gilak-piece) out
+                            #:keep-in keep)))))
+    (test-assert "two scores: writes a PDF" (pdf-file? out))
+    (test-equal "two scores: two pages"
+      2
+      (and (pdf-file? out) (pdf-page-count out)))
+    (test-equal "keep-in: one figure file per score"
+      2
+      (length (filter (lambda (f) (string-suffix? ".json" f))
+                      (folder-entries keep))))
+    (test-assert "leaves nothing in TMPDIR" (render-tmp-empty?)))
+  (let ((out (render-path "gilak-one.pdf")))
+    (test-equal "one score: one page"
+      1
+      (begin
+        (guard (e (#t #f))
+          (with-render-tmp
+           (lambda ()
+             (render-one-file gilak-piece
+                              (list (piece-score gilak-piece 'second-cycle))
+                              out))))
+        (and (pdf-file? out) (pdf-page-count out)))))
+  ;; Three scores, to check the count isn't fixed at two.
+  (let ((nts (tmp-path "three.nts"))
+        (out (render-path "three.pdf")))
+    (write-text nts (string-append
+                     (read-text example-path)
+                     "\n(score zeta (group \"Ugal\" ugal))\n"
+                     "(score alpha :palette set3 (group \"Ugal\" ugal))\n"
+                     "(score mid :title \"Middle\" (group \"Ugal\" ugal))\n"))
+    (test-equal "three scores: three pages"
+      3
+      (guard (e (#t #f))
+        (let ((piece (read-piece-file nts)))
+          (with-render-tmp
+           (lambda () (render-one-file piece (piece-scores piece) out)))
+          (pdf-page-count out))))))
+
 (cleanup)
 
 (define runner (test-runner-current))

@@ -489,7 +489,8 @@ folder), exactly:
 writing OUT-PATH, and returns OUT-PATH. The format comes from
 OUT-PATH's extension: `.pdf`, `.png` (at 144 ppi) or `.svg`; any other
 raises an `&error`. **Planned** (ADR 0061): `#:ppi N` sets a PNG's
-resolution (default 144), passed to Typst as `--ppi`. It runs with `--root` set to TYP-PATH's folder, so
+resolution (default 144), passed to Typst as `--ppi`; `#:ppi` given
+for a `.pdf` or `.svg` is an `&error`, as on the command line. It runs with `--root` set to TYP-PATH's folder, so
 everything the entry file reads must be in that folder. Errors are
 plain `&error`s with a readable message:
 
@@ -527,7 +528,7 @@ finds the repo's; if it can't be found, that is an `&error`.
   score of a piece already read, as `render-piece` does after reading;
   `render-piece` becomes reading and then `render-score`, and takes
   `#:ppi` too.
-- `(render-scores-to-one-file piece scores out-path #:key keep-in)`
+- `(render-one-file piece scores out-path #:key keep-in)`
   writes one PDF with each of SCORES on its own page, in order, each
   page sized to its score, with its title, subtitle and caption as a
   standalone figure has them. The entry file reads one figure file per
@@ -600,7 +601,9 @@ notasi render PIECE.nts --list [--save-piece FILE]
   included (`jaya-semara_full.pdf`, `jaya-semara_kotekan.pdf`); a file
   with no `score` form draws its default score to `NAME.EXT`. Without
   `-o` the files go beside the piece. `-o DIR`, an existing folder or a
-  path ending in `/`, puts them in DIR, named the same. The piece is
+  path ending in `/`, puts them in DIR, named the same; a DIR that
+  doesn't exist is made, with any missing folders above it. A path is
+  printed as DIR, one `/`, and the name. The piece is
   read once: a notation mistake stops everything. A score Typst fails
   on prints `notasi: ` and the message, the others are still drawn,
   and the status is 1 if any failed.

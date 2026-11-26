@@ -443,6 +443,388 @@ each string in ALSO."
     (test-assert "run from another folder: writes the PDF"
       (pdf-file? (tmp-path "script.pdf")))))
 
+;;; ==================================================================
+;;; Milestone feat/render-all (iteration 5; 05, "The `notasi' command",
+;;; Planned (ADR 0061)): --all, --format, --ppi, --one-file, --list.
+;;; --save-piece is a later milestone and isn't tested here.
+;;;
+;;; Choices where the spec leaves room:
+;;; - The fixture three.nts is tenzer1 with three scores, written in the
+;;;   order zeta, alpha, mid (not alphabetical, so "in score order" and
+;;;   "in the order written" can't pass by sorting).  A copy of tenzer1
+;;;   is the file with no score form.  Each group works in its own
+;;;   folder, so "nothing written" is checked as the folder's names
+;;;   being unchanged.
+;;; - Paths are given absolute, so a printed path is the folder (or -o
+;;;   DIR) as given, one "/" and the file's name.
+;;; - --all: stdout is exactly one line per file, in score order.
+;;; - --ppi: checked by a PNG's width: at 72 about half (within 2
+;;;   pixels) of the width at 144, and no --ppi gives the width at 144.
+;;; - --one-file: pages are counted as the PDF's /Type/Page objects;
+;;;   no NAME_SCORE.pdf is written beside it.  Page order isn't checked.
+;;; - A score Typst fails on: with --all -o DIR, a folder already
+;;;   standing where one score's file goes (DIR/three_alpha.pdf/), so
+;;;   Typst can't write that file.  The others are still drawn, the
+;;;   status is 1, stderr starts "notasi: ", and no line of stdout names
+;;;   the file that failed.
+;;; - --list needs no Typst: tested with typst taken off the PATH.
+;;; - A notation mistake with --list is reported as when drawing: the
+;;;   reader's message and a newline on stderr, status 1.
+;;; - "--all with -o naming a file": -o an existing regular file, a
+;;;   path ending .pdf, and a missing path without a trailing "/".
+;;; - "--format disagreeing with -o's extension" covers -o out.png
+;;;   --format svg; --format png with -o out.png agrees (status 0).
+;;; - Usage errors use usage-error-checks (status 2, nothing on
+;;;   stdout, "notasi: " and the usage line), and also check that
+;;;   nothing is written in the folder.
+
+(use-modules (ice-9 iconv)
+             (ice-9 regex))
+
+(define three-scores
+  (string-append
+   "\n(score zeta (group \"Ugal\" ugal))\n"
+   "(score alpha :palette set3 (group \"Ugal\" ugal))\n"
+   "(score mid :title \"Middle\" (group \"Ugal\" ugal))\n"))
+
+(define score-order '("zeta" "alpha" "mid"))
+
+(define (entries dir)
+  "The names in DIR, sorted, without . and .."
+  (scandir dir (lambda (f) (not (member f '("." ".."))))))
+
+(define (make-piece-dir name kind)
+  "Make the folder NAME in tmp-dir holding one piece, and return the
+piece's path: three.nts (three scores) when KIND is 'three, else
+tenzer1.nts (no score form)."
+  (let ((dir (tmp-path name)))
+    (mkdir dir)
+    (let ((nts (string-append dir (if (eq? kind 'three) "/three.nts" "/tenzer1.nts"))))
+      (write-text nts (string-append
+                       (call-with-input-file example-path get-string-all
+                         #:encoding "UTF-8")
+                       (if (eq? kind 'three) three-scores "")))
+      nts)))
+
+(define (lines . paths)
+  "PATHS, each followed by a newline, as one string."
+  (string-concatenate (map (lambda (p) (string-append p "\n")) paths)))
+
+(define (score-files dir piece-name ext)
+  "DIR/PIECE-NAME_SCORE.EXT for each score of three.nts, in order."
+  (map (lambda (s) (string-append dir "/" piece-name "_" s "." ext))
+       score-order))
+
+(define (pdf-page-count path)
+  "The number of pages in the PDF file PATH, from its /Type/Page objects."
+  (length (list-matches "/Type[ \n\r]*/Page([^s]|$)"
+                        (bytevector->string (read-bytes path) "ISO-8859-1"))))
+
+(define (png-width path)
+  (and (png-file? path)
+       (bytevector-u32-ref (read-bytes path) 16 (endianness big))))
+
+(define (success-checks name r out-lines)
+  "Status 0, stdout exactly OUT-LINES, nothing on stderr."
+  (test-equal (string-append name ": exits with status 0") 0 (status-of r))
+  (test-equal (string-append name ": prints one line per file, in score order")
+    out-lines (stdout-of r))
+  (test-equal (string-append name ": prints nothing to stderr") "" (stderr-of r)))
+
+;;; ------------------------------------------------------------------
+;;; --all
+
+(test-group "render --all"
+  (let* ((nts (make-piece-dir "all" 'three))
+         (dir (dirname nts))
+         (outs (score-files dir "three" "pdf"))
+         (r (run "render" nts "--all")))
+    (success-checks "three scores" r (apply lines outs))
+    (test-assert "three scores: each score to NAME_SCORE.pdf, the first included"
+      (every pdf-file? outs))
+    (test-equal "three scores: writes nothing else (no NAME.pdf)"
+      (sort (cons "three.nts" (map basename outs)) string<?)
+      (entries dir)))
+  (let* ((nts (make-piece-dir "all-none" 'none))
+         (dir (dirname nts))
+         (out (string-append dir "/tenzer1.pdf"))
+         (r (run "render" "--all" nts)))
+    (success-checks "no score form" r (lines out))
+    (test-assert "no score form: the default score to NAME.pdf" (pdf-file? out))
+    (test-equal "no score form: writes nothing else"
+      '("tenzer1.nts" "tenzer1.pdf") (entries dir))))
+
+(test-group "render --all -o DIR"
+  (let* ((nts (make-piece-dir "all-o" 'three))
+         (out-dir (tmp-path "all-o/existing")))
+    (mkdir out-dir)
+    (let* ((outs (score-files out-dir "three" "pdf"))
+           (r (run "render" nts "--all" "-o" out-dir)))
+      (success-checks "existing folder" r (apply lines outs))
+      (test-assert "existing folder: the files are in DIR" (every pdf-file? outs))
+      (test-equal "existing folder: nothing beside the piece"
+        '("existing" "three.nts") (entries (dirname nts)))))
+  (let* ((nts (make-piece-dir "all-slash" 'three))
+         (out-dir (tmp-path "all-slash/existing")))
+    (mkdir out-dir)
+    (let* ((outs (score-files out-dir "three" "pdf"))
+           (r (run "render" nts "--all" "-o" (string-append out-dir "/"))))
+      (success-checks "existing folder ending in /: one / in each path"
+                      r (apply lines outs))
+      (test-assert "existing folder ending in /: the files are in DIR"
+        (every pdf-file? outs))))
+  (let* ((nts (make-piece-dir "all-new2" 'three))
+         (out-dir (tmp-path "all-new2/made/deeper"))
+         (outs (score-files out-dir "three" "pdf"))
+         (r (run "render" nts "-o" (string-append out-dir "/") "--all")))
+    (success-checks "missing folder ending in /" r (apply lines outs))
+    (test-assert "missing folder ending in /: made, with missing parents"
+      (and (file-exists? out-dir)
+           (eq? 'directory (stat:type (stat out-dir)))))
+    (test-assert "missing folder ending in /: the files are in it"
+      (every pdf-file? outs))))
+
+(test-group "render --all, a score Typst fails on"
+  (let* ((nts (make-piece-dir "all-fail" 'three))
+         (out-dir (tmp-path "all-fail/out"))
+         (outs (score-files out-dir "three" "pdf"))
+         (blocked (cadr outs)))          ; three_alpha.pdf
+    (mkdir out-dir)
+    (mkdir blocked)
+    (let ((r (run "render" nts "--all" "-o" out-dir)))
+      (test-equal "exits with status 1" 1 (status-of r))
+      (test-assert "stderr starts with \"notasi: \""
+        (starts-with-notasi? (stderr-of r)))
+      (test-assert "the other scores are still drawn"
+        (and (pdf-file? (car outs)) (pdf-file? (caddr outs))))
+      (test-assert "stdout has no line for the file that failed"
+        (not (member blocked (string-split (stdout-of r) #\newline)))))))
+
+(test-group "render --all, a notation mistake"
+  (let* ((dir (tmp-path "all-mistake"))
+         (nts (string-append dir "/mistake.nts")))
+    (mkdir dir)
+    (write-text nts (string-append
+                     "(piece \"Gilak\")\n(pice \"Kotekan\")\n"
+                     "(score a (group \"Ugal\" ugal))\n"))
+    (let ((message (guard (e ((notasi-syntax-error? e) (exception-message e)))
+                     (read-piece-file nts)
+                     #f))
+          (r (run "render" nts "--all")))
+      (test-assert "(the reader rejects the test file)" (string? message))
+      (test-equal "exits with status 1" 1 (status-of r))
+      (test-equal "stderr is the reader's message and a newline"
+        (and message (string-append message "\n")) (stderr-of r))
+      (test-equal "prints nothing to stdout" "" (stdout-of r))
+      (test-equal "draws nothing" '("mistake.nts") (entries dir)))))
+
+;;; ------------------------------------------------------------------
+;;; --format
+
+(test-group "render --format"
+  (let* ((nts (make-piece-dir "format" 'three))
+         (dir (dirname nts)))
+    (let* ((out (string-append dir "/three.png"))
+           (r (run "render" nts "--format" "png")))
+      (success-checks "--format png: PIECE.png" r (lines out))
+      (test-assert "--format png: a PNG" (png-file? out)))
+    (let* ((out (string-append dir "/three_alpha.svg"))
+           (r (run "render" "--format" "svg" "--score" "alpha" nts)))
+      (success-checks "--format svg --score alpha: PIECE_NAME.svg" r (lines out))
+      (test-assert "--format svg --score alpha: an SVG" (svg-file? out)))
+    (let* ((out (string-append dir "/three_mid.pdf"))
+           (r (run "render" nts "--score" "mid" "--format" "pdf")))
+      (success-checks "--format pdf --score mid" r (lines out))
+      (test-assert "--format pdf: a PDF" (pdf-file? out)))
+    (let* ((out (string-append dir "/named"))
+           (r (run "render" nts "-o" out "--format" "png")))
+      (success-checks "-o FILE without an extension: --format adds it"
+                      r (lines (string-append out ".png")))
+      (test-assert "-o FILE without an extension: a PNG at FILE.png"
+        (png-file? (string-append out ".png")))
+      (test-assert "-o FILE without an extension: nothing at FILE"
+        (not (file-exists? out))))
+    (let* ((out (string-append dir "/agrees.png"))
+           (r (run "render" nts "-o" out "--format" "png")))
+      (success-checks "--format agreeing with -o's extension" r (lines out))
+      (test-assert "--format agreeing with -o's extension: a PNG" (png-file? out))))
+  (let* ((nts (make-piece-dir "format-all" 'three))
+         (dir (dirname nts)))
+    (let* ((outs (score-files dir "three" "svg"))
+           (r (run "render" nts "--all" "--format" "svg")))
+      (success-checks "--all --format svg" r (apply lines outs))
+      (test-assert "--all --format svg: each an SVG" (every svg-file? outs)))
+    (let* ((out-dir (string-append dir "/png/"))
+           (outs (score-files (string-append dir "/png") "three" "png"))
+           (r (run "render" nts "--all" "--format" "png" "-o" out-dir)))
+      (success-checks "--all --format png -o DIR/" r (apply lines outs))
+      (test-assert "--all --format png -o DIR/: each a PNG" (every png-file? outs)))))
+
+;;; ------------------------------------------------------------------
+;;; --ppi
+
+(test-group "render --ppi"
+  (let* ((nts (make-piece-dir "ppi" 'none))
+         (dir (dirname nts))
+         (at-72 (string-append dir "/at72.png"))
+         (at-144 (string-append dir "/at144.png"))
+         (plain (string-append dir "/plain.png")))
+    (success-checks "--ppi 72 -o FILE.png" (run "render" nts "--ppi" "72" "-o" at-72)
+                    (lines at-72))
+    (run "render" nts "-o" at-144 "--ppi" "144")
+    (run "render" nts "-o" plain)
+    (test-assert "--ppi 72: about half as wide as at 144"
+      (let ((a (png-width at-72)) (b (png-width at-144)))
+        (and a b (<= (abs (- (* 2 a) b)) 2))))
+    (test-assert "the default is 144 ppi"
+      (let ((a (png-width plain)))
+        (and a (eqv? a (png-width at-144)))))
+    (let* ((out (string-append dir "/tenzer1.png"))
+           (r (run "render" nts "--format" "png" "--ppi" "72")))
+      (success-checks "--format png --ppi 72" r (lines out))
+      (test-equal "--format png --ppi 72: the same width as -o FILE.png --ppi 72"
+        (png-width at-72) (png-width out))))
+  (let* ((nts (make-piece-dir "ppi-all" 'three))
+         (dir (dirname nts))
+         (outs (score-files dir "three" "png"))
+         (r (run "render" nts "--all" "--format" "png" "--ppi" "72")))
+    (success-checks "--all --format png --ppi 72" r (apply lines outs))
+    (test-assert "--all --format png --ppi 72: each a PNG" (every png-file? outs))))
+
+;;; ------------------------------------------------------------------
+;;; --one-file
+
+(test-group "render --all --one-file"
+  (let* ((nts (make-piece-dir "one-file" 'three))
+         (dir (dirname nts))
+         (out (string-append dir "/three.pdf"))
+         (r (run "render" nts "--all" "--one-file")))
+    (success-checks "default OUT" r (lines out))
+    (test-assert "default OUT: NAME.pdf beside the piece" (pdf-file? out))
+    (test-equal "default OUT: one page per score"
+      3 (and (pdf-file? out) (pdf-page-count out)))
+    (test-equal "default OUT: writes no NAME_SCORE.pdf"
+      '("three.nts" "three.pdf") (entries dir)))
+  (let* ((nts (make-piece-dir "one-file-o" 'three))
+         (dir (dirname nts))
+         (out (string-append dir "/book.pdf"))
+         (r (run "render" "--one-file" "-o" out nts "--all")))
+    (success-checks "-o FILE.pdf" r (lines out))
+    (test-equal "-o FILE.pdf: one page per score"
+      3 (and (pdf-file? out) (pdf-page-count out))))
+  (let* ((nts (make-piece-dir "one-file-none" 'none))
+         (out (string-append (dirname nts) "/tenzer1.pdf"))
+         (r (run "render" nts "--all" "--one-file" "--format" "pdf")))
+    (success-checks "no score form, --format pdf" r (lines out))
+    (test-equal "no score form: one page"
+      1 (and (pdf-file? out) (pdf-page-count out)))))
+
+;;; ------------------------------------------------------------------
+;;; --list
+
+(test-group "render --list"
+  (let* ((nts (make-piece-dir "list" 'three))
+         (dir (dirname nts))
+         (r (run "render" nts "--list")))
+    (success-checks "three scores: the names, in the order written"
+                    r (apply lines score-order))
+    (test-equal "three scores: draws nothing" '("three.nts") (entries dir)))
+  (let* ((nts (make-piece-dir "list-none" 'none))
+         (dir (dirname nts))
+         (r (run "render" "--list" nts)))
+    (success-checks "no score form: prints nothing" r "")
+    (test-equal "no score form: draws nothing" '("tenzer1.nts") (entries dir)))
+  (let* ((nts (make-piece-dir "list-no-typst" 'three))
+         (path (path-without-typst))
+         (r (call-with-env "PATH" path (lambda () (run "render" nts "--list")))))
+    (test-assert "without Typst: (the test's PATH really has no typst)"
+      (not (typst-on-path? path)))
+    (success-checks "without Typst: lists all the same" r (apply lines score-order)))
+  (let* ((dir (tmp-path "list-mistake"))
+         (nts (string-append dir "/mistake.nts")))
+    (mkdir dir)
+    (write-text nts "(piece \"Gilak\")\n(pice \"Kotekan\")\n")
+    (let ((message (guard (e ((notasi-syntax-error? e) (exception-message e)))
+                     (read-piece-file nts)
+                     #f))
+          (r (run "render" nts "--list")))
+      (test-equal "notation mistake: exits with status 1" 1 (status-of r))
+      (test-equal "notation mistake: stderr is the reader's message (FILE:LINE: ...)"
+        (and message (string-append message "\n")) (stderr-of r))
+      (test-equal "notation mistake: prints nothing to stdout" "" (stdout-of r))
+      (test-equal "notation mistake: draws nothing" '("mistake.nts") (entries dir)))))
+
+;;; ------------------------------------------------------------------
+;;; Usage errors of the new options: status 2, nothing written
+
+(define usage-dir (tmp-path "usage-new"))
+(mkdir usage-dir)
+(define usage-piece (string-append usage-dir "/three.nts"))
+(write-text usage-piece
+            (string-append (call-with-input-file example-path get-string-all
+                             #:encoding "UTF-8")
+                           three-scores))
+(define usage-file (string-append usage-dir "/existing.txt"))
+(write-text usage-file "not a folder\n")
+(define (usage-path name) (string-append usage-dir "/" name))
+
+(test-group "usage errors of --all, --format, --ppi, --one-file, --list"
+  (for-each
+   (lambda (spec)
+     (let* ((name (car spec))
+            (before (entries usage-dir))
+            (r (apply run "render" usage-piece (cdr spec))))
+       (usage-error-checks name r)
+       (test-equal (string-append name ": writes nothing")
+         before (entries usage-dir))))
+   `(("--all with --score" "--all" "--score" "alpha")
+     ("--all with -o an existing file" "--all" "-o" ,usage-file)
+     ("--all with -o FILE.pdf" "--all" "-o" ,(usage-path "out.pdf"))
+     ("--all with -o a missing path without a trailing /"
+      "--all" "-o" ,(usage-path "nowhere"))
+     ("--one-file without --all" "--one-file")
+     ("--one-file without --all, with --score" "--one-file" "--score" "alpha")
+     ("--one-file with --format png" "--all" "--one-file" "--format" "png")
+     ("--one-file with --format svg" "--all" "--one-file" "--format" "svg")
+     ("--one-file with -o not .pdf" "--all" "--one-file" "-o" ,(usage-path "book.svg"))
+     ("--format disagreeing with -o's extension"
+      "-o" ,(usage-path "out.png") "--format" "svg")
+     ("--format disagreeing with -o's extension (.pdf, png)"
+      "-o" ,(usage-path "out.pdf") "--format" "png")
+     ("--format with an unknown value" "--format" "jpg")
+     ("--format without a value" "--format")
+     ("--ppi without a value" "--format" "png" "--ppi")
+     ("--ppi with the default format (pdf)" "--ppi" "72")
+     ("--ppi with --format pdf" "--format" "pdf" "--ppi" "72")
+     ("--ppi with --format svg" "--format" "svg" "--ppi" "72")
+     ("--ppi with -o FILE.svg" "-o" ,(usage-path "out.svg") "--ppi" "72")
+     ("--ppi with -o FILE.pdf" "-o" ,(usage-path "out.pdf") "--ppi" "72")
+     ("--ppi with --all and the default format" "--all" "--ppi" "72")
+     ("--ppi 0" "--format" "png" "--ppi" "0")
+     ("--ppi -1" "--format" "png" "--ppi" "-1")
+     ("--ppi 1.5" "--format" "png" "--ppi" "1.5")
+     ("--ppi x" "--format" "png" "--ppi" "x")
+     ("--list with --all" "--list" "--all")
+     ("--list with --score" "--list" "--score" "alpha")
+     ("--list with -o" "--list" "-o" ,(usage-path "list.pdf"))
+     ("--list with --format" "--list" "--format" "pdf")
+     ("--list with --ppi" "--list" "--ppi" "72")
+     ("--list with --one-file" "--list" "--one-file"))))
+
+;;; ------------------------------------------------------------------
+;;; --help describes the new options
+
+(for-each
+ (lambda (args)
+   (let ((r (apply run args)))
+     (test-group (string-append (string-join args " ") ": the new options")
+       (for-each
+        (lambda (option)
+          (test-assert (string-append "mentions " option)
+            (string-contains (stdout-of r) option)))
+        '("--all" "--one-file" "--list" "--format" "--ppi")))))
+ '(("--help") ("render" "--help")))
+
 (remove-tree tmp-dir)
 
 (define runner (test-runner-current))
