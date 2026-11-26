@@ -371,8 +371,8 @@ third layer over the notes, since a grid can't overlap its cells:
 - **Lines**, from `lines`, in the background layer: `pulse` as now
   (`0.5pt`, `luma(170)`), `cycle` heavier (`1pt`, `luma(90)`), down the
   left of the column, through the header and the groups. The last
-  column is closed on its right by a pulse line, in every row that has
-  pulse lines (since `feat/gallery`).
+  column is closed on its right by a pulse line, in every row, including
+  annotation rows and rows without pulse lines (since `feat/gallery`).
 - **Overlays**, in the foreground layer, drawn after the notes so they
   sit on top: one cell spanning the overlay's columns and rows, with
   its text centred, near-black (`#222222`), on a small white box at 80%

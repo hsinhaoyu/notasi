@@ -255,9 +255,10 @@
       let under = if x >= first and info.under {
         (bottom: 0.5pt + luma(170))
       }
-      // The last pulse is closed on its right, as each pulse is on its
-      // left, wherever the row has pulse lines.
-      let right = if x == cols.len() - 1 and info.pulse {
+      // The last pulse is closed on its right, as a pulse is on its
+      // left, in every row: annotation rows and rows without pulse
+      // lines too.
+      let right = if x == cols.len() - 1 {
         (right: 0.5pt + luma(170))
       }
       let parts = (left, under, right).filter(p => p != none)
