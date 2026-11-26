@@ -123,7 +123,7 @@ changes the figure, and each later one adds to it.
    images; `make preview` removed; README and CLAUDE.md.
 3. **`feat/collapsed`** (01–05, ADRs 0051, 0053–0057, 0059, 0060), in
    five slices:
-   1. `feat/collapsed-terms`: the glossary's names in code (`pitch`,
+   1. `feat/collapsed-terms` (done): the glossary's names in code (`pitch`,
       `scale-pitches`, `note-pitch`, the error kinds), in the reader's
       messages, and in the manual with the messages it quotes
       ("degree" becomes "pitch"), `by-pitch` and

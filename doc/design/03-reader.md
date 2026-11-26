@@ -21,14 +21,17 @@ steps 10 and 11; the condition's `time` and `uses`; and every
 **[syntax]**, **[durations]**, **[rep]**, **[colotomy]** and
 **[patterns]** case.
 
-**Planned** for iteration 5 (ADRs 0051, 0053–0057): reading the
-piece information, `:note-label` and the label options, `:rows
-compact`, `:part-marker`, the annotation row, pattern annotations and
-`(text ...)`, and `by-pitch`; the removed options becoming unknown
-keys or values; `pattern-names-overlap` removed, and `notes-collide`
-kept for `notes` rows only; error kinds renamed to the glossary's
-terms. See "Iteration 5". Until they are built, the reader takes the
-old options.
+Since iteration 5's `feat/collapsed-terms`: the piece information,
+`:scheme by-pitch` (`by-degree` a bad value), and the error kinds
+`bad-pitch`, `duplicate-pitch` and `pitch-ends-in-digit`, with
+messages that say pitch.
+
+**Planned** for iteration 5 (ADRs 0054–0057): `:note-label` and the
+label options, `:rows compact`, `:part-marker`, the annotation row,
+pattern annotations and `(text ...)`; the removed options becoming
+unknown keys or values; `pattern-names-overlap` removed, and
+`notes-collide` for one key only; `needs-note-label`. See "Iteration
+5". Until they are built, the reader takes the old options.
 
 ## Responsibility
 
@@ -262,7 +265,7 @@ jaya.nts:72: part `polos`, cycle 1, pulse 3 1/2, in pattern `polos-1`
      parts on one instrument where either has no `:name` are not a
      duplicate here: check 13 reports them as `parts-need-names`.
   8. Each scale and stroke set, and each pitch or stroke in order
-     (`bad-degree`, `degree-ends-in-digit`, `duplicate-degree`,
+     (`bad-pitch`, `pitch-ends-in-digit`, `duplicate-pitch`,
      `reserved-name`).
   9. Each instrument: its scale (`undefined-scale`), then each note
      (`unknown-note`, `notes-not-ascending`, `duplicate-note`).
@@ -325,7 +328,7 @@ followed by its `kind`.
 - [syntax] A key with no value (at the end, or followed by another key),
   or a value of the wrong kind (`:pickup 1.5`, `:name "polos"`):
   `bad-option`. A wrong value for a pitch's `:alias`, `:display` or
-  `:damped` is `bad-degree` (see "Definitions").
+  `:damped` is `bad-pitch` (see "Definitions").
 - [iteration 5] A piece information key (`:composer` … `:remarks`)
   whose value is not a string: `bad-option`. Nothing else about it is
   checked.
@@ -371,11 +374,11 @@ All at the line of the list that holds the option.
   key that is not a name): `bad-form`.
 - [syntax] A pitch or stroke that is not `NAME` or `(NAME :key value
   ...)`, `:display` or `:damped` that is not a string, an `:alias` that
-  is not a name or a list of names: `bad-degree`, at the pitch's line
+  is not a name or a list of names: `bad-pitch`, at the pitch's line
   when it is a list, else its scale's.
 - [v1] Duplicate pitch or stroke name or alias within a set:
-  `duplicate-degree`. Pitch name or alias ending in a digit (scales
-  only): `degree-ends-in-digit`.
+  `duplicate-pitch`. Pitch name or alias ending in a digit (scales
+  only): `pitch-ends-in-digit`.
 - [syntax] A pitch or stroke called `rep` or `@`, by name or alias:
   `reserved-name`. [iteration 5] `text` too.
 - [v1] Instrument notes: `unknown-note`, `notes-not-ascending`,
@@ -613,9 +616,9 @@ when the milestones are built; the records it fills are in 02,
 
   | Now | Planned | Slice |
   |---|---|---|
-  | `bad-degree` | `bad-pitch` | `feat/collapsed-terms` |
-  | `duplicate-degree` | `duplicate-pitch` | `feat/collapsed-terms` |
-  | `degree-ends-in-digit` | `pitch-ends-in-digit` | `feat/collapsed-terms` |
+  | `bad-degree` | `bad-pitch` | **Implemented** (`feat/collapsed-terms`) |
+  | `duplicate-degree` | `duplicate-pitch` | **Implemented** (`feat/collapsed-terms`) |
+  | `degree-ends-in-digit` | `pitch-ends-in-digit` | **Implemented** (`feat/collapsed-terms`) |
   | `needs-note-names` | `needs-note-label` | `feat/collapsed-labels`, with its rule |
 
   Messages say "pitch" and "key", never "degree" or "note name".
