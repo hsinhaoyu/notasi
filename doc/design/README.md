@@ -90,7 +90,7 @@ See [its README](../iterations/05-collapsed-and-gallery/README.md).
 
 1. **Implemented.** `feat/render-all`: `notasi render --all` and its options
 2. **Implemented.** `feat/examples`: `examples/` in four folders, committed images
-3. `feat/collapsed`: compact rows, note labels, part markers and the
+3. **Implemented.** `feat/collapsed`: compact rows, note labels, part markers and the
    annotation row; five slices, see the iteration's README
 4. `feat/save-piece`: saving the piece
 5. `feat/gallery`: the acceptance test: Jaya Semara and Baris in the

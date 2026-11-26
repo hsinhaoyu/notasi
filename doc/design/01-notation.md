@@ -20,13 +20,10 @@ the glossary's pitch terms (ADR 0051) since iteration 5's
 `:note-names` and `:octave-numbers` (ADR 0054), since
 `feat/collapsed-labels`. `:rows compact` in place of `single` (ADRs
 0055, 0060) since `feat/collapsed-compact`. `:part-marker` (ADR 0056)
-since `feat/collapsed-markers`.
-
-**Planned** for iteration 5 (ADR 0057): the annotation row, pattern annotations and
-`(text ...)`, in place of `:pattern-names` and `:pattern-level`.
-Until they are built, the reader takes the old options and names. The
-removed ones get no migration: once the new ones are built, they are
-unknown keys or values, errors like any other.
+since `feat/collapsed-markers`. The annotation row, pattern annotations
+and `(text ...)`, in place of `:pattern-names` and `:pattern-level`
+(ADR 0057), since `feat/collapsed-annotation`. The removed options got
+no migration: they are unknown keys or values, errors like any other.
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -229,7 +226,7 @@ Rules:
 - Pitch names and aliases must be unique within the scale.
 - Names and aliases must not end in a digit, so that the octave number
   in `ding2` is unambiguous.
-- No pitch may be called `rep`, `@` or (**Planned**) `text`, which are
+- No pitch may be called `rep`, `@` or `text`, which are
   reserved list heads.
 - The reader resolves aliases: the piece always stores the pitch's own
   name, so `i2` and `ding2` are the same note.
@@ -252,7 +249,7 @@ Rules:
 - A stroke set and a scale cannot share a name, because an instrument
   refers to either by name.
 - Stroke names may end in a digit, since there is no octave number.
-- No stroke may be called `rep`, `@` or (**Planned**) `text`.
+- No stroke may be called `rep`, `@` or `text`.
 
 ### `(instrument NAME SCALE-OR-STROKES NOTE ...)`
 
@@ -414,7 +411,7 @@ Rules:
 | `@NAME` | Play the pattern NAME (see `pattern`). |
 | `(@ NAME :key value ...)` | Play the pattern NAME, changed by operators. |
 | `/` | Visual separator for the reader of the file; ignored, takes no time. |
-| `(text STRING)`, `(text STRING LENGTH)` | **Planned** (ADR 0057). Free text, shown in an annotation row: at this point, or across LENGTH pulses from it. Takes no time. |
+| `(text STRING)`, `(text STRING LENGTH)` | (ADR 0057). Free text, shown in an annotation row: at this point, or across LENGTH pulses from it. Takes no time. |
 
 Durations:
 - A part starts with a duration of 1 pulse, so its first note sets its
@@ -439,7 +436,7 @@ Rules:
   pulse 4 1/2: `||` is not at the end of a cycle". An error inside a
   pattern names the whole chain of uses, with the line of each form.
 
-Free text (**Planned**, ADR 0057):
+Free text (ADR 0057):
 - It is written where it happens, so it moves with the music. It may be
   written inside a pattern, so that every use carries it, and `rep`
   repeats it.
@@ -478,7 +475,7 @@ A named figure, written for one instrument (ADR 0029):
 | `:instrument INSTRUMENT` | required | The instrument the pattern is written for. |
 | `:short STRING` | NAME | A short name, which a score can print over the notes. |
 | `:long STRING` | the short name | A long name, likewise. |
-| `:annotation STRING` | none | **Planned** (ADR 0057). A text about the pattern ("norot on 1"), which an annotation row can show instead of its name. |
+| `:annotation STRING` | none | (ADR 0057). A text about the pattern ("norot on 1"), which an annotation row can show instead of its name. |
 
 - NAME must not start with `:` or `@`.
 - The body is ordinary part tokens: notes, key numbers, durations, `_`,
@@ -505,7 +502,7 @@ The list form applies operators, written as options:
 |---|---|
 | `:step N` | Move every note N pitches along the scale (i o e u a, then i in the next octave); key numbers move N keys. The figure keeps its shape on the keys. |
 | `:short S`, `:long L` | Names for this use, replacing the pattern's, so that a moved figure can be named after what it now plays. |
-| `:annotation A` | **Planned** (ADR 0057). The annotation for this use, replacing the pattern's. |
+| `:annotation A` | (ADR 0057). The annotation for this use, replacing the pattern's. |
 
 ```scheme
 (@ polos-1 :step -1 :short "6")    ; a pitch lower, named "6" here
@@ -529,8 +526,8 @@ Rules:
   a cycle. A `|` or `||` inside it is checked where it is used, against
   the piece's time.
 - **Each use is recorded** in the piece: its part, start, end, nesting
-  level, and the names in force at that use (and, **Planned**, its
-  annotation), so that a score can name it in an annotation row.
+  level, and the names and annotation in force at that use, so that a
+  score can name it in an annotation row.
 
 Errors where the pattern is defined: no `:instrument`, or an unknown
 one; a note, key number or stroke the instrument does not have; a
@@ -615,15 +612,11 @@ In the grid:
 | `:background grid/vertical/horizontal/empty` | score, group | `grid` | The lines behind the notes: pulse lines and a line between every two rows (`grid`), pulse lines only (`vertical`), row lines only (`horizontal`), or neither (`empty`). The lines between groups and the cycle lines are always drawn (ADR 0041). |
 | `:part-marker ((PART :key value ...) ...)` | group | none | (ADR 0056). Tells the group's parts apart: each entry gives a part of the group a symbol, a border, or both (see "Telling parts apart"). |
 
-**Implemented** until the planned options above are built, and then
-removed, with no migration:
+`:pattern-names` and `:pattern-level` (pattern names written over the
+notes) were removed in `feat/collapsed-annotation`: the annotation row
+replaces them.
 
-- `:pattern-names none/short/long` (default `none`) and
-  `:pattern-level N` (default `0`): pattern names written over the
-  notes, across each use of a pattern, at one level of nesting.
-  Replaced by the annotation row.
-
-The annotation row (**Planned**, ADR 0057): one row of text only, with
+The annotation row (ADR 0057): one row of text only, with
 no background and no notes, above or below a group's rows. Its options
 are set on a group, never on a score:
 
@@ -789,15 +782,10 @@ pitched and stroke groups alike:
   is drawn once. On compact rows a stroke counts as its one drawn
   column, so two strokes on one key can't collide; on `notes` rows a
   note counts for its written length, strokes too.
-- Pattern names: identical names from several parts of a group (the
-  same start, length and text) are written once; different names that
-  overlap in one group are an error, naming the parts and the position.
-  **Planned**: removed with `:pattern-names`; the annotation row takes
-  one part, so names can't clash.
 - (ADR 0056) `:part-marker` on a score, a part not in the
   group, an unknown key or symbol, a colour not `"#rrggbb"`, a size
   outside 0 to 1, or a width that isn't a LENGTH is an error.
-- **Planned** (ADR 0057): an annotation row option on a score, an
+- (ADR 0057) An annotation row option on a score, an
   `:annotation-part` that isn't a part of the group, an unknown
   position, alignment or text, or a level that isn't a whole number
   from 0 is an error, as is another annotation row option without
@@ -811,8 +799,8 @@ with every option at its default.
 
 `notasi render FILE --score NAME` prints the score NAME. Without
 `--score`, the first score in the file is printed. A file drawn from a
-chosen score is named `FILE_NAME.pdf` (ADR 0040). **Planned**:
-`--all` draws every score, and `--list` lists their names (05).
+chosen score is named `FILE_NAME.pdf` (ADR 0040). `--all` draws every
+score, and `--list` lists their names (05, ADR 0061).
 
 ## Reading Gold's cipher in this notation
 

@@ -98,8 +98,8 @@
 ;; The full score. The gong and kempli parts are generated from the
 ;; colotomy; they are printed by naming them like any other part.
 ;; Notes are colours only, except the gongs and kempli, which show their
-;; letters. Each pass of the melody is marked "norot" over the pemade.
-(score full :pattern-names short :palette pastel1
+;; letters.
+(score full :palette pastel1
     :font-size "8pt" :cell-width "2em" :cell-height "2em"
   (group "Gangsa pemade" :short "Pem." :subtitle "norot"  polos sangsih)
   (group "Ugal"          :short "Ug."   ugal)
@@ -109,13 +109,9 @@
   (group "Gong, kempli"  :short "G. K." :note-label pitch-display-name :note-label-octave no  gong kempli))
 
 ;; An excerpt: the kotekan against the pokok, one pass of the melody
-;; (cycle 1, pulses 1 to 8). The other parts are not printed. The pemade
-;; notes carry the names of the 2-pulse figures (pattern level 1): "1",
-;; "6", "3", "2". Polos and sangsih carry the same names over the same
-;; pulses, so each name is written once over the group.
+;; (cycle 1, pulses 1 to 8). The other parts are not printed.
 (score kotekan :title "Norot kotekan against the pokok"
-    :from (1 1) :to (1 8) :labels long
-    :pattern-names short :pattern-level 1 :cycle-numbers no
+    :from (1 1) :to (1 8) :labels long :cycle-numbers no
   (group "Gangsa pemade" polos sangsih)
   (group "Jublag"        jublag))
 

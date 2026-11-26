@@ -26,27 +26,46 @@ pattern, the part carries on with the length it had before.
 A pattern may start with `_`: it then holds the note before it, wherever
 it is used.
 
-## Printing pattern names
+## Naming patterns in the score
 
-A pattern can have names, `:short` and `:long`, and a use can give its
-own, so that a moved figure is named after the tone it plays. A
-[score](scores.md) can write them over the notes:
+A pattern can have names, `:short` and `:long`, and a note about how it
+is played, `:annotation`. A use can give its own, so that a moved
+figure is named after the tone it plays. A group of a
+[score](scores.md) can show them in an **annotation row**, a row of
+text only, under (or over) its notes:
 
 ```scheme
-{{#include ../../../examples/manual/pattern-names.nts}}
+{{#include ../../../examples/manual/annotation-row.nts}}
 ```
 
-![The norot figures with their names](figures/pattern-names.png)
+![The norot figures with their notes](figures/annotation-row.png)
 
-| Setting | Where | What it does |
-|---|---|---|
-| `:pattern-names short` / `long` | score or group | Write each pattern's short or long name over its notes. `none`, the default, writes none. |
-| `:pattern-level N` | score or group | Which patterns to name: 0 (the default) for those used in the part, 1 for those inside them, and so on. |
+`:annotation-part` turns the row on and says which part of the group
+it shows. The other settings are on the group too:
 
-When polos and sangsih are in one group and play figures with the same
-name over the same pulses, the name is written once. Two different
-names over the same pulses would be written over each other, so notasi
-reports that as a mistake.
+| Setting | What it does |
+|---|---|
+| `:annotation-part PART` | Show an annotation row, with PART's patterns and text. PART is a part of the group. |
+| `:annotation-position below` / `above` | Where the row goes: under the notes (the default) or over them. |
+| `:annotation-align left` / `center` / `right` | Where a pattern's text sits in its stretch: `left` unless you say. |
+| `:annotation-level N` | Which patterns to name: 0 (the default) for those used in the part, 1 for those inside them, and so on. |
+| `:annotation-text annotation` / `short` / `long` | What a pattern shows: its `:annotation` (the default, or its long name when it has none), its short name or its long name. |
+| `:annotation-label "…"` | A label for the row, beside it where the row labels are. |
+
+A text too long for its stretch is cut off at the stretch's end, and
+starts at the left whatever the alignment.
+
+### Text of your own
+
+`(text "angsel")` in a part writes "angsel" in the annotation row at
+that point, and runs until the next text in the row. `(text "angsel"
+2)` covers two pulses from that point. Text takes no time: the music
+around it is not moved. It can go inside a pattern, so that every use
+of the pattern carries it, and inside `rep`.
+
+Where your text and a pattern's name would overlap, your text is shown
+and the pattern's name is cut short. Text in a part that has no
+annotation row is not shown.
 
 ## The rules
 

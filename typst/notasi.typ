@@ -78,6 +78,22 @@
   }
 }
 
+// One item of an annotation row (ADR 0057): its text on one line,
+// near-black, aligned as the item says when it fits its span, otherwise
+// left-aligned and cut at the span's end.
+#let _annotation-item(it) = layout(size => {
+  let t = text(fill: rgb("#222222"), size: 0.9em, it.text)
+  let w = measure(t).width
+  let pad = 2pt
+  let fits = w + 2 * pad <= size.width
+  let where = if not fits { left }
+    else if it.align == "center" { center }
+    else if it.align == "right" { right }
+    else { left }
+  block(width: size.width, height: size.height, clip: true,
+    inset: (x: pad), align(where + horizon, box(width: w, t)))
+})
+
 // The line at the left of a column, as the figure's `lines' says
 // (ADR 0037): thin at a pulse, heavier at the start of a gong cycle.
 #let _line(kind) = if kind == "cycle" {
@@ -99,7 +115,6 @@
   let header = sys.header
 
   let cells = ()
-  let overlays = ()
   let row = 0
   // For each grid row: whether pulse lines cross it, and whether a row
   // line runs under it (ADRs 0041, 0043). A figure without the flags
@@ -141,52 +156,71 @@
 
   for g in sys.groups {
     let rows = g.rows
+    // The annotation row (ADR 0057): one more row, above or below the
+    // group's rows, inside its rules and frame.
+    let ann = g.at("annotation", default: none)
+    let ann-row = if ann == none { none }
+      else if ann.position == "above" { row } else { row + rows.len() }
+    let first-row = if ann != none and ann.position == "above" { row + 1 } else { row }
+    let height = rows.len() + if ann == none { 0 } else { 1 }
     cells.push(grid.hline(y: row, stroke: 0.8pt + luma(120)))
-    if rows.len() > 0 {
-      cells.push(grid.cell(x: 0, y: row, rowspan: rows.len(),
+    if height > 0 {
+      cells.push(grid.cell(x: 0, y: row, rowspan: height,
         align: horizon + left, inset: (right: 10pt), {
           text(weight: "bold", size: 1.1em, g.label)
           if g.subtitle != none {
             // A one-row group has no room for a second line: the
             // subtitle follows the label on the same line.
-            if rows.len() > 1 { linebreak() } else { h(0.5em) }
+            if height > 1 { linebreak() } else { h(0.5em) }
             text(fill: luma(110), style: "italic", g.subtitle)
           }
         }))
+    }
+    if rows.len() > 0 {
       for (i, l) in rows.enumerate() {
-        cells.push(grid.cell(x: 2, y: row + i, align: horizon + right,
+        cells.push(grid.cell(x: 2, y: first-row + i, align: horizon + right,
           inset: (right: 5pt), text(fill: luma(140), size: 0.85em, l)))
       }
       // Key numbers, to the left of the row labels, lighter (ADR 0047).
       let numbers = g.at("key_numbers", default: none)
       if numbers != none {
         for (i, n) in numbers.enumerate() {
-          cells.push(grid.cell(x: 1, y: row + i, align: horizon + right,
+          cells.push(grid.cell(x: 1, y: first-row + i, align: horizon + right,
             inset: (right: 3pt), text(fill: luma(170), size: 0.85em, n)))
         }
       }
       for v in g.voices {
         let marker = v.at("marker", default: none)
         for e in v.events {
-          cells.push(grid.cell(x: first + e.start, y: row + e.row,
+          cells.push(grid.cell(x: first + e.start, y: first-row + e.row,
             colspan: e.dur, inset: 0pt, _note(e, marker)))
         }
       }
-      // Pattern names, written over the notes (ADR 0036); a continued
-      // piece shows its name again.
-      for o in g.overlays {
-        overlays.push(grid.cell(x: first + o.start, y: row + o.row,
-          colspan: o.dur, rowspan: o.rows, align: center + horizon,
-          box(fill: white.transparentize(20%), inset: (x: 3pt, y: 2pt),
-            radius: 0pt, text(fill: rgb("#222222"), o.text))))
+    }
+    if ann != none {
+      if ann.label != none {
+        cells.push(grid.cell(x: 2, y: ann-row, align: horizon + right,
+          inset: (right: 5pt), text(fill: luma(140), size: 0.85em, ann.label)))
+      }
+      for it in ann.items {
+        cells.push(grid.cell(x: first + it.start, y: ann-row, colspan: it.dur,
+          inset: 0pt, _annotation-item(it)))
       }
     }
     let pulses = g.at("pulse_lines", default: true)
     let rules = g.at("row_lines", default: false)
+    // The annotation row has cycle lines only, and no line between it
+    // and the group's rows.
+    if ann != none and ann.position == "above" {
+      row-lines.push((pulse: false, under: false))
+    }
     for i in range(rows.len()) {
       row-lines.push((pulse: pulses, under: rules and i < rows.len() - 1))
     }
-    row += rows.len()
+    if ann != none and ann.position == "below" {
+      row-lines.push((pulse: false, under: false))
+    }
+    row += height
   }
   cells.push(grid.hline(y: row, stroke: 0.8pt + luma(120)))
   // The frame between the row labels and the grid, beside the groups
@@ -220,13 +254,10 @@
     ..range(cols.len() * rows-count).map(_ => []))
 
   let foreground = grid(columns: cols, rows: rows, ..cells)
-  // A layer of its own: its cells would overlap the notes' in one grid.
-  let names = grid(columns: cols, rows: rows, ..overlays)
 
   box({
-    place(top + left, background)
+    background
     place(top + left, foreground)
-    names
   })
 }
 

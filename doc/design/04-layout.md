@@ -18,11 +18,10 @@ with `rows`, `row` and `row_label_width` (ADR 0059), and the note label
 and the pitch column's forms (ADR 0054), since `feat/collapsed-labels`.
 Compact rows in place of `single` (ADRs 0055, 0060) since
 `feat/collapsed-compact`. Part markers and each voice's `marker` (ADR
-0056) since `feat/collapsed-markers`.
-
-**Planned** for iteration 5 (ADRs 0057, 0059): the rest of contract
-version 4 (the annotation row in place of `overlays`); the annotation
-row. See "Iteration 5".
+0056) since `feat/collapsed-markers`. The annotation row in place of
+the overlays (ADR 0057), completing contract version 4 (ADR 0059),
+since `feat/collapsed-annotation`: iteration 5's layout is
+implemented.
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -48,7 +47,7 @@ label it draws is in the figure.
 so layout reads plain values. `layout-score` replaces `layout-piece`.
 
 The figure is the JSON value of 05's contract itself, version 4 (ADR
-0059) as far as it is built, as `(notasi json)` writes it: alists with symbol keys for
+0059), as `(notasi json)` writes it: alists with symbol keys for
 objects, vectors for arrays, the symbol `null` for null. Writing it out
 is then just `write-json`, and layout is tested with `equal?`. Keys come
 in this order:
@@ -60,19 +59,6 @@ in this order:
 | system | `start`, `steps`, `header`, `lines`, `groups` |
 | header | `cycle_label`, `pulse_label`, `cycles`, `pulses`, `pulse_lines` |
 | cycle mark | `column`, `text` |
-| group | `label`, `subtitle`, `rows`, `key_numbers`, `voices`, `overlays`, `pulse_lines`, `row_lines` |
-| voice | `name`, `marker`, `events` |
-| event | `start`, `dur`, `row`, `text`, `fill`, `text_color`, `continued` |
-| overlay | `start`, `dur`, `row`, `rows`, `text`, `continued` |
-
-Since `feat/collapsed-labels` the figure is version 4 with `rows`,
-`row` and `row_label_width` (version 3's `lanes`, `lane` and
-`lane_width`); the rest of version 4 is **Planned** (ADR 0059):
-
-| Object | Keys |
-|---|---|
-| figure | `version` (4), and the rest as version 3 |
-| sizes | `font_size`, `label_width`, `key_width`, `row_label_width`, `cell_width`, `cell_height` |
 | group | `label`, `subtitle`, `rows`, `key_numbers`, `voices`, `annotation`, `pulse_lines`, `row_lines` |
 | voice | `name`, `marker`, `events` |
 | marker | `symbol`, `symbol_size`, `symbol_color`, `border`, `border_width` |
@@ -80,7 +66,9 @@ Since `feat/collapsed-labels` the figure is version 4 with `rows`,
 | annotation | `position`, `label`, `items` |
 | annotation item | `start`, `dur`, `text`, `align`, `continued` |
 
-There are no overlays. `marker` and `annotation` are `null` when the
+Version 3's `lanes`, `lane` and `lane_width` are `rows`, `row` and
+`row_label_width` (since `feat/collapsed-labels`), and its overlays are
+gone (since `feat/collapsed-annotation`). `marker` and `annotation` are `null` when the
 group asks for none.
 
 - `title`, `subtitle` and `caption` are the score's (`null` when it has
@@ -107,11 +95,11 @@ pattern spans, **Implemented** (`feat/scores-range`).
 The piece's times are rationals in pulses (ADR 0025); the figure counts
 in columns. For each score, layout takes the **step**: the largest
 duration that divides 1 pulse and every time the score prints, which is
-every start and end of an event in the range, every pattern-span edge
-at the chosen level, `from`, `to`, every break and the system length.
-**Planned**: the pattern-span edges are those of each annotation row's
-part at its level, and every free text's start (and end, with a
-length) in an annotation row counts too.
+every start and end of an event in the range, `from`, `to`, every
+break and the system length, and, for each annotation row, its part's
+pattern-span edges at its level and every free text's start (and end,
+with a length) in the range (since `feat/collapsed-annotation`; before,
+the pattern-name spans at the chosen level).
 Since it divides a pulse, the step is 1/k of a pulse, and
 `steps_per_pulse` is k. Every time is then converted to a whole number
 of columns. `(notasi json)` refuses rationals, so a time left
@@ -229,21 +217,9 @@ Layout works out every header number and every line, for every column:
 
 ### Pattern names (overlays)
 
-**Planned**: removed with `:pattern-names` (ADR 0057); the annotation
-row takes their place (see "Iteration 5").
-
-With `pattern-names` `short` or `long`, layout names each pattern use at
-the group's `pattern-level`:
-
-- It takes the spans of that depth from the group's member parts, with
-  their short or long names, and merges identical ones (the same start,
-  end and text). The reader has checked that different names don't
-  overlap in one group.
-- Each becomes an overlay: its columns (`start`, `dur`), the rows it
-  covers (`row` 0, `rows` the group's row count) and its text.
-- An overlay cut by a system boundary, or by the range, is split like a
-  note: the later piece has `continued: true`, and its text is written
-  again.
+Removed in `feat/collapsed-annotation` with `:pattern-names` (ADR
+0057): the annotation row takes their place (see "The annotation row"
+under "Iteration 5").
 
 ### Row labels
 
@@ -395,8 +371,8 @@ text. `dark2` gives strong colours with mostly white text.
     since they sit in the same column (`feat/drawing-header`).
   - `row_label_width` (row labels; `lane_width` before version 4,
     ADR 0059): 0.52em × the longest label + 1em; `"0.0em"` when no
-    group shows row labels (ADR 0047). **Planned**: an annotation
-    row's label counts, since it sits in that column.
+    group shows row labels (ADR 0047). An annotation row's label
+    counts, since it sits in that column.
   - (ADR 0047) `key_width` (key numbers): 0.52em × the
     longest number + 1em, or `"0.0em"` when no group shows key numbers.
   - Lengths are strings in `em` with one decimal, even when whole,
@@ -409,15 +385,15 @@ text. `dark2` gives strong colours with mostly white text.
 
 ## Iteration 5
 
-**Planned** (ADRs 0051, 0054–0057, 0059), except what is marked built.
-What layout does when the
-milestones are built. The group settings are 02's ("Iteration 5").
+**Implemented** (ADRs 0051, 0054–0057, 0059), over `feat/collapsed`'s
+five slices. The group settings are 02's ("Iteration 5").
 
 ### The figure, version 4
 
-**Implemented** in part since `feat/collapsed-labels`: `version` 4,
-`rows`, `row` and `row_label_width`; each voice's `marker` since
-`feat/collapsed-markers`. `annotation` comes with its slice.
+**Implemented**: `version` 4, `rows`, `row` and `row_label_width`
+since `feat/collapsed-labels`; each voice's `marker` since
+`feat/collapsed-markers`; each group's `annotation` since
+`feat/collapsed-annotation`.
 
 Layout writes contract version 4 (ADR 0059; keys in "Public
 interface"). `lanes`, `lane` and `lane_width` become `rows`, `row` and
@@ -508,6 +484,11 @@ included; a `-` of `:holds dash` gets none (decided for
 `feat/collapsed-markers`).
 
 ### The annotation row
+
+**Implemented** since `feat/collapsed-annotation`. A point's text runs
+to the next text starting after it, and never into the next system:
+it is cut at the end of the system it starts in, with no continued
+piece.
 
 A group with `annotation` (ADR 0057) gets the figure's `annotation` in
 every system: its `position`, its `label` (`null` when it is `""` or
@@ -698,10 +679,9 @@ no figure.
 
 - Drawing, fonts, page size: Typst template.
 - Validation, including the checks that need the music
-  (`notes-collide`, `pattern-names-overlap`; **Planned**: `notes-collide`
-  only): reader.
+  (`notes-collide`): reader.
 - Fitting text: whether an annotation item fits its span, and cutting
-  it (**Planned**): the template.
+  it: the template.
 
 ## Open questions
 

@@ -1,0 +1,19 @@
+(piece "Norot with names")
+
+(use gong-kebyar)
+
+;; The figure on i, with a note about how it is played.
+(pattern norot :instrument reyong :short "i" :long "Norot on i"
+         :annotation "norot on i"
+  o3:1/4 i3 i3 - | i3 - i3 -)
+
+;; Each use is named after the tone it plays; the third use has its own
+;; note. Free text marks the angsel, a break in the figure.
+(part :instrument reyong
+  @norot
+  (@ norot :step -1 :short "a" :annotation "norot on a")
+  (@ norot :step 1 :short "o" :annotation "moves up to o")
+  (text "angsel") o3:1/4 - - - | i3:1 _ _)
+
+(score names
+  (group "Reyong" :annotation-part reyong reyong))

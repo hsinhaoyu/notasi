@@ -206,11 +206,11 @@ start relative to FROM, or #f if it doesn't sound there."
 ;;; member (`parts'), or the parts merged, with a row added where keys
 ;;; sound together (`compact').
 (define (prepare-group group k from to)
-  "(GROUP ROW-LABELS VOICES OVERLAYS KEY-NUMBERS), KEY-NUMBERS a string
-per key-row or #f."
+  "(GROUP ROW-LABELS VOICES ANNOTATION-ITEMS KEY-NUMBERS), KEY-NUMBERS a
+string per key-row or #f."
   (match (prepare-rows group k from to)
     ((group labels voices key-numbers)
-     (list group labels voices (group-overlays group k) key-numbers))))
+     (list group labels voices (annotation-items group k) key-numbers))))
 
 (define (sounds-in? event from to)
   "Whether EVENT sounds somewhere in [FROM, TO), in pulses."
@@ -233,31 +233,92 @@ per key-row or #f."
     (filter (match-lambda ((_ . note) (memq note used)))
             (row-owners group))))
 
-(define (named-spans group)
-  "The spans of GROUP's members at its pattern level, as (START END
-TEXT) in pulses: none when it prints no pattern names."
-  (if (eq? (group-pattern-names group) 'none)
-      '()
-      (append-map
-       (lambda (part)
-         (filter-map
-          (lambda (span)
-            (and (= (pattern-span-depth span) (group-pattern-level group))
-                 (list (pattern-span-start span) (pattern-span-end span)
-                       (if (eq? (group-pattern-names group) 'long)
-                           (pattern-span-long span)
-                           (pattern-span-short span)))))
-          (part-spans part)))
-       (group-parts group))))
+(define (annotation-spans group)
+  "What an annotation row of GROUP shows, as (KIND START END TEXT ALIGN)
+in pulses, KIND pattern, free (a free text with a length) or point (a
+free text at a point, END #f); none without an annotation row."
+  (match (group-annotation group)
+    (#f '())
+    (row
+     (let ((part (annotation-row-part row))
+           (align (annotation-row-align row)))
+       (append
+        (filter-map
+         (lambda (span)
+           (and (= (pattern-span-depth span) (annotation-row-level row))
+                (list 'pattern (pattern-span-start span) (pattern-span-end span)
+                      (match (annotation-row-text row)
+                        ('short (pattern-span-short span))
+                        ('long (pattern-span-long span))
+                        ('annotation (or (pattern-span-annotation span)
+                                         (pattern-span-long span))))
+                      align)))
+         (part-spans part))
+        (map (lambda (text)
+               (let ((start (free-text-start text)))
+                 (match (free-text-length text)
+                   (#f (list 'point start #f (free-text-text text) 'left))
+                   (length (list 'free start (+ start length)
+                                 (free-text-text text) align)))))
+             (part-texts part)))))))
 
-(define (group-overlays group k)
-  "GROUP's pattern names as (START DURATION TEXT) in columns of 1/K
-pulse, identical ones written once, sorted by start."
-  (sort (delete-duplicates
-         (map (match-lambda
-                ((start end text) (list (* k start) (* k (- end start)) text)))
-              (named-spans group)))
-        (lambda (a b) (< (car a) (car b)))))
+(define (annotation-items group k)
+  "GROUP's annotation row items (04, \"The annotation row\"), as
+(START END TEXT ALIGN POINT?) in columns of 1/K pulse, sorted by start.
+A point runs to the start of the next text after it, or (END +inf.0)
+to the end of its system, where it is cut later.  Free text wins over a
+pattern's text: a pattern item ends where a free text starts inside it,
+and one whose start a free text covers starts where that text ends, or
+is left out."
+  (let* ((spans (annotation-spans group))
+         (starts (map cadr spans))
+         (free (filter-map
+                (match-lambda
+                  (('point start _ text align)
+                   (let ((later (filter (lambda (t) (> t start)) starts)))
+                     (list start (if (null? later) +inf.0 (apply min later))
+                           text align #t)))
+                  (('free start end text align) (list start end text align #f))
+                  (_ #f))
+                spans))
+         (patterns
+          (filter-map
+           (match-lambda
+             (('pattern start end text align)
+              (let loop ((start start))
+                (match (find (match-lambda
+                               ((fs fe . _) (and (<= fs start) (< start fe))))
+                             free)
+                  ((_ fe . _) (loop fe))
+                  (#f
+                   (let* ((inside (filter (lambda (fs) (< start fs end))
+                                          (map car free)))
+                          (end (if (null? inside) end (apply min end inside))))
+                     (and (< start end) (list start end text align #f)))))))
+             (_ #f))
+           spans)))
+    (stable-sort
+     (map (match-lambda
+            ((start end text align point?)
+             (list (* k start) (if (inf? end) end (* k end)) text align point?)))
+          (append patterns free))
+     (lambda (a b) (< (car a) (car b))))))
+
+(define (clip-annotation-item item from to)
+  "ITEM cut to the columns [FROM, TO), as a JSON item, or #f.  A point is
+shown only in the system it starts in, up to that system's end; other
+items are cut like events, a continued piece writing its text again."
+  (match item
+    ((start end text align point?)
+     (and (if point? (and (<= from start) (< start to))
+              (and (< start to) (> end from)))
+          (let ((first (max start from))
+                (last (if (inf? end) to (min end to))))
+            `((start . ,(- first from))
+              (dur . ,(inexact->exact (- last first)))
+              (text . ,text)
+              (align . ,(symbol->string align))
+              (continued . ,(< start from))))))))
 
 (define (without-unisons voices)
   "VOICES, (NAME . EVENTS) in member order, with every event that an
@@ -395,20 +456,20 @@ part appears."
             (if (stroke-instrument? instrument) notes (reverse notes)))))
    (delete-duplicates (map part-instrument (group-parts group)) eq?)))
 
-(define (clip-overlay overlay rows from to)
-  "OVERLAY cut to the columns [FROM, TO), as a JSON overlay object, or
-#f.  A continued piece shows its text again."
-  (match overlay
-    ((start duration text)
-     (let ((end (+ start duration)))
-       (and (< start to) (> end from)
-            (let ((first (max start from)))
-              `((start . ,(- first from))
-                (dur . ,(- (min end to) first))
-                (row . 0)
-                (rows . ,rows)
-                (text . ,text)
-                (continued . ,(< start from)))))))))
+(define (annotation-json group items from to)
+  "GROUP's annotation row in the system [FROM, TO): null without one;
+its label null when it has none or the group leaves the pitch column
+out (01)."
+  (match (group-annotation group)
+    (#f 'null)
+    (row
+     `((position . ,(symbol->string (annotation-row-position row)))
+       (label . ,(if (eq? (group-row-labels group) 'none)
+                     'null
+                     (null-if-false (annotation-row-label row))))
+       (items . ,(list->vector
+                  (filter-map (lambda (item) (clip-annotation-item item from to))
+                              items)))))))
 
 (define (printed-label group index)
   "The label GROUP prints on the system numbered INDEX (from 0)."
@@ -419,7 +480,7 @@ part appears."
 
 (define (group-in-system prepared index from to)
   (match prepared
-    ((group key-rows voices overlays key-numbers)
+    ((group key-rows voices items key-numbers)
      `((label . ,(printed-label group index))
        (subtitle . ,(null-if-false (group-subtitle group)))
        (rows . ,(list->vector key-rows))
@@ -435,10 +496,7 @@ part appears."
                            (filter-map (lambda (e) (clip-event e from to))
                                        events))))))
                  voices)))
-       (overlays
-        . ,(list->vector
-            (filter-map (lambda (o) (clip-overlay o (length key-rows) from to))
-                        overlays)))
+       (annotation . ,(annotation-json group items from to))
        ;; The lines behind the group's rows (ADRs 0041, 0043).
        (pulse_lines . ,(pulse-lines? (group-background group)))
        (row_lines . ,(and (memq (group-background group) '(grid horizontal))
@@ -473,8 +531,8 @@ null where the template's default is used (ADR 0056)."
 (define (step-columns piece score)
   "K, the number of columns in a pulse: the step is the largest duration
 1/K that divides 1 pulse, the range's ends, the breaks, the system
-length, and every start and end, within the range, of the events and
-pattern names the score prints."
+length, and every start and end, within the range, of the events and the
+annotation rows' pattern names and free text the score prints."
   (let* ((from (score-from score))
          (to (score-to score))
          (edges (lambda (start end)
@@ -493,10 +551,15 @@ pattern names the score prints."
                                                  (event-duration e))))
                                      (part-events part)))
                        (append-map group-parts (score-groups score)))
+           ;; The annotation row's pattern spans and free text (ADR 0057).
            (append-map (lambda (group)
                          (append-map (match-lambda
-                                       ((start end _) (edges start end)))
-                                     (named-spans group)))
+                                       ((_ start #f . _)
+                                        (if (and (<= from start) (< start to))
+                                            (list start)
+                                            '()))
+                                       ((_ start end . _) (edges start end)))
+                                     (annotation-spans group)))
                        (score-groups score))))))
 
 ;;; ------------------------------------------------------------------
@@ -660,7 +723,15 @@ and every system length from its start, in order."
                                    ((group key-rows _ _ _)
                                     (if (eq? (group-row-labels group) 'none)
                                         '()
-                                        key-rows)))
+                                        ;; An annotation row's label sits
+                                        ;; in the same column.
+                                        (append
+                                         key-rows
+                                         (match (group-annotation group)
+                                           (#f '())
+                                           (row (if (annotation-row-label row)
+                                                    (list (annotation-row-label row))
+                                                    '())))))))
                                  prepared))
         (key-numbers (append-map (match-lambda ((_ _ _ _ keys) (or keys '())))
                                  prepared))

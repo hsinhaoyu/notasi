@@ -331,40 +331,7 @@
               ]
             }
           ],
-          "overlays": [
-            {
-              "start": 0,
-              "dur": 8,
-              "row": 0,
-              "rows": 5,
-              "text": "1",
-              "continued": false
-            },
-            {
-              "start": 8,
-              "dur": 8,
-              "row": 0,
-              "rows": 5,
-              "text": "6",
-              "continued": false
-            },
-            {
-              "start": 16,
-              "dur": 8,
-              "row": 0,
-              "rows": 5,
-              "text": "3",
-              "continued": false
-            },
-            {
-              "start": 24,
-              "dur": 8,
-              "row": 0,
-              "rows": 5,
-              "text": "2",
-              "continued": false
-            }
-          ],
+          "annotation": null,
           "pulse_lines": true,
           "row_lines": true
         },
@@ -426,7 +393,7 @@
               ]
             }
           ],
-          "overlays": [],
+          "annotation": null,
           "pulse_lines": true,
           "row_lines": true
         }

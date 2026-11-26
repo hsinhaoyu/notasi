@@ -289,7 +289,7 @@ PARTS with their names as row labels, every other setting at its
 default unless given."
   (make-group label short subtitle labels 'notes
               (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
-              note-label note-label-octave? 'colour 'none 'none 0 'used #t #f
+              note-label note-label-octave? 'colour 'none #f 'used #t #f
               'pitch-display-name '() '()
               scheme palette colors background #f))
 
@@ -315,7 +315,7 @@ TO (times) say otherwise."
 (define header-keys '(cycle_label pulse_label cycles pulses pulse_lines))
 (define mark-keys '(column text))
 (define group-json-keys
-  '(label subtitle rows key_numbers voices overlays pulse_lines row_lines))
+  '(label subtitle rows key_numbers voices annotation pulse_lines row_lines))
 (define voice-keys '(name marker events))
 (define event-keys '(start dur row text fill text_color continued))
 
@@ -336,7 +336,8 @@ per column?"
     (and (equal? (keys g) group-json-keys)
          (every-in (field g 'rows) string?)
          (every-in (field g 'voices) voice-ok?)
-         (vector? (field g 'overlays))))
+         (let ((a (field g 'annotation)))
+           (or (eq? a 'null) (vector? (field a 'items))))))
   (define (mark-ok? m)
     (and (equal? (keys m) mark-keys)
          (integer? (field m 'column))
@@ -430,10 +431,10 @@ at its default: font_size null, cells \"2em\"."
   `((column . ,column) (text . ,text)))
 
 (define (grp label subtitle lanes . voices)
-  "A group with no overlays, and the default `grid' lines (ADR 0041)."
+  "A group with no annotation row, and the default `grid' lines (ADR 0041)."
   `((label . ,label) (subtitle . ,subtitle) (rows . ,lanes)
     (key_numbers . null)
-    (voices . ,(list->vector voices)) (overlays . #())
+    (voices . ,(list->vector voices)) (annotation . null)
     (pulse_lines . #t) (row_lines . #t)))
 
 (define (voice name . events)
@@ -1929,9 +1930,9 @@ column's line is tested on its own, in \"lines: the first column\")."
   (test-assert "both header rows off"
     (well-formed? (layout (colo-piece (notes 8) #:options
                                       ":cycle-numbers no :pulse-numbers no"))))
-  (test-equal "every group has overlays, empty in this slice"
-    '(#() #() #() #())
-    (map (lambda (g) (field g 'overlays))
+  (test-equal "every group's annotation is null without an annotation row"
+    '(null null null null)
+    (map (lambda (g) (field g 'annotation))
          (vector->list (field (system-ref (layout groups-piece) 0) 'groups))))
   (test-equal "the header's keys in order" header-keys
     (keys (header-of (layout (colo-piece (notes 8))) 0)))
@@ -2201,27 +2202,10 @@ give."
       (and fig (string? (json-string fig))))))
 
 ;;; ------------------------------------------------------------------
-;;; Pattern names (slice feat/scores-overlays; 04, "Pattern names
-;;; (overlays)", "The step", "The range and systems")
+;;; Pattern names over the notes (overlays) were removed in
+;;; feat/collapsed-annotation (ADR 0057); the annotation row's tests,
+;;; below, replace them. The piece and the step test remain.
 
-(define overlay-keys '(start dur row rows text continued))
-
-(define (ov start dur row rows text continued)
-  "An overlay object, keys in the documented order."
-  `((start . ,start) (dur . ,dur) (row . ,row) (rows . ,rows)
-    (text . ,text) (continued . ,continued)))
-
-(define (overlays-of fig s g) (field (group-ref fig s g) 'overlays))
-
-;;; One-pulse notes: one column is one pulse. Every part is 8 pulses.
-;;;   p:  pair (P, 0-4; inside it U 0-2, D 2-4), up (U, 4-6), down (D, 6-8)
-;;;   q:  pair (0-4), up (4-6), then plain notes: the same spans as p's
-;;;       up to 6
-;;;   r:  silent, no spans
-;;;   t1: up at 4-6 only; t2: down at 0-2 only
-;;;   t3: like p, its up renamed "Rise" in its long name only
-;;;   t4: up at 4-6, renamed "U'" at the use
-;;; A group of p and q uses i2 o2 e2: 3 lanes.
 (define overlay-lines
   '("(piece \"O\")"
     "(scale sel (ding :alias i :display \"i\") (dong :alias o :display \"o\")"
@@ -2239,121 +2223,6 @@ give."
     "(part :instrument u :name t3 @pair (@ up :long \"Rise\") @down)"
     "(part :instrument u :name t4 e2 e2 e2 e2 (@ up :short \"U'\") e2 e2)"))
 
-(define (overlay-fig . score-lines)
-  "The figure of the overlay piece with SCORE-LINES, or #f if it raises."
-  (layout-or-false (layout (apply piece-of (append overlay-lines score-lines)))))
-
-(define pqd-short
-  (vector (ov 0 4 0 3 "P" #f) (ov 4 2 0 3 "U" #f) (ov 6 2 0 3 "D" #f)))
-
-(test-group "overlays: names at the chosen level"
-  (let ((fig (overlay-fig "(score s :pattern-names short (group \"U\" p q))")))
-    (test-equal "level 0, short: one overlay per span, identical ones merged"
-      pqd-short
-      (and fig (overlays-of fig 0 0)))
-    (test-equal "an overlay's keys in order" overlay-keys
-      (and fig (keys (vector-ref (overlays-of fig 0 0) 0))))
-    (test-assert "well-formed" (and fig (well-formed? fig)))
-    (test-assert "json-string accepts a figure with overlays"
-      (and fig (string? (json-string fig))))
-    (test-assert "the notes are as without pattern names"
-      (let ((plain (overlay-fig "(score s (group \"U\" p q))")))
-        (and fig plain
-             (equal? (field (group-ref plain 0 0) 'voices)
-                     (field (group-ref fig 0 0) 'voices))))))
-  (test-equal "long: the long names"
-    (vector (ov 0 4 0 3 "Pair" #f) (ov 4 2 0 3 "Up" #f) (ov 6 2 0 3 "Down" #f))
-    (let ((fig (overlay-fig "(score s :pattern-names long (group \"U\" p q))")))
-      (and fig (overlays-of fig 0 0))))
-  (test-equal "level 1: the spans inside pair"
-    (vector (ov 0 2 0 3 "U" #f) (ov 2 2 0 3 "D" #f))
-    (let ((fig (overlay-fig "(score s :pattern-names short :pattern-level 1"
-                            "  (group \"U\" p q))")))
-      (and fig (overlays-of fig 0 0))))
-  (test-equal "a level with no spans: none" #()
-    (let ((fig (overlay-fig "(score s :pattern-names short :pattern-level 2"
-                            "  (group \"U\" p q))")))
-      (and fig (overlays-of fig 0 0))))
-  (test-equal ":pattern-names none (the default): none" #()
-    (let ((fig (overlay-fig "(score s (group \"U\" p q))")))
-      (and fig (overlays-of fig 0 0))))
-  (test-equal ":pattern-names none written out: none" #()
-    (let ((fig (overlay-fig "(score s :pattern-names none (group \"U\" p q))")))
-      (and fig (overlays-of fig 0 0))))
-  (test-equal "a group's own options over the score's"
-    ;; t3 plays only i2 and o2: two lanes.
-    ;; q alone has no `down' figure.
-    (list #() (vector (ov 0 4 0 3 "P" #f) (ov 4 2 0 3 "U" #f))
-          (vector (ov 0 2 0 2 "Up" #f) (ov 2 2 0 2 "Down" #f)))
-    (let ((fig (overlay-fig "(score s :pattern-names short"
-                            "  (group \"A\" :pattern-names none p)"
-                            "  (group \"B\" q)"
-                            "  (group \"C\" :pattern-names long :pattern-level 1 t3))")))
-      (and fig (map (lambda (g) (overlays-of fig 0 g)) '(0 1 2)))))
-  (test-equal "a group whose parts have no spans: none" #()
-    (let ((fig (overlay-fig "(score s :pattern-names short (group \"R\" r))")))
-      (and fig (overlays-of fig 0 0))))
-  (test-equal "sorted by start, whatever the members' order"
-    (vector (ov 0 2 0 3 "D" #f) (ov 4 2 0 3 "U" #f))
-    (let ((fig (overlay-fig "(score s :pattern-names short (group \"T\" t1 t2))")))
-      (and fig (overlays-of fig 0 0))))
-  (test-equal "short: the same short name with different long names is merged"
-    ;; p and t3 play only i2 and o2: two lanes.
-    (vector (ov 0 4 0 2 "P" #f) (ov 4 2 0 2 "U" #f) (ov 6 2 0 2 "D" #f))
-    (let ((fig (overlay-fig "(score s :pattern-names short (group \"U\" p t3))")))
-      (and fig (overlays-of fig 0 0))))
-  (test-equal "the names given at a use"
-    (vector (ov 4 2 0 3 "U'" #f))
-    (let ((fig (overlay-fig "(score s :pattern-names short (group \"T\" t4))")))
-      (and fig (overlays-of fig 0 0)))))
-
-(test-group "overlays: the rows they cover"
-  (test-equal "notes rows: every lane" 3
-    ;; p and q together play i2, o2 and e2: three lanes.
-    (let ((fig (overlay-fig "(score s :pattern-names short (group \"U\" p q))")))
-      (and fig (field (vector-ref (overlays-of fig 0 0) 0) 'rows))))
-  (test-equal "parts rows: every member, a silent one too"
-    (vector (ov 0 4 0 3 "P" #f) (ov 4 2 0 3 "U" #f) (ov 6 2 0 3 "D" #f))
-    (let ((fig (overlay-fig "(score s :pattern-names short :note-label pitch-display-name :note-label-octave no"
-                            "  (group \"U\" :rows parts p q r))")))
-      (and fig (overlays-of fig 0 0))))
-  (test-equal "parts rows: two members, two rows"
-    (vector (ov 0 4 0 2 "P" #f) (ov 4 2 0 2 "U" #f) (ov 6 2 0 2 "D" #f))
-    (let ((fig (overlay-fig "(score s :pattern-names short :note-label pitch-display-name :note-label-octave no"
-                            "  (group \"U\" :rows parts p r))")))
-      (and fig (overlays-of fig 0 0))))
-  (test-equal "a single row: one row"
-    (vector (ov 0 4 0 1 "P" #f) (ov 4 2 0 1 "U" #f) (ov 6 2 0 1 "D" #f))
-    (let ((fig (overlay-fig "(score s :pattern-names short :note-label pitch-display-name :note-label-octave no"
-                            "  (group \"U\" :rows compact p r))")))
-      (and fig (overlays-of fig 0 0)))))
-
-(test-group "overlays across systems"
-  (test-equal "cut at each boundary: the later piece continued, its text kept"
-    (list (vector (ov 0 3 0 3 "P" #f))
-          (vector (ov 0 1 0 3 "P" #t) (ov 1 2 0 3 "U" #f))
-          (vector (ov 0 2 0 3 "D" #f)))
-    (let ((fig (overlay-fig "(score s :pattern-names short :system-length 3"
-                            "  (group \"U\" p q))")))
-      (and fig (map (lambda (s) (overlays-of fig s 0)) '(0 1 2)))))
-  (test-equal "a span ending on a boundary is not cut"
-    (list (vector (ov 0 4 0 3 "P" #f))
-          (vector (ov 0 2 0 3 "U" #f) (ov 2 2 0 3 "D" #f)))
-    (let ((fig (overlay-fig "(score s :pattern-names short :system-length 4"
-                            "  (group \"U\" p q))")))
-      (and fig (map (lambda (s) (overlays-of fig s 0)) '(0 1)))))
-  (test-equal "cut at several boundaries: every later piece continued"
-    (list (vector (ov 0 1 0 3 "Pair" #f)) (vector (ov 0 1 0 3 "Pair" #t))
-          (vector (ov 0 1 0 3 "Pair" #t)) (vector (ov 0 1 0 3 "Pair" #t)))
-    (let ((fig (overlay-fig "(score s :pattern-names long :system-length 1"
-                            "  (group \"U\" p q))")))
-      (and fig (map (lambda (s) (overlays-of fig s 0)) '(0 1 2 3)))))
-  (test-equal "a system without a span in it: no overlays"
-    (list (vector (ov 0 2 0 3 "D" #f)) #())
-    (let ((fig (overlay-fig "(score s :pattern-names short :system-length 4"
-                            "  (group \"T\" t2))")))
-      (and fig (map (lambda (s) (overlays-of fig s 0)) '(0 1))))))
-
 ;;; For the step: rh is one pulse of i2 then half a pulse of rest; outer
 ;;; is rh then another half pulse, 2 pulses. Part h plays outer then o2:
 ;;; events i2 0-1 and o2 2-3 (whole pulses), outer 0-2 at depth 0 and rh
@@ -2367,52 +2236,22 @@ give."
                             "(part :instrument u :name h @outer o2:1)")
                           score-lines)))))
 
-(test-group "the step: pattern-span edges at the chosen level"
-  (test-equal "without pattern names, the spans don't count: 1" 1
+(test-group "the step: the annotation row's pattern-span edges"
+  (test-equal "without an annotation row, the spans don't count: 1" 1
     (let ((fig (span-step-fig "(score s (group \"H\" h))")))
       (and fig (field fig 'steps_per_pulse))))
-  (let ((fig (span-step-fig "(score s :pattern-names short (group \"H\" h))")))
-    (test-equal "level 0: outer's edges are whole pulses: 1" 1
-      (and fig (field fig 'steps_per_pulse)))
-    (test-equal "level 0: its overlay" (vector (ov 0 2 0 2 "O" #f))
-      (and fig (overlays-of fig 0 0))))
-  (let ((fig (span-step-fig "(score s :pattern-names short :pattern-level 1"
-                            "  (group \"H\" h))")))
+  (test-equal "level 0: outer's edges are whole pulses: 1" 1
+    (let ((fig (span-step-fig "(score s (group \"H\" :annotation-part h h))")))
+      (and fig (field fig 'steps_per_pulse))))
+  (let ((fig (span-step-fig "(score s (group \"H\" :annotation-part h"
+                            "  :annotation-level 1 h))")))
     (test-equal "level 1: rh ends on a half pulse: 2" 2
       (and fig (field fig 'steps_per_pulse)))
-    (test-equal "level 1: its overlay in half-pulse columns"
-      (vector (ov 0 3 0 2 "R" #f))
-      (and fig (overlays-of fig 0 0)))
     (test-equal "level 1: the notes in half-pulse columns"
       '((0 2 1 #f) (4 2 0 #f))
       (and fig (timing (events-of fig 0 0 0))))
     (test-equal "level 1: the system is 6 columns" '((0 6))
-      (and fig (starts+steps fig))))
-  (test-equal "a group's :pattern-names none over the score's level: its spans don't count" 1
-    (let ((fig (span-step-fig "(score s :pattern-level 1"
-                              "  (group \"H\" :pattern-names none h))")))
-      (and fig (field fig 'steps_per_pulse)))))
-
-(test-group "overlays: a group built by hand"
-  ;; The piece read without a score; the group carries pattern-names
-  ;; short and pattern-level 0 as the reader would fill them in.
-  (let* ((piece (apply piece-of overlay-lines))
-         (fig (and piece
-                   (layout-or-false
-                    (layout-score
-                     piece
-                     (hand-score
-                      piece
-                      (list (make-group "U" "U" #f 'first-long 'notes
-                                        (map (lambda (n)
-                                               (cons (part-named piece n)
-                                                     (symbol->string n)))
-                                             '(p q))
-                                        'none #t 'colour 'none 'short 0
-                                        'used #t #f 'pitch-display-name '() '()
-                                        'by-pitch 'pastel1 '() 'grid #f))))))))
-    (test-equal "the overlays" pqd-short
-      (and fig (overlays-of fig 0 0)))))
+      (and fig (starts+steps fig)))))
 
 ;;; ------------------------------------------------------------------
 ;;; The range, breaks and labels (slice feat/scores-range; 04, "The
@@ -2552,20 +2391,6 @@ give."
   (test-equal "a break at a cycle's start" '((0 5) (5 4))
     (starts+steps (layout (colo-piece (notes 9) #:pickup 1
                                       #:options ":breaks ((2 1))")))))
-
-(test-group "range: overlays"
-  (test-equal "cut at :from (continued) and at :to"
-    (vector (ov 0 3 0 3 "P" #t) (ov 3 2 0 3 "U" #f) (ov 5 1 0 3 "D" #f))
-    (let ((fig (overlay-fig "(score s :pattern-names short :from 2 :to 7"
-                            "  (group \"U\" p q))")))
-      (and fig (overlays-of fig 0 0))))
-  (test-equal "a span outside the range is not printed"
-    '((0 2 "U" #f))
-    (let ((fig (overlay-fig "(score s :pattern-names short :from 5 :to 6"
-                            "  (group \"U\" p q))")))
-      (and fig (map (lambda (o) (list (field o 'start) (field o 'dur)
-                                      (field o 'text) (field o 'continued)))
-                    (vector->list (overlays-of fig 0 0)))))))
 
 (test-group "the step: the range"
   (let ((fig (layout-or-false
@@ -3114,7 +2939,7 @@ its row is."
 ;;; - Every system of a score carries the same flags.
 
 (define lines-group-keys
-  '(label subtitle rows key_numbers voices overlays pulse_lines row_lines))
+  '(label subtitle rows key_numbers voices annotation pulse_lines row_lines))
 (define lines-header-keys
   '(cycle_label pulse_label cycles pulses pulse_lines))
 (define stroke-grey "#e6e6e6")
@@ -3150,14 +2975,14 @@ its row is."
 (test-group "lines: the header's and the groups' keys"
   (test-equal "the header's keys: pulse_lines after pulses" lines-header-keys
     (keys (header-of (layout (colo-piece (notes 8))) 0)))
-  (test-equal "a group's keys: pulse_lines and row_lines after overlays"
+  (test-equal "a group's keys: pulse_lines and row_lines after annotation"
     lines-group-keys
     (keys (group-ref (layout (colo-piece (notes 8))) 0 0)))
   (test-assert "every system and group, without a colotomy"
     (lines-keys-ok? (layout (ten-score ":system-length 4"))))
   (test-assert "every system and group, the default score"
     (lines-keys-ok? (layout (colo-piece (notes 9) #:pickup 1 #:score? #f))))
-  (test-assert "parts and single rows, with overlays"
+  (test-assert "parts and compact rows"
     (let ((fig (rows-fig "(score s :note-label pitch-display-name :note-label-octave no :background empty"
                          "  (group \"P\" :rows parts p q)"
                          "  (group \"S\" :rows compact r s)"
@@ -3395,7 +3220,7 @@ its row is."
 ;;;   them).
 
 (define rows3-group-keys
-  '(label subtitle rows key_numbers voices overlays pulse_lines row_lines))
+  '(label subtitle rows key_numbers voices annotation pulse_lines row_lines))
 (define rows3-sizes-keys
   '(font_size label_width key_width row_label_width cell_width cell_height))
 
@@ -4483,7 +4308,7 @@ null or one string per lane, and `sizes` this slice's keys?"
                         (list (apply make-group
                                      (list "U" "U" #f 'first-long 'notes
                                            (list (cons p "p") (cons q "q"))
-                                           'none #t 'colour 'none 'none 0
+                                           'none #t 'colour 'none #f
                                            'used #t #f 'pitch-display-name '()
                                            (list (cons q ((piece-proc* 'make-marker)
                                                           'cross 0.5 "#111111" #f "1.5pt")))
@@ -4505,6 +4330,435 @@ null or one string per lane, and `sizes` this slice's keys?"
                   (m (and n (string-contains js "\"marker\"" n)))
                   (e (and n (string-contains js "\"events\"" n))))
              (and m e (< n m e)))))))
+
+;;; ------------------------------------------------------------------
+;;; Slice feat/collapsed-annotation (04, "The annotation row", "The
+;;; step", "Sizes" and the version 4 keys table; 05, "JSON contract
+;;; (version 4)"; ADRs 0057, 0059): each group's `annotation`, in place
+;;; of `overlays`: null, or {position, label, items}, each item {start,
+;;; dur, text, align, continued} in the system's columns.
+;;; Choices made where the docs are not explicit:
+;;; - "The next text in the row", where a point ends, is the first text
+;;;   (free text or a pattern's) starting strictly after the point.
+;;; - A point never runs past the end of its system: it ends at the
+;;;   next text's start or at its system's end, whichever comes first,
+;;;   so it has no continued piece. With a range, a system ends at `to`
+;;;   at the latest.
+;;; - A pattern item cut by a free text starting inside it ends there,
+;;;   and doesn't start again after the free text (04: "ends where a
+;;;   free text starts inside it").
+;;; - A pattern item whose whole span is covered by free text is
+;;;   dropped.
+;;; - `align` is the row's for every pattern piece, continued pieces
+;;;   included; "left" for free text.
+;;; - An annotation row's label counts in `row_label_width` like a row
+;;;   label (04, "Sizes": "an annotation row's label counts"); a null
+;;;   label counts 0.
+;;; - The annotation (position and label) is the same in every system;
+;;;   a system with nothing in the row has items #().
+
+(define annotation-keys '(position label items))
+(define annotation-item-keys '(start dur text align continued))
+(define annotation-group-keys
+  '(label subtitle rows key_numbers voices annotation pulse_lines row_lines))
+
+(define (it start dur text align continued)
+  "An annotation item, keys in the documented order."
+  `((start . ,start) (dur . ,dur) (text . ,text) (align . ,align)
+    (continued . ,continued)))
+
+(define (annotation-of fig s g) (get (group-ref fig s g) 'annotation))
+
+(define (items-of fig s g)
+  "The items of group G's annotation in system S, or the annotation
+itself when it isn't an object (null, or missing)."
+  (let ((a (annotation-of fig s g)))
+    (if (pair? a) (get a 'items) a)))
+
+;;; One-pulse notes: one column is one pulse. Every part is 8 pulses.
+;;;   p: pair (0-4; inside it up 0-2, down 2-4), up (4-6), down (6-8)
+;;;   q: pair (0-4), then notes
+;;;   r: silent
+;;;   t: up 0-2 with the use's annotation "rise", down 2-4 with "fall"
+;;;      and the long name "Fall", then notes
+;;;   f: pair (0-4), a point "angsel" at 4, up (4-6), down (6-8)
+;;;   g: marked twice (0-4, 4-8), each with a point "hit" 1 pulse in
+;;;   h: "intro" over 3 pulses from 0, then up, down, up, down
+;;;   w: wide (0-8), with "mid" over 2 pulses from 2
+;;;   a: points "a" at 0 and "b" at 2; no patterns
+;;;   b: points "one" at 1 and "two" at 5
+;;;   c: "long" over 3 pulses from 3
+;;;   d: a point "x" at 0, "y" over 1 pulse from 3
+;;; up has the annotation "going up", pair "a pair"; down none.
+;;; Every part plays i2 and o2 only: rows o2 i2.
+(define annotation-lines
+  '("(piece \"A\")"
+    "(scale sel (ding :alias i :display \"i\") (dong :alias o :display \"o\")"
+    "  (deng :alias e :display \"e\") (dung :alias u :display \"u\")"
+    "  (dang :alias a :display \"a\"))"
+    "(instrument u sel a1 i2 o2 e2 u2)"
+    "(pattern up :instrument u :short \"U\" :long \"Up\" :annotation \"going up\" i2 o2)"
+    "(pattern down :instrument u :short \"D\" :long \"Down\" o2 i2)"
+    "(pattern pair :instrument u :short \"P\" :long \"Pair\" :annotation \"a pair\" @up @down)"
+    "(pattern marked :instrument u :short \"M\" :long \"Marked\" i2 (text \"hit\") o2 i2 o2)"
+    "(pattern wide :instrument u :short \"W\" :long \"Wide\" i2 o2 (text \"mid\" 2) i2 o2 i2 o2 i2 o2)"
+    "(part :instrument u :name p @pair @up @down)"
+    "(part :instrument u :name q @pair i2 i2 i2 i2)"
+    "(part :instrument u :name r - - - - - - - -)"
+    "(part :instrument u :name t (@ up :annotation \"rise\") (@ down :annotation \"fall\" :long \"Fall\") i2 i2 i2 i2)"
+    "(part :instrument u :name f @pair (text \"angsel\") @up @down)"
+    "(part :instrument u :name g @marked @marked)"
+    "(part :instrument u :name h (text \"intro\" 3) @up @down @up @down)"
+    "(part :instrument u :name w @wide)"
+    "(part :instrument u :name a (text \"a\") i2 i2 (text \"b\") i2 i2 i2 i2 i2 i2)"
+    "(part :instrument u :name b i2 (text \"one\") i2 i2 i2 i2 (text \"two\") i2 i2 i2)"
+    "(part :instrument u :name c i2 i2 i2 (text \"long\" 3) i2 i2 i2 i2 i2)"
+    "(part :instrument u :name d (text \"x\") i2 i2 i2 (text \"y\" 1) i2 i2 i2 i2 i2)"))
+
+(define (annotation-fig . score-lines)
+  "The figure of the annotation piece with SCORE-LINES, or #f."
+  (layout-or-false
+   (layout (apply piece-of (append annotation-lines score-lines)))))
+
+(define (row-items part . options)
+  "The items in system 0 of a one-group score of PART with an annotation
+row from PART and OPTIONS (strings), or #f."
+  (let ((fig (annotation-fig
+              (string-append "(score s (group \"G\" :annotation-part " part " "
+                             (string-join options " ") " " part "))"))))
+    (and fig (items-of fig 0 0))))
+
+(define (row-items-by-system part score-options . options)
+  "The items of each system of a one-group score with SCORE-OPTIONS and
+an annotation row from PART with OPTIONS, or #f."
+  (let ((fig (annotation-fig
+              (string-append "(score s " score-options
+                             " (group \"G\" :annotation-part " part " "
+                             (string-join options " ") " " part "))"))))
+    (and fig (map (lambda (s) (items-of fig s 0))
+                  (iota (length (systems fig)))))))
+
+(test-group "[annotation] the group's annotation: null without a row"
+  (let ((fig (annotation-fig "(score s (group \"P\" p) (group \"F\" f))")))
+    (test-equal "null for every group" '(null null)
+      (and fig (list (annotation-of fig 0 0) (annotation-of fig 0 1))))
+    (test-equal "no overlays key" '(missing missing)
+      (and fig (list (get (group-ref fig 0 0) 'overlays)
+                     (get (group-ref fig 0 1) 'overlays)))))
+  (let ((fig (annotation-fig)))
+    (test-assert "the default score: null in every group"
+      (and fig (every-group fig (lambda (g) (eq? 'null (get g 'annotation))))))))
+
+(test-group "[annotation] the figure's keys"
+  (let ((fig (annotation-fig "(score s :system-length 4"
+                             "  (group \"P\" :annotation-part p p)"
+                             "  (group \"Q\" q)"
+                             "  (group \"F\" :annotation-part f :annotation-position above f))")))
+    (test-assert "group keys: annotation where overlays was"
+      (and fig (every-group fig (lambda (g) (equal? (keys g) annotation-group-keys)))))
+    (test-assert "annotation keys: position, label, items"
+      (and fig (every-group
+                fig (lambda (g)
+                      (let ((a (get g 'annotation)))
+                        (or (eq? a 'null)
+                            (and (equal? (keys a) annotation-keys)
+                                 (vector? (get a 'items)))))))))
+    (test-assert "item keys: start, dur, text, align, continued"
+      (and fig (every-group
+                fig (lambda (g)
+                      (let ((a (get g 'annotation)))
+                        (or (eq? a 'null)
+                            (every (lambda (i) (equal? (keys i) annotation-item-keys))
+                                   (vector->list (get a 'items)))))))))
+    (test-assert "no overlays key anywhere"
+      (and fig (every-group fig (lambda (g) (not (assq 'overlays g))))))
+    (test-equal "version 4" 4 (and fig (field fig 'version)))
+    (test-assert "json-string accepts it" (and fig (string? (json-string fig))))
+    (test-assert "annotation is written between voices and pulse_lines"
+      (and fig
+           (let* ((js (json-string fig))
+                  (v (string-contains js "\"voices\""))
+                  (a (and v (string-contains js "\"annotation\"" v)))
+                  (l (and a (string-contains js "\"pulse_lines\"" a))))
+             (and v a l #t))))))
+
+(test-group "[annotation] position and label"
+  (let ((fig (annotation-fig "(score s (group \"P\" :annotation-part p p))")))
+    (test-equal "the defaults: below, label null"
+      '("below" null)
+      (and fig (let ((a (annotation-of fig 0 0)))
+                 (list (get a 'position) (get a 'label))))))
+  (let ((fig (annotation-fig "(score s (group \"P\" :annotation-part p"
+                             "  :annotation-position above :annotation-label \"Kotekan\" p))")))
+    (test-equal "above, with a label"
+      '("above" "Kotekan")
+      (and fig (let ((a (annotation-of fig 0 0)))
+                 (list (get a 'position) (get a 'label))))))
+  (let ((fig (annotation-fig "(score s (group \"P\" :annotation-part p"
+                             "  :annotation-label \"\" p))")))
+    (test-equal "an empty label: null" 'null
+      (and fig (get (annotation-of fig 0 0) 'label))))
+  (let ((fig (annotation-fig "(score s (group \"P\" :annotation-part p :row-labels none"
+                             "  :annotation-label \"Kotekan\" p))")))
+    (test-equal ":row-labels none: no pitch column, label null" 'null
+      (and fig (get (annotation-of fig 0 0) 'label))))
+  (let ((fig (annotation-fig "(score s :row-labels none"
+                             "  (group \"P\" :annotation-part p :annotation-label \"K\" p))")))
+    (test-equal ":row-labels none from the score: label null" 'null
+      (and fig (get (annotation-of fig 0 0) 'label))))
+  (let ((fig (annotation-fig "(score s :system-length 3"
+                             "  (group \"P\" :annotation-part p :annotation-position above"
+                             "    :annotation-label \"K\" p))")))
+    (test-equal "the same position and label in every system"
+      '(("above" "K") ("above" "K") ("above" "K"))
+      (and fig (map (lambda (s)
+                      (let ((a (annotation-of fig s 0)))
+                        (list (get a 'position) (get a 'label))))
+                    '(0 1 2))))))
+
+(test-group "[annotation] pattern text at the chosen level"
+  (for-each
+   (match-lambda
+     ((name part options items)
+      (test-equal name items (apply row-items part options))))
+   (list
+    (list "level 0, annotation (the default): long name where there is none"
+          "p" '()
+          (vector (it 0 4 "a pair" "left" #f) (it 4 2 "going up" "left" #f)
+                  (it 6 2 "Down" "left" #f)))
+    (list "level 0, short" "p" '(":annotation-text short")
+          (vector (it 0 4 "P" "left" #f) (it 4 2 "U" "left" #f)
+                  (it 6 2 "D" "left" #f)))
+    (list "level 0, long" "p" '(":annotation-text long")
+          (vector (it 0 4 "Pair" "left" #f) (it 4 2 "Up" "left" #f)
+                  (it 6 2 "Down" "left" #f)))
+    (list "level 0, annotation written out" "p" '(":annotation-text annotation")
+          (vector (it 0 4 "a pair" "left" #f) (it 4 2 "going up" "left" #f)
+                  (it 6 2 "Down" "left" #f)))
+    (list "level 1: the spans inside pair" "p" '(":annotation-level 1")
+          (vector (it 0 2 "going up" "left" #f) (it 2 2 "Down" "left" #f)))
+    (list "level 1, short" "p" '(":annotation-level 1 :annotation-text short")
+          (vector (it 0 2 "U" "left" #f) (it 2 2 "D" "left" #f)))
+    (list "a level with no spans: no items" "p" '(":annotation-level 2") #())
+    (list "where there is no pattern, the row is empty" "q"
+          '(":annotation-text short") (vector (it 0 4 "P" "left" #f)))
+    (list "a part with no spans and no text: no items" "r" '() #())
+    (list "the use's annotation" "t" '()
+          (vector (it 0 2 "rise" "left" #f) (it 2 2 "fall" "left" #f)))
+    (list "the use's long name" "t" '(":annotation-text long")
+          (vector (it 0 2 "Up" "left" #f) (it 2 2 "Fall" "left" #f)))
+    (list "short: the pattern's, the use gave none" "t" '(":annotation-text short")
+          (vector (it 0 2 "U" "left" #f) (it 2 2 "D" "left" #f)))
+    (list "align center" "p" '(":annotation-text short :annotation-align center")
+          (vector (it 0 4 "P" "center" #f) (it 4 2 "U" "center" #f)
+                  (it 6 2 "D" "center" #f)))
+    (list "align right" "p" '(":annotation-text short :annotation-align right")
+          (vector (it 0 4 "P" "right" #f) (it 4 2 "U" "right" #f)
+                  (it 6 2 "D" "right" #f)))
+    (list "align left written out" "p" '(":annotation-text short :annotation-align left")
+          (vector (it 0 4 "P" "left" #f) (it 4 2 "U" "left" #f)
+                  (it 6 2 "D" "left" #f)))))
+  (let ((fig (annotation-fig "(score s (group \"PQ\" :annotation-part q :annotation-text short p q))")))
+    (test-equal "only the annotation part's spans, not the other members'"
+      (vector (it 0 4 "P" "left" #f))
+      (and fig (items-of fig 0 0))))
+  (let ((fig (annotation-fig "(score s (group \"F\" :annotation-part p :annotation-text short f p))")))
+    (test-equal "another member's free text isn't shown"
+      (vector (it 0 4 "P" "left" #f) (it 4 2 "U" "left" #f) (it 6 2 "D" "left" #f))
+      (and fig (items-of fig 0 0))))
+  (let ((plain (annotation-fig "(score s (group \"P\" p q))"))
+        (fig (annotation-fig "(score s (group \"P\" :annotation-part p p q))")))
+    (test-assert "the voices and rows are as without the row"
+      (and plain fig
+           (equal? (list (get (group-ref plain 0 0) 'voices)
+                         (get (group-ref plain 0 0) 'rows))
+                   (list (get (group-ref fig 0 0) 'voices)
+                         (get (group-ref fig 0 0) 'rows))))))
+  (for-each
+   (lambda (rows)
+     (let ((fig (annotation-fig
+                 (string-append "(score s :note-label pitch-display-name"
+                                " (group \"P\" :rows " rows
+                                " :annotation-part p :annotation-text short p q))"))))
+       (test-equal (string-append "on " rows " rows: the same items")
+         (vector (it 0 4 "P" "left" #f) (it 4 2 "U" "left" #f) (it 6 2 "D" "left" #f))
+         (and fig (items-of fig 0 0)))))
+   '("parts" "compact")))
+
+(test-group "[annotation] free text"
+  (for-each
+   (match-lambda
+     ((name part options items)
+      (test-equal name items (apply row-items part options))))
+   (list
+    (list "points run to the next text, the last to the end of the system"
+          "a" '()
+          (vector (it 0 2 "a" "left" #f) (it 2 6 "b" "left" #f)))
+    (list "a point, then a text with a length" "d" '()
+          (vector (it 0 3 "x" "left" #f) (it 3 1 "y" "left" #f)))
+    (list "a text with a length" "c" '()
+          (vector (it 3 3 "long" "left" #f)))
+    (list "always left, whatever the row's align" "a" '(":annotation-align right")
+          (vector (it 0 2 "a" "left" #f) (it 2 6 "b" "left" #f)))
+    (list "shown whatever the level" "f" '(":annotation-level 3")
+          (vector (it 4 4 "angsel" "left" #f)))
+    (list "a point where a pattern starts: it runs to the next text, and covers that pattern"
+          "f" '(":annotation-align center")
+          (vector (it 0 4 "a pair" "center" #f) (it 4 2 "angsel" "left" #f)
+                  (it 6 2 "Down" "center" #f)))
+    (list "a point inside a pattern: the pattern ends there; the point runs to the next pattern"
+          "g" '(":annotation-text short :annotation-align center")
+          (vector (it 0 1 "M" "center" #f) (it 1 3 "hit" "left" #f)
+                  (it 4 1 "M" "center" #f) (it 5 3 "hit" "left" #f)))
+    (list "a length over a pattern's start: it starts where the text ends"
+          "h" '(":annotation-text short")
+          (vector (it 0 3 "intro" "left" #f) (it 3 1 "D" "left" #f)
+                  (it 4 2 "U" "left" #f) (it 6 2 "D" "left" #f)))
+    (list "a length inside a pattern: the pattern ends where it starts"
+          "w" '(":annotation-text short")
+          (vector (it 0 2 "W" "left" #f) (it 2 2 "mid" "left" #f))))))
+
+(test-group "[annotation] across systems"
+  (test-equal "a pattern cut at each break: the later piece continued, its text again"
+    (list (vector (it 0 3 "P" "left" #f))
+          (vector (it 0 1 "P" "left" #t) (it 1 2 "U" "left" #f))
+          (vector (it 0 2 "D" "left" #f)))
+    (row-items-by-system "p" ":system-length 3" ":annotation-text short"))
+  (test-equal "continued pieces keep the row's align"
+    (list (vector (it 0 3 "P" "right" #f))
+          (vector (it 0 1 "P" "right" #t) (it 1 2 "U" "right" #f))
+          (vector (it 0 2 "D" "right" #f)))
+    (row-items-by-system "p" ":system-length 3" ":annotation-text short"
+                         ":annotation-align right"))
+  (test-equal "cut at several breaks"
+    (list (vector (it 0 2 "a pair" "left" #f)) (vector (it 0 2 "a pair" "left" #t))
+          (vector (it 0 2 "going up" "left" #f)) (vector (it 0 2 "Down" "left" #f)))
+    (row-items-by-system "p" ":system-length 2"))
+  (test-equal "a span ending on a break is not cut"
+    (list (vector (it 0 4 "P" "left" #f))
+          (vector (it 0 2 "U" "left" #f) (it 2 2 "D" "left" #f)))
+    (row-items-by-system "p" ":system-length 4" ":annotation-text short"))
+  (test-equal "a free text with a length, cut at a break"
+    (list (vector (it 3 1 "long" "left" #f)) (vector (it 0 2 "long" "left" #t)))
+    (row-items-by-system "c" ":system-length 4"))
+  (test-equal "a point runs to the end of its system, not into the next"
+    (list (vector (it 1 3 "one" "left" #f)) (vector (it 1 3 "two" "left" #f)))
+    (row-items-by-system "b" ":system-length 4"))
+  (test-equal "a system with nothing in the row: no items"
+    (list (vector (it 0 4 "P" "left" #f)) #())
+    (row-items-by-system "q" ":system-length 4" ":annotation-text short")))
+
+(test-group "[annotation] the range"
+  (test-equal "cut at :from (continued) and at :to"
+    (list (vector (it 0 3 "P" "left" #t) (it 3 1 "U" "left" #f)))
+    (row-items-by-system "p" ":from 2 :to 5" ":annotation-text short"))
+  (test-equal "a free text with a length that started before :from"
+    (list (vector (it 0 2 "long" "left" #t)))
+    (row-items-by-system "c" ":from 5"))
+  (test-equal "a point runs to :to at the latest"
+    (list (vector (it 0 1 "M" "left" #f) (it 1 3 "hit" "left" #f)
+                  (it 4 1 "M" "left" #f) (it 5 1 "hit" "left" #f)))
+    (row-items-by-system "g" ":to 6" ":annotation-text short"))
+  (test-equal "spans outside the range: none"
+    (list (vector (it 0 2 "D" "left" #f)))
+    (row-items-by-system "p" ":from 7" ":annotation-text short")))
+
+;;; For the step: whole-pulse notes, with a free text on a half or a
+;;; quarter pulse.
+;;;   h2: i2 (0-1), a point "x" at 3/2, i2 (2-3)
+;;;   h4: "q" over 1/4 pulse from 0, then i2 i2 i2
+;;;   k2: o2 o2 o2
+(define (text-step-fig . score-lines)
+  (layout-or-false
+   (layout (apply piece-of
+                  (append (list-head annotation-lines 5)
+                          '("(part :instrument u :name h2 i2:1 -:1/2 (text \"x\") -:1/2 i2:1)"
+                            "(part :instrument u :name h4 (text \"q\" 1/4) i2:1 i2 i2)"
+                            "(part :instrument u :name k2 o2 o2 o2)")
+                          score-lines)))))
+
+(test-group "[annotation] the step: free text and annotation spans"
+  (let ((fig (text-step-fig "(score s (group \"H\" :annotation-part h2 h2))")))
+    (test-equal "a free text's start counts: 2" 2
+      (and fig (field fig 'steps_per_pulse)))
+    (test-equal "the point in half-pulse columns, to the system's end"
+      (vector (it 3 3 "x" "left" #f))
+      (and fig (items-of fig 0 0)))
+    (test-equal "the notes in half-pulse columns" '((0 2 0 #f) (4 2 0 #f))
+      (and fig (timing (events-of fig 0 0 0)))))
+  (test-equal "without an annotation row, free text doesn't count: 1" 1
+    (let ((fig (text-step-fig "(score s (group \"H\" h2))")))
+      (and fig (field fig 'steps_per_pulse))))
+  (test-equal "free text of a part that isn't the row's doesn't count: 1" 1
+    (let ((fig (text-step-fig "(score s (group \"H\" :annotation-part k2 h2 k2))")))
+      (and fig (field fig 'steps_per_pulse))))
+  (let ((fig (text-step-fig "(score s (group \"H\" :annotation-part h4 h4))")))
+    (test-equal "a free text's end counts: 4" 4
+      (and fig (field fig 'steps_per_pulse)))
+    (test-equal "its item, one quarter-pulse column"
+      (vector (it 0 1 "q" "left" #f))
+      (and fig (items-of fig 0 0)))))
+
+;;; span-step-fig's part h: outer (0-2) at depth 0, rh (0-3/2) at depth 1.
+(test-group "[annotation] the step: pattern-span edges of the annotation row's part"
+  (let ((fig (span-step-fig "(score s (group \"H\" :annotation-part h"
+                            "  :annotation-text short h))")))
+    (test-equal "level 0: outer's edges are whole pulses: 1" 1
+      (and fig (field fig 'steps_per_pulse)))
+    (test-equal "level 0: its item" (vector (it 0 2 "O" "left" #f))
+      (and fig (items-of fig 0 0))))
+  (let ((fig (span-step-fig "(score s (group \"H\" :annotation-part h"
+                            "  :annotation-level 1 :annotation-text short h))")))
+    (test-equal "level 1: rh ends on a half pulse: 2" 2
+      (and fig (field fig 'steps_per_pulse)))
+    (test-equal "level 1: its item in half-pulse columns"
+      (vector (it 0 3 "R" "left" #f))
+      (and fig (items-of fig 0 0))))
+  (test-equal "without an annotation row, the spans don't count: 1" 1
+    (let ((fig (span-step-fig "(score s (group \"H\" h))")))
+      (and fig (field fig 'steps_per_pulse)))))
+
+(test-group "[annotation] sizes: row_label_width counts the row's label"
+  (define (width . score-lines)
+    (let ((fig (apply annotation-fig score-lines)))
+      (and fig (get (field fig 'sizes) 'row_label_width))))
+  (test-equal "rows \"o2\" \"i2\": 2.0em" "2.0em"
+    (width "(score s (group \"P\" :annotation-part p p))"))
+  (test-equal "a label of 7 characters: 0.52 × 7 + 1 = 4.6em" "4.6em"
+    (width "(score s (group \"P\" :annotation-part p :annotation-label \"Kotekan\" p))"))
+  (test-equal "a label shorter than the rows' doesn't change it" "2.0em"
+    (width "(score s (group \"P\" :annotation-part p :annotation-label \"K\" p))"))
+  (test-equal ":row-labels none: the label is null and counts 0" "0.0em"
+    (width "(score s :row-labels none"
+           "  (group \"P\" :annotation-part p :annotation-label \"Kotekan\" p))")))
+
+(test-group "[annotation] a group built by hand"
+  (define (ann-piece-proc name)
+    (let ((v (module-variable (resolve-interface '(notasi piece)) name)))
+      (cond ((not v) (lambda args (error "not exported by (notasi piece):" name)))
+            ((macro? (variable-ref v)) (eval name (resolve-module '(notasi piece))))
+            (else (variable-ref v)))))
+  (let* ((piece (apply piece-of annotation-lines))
+         (fig (and piece
+                   (layout-or-false
+                    (let ((p (part-named piece 'p)))
+                      (layout-score
+                       piece
+                       (hand-score
+                        piece
+                        (list (apply make-group
+                                     (list "U" "U" #f 'first-long 'notes
+                                           (list (cons p "p"))
+                                           'none #t 'colour 'none
+                                           ((ann-piece-proc 'make-annotation-row)
+                                            p 'above 'center 0 'long "Pola")
+                                           'used #t #f 'pitch-display-name '() '()
+                                           'by-pitch 'pastel1 '() 'grid #f))))))))))
+    (test-equal "the record's settings, as the reader would fill them"
+      `((position . "above") (label . "Pola")
+        (items . ,(vector (it 0 4 "Pair" "center" #f) (it 4 2 "Up" "center" #f)
+                          (it 6 2 "Down" "center" #f))))
+      (and fig (annotation-of fig 0 0)))))
 
 (test-end "layout")
 

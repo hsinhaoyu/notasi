@@ -31,13 +31,11 @@ keys and `:row-labels yes`/`no` bad values, and `needs-note-label`
 single` a bad value, and `notes-collide` for one key only, on `notes`
 and compact rows (ADRs 0055, 0060). Since `feat/collapsed-markers`:
 `:part-marker`, its values checked with the group's options and its
-parts after the members (ADR 0056).
-
-**Planned** for iteration 5 (ADR 0057): the
-annotation row, pattern annotations and `(text ...)`; the other removed
-options becoming unknown keys; `pattern-names-overlap` removed.
-See "Iteration 5". Until they are built, the reader takes the old
-options.
+parts after the members (ADR 0056). Since `feat/collapsed-annotation`:
+the annotation row, pattern annotations and `(text ...)` (`bad-text`),
+`:pattern-names` and `:pattern-level` unknown keys, and
+`pattern-names-overlap` removed (ADR 0057). Iteration 5's reader is
+built; see "Iteration 5".
 
 ## Responsibility
 
@@ -208,9 +206,10 @@ Finding templates (**Implemented**):
     `rows` `compact` since `feat/collapsed-compact`. `part-marker`
     since `feat/collapsed-markers`: a `:part-marker` entry's missing
     `:symbol` is `none`, its other missing keys `#f` (the template's
-    defaults). **Planned** (iteration 5): `annotation`, in place of
-    `pattern-names` and `pattern-level`; an annotation row's missing
-    options are their defaults. Free text is collected with the part's events (step 9).
+    defaults). `annotation` since `feat/collapsed-annotation`, in
+    place of `pattern-names` and `pattern-level`: an annotation row's
+    missing options are their defaults. Free text is collected with the
+    part's events (step 9).
 13. **Check the piece invariants** (02-piece.md).
 
 ## Error reporting
@@ -291,10 +290,10 @@ jaya.nts:72: part `polos`, cycle 1, pulse 3 1/2, in pattern `polos-1`
   15. Generated parts' names (`duplicate-definition`).
   16. Each score, in file order: its options, then each group in order
       (its options, its members, its instruments), then the checks that
-      need the music (`notes-collide`, `pattern-names-overlap`).
-      **Planned** (iteration 5): after its members, whether the parts
-      that `:part-marker` and `:annotation-part` name are among them;
-      `pattern-names-overlap` is gone.
+      need the music (`notes-collide`). After its members, whether the
+      parts that `:part-marker` and `:annotation-part` name are among
+      them (iteration 5). `pattern-names-overlap`, checked here before
+      iteration 5, is gone.
 - Which line an error reports:
   - The line of the list to blame: the form, or the list inside it
     (a pitch, a group, a member, a `rep`, a pattern use).
@@ -313,7 +312,8 @@ pitches), **[durations]**, **[rep]**, **[colotomy]**, **[patterns]** and
 **[scores]**; iteration 3 adds **[parts]** (the forms of ADR 0038,
 **Implemented**) and **[score-options]** (the score options of ADRs
 0039–0041, `:keys` and `:display`, **Implemented**); iteration 5 adds
-**[iteration 5]** (ADRs 0053–0057, **Planned**). Each case is
+**[iteration 5]** (ADRs 0053–0057, **Implemented** over
+`feat/collapsed`'s slices). Each case is
 followed by its `kind`.
 
 ### Files and forms
@@ -579,9 +579,9 @@ All errors at a use carry the part, the time and the chain of uses.
 
 ## Iteration 5
 
-**Planned** (ADRs 0051, 0053–0057). What the reader adds and removes
-when the milestones are built; the records it fills are in 02,
-"Iteration 5". The error cases are tagged **[iteration 5]** above.
+**Implemented** (ADRs 0051, 0053–0057), over `feat/collapsed`'s five
+slices. What the reader added and removed; the records it fills are in
+02, "Iteration 5". The error cases are tagged **[iteration 5]** above.
 
 - **Piece information**: the `piece` form takes the nine keys of 01,
   each a string, kept in `piece-info` in the order written (step 4).
@@ -621,7 +621,7 @@ when the milestones are built; the records it fills are in 02,
 - **Error kinds renamed** to the glossary's terms (ADR 0051), with the
   reader's other changes. Tests check kinds, so they change with them:
 
-  | Now | Planned | Slice |
+  | Before | Now | Slice |
   |---|---|---|
   | `bad-degree` | `bad-pitch` | **Implemented** (`feat/collapsed-terms`) |
   | `duplicate-degree` | `duplicate-pitch` | **Implemented** (`feat/collapsed-terms`) |

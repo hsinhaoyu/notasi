@@ -444,7 +444,8 @@ its parts, each a `part' form (ADR 0038)."
 (define pattern-options
   `((instrument ,(lambda (v) (and (symbol? v) (not (key? v)))) . "an instrument's name")
     (short ,string? . "a string")
-    (long ,string? . "a string")))
+    (long ,string? . "a string")
+    (annotation ,string? . "a string")))
 
 (define (pattern-name? x)
   (and (symbol? x)
@@ -761,7 +762,7 @@ from it, as definitions in merged order."
     (display ,string? . "a string")
     (damped ,string? . "a string")))
 
-(define reserved-names '(rep @))
+(define reserved-names '(rep @ text))
 
 (define (parse-pitch datum set-line)
   "Build a pitch record from DATUM: a name, or (NAME :key value ...).  A
@@ -959,8 +960,8 @@ before it, after its instrument and before its tokens.  Return
                                 #:cycle cycle #:pickup pickup
                                 #:patterns (current-patterns)))))
               line name))
-         (lambda (events written spans)
-           (cons (make-part name instrument events 'written spans
+         (lambda (events written spans texts)
+           (cons (make-part name instrument events 'written spans texts
                             (location line))
                  written)))))))
 
@@ -998,6 +999,7 @@ instrument.  PATTERNS is an alist of every pattern, from name to
          (check-pattern tokens instrument #:patterns patterns))
        (cons (make-pattern name instrument short
                            (or (assq-ref options 'long) short)
+                           (assq-ref options 'annotation)
                            (location line))
              tokens)))))
 
@@ -1014,7 +1016,7 @@ instrument and measured."
                                                 (assq-ref options 'instrument))))
                       (and instrument
                            (cons name
-                                 (cons (make-pattern name instrument "" ""
+                                 (cons (make-pattern name instrument "" "" #f
                                                      (make-source-location
                                                       file (cdr form)))
                                        tokens))))))))
@@ -1059,7 +1061,7 @@ cycle.  INSTRUMENTS is an alist from name to instrument record."
                                  length name cycle))
                    (make-part part-name instrument
                               (repeat-events events length (/ cycle length))
-                              'colotomy '() (location line))))))))
+                              'colotomy '() '() (location line))))))))
            (colotomy-part-forms form))
       (location line)))))
 
@@ -1151,7 +1153,7 @@ cycle's last pulse: from PICKUP - CYCLE, cycle after cycle."
   (let loop ((from (- pickup cycle)) (events '()))
     (if (>= from length)
         (make-part (part-name part) (part-instrument part) events
-                   'colotomy '() (part-location part))
+                   'colotomy '() '() (part-location part))
         (loop (+ from cycle)
               (append events (clip-events (part-events part) from length))))))
 
@@ -1162,7 +1164,7 @@ cut at the piece's end, on the piece's kempli or a built-in one."
              (or (assq-ref instruments 'kempli) built-in-kempli)
              (map (lambda (t) (make-event t (min 1 (- length t)) '(0)))
                   (iota (ceiling length)))
-             'timekeeper '()
+             'timekeeper '() '()
              (and colotomy (colotomy-location colotomy))))
 
 (define (generated-parts instruments colotomy pickup length)
@@ -1220,8 +1222,6 @@ cut at the piece's end, on the piece's kempli or a built-in one."
     (rows ,(lambda (v) (memq v '(notes parts compact))) . "notes, parts or compact")
     (fill ,(lambda (v) (memq v '(colour none))) . "colour or none")
     (holds ,(lambda (v) (memq v '(none dash))) . "none or dash")
-    (pattern-names ,(lambda (v) (memq v '(none short long))) . "none, short or long")
-    (pattern-level ,(lambda (v) (and (exact-integer? v) (>= v 0))) . "a whole number from 0")
     (labels ,(lambda (v) (memq v '(long short first-long))) . "long, short or first-long")
     (background ,(lambda (v) (memq v '(grid vertical horizontal empty)))
                 . "grid, vertical, horizontal or empty")
@@ -1275,7 +1275,46 @@ keys and values are checked with the group's members (ADR 0056)."
 (define group-only-options
   `((subtitle ,string? . "a string")
     (short ,string? . "a string")
-    (part-marker ,part-marker-shape? . "a list of (PART :key value ...)")))
+    (part-marker ,part-marker-shape? . "a list of (PART :key value ...)")
+    ;; The annotation row (ADR 0057; 01, "The annotation row").
+    (annotation-part ,(lambda (v) (and (symbol? v) (not (key? v)))) . "a part's name")
+    (annotation-position ,(lambda (v) (memq v '(above below))) . "above or below")
+    (annotation-align ,(lambda (v) (memq v '(left center right))) . "left, center or right")
+    (annotation-level ,(lambda (v) (and (exact-integer? v) (>= v 0))) . "a whole number from 0")
+    (annotation-text ,(lambda (v) (memq v '(short long annotation))) . "short, long or annotation")
+    (annotation-label ,string? . "a string")))
+
+(define annotation-options
+  '(annotation-position annotation-align annotation-level annotation-text
+    annotation-label))
+
+(define (check-annotation-part own line)
+  "An annotation row's other options need :annotation-part (03)."
+  (when (and (not (assq 'annotation-part own))
+             (any (lambda (name) (assq name own)) annotation-options))
+    (syntax-error 'missing-option line
+                  "the :annotation-… options describe an annotation row; name the part it shows with :annotation-part")))
+
+(define (group-annotation-setting own members line)
+  "A group's annotation row, or #f without :annotation-part, whose part
+must be a member of the group (invariant 11); its other options take
+their defaults (01)."
+  (match (assq-ref own 'annotation-part)
+    (#f #f)
+    (name
+     (let ((member (find (lambda (m) (eq? (part-name (car m)) name)) members)))
+       (unless member
+         (part-error 'bad-option line name #f
+                     ":annotation-part: `~a' is not a part of this group" name))
+       (make-annotation-row
+        (car member)
+        (or (assq-ref own 'annotation-position) 'below)
+        (or (assq-ref own 'annotation-align) 'left)
+        (or (assq-ref own 'annotation-level) 0)
+        (or (assq-ref own 'annotation-text) 'annotation)
+        (match (assq-ref own 'annotation-label)
+          ((or #f "") #f)
+          (label label)))))))
 
 ;;; The keys of a :part-marker entry (ADR 0056; 01, "Telling parts
 ;;; apart").
@@ -1368,6 +1407,7 @@ are checked already.  A missing :symbol is none, other missing keys #f."
   (let ((own (check-options options (append group-only-options style-options)
                             "a group" line)))
     (check-part-marker-values own line)
+    (check-annotation-part own line)
     own))
 
 (define (setting name own score default)
@@ -1490,8 +1530,7 @@ A group's own strokes must be strokes of its instruments."
                 (not (eq? (setting 'note-label-octave own score-opts 'yes) 'no))
                 (setting 'fill own score-opts 'colour)
                 (setting 'holds own score-opts 'none)
-                (setting 'pattern-names own score-opts 'none)
-                (setting 'pattern-level own score-opts 0)
+                (group-annotation-setting own members line)
                 (group-keys-setting own score-opts rows pitched?
                                     (car instruments) line score-line)
                 (not (eq? (setting 'row-label-octave own score-opts 'yes) 'no))
@@ -1606,48 +1645,6 @@ the later of the two parts."
                                  (cons t part)
                                  found)))))
            (loop rest (append cells earlier) found)))))))
-
-(define (named-spans group part)
-  "PART's spans at GROUP's pattern level, as (START END TEXT)."
-  (filter-map (lambda (span)
-                (and (= (pattern-span-depth span) (group-pattern-level group))
-                     (list (pattern-span-start span) (pattern-span-end span)
-                           (if (eq? (group-pattern-names group) 'long)
-                               (pattern-span-long span)
-                               (pattern-span-short span)))))
-              (part-spans part)))
-
-(define (check-pattern-names group line)
-  "Pattern names written over a group must not overlap unless they are
-the same name over the same stretch, which is written once."
-  (unless (eq? (group-pattern-names group) 'none)
-    (let loop ((parts (group-parts group)) (earlier '()) (found #f))
-      (match parts
-        (()
-         (match found
-           (#f #t)
-           ((time . part)
-            (part-error 'pattern-names-overlap line (part-name part) time
-                        "pattern names overlap in this group; they would be written over each other"))))
-        ((part . rest)
-         (let* ((spans (named-spans group part))
-                (times (append-map
-                        (match-lambda
-                          ((and a (s1 e1 _))
-                           (filter-map (match-lambda
-                                         ((and b (s2 e2 _))
-                                          (and (< (max s1 s2) (min e1 e2))
-                                               (not (equal? a b))
-                                               (max s1 s2))))
-                                       earlier)))
-                        spans))
-                (found (if (null? times)
-                           found
-                           (let ((t (apply min times)))
-                             (if (or (not found) (< t (car found)))
-                                 (cons t part)
-                                 found)))))
-           (loop rest (append spans earlier) found)))))))
 
 (define (position->time pos colotomy pickup length numbering line)
   "The time at which the pulse POS starts, as the score prints it: with a
@@ -1797,8 +1794,7 @@ print."
           (check-score-display opts (map car built) line)
           (for-each (match-lambda
                       ((group . gline)
-                       (check-collisions group gline)
-                       (check-pattern-names group gline)))
+                       (check-collisions group gline)))
                     built)
           (for-each (match-lambda
                       ((group . gline)
@@ -1837,7 +1833,7 @@ print."
                      (let ((name (symbol->string (part-name part))))
                        (make-group name name #f 'first-long 'notes
                                    (list (cons part name))
-                                   'none #t 'colour 'none 'none 0
+                                   'none #t 'colour 'none #f
                                    'used #t #f 'pitch-display-name '() '()
                                    'by-pitch 'pastel1 '() 'grid #f)))
                    parts)
