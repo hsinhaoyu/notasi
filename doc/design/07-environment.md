@@ -2,7 +2,9 @@
 
 Status: mostly open questions. Iteration 4 (ADR 0049): CI for the
 Emacs package and what Emacs users install are implemented.
-This answers question 2 for Emacs users only. Each question, once decided, gets an
+This answers question 2 for Emacs users only. Planned for iteration 5
+(ADR 0052): the examples in four folders, their committed drawings and
+the CI check that keeps them current. Each question, once decided, gets an
 ADR and this document is updated to describe the choice.
 
 ## Responsibility
@@ -76,6 +78,73 @@ Emacs", `feat/emacs-docs`).
   on a fresh Emacs, following only the README and the manual (the
   "README test" of question 3, done once, by hand).
 
+## Examples and their drawings
+
+**Planned** (iteration 5, ADR 0052).
+
+Every `.nts` example in the repository is under `examples/`:
+
+```
+examples/
+  gallery/          showcase pieces
+    images/         their drawings, committed
+  demos/            examples that show a feature
+  contrib/          other people's examples
+  manual/           the user manual's examples
+    templates/      templates they use
+    mistakes/       the manual's mistakes (NAME.nts, NAME.txt)
+    images/         the drawings its pages show, committed
+```
+
+| Folder | What it holds | Tested | Drawings committed |
+|---|---|---|---|
+| `gallery/` | Showcase pieces; the README and the manual may show them | golden JSON; images up to date | every score of every file, in `gallery/images/` |
+| `demos/` | Examples that show a feature; not necessarily whole pieces | golden JSON | no |
+| `contrib/` | Other people's examples; no README in the folder | no, not even read | no |
+| `manual/` | The manual's examples, shown with `{{#include}}` from here | `tests/manual.scm`; images up to date | those a page shows, in `manual/images/` |
+
+- **The pieces:** `gallery/` holds `jaya-semara`, `baris` and
+  `gambangan-excerpt`; `demos/` holds `gilak` and `tenzer1`.
+- **Names** are unique across `examples/`: a test fails if two folders
+  hold a file of the same name. Golden files keep their names, with no
+  folder: `tests/golden/NAME.json`, or `NAME_SCORE.json` for a file
+  with scores (ADR 0040). They cover `gallery/` and `demos/`.
+- **The manual's mistakes** are under `manual/mistakes/`, so every
+  `.nts` is under `examples/`; the other folders' tests skip it.
+- **The manual's templates** move with its examples, so
+  `(use "templates/my-gamelan.nts")`, resolved relative to the file
+  that contains it (01), works unchanged.
+- **`templates/`**, the shared definitions loaded with `(use NAME)`,
+  stays where it is.
+- **Contributions** are credited with the piece information keys
+  `:contributor`, `:source` and `:transcriber` (01), by convention.
+
+### Drawings
+
+- **PNG**, named as ADR 0040 says: `NAME.png`, or `NAME_SCORE.png` for
+  a file with scores.
+- **`make images`** redraws every committed drawing, with
+  `notasi render --all` (05), passing one fixed `--ppi` value set in
+  one place in the Makefile. It draws every score of every gallery
+  file into `gallery/images/`, and, for the manual, only the images
+  its pages link to (`![…](figures/NAME.png)` or
+  `figures/NAME_SCORE.png`) into `manual/images/`. The resolution is
+  chosen by eye when the target is built: sharp enough for the README
+  and the manual, small enough for the repository.
+- **The committed images are Linux's.** They are drawn on Linux with
+  the pinned Typst (0.15.1), as CI draws them, so the check doesn't
+  depend on Typst drawing the same bytes on every system. CI runs
+  `make images` and fails if any image changes; when it fails, it
+  uploads the images it drew as a workflow artifact, and the PR commits
+  those. `make images` on another system (macOS) is for looking: its
+  images may differ in their bytes and are not committed.
+- **The manual** builds with mdBook alone: `make manual` copies the
+  images its pages show from `examples/manual/images/` into
+  `doc/manual/src/figures/` (which stays generated, not committed) and
+  draws nothing. Its CI workflow then needs only mdBook.
+- **`make preview`** and `scripts/preview.scm` are removed. To draw any
+  one file, `demos/` included, use `notasi render --all`.
+
 ## Open questions
 
 ### 1. A reproducible environment for developers
@@ -132,6 +201,11 @@ These are not exclusive; the question is which to adopt and when.
 Locally, the same checks can run in a throwaway container, a dev
 container or Codespaces, or with `act` (which runs GitHub workflows
 locally, not exactly as GitHub does).
+
+Partly answered for drawings (ADR 0052): CI redraws the committed
+images and fails if any changes, a visual regression test for the
+gallery and the manual. The images are drawn on Linux only, so the
+check doesn't depend on Typst drawing the same bytes on every system.
 
 Depends on: question 1 (whether CI and laptop share one environment
 definition) and on when Typst enters the build (milestone 4), after
