@@ -2,6 +2,11 @@
 
 Tools for notating and visualizing Balinese gamelan music, written in GNU Guile 3.0.
 
+![Jaya Semara, one gong cycle: each part on one row, the norot figures named below the gangsa polos, and the gongs and kempli on two rows](examples/gallery/images/jaya-semara_collapsed.png)
+
+One gong cycle of Jaya Semara, drawn from
+[`examples/gallery/jaya-semara.nts`](examples/gallery/jaya-semara.nts).
+
 ## Layout
 
 - `notasi/piece.scm`: records for a piece (instruments, notes, parts)

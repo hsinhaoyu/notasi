@@ -155,7 +155,7 @@ changes the figure, and each later one adds to it.
    `--save-piece` as JSON and as an s-expression, its golden files,
    and its manual section. After `feat/collapsed`, so it saves the
    records in their final form.
-5. **`feat/gallery`**, the acceptance test, with no slices: Jaya Semara
+5. **`feat/gallery`** (done), the acceptance test, with no slices: Jaya Semara
    and Baris in `examples/gallery/` with collapsed scores and
    annotation rows, their piece information, their images committed,
    and a gallery picture in the README.
