@@ -24,10 +24,13 @@ and `notasi --version` (ADR 0048), since iteration 4's
 `compile-typst #:ppi`, `render-score` and `render-one-file`, and one
 line per file drawn on success (ADR 0061) since iteration 5's
 `feat/render-all`. The manual's figures committed as PNG, and `make
-preview` removed (ADR 0052), since `feat/examples`.
+preview` removed (ADR 0052), since `feat/examples`. Contract version
+4's `rows`, `row` and `row_label_width` since `feat/collapsed-labels`;
+each voice's `marker` and the template's part marks (ADR 0056) since
+`feat/collapsed-markers`.
 
-**Planned** for iteration 5 (ADRs 0056–0059): contract version 4 and
-the template's annotation row and part marks; `--save-piece`. Each
+**Planned** for iteration 5 (ADRs 0057–0059): the rest of contract
+version 4 and the template's annotation row; `--save-piece`. Each
 section says what is planned.
 
 ## Responsibility
@@ -44,8 +47,9 @@ must work in both places; see "Typst template design", points 6 and 7.
 
 ADR 0059, built over iteration 5. Version 3 below, with these changes
 (04 lists the keys in order, and says how layout fills them). The
-first two are **Implemented** since `feat/collapsed-labels`, and the
-template reads them; the rest is **Planned**:
+first two are **Implemented** since `feat/collapsed-labels`, and each
+voice's `marker` since `feat/collapsed-markers`, and the template reads
+them; the annotation row is **Planned**:
 
 - `version` is 4.
 - `lanes`, `lane` and `sizes.lane_width` become `rows`, `row` and
@@ -377,8 +381,8 @@ third layer over the notes, since a grid can't overlap its cells:
   event whose `fill` is `null` (`:fill none`) is its text alone, which
   also draws the `"-"` of `:holds dash`.
 
-**Planned** for version 4 (ADRs 0056, 0057, 0059), changing
-version 3's drawing, which follows:
+**Planned** for version 4 (ADRs 0057, 0059), except the part marks,
+changing version 3's drawing, which follows:
 
 - **No overlays**: the third layer is gone.
 - **The annotation row**: one row of `cell_height`, above or below the
@@ -395,9 +399,11 @@ version 3's drawing, which follows:
   side, in `symbol_color` (near-black, `#222222`, by default); and,
   when `border` isn't `null`, a border of that colour and
   `border_width` in place of the grey one. A note's text and symbol
-  are both drawn, centred, even when they overlap. The default size and
-  width are chosen by eye when built, the width thicker than the grey
-  border but small enough not to hide a gangsa note's fill. A note
+  are both drawn, centred, even when they overlap. The defaults, chosen
+  by eye on Jaya Semara's kotekan, are a size of 0.3 and a width of
+  1.5pt: thicker than the grey border but small enough not to hide a
+  gangsa note's fill. **Implemented** since `feat/collapsed-markers`, on
+  every piece of a cut note, and never on a `"-"` of `:holds dash`. A note
   drawn as text alone (`fill` `null`) gets the symbol but no border.
 - `lanes`, `lane` and `lane_width` are read as `rows`, `row` and
   `row_label_width` (**Implemented** since `feat/collapsed-labels`).

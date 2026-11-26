@@ -29,9 +29,11 @@ and the label options, `:note-names` and `:octave-numbers` unknown
 keys and `:row-labels yes`/`no` bad values, and `needs-note-label`
 (ADR 0054). Since `feat/collapsed-compact`: `:rows compact`, `:rows
 single` a bad value, and `notes-collide` for one key only, on `notes`
-and compact rows (ADRs 0055, 0060).
+and compact rows (ADRs 0055, 0060). Since `feat/collapsed-markers`:
+`:part-marker`, its values checked with the group's options and its
+parts after the members (ADR 0056).
 
-**Planned** for iteration 5 (ADRs 0056, 0057): `:part-marker`, the
+**Planned** for iteration 5 (ADR 0057): the
 annotation row, pattern annotations and `(text ...)`; the other removed
 options becoming unknown keys; `pattern-names-overlap` removed.
 See "Iteration 5". Until they are built, the reader takes the old
@@ -203,12 +205,12 @@ Finding templates (**Implemented**):
     `notes-collide`. Since `feat/collapsed-labels`: `note-label`,
     `note-label-octave?`, `row-labels` and `row-label-octave?`, in
     place of `note-names?`, `octave-numbers?` and `row-labels?`.
-    `rows` `compact` since `feat/collapsed-compact`. **Planned**
-    (iteration 5): the rest of 02's "Iteration 5", `part-marker` and
-    `annotation`, in place of
-    `pattern-names` and `pattern-level`. A `:part-marker` entry's missing keys are `#f`
-    (layout's defaults); an annotation row's are its options'
-    defaults. Free text is collected with the part's events (step 9).
+    `rows` `compact` since `feat/collapsed-compact`. `part-marker`
+    since `feat/collapsed-markers`: a `:part-marker` entry's missing
+    `:symbol` is `none`, its other missing keys `#f` (the template's
+    defaults). **Planned** (iteration 5): `annotation`, in place of
+    `pattern-names` and `pattern-level`; an annotation row's missing
+    options are their defaults. Free text is collected with the part's events (step 9).
 13. **Check the piece invariants** (02-piece.md).
 
 ## Error reporting
@@ -560,7 +562,7 @@ All errors at a use carry the part, the time and the chain of uses.
   entries; a key other than `:symbol`, `:symbol-size`,
   `:symbol-color`, `:border` and `:border-width`, or a key twice; a
   `:symbol` not `none`, `dot`, `ring` or `cross`; a `:symbol-size`
-  that is not a number from 0 to 1; a `:symbol-color` or `:border`
+  that is not a number greater than 0 and at most 1; a `:symbol-color` or `:border`
   that is not `"#rrggbb"`; a `:border-width` that is not a length:
   `bad-option`, at the group's line (`part` set to PART where there is
   one). Everything inside the value is `bad-option`, as for

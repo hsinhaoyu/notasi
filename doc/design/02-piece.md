@@ -296,8 +296,9 @@ construction, since events are built from the tokens.
     a range is pitched, with `rows` `notes`. Every stroke in a group's
     `display` is a stroke of an instrument in the group. A group with
     `key-numbers?` is pitched, with `rows` `notes`.
-11. **Planned.** A group's `annotation-part` and the parts in its
-    `part-marker` are members of the group.
+11. The parts in a group's `part-marker` are members of the group,
+    each in one entry (since `feat/collapsed-markers`). **Planned**:
+    its `annotation-part` too.
 
 ## Iteration 5
 
@@ -347,17 +348,24 @@ row-label-octave? are Implemented since feat/collapsed-labels; see
 the group record above)
   rows              : symbol           notes | parts | compact
   part-marker       : list of (part . marker)   '() for none
+                                       (Implemented since
+                                       feat/collapsed-markers)
   annotation        : annotation-row | #f       #f: no annotation row
   scheme            : symbol           e.g. by-pitch
   colors            : list of (symbol . string) pitch name and "#rrggbb"
   (pattern-names and pattern-level are removed)
+
+  part-marker goes in make-group just after display, before scheme
+  (feat/collapsed-markers); marker is (make-marker symbol symbol-size
+  symbol-color border border-width), accessors marker-symbol, ...
 
   In make-group (feat/collapsed-labels), each new label field took its
   old one's place: note-label and then note-label-octave? where
   note-names? was, row-label-octave? where octave-numbers? was, and
   row-labels where row-labels? was.
 
-marker                                 (new) a part's marks
+marker                                 a part's marks (Implemented since
+                                       feat/collapsed-markers)
   symbol       : symbol                none | dot | ring | cross
   symbol-size  : number | #f           fraction of the cell's narrower
                                        side; #f: the default

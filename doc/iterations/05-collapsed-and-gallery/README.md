@@ -142,7 +142,7 @@ changes the figure, and each later one adds to it.
       rows by key, and `notes-collide` on compact rows; the manual's
       `notes-collide` mistake shows the compact case (one key, two
       parts, overlapping).
-   4. `feat/collapsed-markers`: `:part-marker`, each voice's `marker`,
+   4. `feat/collapsed-markers` (done): `:part-marker`, each voice's `marker`,
       and the template's marks.
    5. `feat/collapsed-annotation`: the annotation row, pattern
       annotations and `(text ...)`, in place of `:pattern-names`,

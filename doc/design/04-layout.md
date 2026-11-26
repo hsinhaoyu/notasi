@@ -17,11 +17,12 @@ since iteration 5's `feat/collapsed-terms`. Contract version 4 opened,
 with `rows`, `row` and `row_label_width` (ADR 0059), and the note label
 and the pitch column's forms (ADR 0054), since `feat/collapsed-labels`.
 Compact rows in place of `single` (ADRs 0055, 0060) since
-`feat/collapsed-compact`.
+`feat/collapsed-compact`. Part markers and each voice's `marker` (ADR
+0056) since `feat/collapsed-markers`.
 
-**Planned** for iteration 5 (ADRs 0056, 0057, 0059): the rest of
-contract version 4 (the annotation row in place of `overlays`; each
-voice's `marker`); part markers; the annotation row. See "Iteration 5".
+**Planned** for iteration 5 (ADRs 0057, 0059): the rest of contract
+version 4 (the annotation row in place of `overlays`); the annotation
+row. See "Iteration 5".
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -60,7 +61,7 @@ in this order:
 | header | `cycle_label`, `pulse_label`, `cycles`, `pulses`, `pulse_lines` |
 | cycle mark | `column`, `text` |
 | group | `label`, `subtitle`, `rows`, `key_numbers`, `voices`, `overlays`, `pulse_lines`, `row_lines` |
-| voice | `name`, `events` |
+| voice | `name`, `marker`, `events` |
 | event | `start`, `dur`, `row`, `text`, `fill`, `text_color`, `continued` |
 | overlay | `start`, `dur`, `row`, `rows`, `text`, `continued` |
 
@@ -322,9 +323,9 @@ picks colours (ADR 0005).
   the note label (ADR 0054).
 - Parts are not told apart by colour: polos and sangsih in one group
   are drawn in the same pitch colours, so the group shows the composite
-  melody. The group's label and subtitle say which parts it holds.
-  **Planned** (ADR 0056): a group can mark its parts with
-  `:part-marker` (see "Iteration 5").
+  melody. The group's label and subtitle say which parts it holds. A
+  group can mark its parts with `:part-marker` (ADR 0056, see "Part
+  markers" under "Iteration 5").
 
 **The style** is an immutable record made with
 `(make-style #:key scheme palette pitch-colors)`; `(default-style)` is
@@ -415,8 +416,8 @@ milestones are built. The group settings are 02's ("Iteration 5").
 ### The figure, version 4
 
 **Implemented** in part since `feat/collapsed-labels`: `version` 4,
-`rows`, `row` and `row_label_width`. `annotation` and `marker` come
-with their slices.
+`rows`, `row` and `row_label_width`; each voice's `marker` since
+`feat/collapsed-markers`. `annotation` comes with its slice.
 
 Layout writes contract version 4 (ADR 0059; keys in "Public
 interface"). `lanes`, `lane` and `lane_width` become `rows`, `row` and
@@ -491,6 +492,8 @@ into one line, with a row added where different keys sound together.
 
 ### Part markers
 
+**Implemented** since `feat/collapsed-markers`.
+
 A group's `part-marker` (ADR 0056) gives each voice its `marker`:
 `null` for a part with no entry, otherwise the entry's `symbol` (a
 string, `"none"` when the entry gives none), `symbol_size`,
@@ -499,7 +502,10 @@ is `null`, the template's default. Layout chooses no defaults: the
 default size and width are the template's, chosen by eye when built.
 
 A unison drawn once is an event of the first part's voice only, so it
-carries that part's marks.
+carries that part's marks. The template draws a voice's marks on each
+of its notes, the later pieces of a note cut by a system break
+included; a `-` of `:holds dash` gets none (decided for
+`feat/collapsed-markers`).
 
 ### The annotation row
 

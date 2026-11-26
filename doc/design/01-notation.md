@@ -19,9 +19,10 @@ the glossary's pitch terms (ADR 0051) since iteration 5's
 `:row-label-octave` and `:note-label-octave`, in place of
 `:note-names` and `:octave-numbers` (ADR 0054), since
 `feat/collapsed-labels`. `:rows compact` in place of `single` (ADRs
-0055, 0060) since `feat/collapsed-compact`.
+0055, 0060) since `feat/collapsed-compact`. `:part-marker` (ADR 0056)
+since `feat/collapsed-markers`.
 
-**Planned** for iteration 5 (ADRs 0056, 0057): `:part-marker`; the annotation row, pattern annotations and
+**Planned** for iteration 5 (ADR 0057): the annotation row, pattern annotations and
 `(text ...)`, in place of `:pattern-names` and `:pattern-level`.
 Until they are built, the reader takes the old options and names. The
 removed ones get no migration: once the new ones are built, they are
@@ -612,7 +613,7 @@ In the grid:
 | `:key-numbers yes/no` | score, group | `no` | A column of key numbers to the left of the pitch column: each row's key on its instrument, from 1 (on the ugal, `a1` is key 4). Pitched keys on `notes` rows only. |
 | `:display ((STROKE STRING) ...)` | score, group | none | Show these strokes with these stroke display names in this score, in row labels and note labels: `:display ((GL "G"))`. |
 | `:background grid/vertical/horizontal/empty` | score, group | `grid` | The lines behind the notes: pulse lines and a line between every two rows (`grid`), pulse lines only (`vertical`), row lines only (`horizontal`), or neither (`empty`). The lines between groups and the cycle lines are always drawn (ADR 0041). |
-| `:part-marker ((PART :key value ...) ...)` | group | none | **Planned** (ADR 0056). Tells the group's parts apart: each entry gives a part of the group a symbol, a border, or both (see "Telling parts apart"). |
+| `:part-marker ((PART :key value ...) ...)` | group | none | (ADR 0056). Tells the group's parts apart: each entry gives a part of the group a symbol, a border, or both (see "Telling parts apart"). |
 
 **Implemented** until the planned options above are built, and then
 removed, with no migration:
@@ -727,7 +728,7 @@ sound together:
 
 #### Telling parts apart
 
-**Planned** (ADR 0056). By default a group's parts are drawn alike:
+ADR 0056, since `feat/collapsed-markers`. By default a group's parts are drawn alike:
 each note takes its pitch's colour, whichever part plays it. A group
 can mark its parts with `:part-marker`, on every kind of rows and for
 pitched and stroke groups alike:
@@ -741,10 +742,10 @@ pitched and stroke groups alike:
 | Key | Value | Default |
 |---|---|---|
 | `:symbol` | `none`, `dot`, `ring`, `cross`: small, centred in the note's cell | `none` |
-| `:symbol-size` | a fraction of the cell's narrower side, e.g. `0.3` | chosen by eye when built |
+| `:symbol-size` | a fraction of the cell's narrower side, greater than 0 and at most 1, e.g. `0.3` | `0.3`, chosen by eye |
 | `:symbol-color` | `"#rrggbb"` | near-black, as note labels |
 | `:border` | `"#rrggbb"`: a border of that colour, thicker than the normal one | none (the normal border) |
-| `:border-width` | a LENGTH, e.g. `"1pt"` | thicker than the normal border, chosen by eye when built |
+| `:border-width` | a LENGTH, e.g. `"1pt"` | `"1.5pt"`, thicker than the normal border, chosen by eye |
 
 - A part with no entry is drawn as without `:part-marker`. Colour
   stays the pitch colour.
@@ -793,7 +794,7 @@ pitched and stroke groups alike:
   overlap in one group are an error, naming the parts and the position.
   **Planned**: removed with `:pattern-names`; the annotation row takes
   one part, so names can't clash.
-- **Planned** (ADR 0056): `:part-marker` on a score, a part not in the
+- (ADR 0056) `:part-marker` on a score, a part not in the
   group, an unknown key or symbol, a colour not `"#rrggbb"`, a size
   outside 0 to 1, or a width that isn't a LENGTH is an error.
 - **Planned** (ADR 0057): an annotation row option on a score, an
@@ -843,8 +844,9 @@ Later extensions of the notation are listed in the
 ## Open questions
 
 None for iteration 5: its design ideas' questions were settled before
-promotion. To be chosen by eye when built: the default `:symbol-size`
-and `:border-width` of `:part-marker`. None for iteration 3: its design ideas' questions were settled before
+promotion; the default `:symbol-size` (0.3) and `:border-width`
+(1.5pt) of `:part-marker` were chosen by eye in `feat/collapsed-markers`.
+None for iteration 3: its design ideas' questions were settled before
 promotion. None for iteration 2. The three questions of v1 are answered: parts
 have equal length, and only colotomy parts shorter than their cycle
 repeat; a rest damps (ADR 0028); octave numbers are shared across
