@@ -635,7 +635,8 @@ notasi render PIECE.nts --list [--save-piece FILE]
   paths, no score names). With `--list`, it lists and saves, and draws
   nothing.
 - **On success**, one line per file drawn, its path, in score order;
-  one line for one score or for `--one-file`.
+  one line for one score or for `--one-file`. With `--save-piece -`,
+  the saved piece's JSON instead, and no paths.
 - **Usage errors** (status 2): `--all` with `--score`; `--all` with
   `-o` naming a file, except with `--one-file`; `--one-file` without
   `--all`, or with `--format png` or `svg`, or an `-o` that isn't
@@ -666,6 +667,8 @@ changes the editor package in the same PR:
 - **On success:** OUT's path, on one line, to standard output, and
   nothing to standard error. With `--all`, one line per file drawn
   (ADR 0061); drawing one score, as an editor does, is still one line.
+  With `--save-piece -`, standard output holds the saved piece's JSON
+  alone (ADR 0058).
 - **A mistake in the notation:** one line to standard error,
   `FILE:LINE: message`, where FILE is the file the mistake is in (the
   piece as given on the command line, or a template it uses) and LINE
