@@ -290,7 +290,7 @@ default unless given."
   (make-group label short subtitle labels 'notes
               (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
               note-label note-label-octave? 'colour 'none 'none 0 'used #t #f
-              'pitch-display-name '()
+              'pitch-display-name '() '()
               scheme palette colors background #f))
 
 (define* (hand-score piece groups
@@ -316,7 +316,7 @@ TO (times) say otherwise."
 (define mark-keys '(column text))
 (define group-json-keys
   '(label subtitle rows key_numbers voices overlays pulse_lines row_lines))
-(define voice-keys '(name events))
+(define voice-keys '(name marker events))
 (define event-keys '(start dur row text fill text_color continued))
 
 (define (string-or-null? x) (or (string? x) (eq? x 'null)))
@@ -437,7 +437,8 @@ at its default: font_size null, cells \"2em\"."
     (pulse_lines . #t) (row_lines . #t)))
 
 (define (voice name . events)
-  `((name . ,name) (events . ,(list->vector events))))
+  "A voice with no marks (marker null, ADR 0056)."
+  `((name . ,name) (marker . null) (events . ,(list->vector events))))
 
 ;; Lanes of "Ugal": ding2 deng1 dong1 ding1 → i2 e1 o1 i1 (0 1 2 3).
 ;; No group has note names: text is null for pitched notes and strokes.
@@ -2408,7 +2409,7 @@ give."
                                                      (symbol->string n)))
                                              '(p q))
                                         'none #t 'colour 'none 'short 0
-                                        'used #t #f 'pitch-display-name '()
+                                        'used #t #f 'pitch-display-name '() '()
                                         'by-pitch 'pastel1 '() 'grid #f))))))))
     (test-equal "the overlays" pqd-short
       (and fig (overlays-of fig 0 0)))))
@@ -4318,6 +4319,192 @@ null or one string per lane, and `sizes` this slice's keys?"
   (test-assert "json-string accepts a figure with compact rows"
     (let ((fig (colotomic-fig "(score s :holds dash (group \"C\" :rows compact gong kempli))")))
       (and fig (string? (json-string fig))))))
+
+;;; ------------------------------------------------------------------
+;;; Slice feat/collapsed-markers (04, "Part markers" and the version 4
+;;; keys table; 05, "JSON contract (version 4)"; ADRs 0056, 0059):
+;;; each voice gets `marker`, between `name` and `events`: null for a
+;;; part with no entry in its group's `part-marker`, else an object
+;;; `symbol` (a string, "none" when the entry gives none),
+;;; `symbol_size`, `symbol_color`, `border`, `border_width`, each null
+;;; when the entry leaves it out. A unison drawn once is an event of the
+;;; first part's voice only, so it carries that part's marks.
+;;; Choices made where the docs are not explicit:
+;;; - `symbol_size` is written as the number read (0.3), not a string.
+;;; - The group's whole key list is not tested: `annotation` replaces
+;;;   `overlays` in a later slice. Only the voice's and the marker's keys
+;;;   are.
+;;; - A voice's marker is the same in every system.
+
+(define marker-keys '(symbol symbol_size symbol_color border border_width))
+
+(define (marker-of fig s g v) (get (voice-ref fig s g v) 'marker))
+
+(define (markers-of fig s g)
+  "Each voice's marker in group G of system S."
+  (map (lambda (v) (marker-of fig s g v))
+       (iota (vector-length (field (group-ref fig s g) 'voices)))))
+
+(define (mk symbol size symbol-color border border-width)
+  "A marker object, keys in the documented order."
+  `((symbol . ,symbol) (symbol_size . ,size) (symbol_color . ,symbol-color)
+    (border . ,border) (border_width . ,border-width)))
+
+(define (every-voice fig pred)
+  "Does PRED hold for every voice of every group of FIG?"
+  (every-group fig (lambda (g) (every pred (vector->list (field g 'voices))))))
+
+(define (voice-keys-ok? v)
+  (and (equal? (keys v) '(name marker events))
+       (let ((m (get v 'marker)))
+         (or (eq? m 'null)
+             (and (equal? (keys m) marker-keys)
+                  (member (get m 'symbol) '("none" "dot" "ring" "cross")))))))
+
+(test-group "[markers] the voice's marker: no :part-marker"
+  (let ((fig (rows-fig "(score s (group \"U\" p q) (group \"K\" d))")))
+    (test-equal "every voice: marker null" '((null null) (null))
+      (and fig (list (markers-of fig 0 0) (markers-of fig 0 1))))
+    (test-assert "voice keys: name, marker, events"
+      (and fig (every-voice fig (lambda (v) (equal? (keys v) '(name marker events))))))))
+
+(test-group "[markers] the voice's marker: notes rows"
+  (let ((fig (rows-fig "(score s (group \"U\" :part-marker ((q :symbol dot :border \"#d62728\")) p q))")))
+    (test-equal "05's excerpt: null for the part with no entry, the entry's marks"
+      (list 'null (mk "dot" 'null 'null "#d62728" 'null))
+      (and fig (markers-of fig 0 0)))
+    (test-assert "voice keys: name, marker, events; marker keys in order"
+      (and fig (every-voice fig voice-keys-ok?)))
+    (let ((plain (rows-fig "(score s (group \"U\" p q))")))
+      (test-assert "the events are those without :part-marker"
+        (and fig plain
+             (equal? (list (events-of fig 0 0 0) (events-of fig 0 0 1))
+                     (list (events-of plain 0 0 0) (events-of plain 0 0 1)))))))
+  (let ((fig (rows-fig "(score s (group \"U\" :part-marker ((p :symbol cross :symbol-size 0.3"
+                       "  :symbol-color \"#222222\" :border \"#d62728\" :border-width \"1pt\")) p q))")))
+    (test-equal "every key"
+      (list (mk "cross" 0.3 "#222222" "#d62728" "1pt") 'null)
+      (and fig (markers-of fig 0 0))))
+  (let ((fig (rows-fig "(score s (group \"U\" :part-marker ((p :border \"#00ff00\")"
+                       "  (q :symbol ring)) p q))")))
+    (test-equal "no :symbol: \"none\"; ring; the rest null"
+      (list (mk "none" 'null 'null "#00ff00" 'null)
+            (mk "ring" 'null 'null 'null 'null))
+      (and fig (markers-of fig 0 0))))
+  (let ((fig (rows-fig "(score s (group \"U\" :part-marker ((q :symbol none :border-width \"2pt\")) p q))")))
+    (test-equal ":symbol none written: \"none\"" (list 'null (mk "none" 'null 'null 'null "2pt"))
+      (and fig (markers-of fig 0 0))))
+  (let ((fig (rows-fig "(score s (group \"U\" :part-marker ((q :symbol-size 1 :symbol dot)) p q))")))
+    (test-equal ":symbol-size 1: a number" (list 'null (mk "dot" 1 'null 'null 'null))
+      (and fig (markers-of fig 0 0))))
+  (let ((fig (rows-fig "(score s (group \"U\" :part-marker ((q :symbol dot)) p q)"
+                       "  (group \"S\" s))")))
+    (test-equal "another group: no marks" '(null)
+      (and fig (markers-of fig 0 1))))
+  (let ((fig (rows-fig "(score s (group \"U\" :part-marker ((r :symbol cross)) p r))")))
+    (test-equal "a voice with no events still has its marker"
+      (list 'null (mk "cross" 'null 'null 'null 'null) '())
+      (and fig (list (marker-of fig 0 0 0) (marker-of fig 0 0 1)
+                     (events-of fig 0 0 1))))))
+
+(test-group "[markers] the voice's marker: every kind of rows and strokes"
+  (let ((fig (rows-fig "(score s (group \"U\" :rows parts :part-marker ((q :symbol dot)) p q))")))
+    (test-equal "parts rows" (list 'null (mk "dot" 'null 'null 'null 'null))
+      (and fig (markers-of fig 0 0))))
+  (let ((fig (rows-fig "(score s (group \"U\" :rows compact :part-marker ((p :symbol ring)) p q))")))
+    (test-equal "compact rows" (list (mk "ring" 'null 'null 'null 'null) 'null)
+      (and fig (markers-of fig 0 0))))
+  (let ((fig (rows-fig "(score s (group \"K\" :part-marker ((d :symbol cross :border \"#000000\")) d))")))
+    (test-equal "a stroke group" (list (mk "cross" 'null 'null "#000000" 'null))
+      (and fig (markers-of fig 0 0))))
+  (let ((fig (colotomic-fig "(score s (group \"C\" :rows compact"
+                            "  :part-marker ((kempli :symbol dot)) gong kempli))")))
+    (test-equal "the generated kempli on compact rows"
+      (list 'null (mk "dot" 'null 'null 'null 'null))
+      (and fig (markers-of fig 0 0)))
+    (test-assert "well-formed voices" (and fig (every-voice fig voice-keys-ok?))))
+  (let ((fig (rows-fig "(score s :system-length 2"
+                       "  (group \"U\" :part-marker ((q :symbol dot)) p q))")))
+    (test-equal "in every system"
+      (list (list 'null (mk "dot" 'null 'null 'null 'null))
+            (list 'null (mk "dot" 'null 'null 'null 'null))
+            (list 'null (mk "dot" 'null 'null 'null 'null)))
+      (and fig (map (lambda (s) (markers-of fig s 0)) '(0 1 2))))))
+
+(test-group "[markers] a unison drawn once carries the first part's marks"
+  (let ((fig (compact-fig "(part :instrument u :name a i2 - - -)"
+                          "(part :instrument u :name b i2 - - -)"
+                          "(score s (group \"U\" :part-marker ((b :symbol dot)) a b))")))
+    (test-equal "notes rows: the event under a, whose marker is null"
+      (list 'null '((0 1 0 #f)) (mk "dot" 'null 'null 'null 'null) '())
+      (and fig (list (marker-of fig 0 0 0) (timing (events-of fig 0 0 0))
+                     (marker-of fig 0 0 1) (timing (events-of fig 0 0 1))))))
+  (let ((fig (compact-fig "(part :instrument u :name a i2 - - -)"
+                          "(part :instrument u :name b i2 - - -)"
+                          "(score s (group \"U\" :rows compact :part-marker ((a :symbol cross)) a b))")))
+    (test-equal "compact rows: the event under a, with a's marks"
+      (list (mk "cross" 'null 'null 'null 'null) '((0 1 0 #f)) 'null '())
+      (and fig (list (marker-of fig 0 0 0) (timing (events-of fig 0 0 0))
+                     (marker-of fig 0 0 1) (timing (events-of fig 0 0 1))))))
+  (let ((fig (compact-fig "(part :instrument u :name a i2 - - -)"
+                          "(part :instrument u :name b i2 - - -)"
+                          "(score s (group \"U\" :part-marker ((a :symbol dot)) b a))")))
+    (test-equal "the first part in member order draws it, b, unmarked"
+      (list '("b" "a") 'null '((0 1 0 #f)) (mk "dot" 'null 'null 'null 'null) '())
+      (and fig (list (voice-names fig 0 0)
+                     (marker-of fig 0 0 0) (timing (events-of fig 0 0 0))
+                     (marker-of fig 0 0 1) (timing (events-of fig 0 0 1))))))
+  (let ((fig (compact-fig "(part :instrument u :name a i2 - - -)"
+                          "(part :instrument u :name b i2 - - -)"
+                          "(score s (group \"U\" :rows parts :part-marker ((b :symbol dot)) a b))")))
+    (test-equal "parts rows: each part shows it, with its own marks"
+      (list 'null '((0 1 0 #f)) (mk "dot" 'null 'null 'null 'null) '((0 1 1 #f)))
+      (and fig (list (marker-of fig 0 0 0) (timing (events-of fig 0 0 0))
+                     (marker-of fig 0 0 1) (timing (events-of fig 0 0 1)))))))
+
+(test-group "[markers] a group built by hand"
+  ;; make-group's order of this slice (02): part-marker just after
+  ;; display. The marker record through make-marker, looked up when the
+  ;; test runs.
+  (define (piece-proc* name)
+    (let ((v (module-variable (resolve-interface '(notasi piece)) name)))
+      (cond ((not v) (lambda args (error "not exported by (notasi piece):" name)))
+            ((macro? (variable-ref v)) (eval name (resolve-module '(notasi piece))))
+            (else (variable-ref v)))))
+  (let* ((piece (rows-piece))
+         (fig (and piece
+                   (layout-or-false
+                    (let ((p (part-named piece 'p))
+                          (q (part-named piece 'q)))
+                      (layout-score
+                       piece
+                       (hand-score
+                        piece
+                        (list (apply make-group
+                                     (list "U" "U" #f 'first-long 'notes
+                                           (list (cons p "p") (cons q "q"))
+                                           'none #t 'colour 'none 'none 0
+                                           'used #t #f 'pitch-display-name '()
+                                           (list (cons q ((piece-proc* 'make-marker)
+                                                          'cross 0.5 "#111111" #f "1.5pt")))
+                                           'by-pitch 'pastel1 '() 'grid #f))))))))))
+    (test-equal "the record's fields, #f as null"
+      (list 'null (mk "cross" 0.5 "#111111" 'null "1.5pt"))
+      (and fig (markers-of fig 0 0)))))
+
+(test-group "[markers] the figure as JSON"
+  (let ((fig (rows-fig "(score s (group \"U\" :part-marker ((p :symbol dot :symbol-size 0.4"
+                       "  :border \"#d62728\" :border-width \"1pt\")) p q) (group \"K\" d))")))
+    (test-equal "version 4" 4 (and fig (field fig 'version)))
+    (test-assert "json-string accepts a figure with markers"
+      (and fig (string? (json-string fig))))
+    (test-assert "the marker is written between name and events"
+      (and fig
+           (let* ((js (json-string fig))
+                  (n (string-contains js "\"name\": \"p\""))
+                  (m (and n (string-contains js "\"marker\"" n)))
+                  (e (and n (string-contains js "\"events\"" n))))
+             (and m e (< n m e)))))))
 
 (test-end "layout")
 

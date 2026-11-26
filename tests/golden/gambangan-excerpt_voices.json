@@ -32,6 +32,7 @@
           "voices": [
             {
               "name": "sangsih",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -244,6 +245,7 @@
             },
             {
               "name": "polos",
+              "marker": null,
               "events": [
                 {
                   "start": 1,

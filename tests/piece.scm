@@ -175,6 +175,7 @@
                     (holds 'none) (pattern-names 'none) (pattern-level 0)
                     (keys 'used) (row-label-octave? #t) (key-numbers? #f)
                     (row-labels 'pitch-display-name) (display '())
+                    (part-marker '())
                     (scheme 'by-pitch) (palette 'pastel1) (colors '())
                     (background 'grid) (location #f))
   "A group of PARTS, each with its name as row label; every other
@@ -183,7 +184,7 @@ setting at its default unless given."
               (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
               note-label note-label-octave? fill holds pattern-names
               pattern-level keys row-label-octave? key-numbers? row-labels
-              display
+              display part-marker
               scheme palette colors background location))
 
 (define (mk-group label . parts)
@@ -300,7 +301,7 @@ one score holding GROUPS."
          (members (list (cons p "polos") (cons s "S.")))
          (g (make-group "Reyong" "Rey." "polos + sangsih" 'short 'parts
                         members 'pitch-display-name #t 'none 'dash 'long 1
-                        'used #t #f 'pitch-display-name '()
+                        'used #t #f 'pitch-display-name '() '()
                         'by-pitch '("#111111" "#eeeeee")
                         '((ding . "#000000")) 'vertical loc))
          (d (mk-group "polos" p)))
@@ -633,14 +634,14 @@ constructor of another arity fails the tests instead of the file."
          (high (inst-note reyong 5))
          (g (rows3-group "Reyong" "Rey." #f 'first-long 'notes members
                          'none #t 'colour 'none 'none 0
-                         (cons low high) #f #t 'none '()
+                         (cons low high) #f #t 'none '() '()
                          'by-pitch 'pastel1 '() 'grid loc))
          (k (mk-part 'gong gong))
          (s (rows3-group "Gong" "Gong" #f 'first-long 'notes
                          (list (cons k "gong"))
                          'none #t 'colour 'none 'none 0
                          'all #t #f 'pitch-display-name
-                         '((G . "Gong") (P . "Kempur"))
+                         '((G . "Gong") (P . "Kempur")) '()
                          'by-pitch 'pastel1 '() 'vertical loc)))
     (test-assert "predicate" (group? g))
     (test-assert "keys: a range, the note records themselves"
@@ -665,7 +666,7 @@ constructor of another arity fails the tests instead of the file."
       'used
       (let ((u (rows3-group "U" "U" #f 'first-long 'notes members
                             'none #t 'colour 'none 'none 0
-                            'used #t #f 'pitch-display-name '()
+                            'used #t #f 'pitch-display-name '() '()
                             'by-pitch 'pastel1 '() 'grid #f)))
         (and (group? u) (group-keys u))))))
 
@@ -1116,7 +1117,7 @@ make-group raises."
    label label #f 'first-long rows
    (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
    note-label note-label-octave? fill 'none 'none 0
-   keys row-label-octave? key-numbers? row-labels display
+   keys row-label-octave? key-numbers? row-labels display '()
    'by-pitch 'pastel1 '() 'grid location))
 
 (define (group-field name g)
@@ -1131,10 +1132,10 @@ make-group raises."
          (g (labels-make-group "Reyong" "Rey." "sub" 'short 'parts members
                                'key-number #f 'none 'dash 'long 2
                                (cons low high) #f #t 'pitch-name
-                               '((G . "Gong"))
+                               '((G . "Gong")) '()
                                'by-pitch '("#111111") '((ding . "#000000"))
                                'vertical loc)))
-    (test-assert "make-group takes 22 arguments" (group? g))
+    (test-assert "make-group takes 23 arguments (with part-marker)" (group? g))
     (test-eq "note-label" 'key-number (group-field 'group-note-label g))
     (test-eq "note-label-octave?" #f (group-field 'group-note-label-octave? g))
     (test-eq "row-label-octave?" #f (group-field 'group-row-label-octave? g))
@@ -1245,6 +1246,148 @@ make-group raises."
       (row-keys (labels-group "Pulse"
                               (list (mk-part 'kempli kempli (ev 0 1 0) (ev 4 1 0))
                                     (mk-part 'gong gong (ev 0 1 1) (ev 7 1 0))))))))
+
+;;; ------------------------------------------------------------------
+;;; Slice feat/collapsed-markers (iteration 5; 02, "Iteration 5" and
+;;; invariant 11; ADR 0056): the `marker` record (symbol, symbol-size,
+;;; symbol-color, border, border-width) and the group's `part-marker`,
+;;; a list of (part . marker), '() for none.
+;;; Choices made where the docs are not explicit:
+;;; - make-group's order follows 02's paragraph: part-marker just after
+;;;   display, before scheme: (make-group label short subtitle labels
+;;;   rows members note-label note-label-octave? fill holds
+;;;   pattern-names pattern-level keys row-label-octave? key-numbers?
+;;;   row-labels display part-marker scheme palette colors background
+;;;   location), 23 arguments; the old 22 raise.
+;;; - The records hold what they are given and check nothing (the
+;;;   reader checks the values and invariant 11), so a marker's #f
+;;;   fields and a part-marker naming any part are kept as given.
+;;; - The new names are looked up when a test runs (`piece-proc`), and
+;;;   make-group is called through apply, so the file compiles before
+;;;   the code exists.
+
+(define (marker . fields)
+  "make-marker applied to FIELDS, or the condition it raises."
+  (guard (c (#t c)) (apply (piece-proc 'make-marker) fields)))
+
+(define (marker-fields m)
+  "M's (SYMBOL SYMBOL-SIZE SYMBOL-COLOR BORDER BORDER-WIDTH), or #f
+when M is not a marker."
+  (and ((piece-proc 'marker?) m)
+       (map (lambda (name) ((piece-proc name) m))
+            '(marker-symbol marker-symbol-size marker-symbol-color
+              marker-border marker-border-width))))
+
+(define (markers-make-group . args)
+  "make-group applied to ARGS, or the condition it raises."
+  (guard (c (#t c)) (apply make-group args)))
+
+(define* (markers-group label parts #:key (part-marker '()) (display '())
+                        (rows 'notes))
+  "A group of PARTS through make-group's order of this slice (02), with
+PART-MARKER, every other setting at its default; or the condition
+make-group raises."
+  (markers-make-group
+   label label #f 'first-long rows
+   (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
+   'none #t 'colour 'none 'none 0
+   'used #t #f 'pitch-display-name display
+   part-marker
+   'by-pitch 'pastel1 '() 'grid #f))
+
+(test-group "[markers] the marker record"
+  (test-equal "every field kept"
+    '(dot 0.3 "#222222" "#d62728" "1pt")
+    (marker-fields (marker 'dot 0.3 "#222222" "#d62728" "1pt")))
+  (test-equal "#f for the defaults, but the symbol"
+    '(none #f #f #f #f)
+    (marker-fields (marker 'none #f #f #f #f)))
+  (for-each
+   (lambda (symbol)
+     (test-eq (format #f "symbol ~a" symbol) symbol
+       (and=> (marker-fields (marker symbol #f #f #f #f)) car)))
+   '(none dot ring cross))
+  (test-equal "a border alone" '(none #f #f "#d62728" #f)
+    (marker-fields (marker 'none #f #f "#d62728" #f)))
+  (test-assert "marker? is #f for a group"
+    (not ((piece-proc 'marker?)
+          (markers-group "U" (list (mk-part 'polos reyong))))))
+  (test-assert "make-marker takes five arguments: four raise"
+    (raises? (lambda () (apply (piece-proc 'make-marker) '(dot #f #f #f))))))
+
+(test-group "[markers] the group's part-marker"
+  (let* ((polos (mk-part 'polos reyong))
+         (sangsih (mk-part 'sangsih reyong))
+         (m (marker 'dot #f #f "#d62728" #f))
+         (members (list (cons polos "polos") (cons sangsih "sangsih")))
+         (g (markers-make-group "Reyong" "Rey." "sub" 'short 'parts members
+                                'key-number #f 'none 'dash 'long 2
+                                'all #f #t 'pitch-name '((G . "Gong"))
+                                (list (cons sangsih m))
+                                'by-pitch '("#111111") '((ding . "#000000"))
+                                'vertical loc)))
+    (test-assert "make-group takes 23 arguments" (group? g))
+    (test-assert "part-marker: the (part . marker) pairs as given"
+      (and (group? g)
+           (match ((piece-proc 'group-part-marker) g)
+             (((p . mk)) (and (eq? p sangsih) (eq? mk m)))
+             (_ #f))))
+    (test-equal "display keeps its place, just before part-marker"
+      '((G . "Gong"))
+      (and (group? g) (group-display g)))
+    (test-equal "scheme keeps its place, just after part-marker" 'by-pitch
+      (and (group? g) (group-scheme g)))
+    (test-equal "the other fields keep their places"
+      (list "Reyong" "Rey." "sub" 'short 'parts members 'key-number #f
+            'none 'dash 'long 2 'all #f #t 'pitch-name
+            '("#111111") '((ding . "#000000")) 'vertical loc)
+      (and (group? g)
+           (list (group-label g) (group-short g) (group-subtitle g)
+                 (group-labels g) (group-rows g) (group-members g)
+                 ((piece-proc 'group-note-label) g)
+                 ((piece-proc 'group-note-label-octave?) g)
+                 (group-fill g) (group-holds g) (group-pattern-names g)
+                 (group-pattern-level g) (group-keys g)
+                 ((piece-proc 'group-row-label-octave?) g)
+                 (group-key-numbers? g)
+                 ((piece-proc 'group-row-labels) g)
+                 (group-palette g) (group-colors g) (group-background g)
+                 (group-location g)))))
+  (let ((g (markers-group "U" (list (mk-part 'polos reyong)))))
+    (test-equal "'() for none, as the reader fills it" '()
+      (and (group? g) ((piece-proc 'group-part-marker) g))))
+  (let* ((polos (mk-part 'polos reyong))
+         (sangsih (mk-part 'sangsih reyong))
+         (a (marker 'ring #f #f #f #f))
+         (b (marker 'cross 0.5 "#000000" #f "2pt"))
+         (g (markers-group "R" (list polos sangsih)
+                           #:part-marker (list (cons sangsih a) (cons polos b)))))
+    (test-equal "several entries, in the order given"
+      '((sangsih ring #f #f #f #f) (polos cross 0.5 "#000000" #f "2pt"))
+      (and (group? g)
+           (map (match-lambda
+                  ((p . mk) (cons (part-name p) (marker-fields mk))))
+                ((piece-proc 'group-part-marker) g)))))
+  (let* ((k (mk-part 'gong gong))
+         (g (markers-group "G" (list k)
+                           #:part-marker (list (cons k (marker 'cross #f #f #f #f))))))
+    (test-equal "a stroke group" '(gong)
+      (and (group? g) (map (compose part-name car)
+                           ((piece-proc 'group-part-marker) g)))))
+  (test-assert "make-group with the old 22 arguments raises"
+    (raises? (lambda ()
+               (apply make-group
+                      (list "U" "U" #f 'first-long 'notes '()
+                            'none #t 'colour 'none 'none 0
+                            'used #t #f 'pitch-display-name '()
+                            'by-pitch 'pastel1 '() 'grid #f))))))
+
+(test-group "[markers] the new names are exported"
+  (for-each
+   (lambda (name)
+     (test-assert (format #f "~a is exported" name) (exported-by-piece? name)))
+   '(make-marker marker? marker-symbol marker-symbol-size marker-symbol-color
+     marker-border marker-border-width group-part-marker)))
 
 (define runner (test-runner-current))
 (test-end "piece")

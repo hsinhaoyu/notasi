@@ -70,7 +70,11 @@ make-source-location source-location?
             group-pattern-names group-pattern-level group-scheme
             group-palette group-colors group-background group-location
             group-keys group-row-label-octave? group-key-numbers?
-            group-row-labels group-display
+            group-row-labels group-display group-part-marker
+
+            make-marker marker?
+            marker-symbol marker-symbol-size marker-symbol-color
+            marker-border marker-border-width
             group-parts))
 
 ;;; Where a record came from, for error messages.  FILE is #f when the
@@ -227,8 +231,8 @@ make-source-location source-location?
 (define-record-type <group>
   (make-group label short subtitle labels rows members note-label
               note-label-octave? fill holds pattern-names pattern-level keys
-              row-label-octave? key-numbers? row-labels display scheme
-              palette colors background location)
+              row-label-octave? key-numbers? row-labels display part-marker
+              scheme palette colors background location)
   group?
   (label         group-label)
   (short         group-short)
@@ -248,11 +252,23 @@ make-source-location source-location?
   (key-numbers?  group-key-numbers?)
   (row-labels    group-row-labels)      ; none | pitch-name | pitch-display-name
   (display       group-display)         ; ((STROKE . STRING) ...)
+  (part-marker   group-part-marker)     ; ((PART . MARKER) ...), '() for none
   (scheme        group-scheme)
   (palette       group-palette)
   (colors        group-colors)
   (background    group-background)
   (location      group-location))
+
+;;; A part's marks in a group (ADR 0056): SYMBOL is none, dot, ring or
+;;; cross; the others are #f for the template's default.
+(define-record-type <marker>
+  (make-marker symbol symbol-size symbol-color border border-width)
+  marker?
+  (symbol       marker-symbol)
+  (symbol-size  marker-symbol-size)     ; a fraction of the cell, or #f
+  (symbol-color marker-symbol-color)    ; "#rrggbb", or #f
+  (border       marker-border)          ; "#rrggbb", or #f
+  (border-width marker-border-width))   ; a Typst length, or #f
 
 (define (group-parts group)
   "The parts of GROUP's members, in order."

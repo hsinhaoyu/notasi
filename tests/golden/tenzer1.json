@@ -41,6 +41,7 @@
           "voices": [
             {
               "name": "ugal",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -138,6 +139,7 @@
           "voices": [
             {
               "name": "gong",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -199,6 +201,7 @@
           "voices": [
             {
               "name": "kempli",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
