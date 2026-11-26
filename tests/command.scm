@@ -490,8 +490,9 @@ each string in ALSO."
 (define score-order '("zeta" "alpha" "mid"))
 
 (define (entries dir)
-  "The names in DIR, sorted, without . and .."
-  (scandir dir (lambda (f) (not (member f '("." ".."))))))
+  "The names in DIR, sorted with string<? (not the locale's order), without
+. and .."
+  (scandir dir (lambda (f) (not (member f '("." "..")))) string<?))
 
 (define (make-piece-dir name kind)
   "Make the folder NAME in tmp-dir holding one piece, and return the
