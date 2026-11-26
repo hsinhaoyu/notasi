@@ -1,6 +1,6 @@
 (piece "Selisir")
 
-;; The five degrees of selisir, lowest first.
+;; The five pitches of selisir, lowest first.
 ;; Each one can also be written by its vowel.
 (scale selisir
   (ding :alias i)

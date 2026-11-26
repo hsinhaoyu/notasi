@@ -85,7 +85,12 @@ itself is not in the repository.
 | gilak | 8 | gong lanang on 4, kempur on 5 and 7, gong wadon on 8 |
 
 - Several meters are doubled-length (longgor) forms of others; gilak is
-  the exception (p. 111).
+  the exception (p. 111). Bapang is played at 8, 16 (Jaya Semara's
+  pangecet, pp. 57–58, 140) and 32 beats ("Jagra Parwata", p. 142:
+  kempur, klentong, kempur, gong).
+- The 16-beat bapang and gegaboran have the same gong strokes; they
+  differ in drumming, mood and genre, so the gongs alone don't name the
+  meter. notasi's template keeps them as two colotomies (ADR 0053).
 - Cycles in other music reach 512 beats (p. 110).
 - Gong symbols used in the book: G gong, P kempur, T klentong,
   n kelenang, and the syllable "tuk" for the kempli or kajar (p. 110).

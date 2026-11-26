@@ -123,12 +123,14 @@ changes the figure, and each later one adds to it.
    images; `make preview` removed; README and CLAUDE.md.
 3. **`feat/collapsed`** (01–05, ADRs 0051, 0053–0057, 0059, 0060), in
    five slices:
-   1. `feat/collapsed-terms`: the glossary's names in code (`pitch`,
+   1. `feat/collapsed-terms` (done): the glossary's names in code (`pitch`,
       `scale-pitches`, `note-pitch`, the error kinds), in the reader's
       messages, and in the manual with the messages it quotes
       ("degree" becomes "pitch"), `by-pitch` and
-      `pitch-colors`; the piece information keys; `bapang-8`,
-      `bapang-16` and `gegaboran`.
+      `pitch-colors`; the piece information keys (`piece-info`, the
+      last field of the piece); `bapang-8`, `bapang-16` and `gegaboran`,
+      with the manual's pages on colotomies (what a colotomy is, the
+      32-pulse bapang in place of `own-colotomy.nts`).
    2. `feat/collapsed-labels`: `:note-label`, `:row-labels`,
       `:row-label-octave` and `:note-label-octave` in place of
       `:note-names` and `:octave-numbers`; `needs-note-label`; contract

@@ -6,7 +6,7 @@
 (pattern norot :instrument reyong
   o3:1/4 i3 i3 - | i3 - i3 -)
 
-;; The figure on i, moved down a degree (to a), up a degree (to o),
+;; The figure on i, moved down a pitch (to a), up a pitch (to o),
 ;; and on i again: eight pulses.
 (part :instrument reyong
   @norot

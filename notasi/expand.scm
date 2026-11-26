@@ -32,7 +32,7 @@
 
             ;; Shared with the reader, which resolves instrument notes.
             split-octave
-            degree-names))
+            pitch-names))
 
 ;;; ------------------------------------------------------------------
 ;;; The condition
@@ -92,14 +92,14 @@ with 0)."
          (cons (string->symbol (substring s 0 (1+ end)))
                (string->number digits)))))
 
-(define (degree-names degree)
-  (cons (degree-name degree) (degree-aliases degree)))
+(define (pitch-names pitch)
+  (cons (pitch-name pitch) (pitch-aliases pitch)))
 
 (define (note-name-table instrument)
   "An alist from every way to write a note of INSTRUMENT to the note's
-index: for a pitched note, each name and alias of its degree with the
+index: for a pitched note, each name and alias of its pitch with the
 octave (ding2, i2); for a stroke, each name and alias."
-  (let ((degrees (list->vector (scale-degrees (instrument-scale instrument)))))
+  (let ((pitches (list->vector (scale-pitches (instrument-scale instrument)))))
     (append-map
      (lambda (note i)
        (map (lambda (name)
@@ -108,7 +108,7 @@ octave (ding2, i2); for a stroke, each name and alias."
                       (octave (symbol-append
                                name (string->symbol (number->string octave)))))
                     i))
-            (degree-names (vector-ref degrees (note-degree note)))))
+            (pitch-names (vector-ref pitches (note-pitch note)))))
      (vector->list (instrument-notes instrument))
      (iota (vector-length (instrument-notes instrument))))))
 

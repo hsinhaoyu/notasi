@@ -1,0 +1,10 @@
+(piece "Bapang, 32 pulses" :colotomy bapang-32 :pickup 1)
+
+(use gong-kebyar)
+
+;; Gold's 32-pulse bapang ("Jagra Parwata", Music in Bali, p. 142):
+;; kempur on 8 and 24, klentong on 16, gong on 32.
+(colotomy bapang-32 32
+  (part :instrument gong  -:7 P:1 -:7 T:1 -:7 P:1 -:7 G:1))
+
+(part :instrument ugal  a1 || (rep 4 o2:2 i2 e2 o2) ||)

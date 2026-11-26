@@ -14,11 +14,13 @@ default since `feat/drawing-header`, and the score's and group's
 `background` since `feat/drawing-lines`, and the group's `keys`,
 `octave-numbers?`, `key-numbers?`, `row-labels?` and `display`,
 `note-label`'s `#:octave?` and invariant 10 since `feat/drawing-rows`,
-and invariant 9 since `feat/drawing-output`. Tests in `tests/piece.scm`.
+and invariant 9 since `feat/drawing-output`. The glossary's names
+(`pitch`, `scale-pitches`, `note-pitch`) and the piece's `info` since
+iteration 5's `feat/collapsed-terms`. Tests in `tests/piece.scm`.
 
-**Planned** for iteration 5: the record changes in "Iteration 5" below
-(piece information, pattern annotations, free text, the group's new
-settings, the glossary's names), and saving the piece (ADR 0058).
+**Planned** for iteration 5: the rest of the record changes in
+"Iteration 5" below (pattern annotations, free text, the group's new
+settings, the remaining renames), and saving the piece (ADR 0058).
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -76,20 +78,25 @@ piece
   patterns    : list of pattern
   parts       : list of part           written parts, then generated ones
   scores      : list of score          at least one (the default score)
+  info        : list of (symbol . string)
+                                       the piece information (01), in the
+                                       order written; '() for none. The
+                                       last argument of make-piece
 
-scale                                  (implemented, unchanged) also stroke sets
+scale                                  also stroke sets
   name     : symbol
-  degrees  : list of degree            scale: ascending, one octave;
+  pitches  : list of pitch             scale: ascending, one octave;
                                        stroke set: the strokes, unordered
   pitched? : boolean                   #f for a stroke set (`strokes` form)
   location : source location
 
-degree
+pitch                                  also a stroke
   name     : symbol                    e.g. ding
   aliases  : list of symbol            e.g. (i); may be empty
-  display  : string                    the form drawn in the grid, e.g. "i"
-  damped   : string | #f               the form for a note cut short, e.g.
-                                       "na'"; #f: the display form is used
+  display  : string                    the pitch display name, e.g. "i"
+  damped   : string | #f               the damped form, for a note cut
+                                       short, e.g. "na'"; #f: the display
+                                       name is used
   location : source location
 
 instrument
@@ -99,9 +106,9 @@ instrument
                                        strokes: the order the instrument lists
   location : source location
 
-note                                   (implemented, unchanged)
+note
   name   : symbol                      e.g. ding2, dag (never an alias)
-  degree : integer                     index into the scale's degrees (or strokes)
+  pitch  : integer                     index into the scale's pitches (or strokes)
   octave : integer | #f                #f for strokes
 
 colotomy
@@ -195,9 +202,9 @@ group                                  every setting filled in (ADR 0033)
                                        score (`:display`); '() for none
   background    : symbol               grid | vertical |
                                        horizontal | empty
-  scheme        : symbol               e.g. by-degree
+  scheme        : symbol               e.g. by-pitch
   palette       : symbol | list of string   a palette name or "#rrggbb"s
-  colors        : list of (symbol . string) degree name and "#rrggbb"
+  colors        : list of (symbol . string) pitch name and "#rrggbb"
   location      : source location | #f
 ```
 
@@ -294,27 +301,24 @@ follows when the milestones are built; the reader fills every new
 field, so layout never sees a missing one.
 
 Renamed to the glossary's terms (ADR 0051), when a milestone next
-touches them:
+touches them, in the slice named:
 
-| Now | Planned |
-|---|---|
-| record `degree` | `pitch` |
-| `scale-degrees` | `scale-pitches` |
-| `note-degree` (index into the scale) | `note-pitch` |
-| `group-lanes` | `group-rows` |
-| `note-label` (the row label) | `note-row-label`, since `note-label` is now an option's name |
+| Now | Planned | Slice |
+|---|---|---|
+| record `degree` (`make-degree`, `degree?`, `degree-…`) | `pitch` (`make-pitch`, `pitch?`, `pitch-…`) | **Implemented** (`feat/collapsed-terms`) |
+| `scale-degrees` | `scale-pitches` | **Implemented** (`feat/collapsed-terms`) |
+| `note-degree` (index into the scale) | `note-pitch` | **Implemented** (`feat/collapsed-terms`) |
+| `group-lanes` | `group-rows` | `feat/collapsed-labels`, with the JSON's `rows` |
+| `note-label` (the row label) | `note-row-label`, since `note-label` is now an option's name | `feat/collapsed-labels` |
 
 New and changed fields:
 
-```
-piece
-  info        : list of (symbol . string)
-                                       the piece information (01), keyed
-                                       by option name without the colon
-                                       (composer, remarks, ...), in the
-                                       order written; '() for none.
-                                       Kept as written, never printed
+The piece's `info` (accessor `piece-info`, the last argument of
+`make-piece`) is **Implemented** since `feat/collapsed-terms`: the
+piece information keys without the colon (`composer`, `remarks`, ...),
+kept as written, never printed. The rest is Planned:
 
+```
 pattern
   annotation  : string | #f            `:annotation`
 

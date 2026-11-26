@@ -86,7 +86,7 @@
 (define loc (make-source-location "test.nts" 1))
 
 (define (deg name alias display)
-  (make-degree name (if alias (list alias) '()) display #f loc))
+  (make-pitch name (if alias (list alias) '()) display #f loc))
 
 ;; selisir: ding dong deng dung dang, aliases i o e u a.
 (define selisir
@@ -99,7 +99,7 @@
   (make-scale 'gong-strokes (list (deg 'G #f "G") (deg 'P #f "P")) #f loc))
 
 (define (degree-index scale name)
-  (list-index (lambda (d) (eq? (degree-name d) name)) (scale-degrees scale)))
+  (list-index (lambda (d) (eq? (pitch-name d) name)) (scale-pitches scale)))
 
 (define (pitched-note name octave)
   (make-note (symbol-append name (string->symbol (number->string octave)))

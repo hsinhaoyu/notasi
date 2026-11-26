@@ -37,7 +37,7 @@ in one sweep.
 |---|---|---|---|
 | **scale** | A named, ordered set of pitches within one octave | `scale` | |
 | **scale name** | A scale's name: `selisir` | | |
-| **pitch** | One member of a scale: `(dong :alias o :display "o")` | `degree` in code, until renamed | degree |
+| **pitch** | One member of a scale: `(dong :alias o :display "o")` | `pitch` | degree |
 | **pitch name** | A pitch's name: `dong` | | degree name, note name |
 | **pitch display name** | How a pitch is drawn: `o` (its `:display`) | | display form |
 | **octave number** | The digit after a pitch in a key: the `2` of `o2` | | |
@@ -48,7 +48,7 @@ in one sweep.
 | **stroke display name** | How a stroke is drawn: `du'` (its `:display`) | | display form |
 | **damped form** | The form drawn for a note one column long: `na'` (`:damped`) | `damped` | |
 | **instrument** | A named list of keys, or of strokes | `instrument` | |
-| **by-pitch** | **Planned.** The colour scheme that colours each note by its pitch, the same in every octave (`:scheme by-pitch`) | `by-degree` until renamed | by-degree |
+| **by-pitch** | The colour scheme that colours each note by its pitch, the same in every octave (`:scheme by-pitch`) | `by-pitch` | by-degree |
 
 ## Music
 

@@ -11,17 +11,17 @@ Labelled number rows (ADR 0039) and the pickup shown as cycle 0 since
 `feat/drawing-header`; `:background` (ADR 0041) since
 `feat/drawing-lines`; `:keys`, `:octave-numbers`, `:display`,
 `:key-numbers` and `:row-labels` since `feat/drawing-rows`; no `_` in
-score names (ADR 0040) since `feat/drawing-output`.
+score names (ADR 0040) since `feat/drawing-output`. Information about
+a piece, `bapang-8`, `bapang-16` and `gegaboran` in place of `bapang`
+(ADR 0053), `:scheme by-pitch` in place of `by-degree` (ADR 0056) and
+the glossary's pitch terms (ADR 0051) since iteration 5's
+`feat/collapsed-terms`.
 
-**Planned** for iteration 5 (ADRs 0053–0057): information about a
-piece; `bapang-8`, `bapang-16` and `gegaboran` in the template, in
-place of `bapang`; `:note-label`, a widened `:row-labels`, and
+**Planned** for iteration 5 (ADRs 0054–0057): `:note-label`, a widened `:row-labels`, and
 `:row-label-octave` and `:note-label-octave`, in place of
 `:note-names` and `:octave-numbers`; `:rows compact` in place of
 `single`; `:part-marker`; the annotation row, pattern annotations and
-`(text ...)`, in place of `:pattern-names` and `:pattern-level`;
-`:scheme by-pitch` in place of `by-degree`; the glossary's terms
-(ADR 0051): pitch, pitch name and pitch display name, not degree.
+`(text ...)`, in place of `:pattern-names` and `:pattern-level`.
 Until they are built, the reader takes the old options and names. The
 removed ones get no migration: once the new ones are built, they are
 unknown keys or values, errors like any other.
@@ -136,7 +136,7 @@ Exactly one per file, first.
 
 A piece with a colotomy is its pickup plus whole cycles.
 
-**Planned** (iteration 5): information
+**Implemented** (iteration 5's `feat/collapsed-terms`): information
 about the piece, all optional, every value a string:
 
 | Option | Meaning |
@@ -288,10 +288,9 @@ about how it is played or printed. It has no options.
   with `:colotomy` and writes no `colotomy` form, or defines its own,
   or replaces the template's with one of the same name.
 
-  Bapang (ADR 0053): **Implemented** today as `bapang` (16 pulses:
-  kempur on 4 and 12, klentong on 8, gong on 16). **Planned**: `bapang`
-  is replaced by two colotomies named for their length, and the
-  template gets `gegaboran`. Pulses are Gold's kempli beats:
+  Bapang (ADR 0053, **Implemented** since `feat/collapsed-terms`): two
+  colotomies named for their length, and `gegaboran`, replacing
+  iteration 3's 16-pulse `bapang`. Pulses are Gold's kempli beats:
 
   | Colotomy | Pulses | Strokes | Source |
   |---|---|---|---|
@@ -299,11 +298,14 @@ about how it is played or printed. It has no options.
   | `bapang-16` | 16 | kempur on 4 and 12, klentong on 8, gong on 16 | Gold, p. 58 (Jaya Semara), p. 142 |
   | `gegaboran` | 16 | the strokes of `bapang-16` | Gold, figure 5.11, p. 110 |
 
-  Plain `bapang` then is an unknown colotomy. `gegaboran` is in the
+  Plain `bapang` is an unknown colotomy. `gegaboran` is in the
   template though no example uses it, an exception to ADR 0046's rule,
   so a writer can name the meter they mean. Other lengths (Gold's
-  32-pulse bapang, p. 142) are written in the piece as a `colotomy`;
-  notasi has no operation that stretches one.
+  32-pulse bapang in "Jagra Parwata", p. 142: kempur on 8 and 24,
+  klentong on 16, gong on 32, the 16-pulse strokes spread over twice
+  the pulses) are written in the piece as a `colotomy`; notasi has no
+  operation that stretches one. The manual's example of a colotomy of
+  your own is that 32-pulse bapang.
 
 - With a stroke set, each NOTE is a stroke from that set (`G`, `dag`),
   in any order. The order sets the note indices and the order of the
@@ -315,8 +317,8 @@ about how it is played or printed. It has no options.
 A colotomic meter (ADRs 0030, 0038): a cycle of LENGTH pulses and the
 gong parts that mark it.
 
-What a colotomy is (**Planned** wording for the manual and the
-template's comments, ADR 0053):
+What a colotomy is (the manual's and the template's wording, ADR
+0053):
 
 - "Colotomic" is a word from Western writing about gamelan; there is no
   single Balinese term, and each meter has its own name, such as gilak
@@ -658,7 +660,7 @@ Colour and size (ADR 0032):
 
 | Option | Level | Default | Meaning |
 |---|---|---|---|
-| `:scheme NAME` | score, group | `by-degree`; **Planned**: `by-pitch` | How notes are coloured (04, "Note style"). `by-pitch` (ADR 0056, `by-degree` renamed, with no migration) colours each note by its pitch, the same in every octave. |
+| `:scheme NAME` | score, group | `by-pitch` | How notes are coloured (04, "Note style"). `by-pitch` (ADR 0056, `by-degree` renamed, with no migration) colours each note by its pitch, the same in every octave. |
 | `:palette NAME` or `:palette (COLOUR ...)` | score, group | `pastel1` | The colours, by name or as a list of `"#rrggbb"`. |
 | `:colors ((PITCH COLOUR) ...)` | score, group | none | Colours for particular pitches, by pitch name, e.g. `((ding "#000000"))`. |
 | `:font-size LENGTH` | score | `"8pt"` on its own page; the document's size in a document | The base text size. |

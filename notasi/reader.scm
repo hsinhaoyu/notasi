@@ -4,7 +4,7 @@
 ;;; v1 (four slices): the public interface, &notasi-syntax-error, forms,
 ;;; scales, stroke sets, instruments, parts and templates.  Iteration 2,
 ;;; slice 1 (feat/music-syntax): `:key value' options, (part INSTRUMENT
-;;; :name NAME ...), degrees with :alias, :display and :damped, no
+;;; :name NAME ...), pitches with :alias, :display and :damped, no
 ;;; instrument options, no `·' and no top-level groups.  `colotomy',
 ;;; `pattern' and `score' raise `not-implemented' until their slices.
 
@@ -279,9 +279,21 @@ BAD, when given, is called instead of `bad-option' for a wrong value."
   (and (exact-integer? x) (positive? x)))
 
 ;;; The options a form accepts: (NAME VALID? . WHAT-IT-MUST-BE).
+(define piece-info-keys
+  ;; Information about the piece (01): strings, kept as written, never
+  ;; printed.
+  '(composer composition-year transcriber transcription-year source
+    contributor contribution-year performer remarks))
+
 (define piece-options
   `((colotomy ,(lambda (v) (and (symbol? v) (not (key? v)))) . "a colotomy's name")
-    (pickup ,(lambda (v) (and (number? v) (exact? v))) . "a whole number of pulses")))
+    (pickup ,(lambda (v) (and (number? v) (exact? v))) . "a whole number of pulses")
+    ,@(map (lambda (key) `(,key ,string? . "a string")) piece-info-keys)))
+
+(define (information options)
+  "The piece information among OPTIONS, the piece form's checked options,
+as (KEY . STRING) in the order written."
+  (filter (lambda (option) (memq (car option) piece-info-keys)) options))
 
 (define part-options
   `((instrument ,(lambda (v) (and (symbol? v) (not (key? v)))) . "an instrument's name")
@@ -335,12 +347,12 @@ in file order."
   (and (symbol? x) (not (key? x))))
 
 (define (check-set-shape form)
-  "A `scale' or `strokes' FORM: a name, no options, then its degrees."
+  "A `scale' or `strokes' FORM: a name, no options, then its pitches."
   (match form
     (((head (? note-name?) . items) . line)
      (match (split-options items line)
        ((() . ()) (bad-set-form head line))
-       ((() . degrees) (reject-keys degrees line))
+       ((() . pitches) (reject-keys pitches line))
        ((options . _)
         (check-options options '()
                        (if (eq? head 'scale) "a scale" "a stroke set") line))))
@@ -349,7 +361,7 @@ in file order."
 (define (bad-set-form head line)
   (if (eq? head 'scale)
       (syntax-error 'bad-form line
-                    "a scale needs a name and its degrees: (scale NAME DEGREE ...)")
+                    "a scale needs a name and its pitches: (scale NAME PITCH ...)")
       (syntax-error 'bad-form line
                     "a stroke set needs a name and its strokes: (strokes NAME STROKE ...)")))
 
@@ -742,37 +754,37 @@ from it, as definitions in merged order."
   (or (note-name? v)
       (and (pair? v) (list? v) (every note-name? v))))
 
-;;; A degree's options.  A wrong value is a `bad-degree', not a
+;;; A pitch's options.  A wrong value is a `bad-pitch', not a
 ;;; `bad-option' (03, "Definitions").
-(define degree-options
+(define pitch-options
   `((alias ,alias-list? . "a name or a list of names")
     (display ,string? . "a string")
     (damped ,string? . "a string")))
 
 (define reserved-names '(rep @))
 
-(define (parse-degree datum set-line)
-  "Build a degree record from DATUM: a name, or (NAME :key value ...).  A
+(define (parse-pitch datum set-line)
+  "Build a pitch record from DATUM: a name, or (NAME :key value ...).  A
 bare name has no position, so it takes SET-LINE, its scale's line."
   (let ((line (list-line datum set-line)))
     (define (bad fmt . args)
-      (apply syntax-error 'bad-degree line fmt args))
+      (apply syntax-error 'bad-pitch line fmt args))
     (match datum
       ((? note-name? name)
-       (make-degree name '() (symbol->string name) #f (location line)))
+       (make-pitch name '() (symbol->string name) #f (location line)))
       (((? note-name? name) . items)
        (match (split-options items line)
          ((options . ())
           (for-each (match-lambda
                       ((key . value)
-                       (match (assq (key-name key) degree-options)
+                       (match (assq (key-name key) pitch-options)
                          ((_ valid? . what)
                           (unless (valid? value)
                             (bad "`~a' must be ~a, not ~s" key what value)))
                          (#f #t))))
                     options)
-          (let ((opts (check-options options degree-options "a degree" line)))
-            (make-degree name
+          (let ((opts (check-options options pitch-options "a pitch" line)))
+            (make-pitch name
                          (match (assq-ref opts 'alias)
                            (#f '())
                            ((? symbol? a) (list a))
@@ -781,61 +793,61 @@ bare name has no position, so it takes SET-LINE, its scale's line."
                          (assq-ref opts 'damped)
                          (location line))))
          ((_ . (item . _))
-          (bad "a degree is NAME or (NAME :alias A :display \"TEXT\" :damped \"TEXT\"), not ~s"
+          (bad "a pitch is NAME or (NAME :alias A :display \"TEXT\" :damped \"TEXT\"), not ~s"
                datum))))
-      (_ (bad "a degree must be a name or (NAME :key value ...), not ~s" datum)))))
+      (_ (bad "a pitch must be a name or (NAME :key value ...), not ~s" datum)))))
 
 (define (build-scale form)
   "Build a scale record from a `scale' or `strokes' FORM."
   (match form
     (((head name . data) . set-line)
      (let ((pitched? (eq? head 'scale)))
-       (let loop ((data data) (used '()) (degrees '()))
+       (let loop ((data data) (used '()) (pitches '()))
          (match data
            (()
-            (make-scale name (reverse degrees) pitched? (location set-line)))
+            (make-scale name (reverse pitches) pitched? (location set-line)))
            ((datum . rest)
-            (let* ((degree (parse-degree datum set-line))
-                   (line (source-location-line (degree-location degree))))
+            (let* ((pitch (parse-pitch datum set-line))
+                   (line (source-location-line (pitch-location pitch))))
               (for-each
                (lambda (n)
                  (when (memq n reserved-names)
                    (syntax-error 'reserved-name line
-                                 "`~a' can't name a degree or stroke: it is reserved"
+                                 "`~a' can't name a pitch or stroke: it is reserved"
                                  n)))
-               (degree-names degree))
+               (pitch-names pitch))
               (when pitched?
                 (for-each
                  (lambda (n)
                    (when (ends-in-digit? n)
-                     (syntax-error 'degree-ends-in-digit line
+                     (syntax-error 'pitch-ends-in-digit line
                                    "scale `~a': `~a' ends in a digit, which would be read as an octave"
                                    name n)))
-                 (degree-names degree)))
+                 (pitch-names pitch)))
               (loop rest
                     (fold (lambda (n used)
                             (when (memq n used)
-                              (syntax-error 'duplicate-degree line
+                              (syntax-error 'duplicate-pitch line
                                             "`~a' is used twice in `~a'" n name))
                             (cons n used))
                           used
-                          (degree-names degree))
-                    (cons degree degrees))))))))))
+                          (pitch-names pitch))
+                    (cons pitch pitches))))))))))
 
 ;;; ------------------------------------------------------------------
 ;;; Item 9: instruments
 
 (define (name-table scale)
-  "An alist from every degree name and alias of SCALE to its index."
-  (append-map (lambda (degree i)
-                (map (lambda (n) (cons n i)) (degree-names degree)))
-              (scale-degrees scale)
-              (iota (length (scale-degrees scale)))))
+  "An alist from every pitch name and alias of SCALE to its index."
+  (append-map (lambda (pitch i)
+                (map (lambda (n) (cons n i)) (pitch-names pitch)))
+              (scale-pitches scale)
+              (iota (length (scale-pitches scale)))))
 
 (define (resolve-note name scale table instrument line)
   "The note record for NAME on INSTRUMENT, whose scale is SCALE."
   (define (canonical i)
-    (degree-name (list-ref (scale-degrees scale) i)))
+    (pitch-name (list-ref (scale-pitches scale) i)))
   (define (unknown)
     (syntax-error 'unknown-note line
                   "instrument `~a': `~a' is not a note of `~a'"
@@ -847,8 +859,8 @@ bare name has no position, so it takes SET-LINE, its scale's line."
                               "instrument `~a': `~a' needs an octave number, e.g. ~a1"
                               instrument name name)
                 (unknown)))
-        ((degree . octave)
-         (match (assq degree table)
+        ((pitch . octave)
+         (match (assq pitch table)
            (#f (unknown))
            ((_ . i)
             (make-note (symbol-append (canonical i)
@@ -861,7 +873,7 @@ bare name has no position, so it takes SET-LINE, its scale's line."
 (define (pitch<? a b)
   (or (< (note-octave a) (note-octave b))
       (and (= (note-octave a) (note-octave b))
-           (< (note-degree a) (note-degree b)))))
+           (< (note-pitch a) (note-pitch b)))))
 
 (define (check-note-order note earlier pitched? instrument line)
   "Check NOTE against EARLIER, the notes before it, latest first."
@@ -873,7 +885,7 @@ bare name has no position, so it takes SET-LINE, its scale's line."
                          "instrument `~a': `~a' comes after `~a'; list notes from low to high"
                          instrument (note-name note) (note-name previous))))
         (() #t))
-      (when (any (lambda (n) (= (note-degree n) (note-degree note))) earlier)
+      (when (any (lambda (n) (= (note-pitch n) (note-pitch note))) earlier)
         (syntax-error 'duplicate-note line
                       "instrument `~a': `~a' is listed twice"
                       instrument (note-name note)))))
@@ -1119,7 +1131,7 @@ piece length: the common step count, or 0 with no parts."
 (define built-in-kempli
   (make-instrument
    'kempli
-   (make-scale 'kempli-strokes (list (make-degree 'K '() "K" #f #f)) #f #f)
+   (make-scale 'kempli-strokes (list (make-pitch 'K '() "K" #f #f)) #f #f)
    (vector (make-note 'K 0 #f))
    #f))
 
@@ -1200,9 +1212,9 @@ cut at the piece's end, on the piece's kempli or a built-in one."
 
 (define style-options
   `((note-names ,yes-no? . "yes or no")
-    (scheme ,(lambda (v) (eq? v 'by-degree)) . "a colour scheme: by-degree")
+    (scheme ,(lambda (v) (eq? v 'by-pitch)) . "a colour scheme: by-pitch")
     (palette ,palette? . "a palette name or a list of \"#rrggbb\" colours")
-    (colors ,colors? . "a list of (DEGREE \"#rrggbb\")")
+    (colors ,colors? . "a list of (PITCH \"#rrggbb\")")
     (rows ,(lambda (v) (memq v '(notes parts single))) . "notes, parts or single")
     (fill ,(lambda (v) (memq v '(colour none))) . "colour or none")
     (holds ,(lambda (v) (memq v '(none dash))) . "none or dash")
@@ -1293,11 +1305,11 @@ or alias with its octave, as in a part; `bad-option' at LINE if none."
             ((? symbol?)
              (match (split-octave key)
                (#f #f)
-               ((degree . octave)
-                (let ((i (list-index (lambda (d) (memq degree (degree-names d)))
-                                     (scale-degrees scale))))
+               ((pitch . octave)
+                (let ((i (list-index (lambda (d) (memq pitch (pitch-names d)))
+                                     (scale-pitches scale))))
                   (and i
-                       (find (lambda (n) (and (= (note-degree n) i)
+                       (find (lambda (n) (and (= (note-pitch n) i)
                                               (eqv? (note-octave n) octave)))
                              (vector->list notes)))))))
             (_ #f))))
@@ -1401,9 +1413,9 @@ A group's own strokes must be strokes of its instruments."
                 (group-key-numbers-setting own score-opts key-rows? line)
                 (not (eq? (setting 'row-labels own score-opts 'yes) 'no))
                 (group-display-setting own score-opts instruments line)
-                (setting 'scheme own score-opts 'by-degree)
+                (setting 'scheme own score-opts 'by-pitch)
                 (setting 'palette own score-opts 'pastel1)
-                (map (match-lambda ((degree colour) (cons degree colour)))
+                (map (match-lambda ((pitch colour) (cons pitch colour)))
                      colors)
                 (setting 'background own score-opts 'grid)
                 location)))
@@ -1737,7 +1749,7 @@ print."
                                    (list (cons part name))
                                    #f 'colour 'none 'none 0
                                    'used #t #f #t '()
-                                   'by-degree 'pastel1 '() 'grid #f)))
+                                   'by-pitch 'pastel1 '() 'grid #f)))
                    parts)
               #f))
 
@@ -1834,7 +1846,8 @@ so a file with several problems always reports the same one."
                           (map (lambda (form)
                                  (build-score form printable (car piece)
                                               length colotomy pickup))
-                               forms))))))))
+                               forms))))
+                  (information (cdr piece))))))
 
 (define (read-port port dir chain)
   (read-piece (read-forms port) dir chain))

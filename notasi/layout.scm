@@ -155,7 +155,7 @@ start relative to FROM, or #f if it doesn't sound there."
 (define (group-style group)
   (make-style #:scheme (group-scheme group)
               #:palette (group-palette group)
-              #:degree-colors (group-colors group)))
+              #:pitch-colors (group-colors group)))
 
 ;;; A group prepared once for the whole piece: its JSON label fields,
 ;;; its row labels, and each voice's events in the whole piece, in

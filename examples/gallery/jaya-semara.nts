@@ -18,16 +18,16 @@
 ;; Not notated here: the reyong norot (described but not written out in
 ;; the book), the alternation with nyog-cag kotekan, dynamics and tempo.
 
-(piece "Jaya Semara: pangecet" :colotomy bapang :pickup 1)
+(piece "Jaya Semara: pangecet" :colotomy bapang-16 :pickup 1)
 
 (use gong-kebyar)
 
 ;; The instruments, with Gold's ranges (figure 2.7), and the gongs come
 ;; from the template.
 
-;; The meter is bapang, from the template (Gold, p. 140): kempur,
-;; klentong, kempur, gong over 16 pulses (activity 2.4), kempur on 4 and
-;; 12, klentong on 8, gong on 16.
+;; The meter is the 16-pulse bapang, from the template (Gold, pp. 57,
+;; 58 and 140): kempur, klentong, kempur, gong, kempur on 4 and 12,
+;; klentong on 8, gong on 16.
 
 ;; ---------------------------------------------------------------
 ;; Patterns. Each part below is built from these. Each pattern says
@@ -62,8 +62,8 @@
   -:1/4 i3 i3 o3 | - o3 - o3)
 
 ;; One pass of the melody, 8 pulses. The figures on 6 and 2 are the
-;; figure on 1 moved a degree down and up; the sangsih on 3 is its
-;; figure on 1 moved two degrees up. A moved figure is given the name of
+;; figure on 1 moved a pitch down and up; the sangsih on 3 is its
+;; figure on 1 moved two pitches up. A moved figure is given the name of
 ;; the pokok tone it serves, so that polos and sangsih carry the same
 ;; names: "1", "6", "3", "2".
 (pattern polos :instrument pemade :short "norot" :long "Norot kotekan, polos"

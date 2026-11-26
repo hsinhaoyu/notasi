@@ -15,6 +15,33 @@ Every piece starts with a title. Here is a whole file:
   for you, not for notasi, so use comments to note where a piece comes
   from or what a line means.
 
+## Who made it, and where it comes from
+
+The `piece` line can also say who made the music and where your
+notation comes from:
+
+```scheme
+{{#include ../../../examples/manual/piece-information.nts}}
+```
+
+Each of these is optional, and each takes text in double quotes,
+written however you like (`"1964"`, `"1930s"` or `"c. 1964"` for a
+year):
+
+| Key | What it says |
+|---|---|
+| `:composer` | Who composed the music. |
+| `:composition-year` | When it was composed. |
+| `:transcriber` | Who wrote it down. |
+| `:transcription-year` | When it was written down. |
+| `:source` | Where it comes from: a book, a recording, a teacher. |
+| `:contributor` | Who contributed the file. |
+| `:contribution-year` | When it was contributed. |
+| `:performer` | Who plays the music your notation follows. |
+| `:remarks` | Anything else: its history, what is left out. |
+
+notasi keeps them with the piece but doesn't print them in the score.
+
 ## The rules
 
 - The `piece` line comes first, before anything else except comments

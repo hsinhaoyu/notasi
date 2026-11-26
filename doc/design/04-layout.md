@@ -18,8 +18,8 @@ Iteration 3's layout is implemented.
 version 4 (`rows`, `row` and `row_label_width` for `lanes`, `lane` and
 `lane_width`; the annotation row in place of `overlays`; each voice's
 `marker`); compact rows in place of `single`; the note label and the
-pitch column's forms; part markers; the annotation row; `by-pitch`.
-See "Iteration 5".
+pitch column's forms; part markers; the annotation row. See
+"Iteration 5". `by-pitch` and `pitch-colors` since `feat/collapsed-terms`.
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -272,7 +272,7 @@ shown; with `all` they run from 1.
 
 **Implemented** (`feat/scores-form`): layout builds one style per group, from the group's
 `scheme`, `palette` and `colors` (ADR 0032), with
-`(make-style #:scheme #:palette #:degree-colors)`. The reader has
+`(make-style #:scheme #:palette #:pitch-colors)`. The reader has
 checked the names and colours, so `make-style` does not fail here.
 `(palette-names)` is what the reader checks palette names against
 (ADR 0035).
@@ -296,8 +296,8 @@ adding a scheme; the JSON and the Typst template don't change. Colours
 are chosen in Guile and written as hex strings; the Typst side never
 picks colours (ADR 0005).
 
-**v1 has one scheme, `by-degree`** (ADR 0017; **Planned**: renamed
-`by-pitch`, ADR 0056, with `by-degree` an unknown name):
+**There is one scheme, `by-pitch`** (ADRs 0017, 0056; called
+`by-degree` until `feat/collapsed-terms`, now an unknown name):
 
 - **Pitched notes are coloured by pitch.** Pitch *k* of the
   scale (0-based, in scale order: ding 0, dong 1, …) gets colour *k* of
@@ -330,36 +330,32 @@ picks colours (ADR 0005).
   `:part-marker` (see "Iteration 5").
 
 **The style** is an immutable record made with
-`(make-style #:key scheme palette degree-colors)`; `(default-style)` is
+`(make-style #:key scheme palette pitch-colors)`; `(default-style)` is
 `(make-style)`. Predicate `style?`; accessors `style-scheme`,
-`style-palette`, `style-degree-colors`.
+`style-palette`, `style-pitch-colors`.
 
 | Field | Default | Meaning |
 |---|---|---|
-| `scheme` | `'by-degree` | a scheme name, or a procedure `(style instrument note) → look` |
+| `scheme` | `'by-pitch` | a scheme name, or a procedure `(style instrument note) → look` |
 | `palette` | `'pastel1` | a palette name (below), or a list of colours |
-| `degree-colors` | `'()` | overrides by pitch name, e.g. `((ding . "#000000"))` |
+| `pitch-colors` | `'()` | overrides by pitch name, e.g. `((ding . "#000000"))` |
 
 `make-style` checks its arguments and raises an `&error` whose
 irritants include the bad value for: an unknown scheme name (anything
-that is neither `by-degree` nor a procedure), an unknown palette name,
+that is neither `by-pitch` nor a procedure), an unknown palette name,
 an empty colour list, a colour that is not a string `#rrggbb` (hex
-digits in either case), or a `degree-colors` entry that is not
-`(SYMBOL . COLOUR)`, and for a `palette` or `degree-colors` of the
-wrong type (`#:palette 42`, `#:degree-colors 'x`). For a malformed
+digits in either case), or a `pitch-colors` entry that is not
+`(SYMBOL . COLOUR)`, and for a `palette` or `pitch-colors` of the
+wrong type (`#:palette 42`, `#:pitch-colors 'x`). For a malformed
 entry, the irritants include the entry or its bad part. A pitch name
 that no scale has is allowed; it is just never used. Keys are pitch
 names, not aliases: `(i . "#000000")` overrides nothing, even where
 `i` is an alias of `ding`. Overrides apply to pitched notes only;
 strokes are always grey. The accessors return resolved values:
-`style-scheme` a procedure (`by-degree` for the name), `style-palette`
-the list of colours, all colours in lowercase. `by-degree` is exported,
+`style-scheme` a procedure (`by-pitch` for the name), `style-palette`
+the list of colours, all colours in lowercase. `by-pitch` is exported,
 so a custom scheme can fall back on it.
 
-**Planned** (ADRs 0051, 0056), when the style is next changed:
-`by-degree` becomes `by-pitch` (the procedure and the name),
-`#:degree-colors` becomes `#:pitch-colors`, and
-`style-degree-colors` becomes `style-pitch-colors`.
 
 The colours notasi makes (palettes, overrides, text colours) are
 lowercase `#rrggbb` strings; strokes are `#cccccc`. A custom
