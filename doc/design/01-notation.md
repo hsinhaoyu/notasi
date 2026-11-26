@@ -49,19 +49,9 @@ would need. In particular:
 
 ## Concepts
 
-| Term | Meaning |
-|---|---|
-| pulse | One kempli stroke: the unit of time (ADR 0009). Gold's "beat". |
-| duration | A length of time in pulses: a whole number or a fraction (`2`, `1/4`). |
-| step | The smallest unit of time a score prints: one column of its grid. Layout derives it (04). |
-| part | One line of music on one instrument. |
-| pace | A part's current duration: the duration a note gets when none is written. |
-| colotomy | A named cycle: a length in pulses and the gong parts that mark it (Gold's colotomic meter). |
-| cycle | One repetition of the colotomy. Cycle 1 is the first complete one. |
-| position | A place in time: a cycle and a pulse ("cycle 2, pulse 4"), or a pulse number without a colotomy. |
-| pickup | Pulses before the first complete cycle, when a piece opens on the gong. |
-| pattern | A named list of tokens, written for one instrument, that its parts can play, join, repeat and transform. |
-| score | How the music is printed: which parts, in which groups, with which options. A file may have several. |
+The terms used here (pulse, duration, pace, step, part, colotomy,
+cycle, position, pickup, pattern, score, and the rest) are defined in
+the [glossary](glossary.md) (ADR 0051).
 
 ## Files
 

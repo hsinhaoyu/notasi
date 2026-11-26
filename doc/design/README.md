@@ -22,6 +22,7 @@ book.typ + book.notasi.json ──typst compile──▶ PDF
 
 | Stage | Module | Document |
 |---|---|---|
+| Terms used everywhere | — | [glossary.md](glossary.md) |
 | Notation language | — | [01-notation.md](01-notation.md) |
 | Piece (internal data) | `(notasi piece)` | [02-piece.md](02-piece.md) |
 | Reader + validation | `(notasi reader)`, `(notasi expand)` | [03-reader.md](03-reader.md) |
@@ -121,6 +122,7 @@ Each decision's context and consequences are in its record in
 26. Cycle lines are heavier than pulse lines: [0037](../decisions/0037-cycle-lines-are-heavier.md)
 27. The notasi command line is a contract for editors: [0048](../decisions/0048-the-command-line-is-a-contract-for-editors.md)
 28. An Emacs package ships with notasi and only runs the command: [0050](../decisions/0050-an-emacs-package-ships-with-notasi.md)
+29. One glossary names things in the documents and the code: [0051](../decisions/0051-one-glossary-names-things-everywhere.md)
 
 Proposed, not yet agreed:
 
@@ -150,23 +152,7 @@ Proposed, not yet agreed:
 
 ## Glossary
 
-| Term | Meaning |
-|---|---|
-| pulse | The steady stroke of the kempli/kajar; the unit of time. Durations are counted in pulses |
-| step | One column of a printed grid: the largest duration dividing every time a score prints, derived by layout. (v1: one token in a part, `steps-per-pulse` to a pulse) |
-| cycle | One repetition of a colotomy; positions are a cycle and a pulse |
-| colotomy | A named cycle of pulses and the gong parts that mark it |
-| pattern | A named figure for one instrument, played in parts with `@NAME` |
-| system | One horizontal block of the figure, e.g. one gong cycle |
-| scale | Ordered set of degree names, e.g. `ding dong deng dung dang` |
-| stroke set | Named set of unpitched strokes, e.g. kendang `dag dug du` |
-| instrument | Ordered list of the notes (keys/pots) an instrument has |
-| part | A line of music played on one instrument |
-| score | How the music is printed: groups of parts and printing options; a file may have several |
-| group | Parts drawn together in one block of rows, e.g. polos + sangsih; part of a score (v1: a top-level form) |
-| lane | One row inside a group, one per note (pitch) or stroke type |
-| polos / sangsih | The two interlocking parts of a kotekan |
-| colotomic | Gong, kempur, kempli etc., which mark the structure of the cycle |
+The terms are defined once, in [glossary.md](glossary.md) (ADR 0051).
 
 ## Prototype
 
