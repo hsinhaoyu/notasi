@@ -115,10 +115,10 @@ of the group and gives it a symbol, a border, or both:
 | Key | What it does |
 |---|---|
 | `:symbol dot` / `ring` / `cross` | A small mark in the middle of each of the part's notes. `none` (the default) draws none. |
-| `:symbol-size 0.3` | The mark's size, as a part of the square (more than 0, at most 1). 0.3 unless you say. |
+| `:symbol-size 0.2` | The mark's size, as a part of the square (more than 0, at most 1). 0.12 unless you say. |
 | `:symbol-color "#222222"` | The mark's colour: near-black unless you say. |
 | `:border "#d62728"` | A border of this colour around each of the part's notes, in place of the thin grey one. |
-| `:border-width "1.5pt"` | How thick the border is: 1.5pt unless you say. |
+| `:border-width "1pt"` | How thick the border is: 0.8pt unless you say. |
 
 A part with no entry is drawn as usual. A mark and a note's label are
 both drawn in the middle of the square, even where they overlap, so

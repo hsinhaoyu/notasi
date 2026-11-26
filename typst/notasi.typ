@@ -11,12 +11,12 @@
 // A length from the figure, e.g. "10.5em" or "4mm".
 #let _len(s) = eval(s)
 
-// Defaults for a part's marks (ADR 0056), chosen by eye: a symbol a
-// fraction of the cell's narrower side, and a border thicker than the
-// grey one but thin enough not to hide a small note's colour.
-#let _default-symbol-size = 0.3
+// Defaults for a part's marks (ADR 0056), chosen by eye to be subtle
+// (feat/gallery): a small symbol, a fraction of the cell's narrower
+// side, and a border a little thicker than the grey one.
+#let _default-symbol-size = 0.12
 #let _default-symbol-color = "#222222"
-#let _default-border-width = "1.5pt"
+#let _default-border-width = "0.8pt"
 
 // A value of a voice's marker, or DEFAULT when the marker leaves it out.
 #let _mark(marker, key, default) = {

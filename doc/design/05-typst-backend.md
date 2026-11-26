@@ -405,9 +405,10 @@ version 3's drawing, which follows:
   when `border` isn't `null`, a border of that colour and
   `border_width` in place of the grey one. A note's text and symbol
   are both drawn, centred, even when they overlap. The defaults, chosen
-  by eye on Jaya Semara's kotekan, are a size of 0.3 and a width of
-  1.5pt: thicker than the grey border but small enough not to hide a
-  gangsa note's fill. **Implemented** since `feat/collapsed-markers`, on
+  by eye to be subtle (on Gambangan's kotekan, `feat/gallery`; 0.3 and
+  1.5pt before), are a size of 0.12 and a width of 0.8pt: a little
+  thicker than the grey border, so the mark is seen without hiding the
+  note's fill. **Implemented** since `feat/collapsed-markers`, on
   every piece of a cut note, and never on a `"-"` of `:holds dash`. A note
   drawn as text alone (`fill` `null`) gets the symbol but no border.
 - `lanes`, `lane` and `lane_width` are read as `rows`, `row` and
