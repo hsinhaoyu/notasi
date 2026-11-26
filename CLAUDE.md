@@ -55,6 +55,7 @@ doc/decisions/      decision log (ADRs)
 
 `doc/design/` describes the current design; `doc/decisions/` holds numbered decision records (ADRs) explaining why. Read the relevant design doc before working on a module. Design ideas under `doc/iterations/*/design_ideas/` are thinking, never the design: never treat them as a spec or build from them. The one exception is the promotion step (`/promote-design`), which reads them when the user asks for it.
 
+- Use the terms in `doc/design/glossary.md` (ADR 0051) in docs, the manual, code (procedures, record fields, JSON keys), error messages and commit messages, and never the words in its "Not" column for the same thing. When a milestone touches code that still uses an older name the glossary lists, rename it there. A new term, or a changed one, goes into the glossary in the same PR.
 - Any change to behaviour, notation, the piece records or the JSON contract updates `doc/design/` in the same PR. Keep each doc's `Status:` line and its Implemented / Planned / Open questions labels accurate.
 - Reversing or narrowing a documented decision requires a new ADR in `doc/decisions/` (format and rules in its README), and the old ADR's status becomes `superseded by NNNN`. `tests/decisions.scm` checks the format.
 - Never edit an accepted ADR except its `Status:` line.
