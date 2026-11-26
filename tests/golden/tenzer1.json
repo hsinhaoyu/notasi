@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "title": "Eight-pulse gong cycle",
   "subtitle": null,
   "steps_per_pulse": 1,
@@ -7,7 +7,7 @@
     "font_size": null,
     "label_width": "5.1em",
     "key_width": "0.0em",
-    "lane_width": "2.0em",
+    "row_label_width": "2.0em",
     "cell_width": "2em",
     "cell_height": "2em"
   },
@@ -36,7 +36,7 @@
         {
           "label": "ugal",
           "subtitle": null,
-          "lanes": ["e2", "o2", "i2", "a1"],
+          "rows": ["e2", "o2", "i2", "a1"],
           "key_numbers": null,
           "voices": [
             {
@@ -45,7 +45,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -54,7 +54,7 @@
                 {
                   "start": 1,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -63,7 +63,7 @@
                 {
                   "start": 2,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -72,7 +72,7 @@
                 {
                   "start": 3,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -81,7 +81,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -90,7 +90,7 @@
                 {
                   "start": 5,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -99,7 +99,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -108,7 +108,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -117,7 +117,7 @@
                 {
                   "start": 8,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -133,7 +133,7 @@
         {
           "label": "gong",
           "subtitle": null,
-          "lanes": ["G", "GL", "P"],
+          "rows": ["G", "GL", "P"],
           "key_numbers": null,
           "voices": [
             {
@@ -142,7 +142,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -151,7 +151,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -160,7 +160,7 @@
                 {
                   "start": 5,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -169,7 +169,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -178,7 +178,7 @@
                 {
                   "start": 8,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -194,7 +194,7 @@
         {
           "label": "kempli",
           "subtitle": null,
-          "lanes": ["K"],
+          "rows": ["K"],
           "key_numbers": null,
           "voices": [
             {
@@ -203,7 +203,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -212,7 +212,7 @@
                 {
                   "start": 1,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -221,7 +221,7 @@
                 {
                   "start": 2,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -230,7 +230,7 @@
                 {
                   "start": 3,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -239,7 +239,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -248,7 +248,7 @@
                 {
                   "start": 5,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -257,7 +257,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -266,7 +266,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -275,7 +275,7 @@
                 {
                   "start": 8,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",

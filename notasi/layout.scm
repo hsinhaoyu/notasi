@@ -1,5 +1,5 @@
 ;;; (notasi layout) -- Lay out one score of a piece as a figure: systems,
-;;; groups, lanes and events, each event with its look.  See
+;;; groups, key-rows and events, each event with its look.  See
 ;;; doc/design/04-layout.md.
 ;;;
 ;;; The figure is the JSON value of 05's contract itself: alists with
@@ -17,10 +17,10 @@
   (or x 'null))
 
 ;;; ------------------------------------------------------------------
-;;; Lanes
+;;; Rows
 
-(define (lane-owners group)
-  "The lanes of GROUP, top first, as (INSTRUMENT . NOTE) pairs."
+(define (row-owners group)
+  "The key-rows of GROUP, top first, as (INSTRUMENT . NOTE) pairs."
   (let ((instruments (delete-duplicates (map part-instrument (group-parts group))
                                         eq?)))
     (map (lambda (note)
@@ -29,7 +29,7 @@
                                        (instrument-notes instrument)))
                        instruments)
                  note))
-         (group-lanes group))))
+         (group-row-keys group))))
 
 (define (vector-index pred vector)
   (let loop ((i 0))
@@ -37,36 +37,75 @@
           ((pred (vector-ref vector i)) i)
           (else (loop (1+ i))))))
 
-(define (lane-label group lane)
-  "LANE's label in GROUP: a stroke's form from the group's :display, or
-the note's label, with or without its octave; \"\" without row labels."
-  (match lane
+(define (pitch-name-of instrument note)
+  "The name of NOTE's pitch (ding for ding2), or a stroke's name, as a
+string."
+  (symbol->string
+   (pitch-name (list-ref (scale-pitches (instrument-scale instrument))
+                         (note-pitch note)))))
+
+(define (with-octave text note octave?)
+  "TEXT followed by NOTE's octave number, when it has one and OCTAVE?."
+  (if (and octave? (note-octave note))
+      (string-append text (number->string (note-octave note)))
+      text))
+
+(define (row-label group key-row)
+  "ROW's row label in GROUP (04, \"The pitch column\"), by its
+`row-labels': the pitch name or pitch display name, with the octave by
+`row-label-octave?'; a stroke's name or display name (from the group's
+:display); \"\" for none."
+  (match key-row
     ((instrument . note)
-     (cond ((not (group-row-labels? group)) "")
-           ((assq-ref (group-display group) (note-name note)))
-           (else (note-label instrument note
-                             #:octave? (group-octave-numbers? group)))))))
+     (match (group-row-labels group)
+       ('none "")
+       ('pitch-name
+        (with-octave (pitch-name-of instrument note) note
+                     (group-row-label-octave? group)))
+       ('pitch-display-name
+        (or (assq-ref (group-display group) (note-name note))
+            (note-row-label instrument note
+                            #:octave? (group-row-label-octave? group))))))))
 
 (define (stroke-instrument? instrument)
   (not (scale-pitched? (instrument-scale instrument))))
 
-(define (lane-key-number lane)
-  "LANE's key number on its instrument, counted from 1, as a string."
-  (match lane
-    ((instrument . note)
-     (number->string
-      (1+ (vector-index (lambda (n) (eq? n note))
-                        (instrument-notes instrument)))))))
+(define (row-key-number key-row)
+  "ROW's key number on its instrument, counted from 1, as a string."
+  (match key-row
+    ((instrument . note) (key-number-of instrument note))))
 
 ;;; ------------------------------------------------------------------
 ;;; Events
 
+(define (key-number-of instrument note)
+  "NOTE's key number on INSTRUMENT, counted from 1, as a string."
+  (number->string
+   (1+ (vector-index (lambda (n) (eq? n note)) (instrument-notes instrument)))))
+
 (define (note-text group instrument note columns)
-  "NOTE's name for an event COLUMNS long (as written): its damped form
-when the note lasts no longer than one column, its display form
-otherwise; a stroke in GROUP's :display shows that form."
-  (or (assq-ref (group-display group) (note-name note))
-      (note-display instrument note #:damped? (<= columns 1))))
+  "NOTE's label for an event COLUMNS long (as written), by GROUP's
+`note-label' (04, \"What a note shows\"), or #f for none.  A pitch
+display name is the damped form when the note lasts no longer than one
+column; a stroke shows its name, or its display name (from the group's
+:display) for pitch-display-name and key-number; octave numbers follow
+`note-label-octave?' and never apply to strokes or key numbers."
+  (define (display-name)
+    (or (assq-ref (group-display group) (note-name note))
+        (note-display instrument note #:damped? (<= columns 1))))
+  (define octave? (group-note-label-octave? group))
+  (match (group-note-label group)
+    ('none #f)
+    ('pitch-name
+     (if (stroke-instrument? instrument)
+         (symbol->string (note-name note))
+         (with-octave (pitch-name-of instrument note) note octave?)))
+    ('pitch-display-name
+     (with-octave (display-name) note octave?))
+    ('key-number
+     (if (stroke-instrument? instrument)
+         (display-name)
+         (key-number-of instrument note)))))
 
 (define (event-looks group style instrument indices columns)
   "The looks of an event striking INDICES on INSTRUMENT, COLUMNS long:
@@ -75,8 +114,10 @@ one per note on `notes' rows; one for the whole chord on `parts' and
   (define (look-of index text)
     (let ((look (note-look style instrument
                            (vector-ref (instrument-notes instrument) index))))
+      ;; The scheme gives the fill and the text colour; the text is the
+      ;; note label (ADR 0054).
       (make-look (and (not (eq? (group-fill group) 'none)) (look-fill look))
-                 (and (group-note-names? group) text)
+                 text
                  (look-text-color look))))
   (define (name index)
     (note-text group instrument (vector-ref (instrument-notes instrument) index)
@@ -86,7 +127,9 @@ one per note on `notes' rows; one for the whole chord on `parts' and
       (let ((lowest (apply min indices)))
         (list (cons lowest
                     (look-of lowest
-                             (string-join (map name (sort indices <)) " ")))))))
+                             (and (not (eq? (group-note-label group) 'none))
+                                  (string-join (map name (sort indices <))
+                                               " "))))))))
 
 (define (with-holds group instrument events)
   "With `holds' `dash', each event takes its first column only, and
@@ -96,18 +139,18 @@ Strokes are not held (ADR 0042): they get no dashes."
            (not (stroke-instrument? instrument)))
       (append-map
        (match-lambda
-         ((start duration lane look)
-          (cons (list start 1 lane look)
+         ((start duration key-row look)
+          (cons (list start 1 key-row look)
                 (map (lambda (c)
-                       (list c 1 lane
+                       (list c 1 key-row
                              (make-look #f "-" (look-text-color look))))
                      (iota (max 0 (- duration 1)) (+ start 1))))))
        events)
       events))
 
-(define (note-events group part lane-of style k)
-  "PART's events in GROUP as (START DURATION LANE LOOK) lists, in columns
-of 1/K pulse.  LANE-OF gives a note's lane from its index."
+(define (note-events group part row-of style k)
+  "PART's events in GROUP as (START DURATION ROW LOOK) lists, in columns
+of 1/K pulse.  ROW-OF gives a note's key-row from its index."
   (let ((instrument (part-instrument part)))
     (with-holds
      group instrument
@@ -120,7 +163,7 @@ of 1/K pulse.  LANE-OF gives a note's lane from its index."
           (map (match-lambda
                  ((index . look)
                   (list (* k (event-start event)) drawn
-                        (lane-of index) look)))
+                        (row-of index) look)))
                (event-looks group style instrument (event-notes event)
                             columns))))
       (part-events part)))))
@@ -129,13 +172,13 @@ of 1/K pulse.  LANE-OF gives a note's lane from its index."
   "EVENT cut to the steps [FROM, TO), as a JSON event object with a
 start relative to FROM, or #f if it doesn't sound there."
   (match event
-    ((start duration lane look)
+    ((start duration key-row look)
      (let ((end (+ start duration)))
        (and (< start to) (> end from)
             (let ((first (max start from)))
               `((start . ,(- first from))
                 (dur . ,(- (min end to) first))
-                (lane . ,lane)
+                (row . ,key-row)
                 (text . ,(null-if-false (look-text look)))
                 (fill . ,(null-if-false (look-fill look)))
                 (text_color . ,(look-text-color look))
@@ -143,9 +186,9 @@ start relative to FROM, or #f if it doesn't sound there."
 
 (define (event<? a b)
   (match (list a b)
-    (((start-a _ lane-a _) (start-b _ lane-b _))
+    (((start-a _ row-a _) (start-b _ row-b _))
      (or (< start-a start-b)
-         (and (= start-a start-b) (< lane-a lane-b))))))
+         (and (= start-a start-b) (< row-a row-b))))))
 
 ;;; ------------------------------------------------------------------
 ;;; Groups and systems
@@ -162,8 +205,8 @@ start relative to FROM, or #f if it doesn't sound there."
 ;;; columns of 1/K pulse.  Rows are the notes used (`notes'), one per
 ;;; member (`parts'), or one for all (`single').
 (define (prepare-group group k from to)
-  "(GROUP LANE-LABELS VOICES OVERLAYS KEY-NUMBERS), KEY-NUMBERS a string
-per lane or #f."
+  "(GROUP ROW-LABELS VOICES OVERLAYS KEY-NUMBERS), KEY-NUMBERS a string
+per key-row or #f."
   (match (prepare-rows group k from to)
     ((group labels voices key-numbers)
      (list group labels voices (group-overlays group k) key-numbers))))
@@ -173,8 +216,8 @@ per lane or #f."
   (and (< (event-start event) to)
        (> (+ (event-start event) (event-duration event)) from)))
 
-(define (lanes-in-range group from to)
-  "GROUP's lanes that some note of its parts sounds on in [FROM, TO)."
+(define (rows-in-range group from to)
+  "GROUP's key-rows that some note of its parts sounds on in [FROM, TO)."
   (let ((used (append-map
                (lambda (part)
                  (let ((notes (instrument-notes (part-instrument part))))
@@ -187,7 +230,7 @@ per lane or #f."
                     (part-events part))))
                (group-parts group))))
     (filter (match-lambda ((_ . note) (memq note used)))
-            (lane-owners group))))
+            (row-owners group))))
 
 (define (named-spans group)
   "The spans of GROUP's members at its pattern level, as (START END
@@ -217,30 +260,30 @@ pulse, identical ones written once, sorted by start."
 
 (define (without-unisons voices)
   "VOICES, (NAME . EVENTS) in member order, with every event that an
-earlier voice already has (the same start, duration and lane: a unison,
+earlier voice already has (the same start, duration and key-row: a unison,
 which the reader allows on `notes' rows) left out, so it is drawn once."
   (let loop ((voices voices) (seen '()) (out '()))
     (match voices
       (() (reverse out))
       (((name . events) . rest)
-       (let* ((cell (match-lambda ((start duration lane _)
-                                   (list start duration lane))))
+       (let* ((cell (match-lambda ((start duration key-row _)
+                                   (list start duration key-row))))
               (kept (remove (lambda (e) (member (cell e) seen)) events)))
          (loop rest (append (map cell events) seen)
                (cons (cons name kept) out)))))))
 
 (define (prepare-rows group k from to)
   (let ((style (group-style group)))
-    (define (voices lane-of-part)
+    (define (voices row-of-part)
       (map (lambda (part)
              (cons (symbol->string (part-name part))
-                   (sort (note-events group part (lane-of-part part) style k)
+                   (sort (note-events group part (row-of-part part) style k)
                          event<?)))
            (group-parts group)))
     (match (group-rows group)
       ('notes
-       (let ((lanes (group-key-lanes group from to)))
-         (list group (map (lambda (lane) (lane-label group lane)) lanes)
+       (let ((key-rows (group-key-rows group from to)))
+         (list group (map (lambda (key-row) (row-label group key-row)) key-rows)
                (without-unisons
                 (voices
                 (lambda (part)
@@ -249,11 +292,12 @@ which the reader allows on `notes' rows) left out, so it is drawn once."
                                              (part-instrument part))
                                             index)))
                       (list-index (match-lambda ((_ . n) (eq? n note)))
-                                  lanes))))))
+                                  key-rows))))))
                (and (group-key-numbers? group)
-                    (map lane-key-number lanes)))))
+                    (map row-key-number key-rows)))))
       ('parts
-       (list group (map (lambda (m) (if (group-row-labels? group) (cdr m) ""))
+       (list group (map (lambda (m)
+                          (if (eq? (group-row-labels group) 'none) "" (cdr m)))
                         (group-members group))
              (voices (lambda (part)
                        (let ((row (list-index (match-lambda ((p . _) (eq? p part)))
@@ -263,12 +307,12 @@ which the reader allows on `notes' rows) left out, so it is drawn once."
       ('single
        (list group '("") (voices (lambda (part) (const 0))) #f)))))
 
-(define (group-key-lanes group from to)
-  "The lanes of a `notes' group, top first, by its `keys' (04): the keys
+(define (group-key-rows group from to)
+  "The key-rows of a `notes' group, top first, by its `keys' (04): the keys
 played in [FROM, TO), every key of the instruments, or LOW to HIGH."
   (match (group-keys group)
-    ('used (lanes-in-range group from to))
-    ('all (all-lanes group))
+    ('used (rows-in-range group from to))
+    ('all (all-key-rows group))
     ((low . high)
      (let* ((instrument (part-instrument (car (group-parts group))))
             (notes (vector->list (instrument-notes instrument)))
@@ -277,7 +321,7 @@ played in [FROM, TO), every key of the instruments, or LOW to HIGH."
        (map (lambda (n) (cons instrument n))
             (reverse (list-head (list-tail notes lo) (1+ (- hi lo)))))))))
 
-(define (all-lanes group)
+(define (all-key-rows group)
   "Every key of GROUP's instrument, highest first, or every stroke of
 each stroke instrument, in its order, as blocks in the order their first
 part appears."
@@ -312,10 +356,10 @@ part appears."
 
 (define (group-in-system prepared index from to)
   (match prepared
-    ((group lanes voices overlays key-numbers)
+    ((group key-rows voices overlays key-numbers)
      `((label . ,(printed-label group index))
        (subtitle . ,(null-if-false (group-subtitle group)))
-       (lanes . ,(list->vector lanes))
+       (rows . ,(list->vector key-rows))
        (key_numbers . ,(if key-numbers (list->vector key-numbers) 'null))
        (voices
         . ,(list->vector
@@ -329,7 +373,7 @@ part appears."
                  voices)))
        (overlays
         . ,(list->vector
-            (filter-map (lambda (o) (clip-overlay o (length lanes) from to))
+            (filter-map (lambda (o) (clip-overlay o (length key-rows) from to))
                         overlays)))
        ;; The lines behind the group's rows (ADRs 0041, 0043).
        (pulse_lines . ,(pulse-lines? (group-background group)))
@@ -518,9 +562,9 @@ and every system length from its start, in order."
                  ;; and the subtitle.
                  (filter-map
                   (match-lambda
-                    ((group lanes _ _ _)
+                    ((group key-rows _ _ _)
                      (and (group-subtitle group)
-                          (if (= (length lanes) 1)
+                          (if (= (length key-rows) 1)
                               (string-append
                                (make-string
                                 (longest (list (group-label group)
@@ -529,13 +573,17 @@ and every system length from its start, in order."
                                "  " (group-subtitle group))
                               (group-subtitle group)))))
                   prepared)))
-        (lane-labels (append-map (match-lambda
-                                   ((group lanes _ _ _)
-                                    (if (group-row-labels? group) lanes '())))
+        (row-labels (append-map (match-lambda
+                                   ((group key-rows _ _ _)
+                                    (if (eq? (group-row-labels group) 'none)
+                                        '()
+                                        key-rows)))
                                  prepared))
         (key-numbers (append-map (match-lambda ((_ _ _ _ keys) (or keys '())))
                                  prepared))
-        (any-labels? (any (match-lambda ((group . _) (group-row-labels? group)))
+        (any-labels? (any (match-lambda
+                            ((group . _)
+                             (not (eq? (group-row-labels group) 'none))))
                           prepared)))
     `((font_size . ,(null-if-false (score-font-size score)))
       (label_width . ,(em (+ (* 3/5 (longest labels)) 3/2)))
@@ -544,10 +592,10 @@ and every system length from its start, in order."
       (key_width . ,(if (null? key-numbers)
                         "0.0em"
                         (em (+ (* 13/25 (longest key-numbers)) 1))))
-      (lane_width . ,(if (and (null? prepared) #t)
-                         (em (+ (* 13/25 (longest lane-labels)) 1))
+      (row_label_width . ,(if (and (null? prepared) #t)
+                         (em (+ (* 13/25 (longest row-labels)) 1))
                          (if any-labels?
-                             (em (+ (* 13/25 (longest lane-labels)) 1))
+                             (em (+ (* 13/25 (longest row-labels)) 1))
                              "0.0em")))
       (cell_width . ,(score-cell-width score))
       (cell_height . ,(score-cell-height score)))))
@@ -557,7 +605,7 @@ and every system length from its start, in order."
 
 (define (layout-score piece score)
   "Lay out SCORE, one of PIECE's scores, as a figure: the JSON value of
-the contract in doc/design/05-typst-backend.md (version 2).  Its groups
+the contract in doc/design/05-typst-backend.md (version 4).  Its groups
 carry their effective settings (ADR 0033)."
   (let* ((k (step-columns piece score))
          (prepared (map (lambda (group)
@@ -565,7 +613,7 @@ carry their effective settings (ADR 0033)."
                                          (score-to score)))
                         (score-groups score)))
          (systems (systems prepared score (piece-meter piece) k)))
-    `((version . 3)
+    `((version . 4)
       (title . ,(score-title score))
       (subtitle . ,(null-if-false (score-subtitle score)))
       (steps_per_pulse . ,k)

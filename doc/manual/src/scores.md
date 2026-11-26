@@ -40,7 +40,8 @@ own instead.
 | `:system-length N` | score | N pulses on each line of the score. Without it (or [breaks](#excerpts-and-lines)), the whole piece, or the whole excerpt, is one line. |
 | `:short "…"` | group | A short label, such as `"U."` for `"Ugal"`. |
 | `:labels first-long` / `long` / `short` | score or group | Which label to print: the long one on the first line and the short one after (the default), always the long one, or always the short one. |
-| `:note-names yes` | score or group | Write each note's name in its square. The gongs above show `G`, `P` and `K`. |
+| `:note-label NAME` | score or group | What to write in each note's square: `none` (the default: colour only), `pitch-name` (`dong2`), `pitch-display-name` (`o2`) or `key-number` (its key on the instrument, counted from 1 at the lowest). Gongs and drums show their stroke (`G`, `P`, `K`). The gongs above use `pitch-display-name`. |
+| `:note-label-octave yes` / `no` | score or group | `no` leaves the octave number out of the label in each square: `o` instead of `o2`. `yes` unless you say. |
 | `:palette NAME` | score or group | The colours of the notes: `pastel1` (the default), `set2`, `dark2` and others, or a list of colours such as `("#e41a1c" "#377eb8")`. |
 | `:colors ((ding "#000000"))` | score or group | A colour for one pitch, in every octave. |
 | `:cell-width "2em"`, `:cell-height "2em"` | score | The size of a square. |
@@ -62,8 +63,8 @@ the rows are labelled:
 |---|---|---|
 | `:keys used` / `all` / `(LOW HIGH)` | score or group | The rows: the keys played (the default), every key of the instrument, or the keys from LOW up to HIGH, written as in a part (`(a1 u2)` or `(4 8)`). Gongs and drums take `used` or `all`. |
 | `:key-numbers yes` / `no` | score or group | A column of key numbers to the left of the row labels, counted from the lowest key: on the ugal, `a1` is key 4. Only for pitched instruments. `no` unless you say. |
-| `:octave-numbers yes` / `no` | score or group | `no` labels the rows `a`, `i`, … instead of `a1`, `i2`, …. |
-| `:row-labels yes` / `no` | score or group | `no` leaves the row labels out. |
+| `:row-labels NAME` | score or group | How the rows are labelled: `pitch-display-name` (`a1`, the default), `pitch-name` (`dang1`), or `none` to leave the labels out. |
+| `:row-label-octave yes` / `no` | score or group | `no` labels the rows `a`, `i`, … instead of `a1`, `i2`, …. `yes` unless you say. |
 | `:display ((GL "G") …)` | score or group | Show these strokes another way in this score, in their row labels and names: here both gongs as "G", as Tenzer writes them. |
 
 With `:keys (LOW HIGH)`, every note the group plays must be among the
@@ -87,8 +88,9 @@ colours:
 | `:fill none` | score or group | Names only, without coloured squares. |
 | `:holds dash` | score or group | A `-` in every column a note is held, as in a sung line. |
 
-Rows of parts or one row, and `:fill none`, show the notes only by
-their names, so the group needs `:note-names yes`.
+On rows of parts or one row, the squares keep their colours, so a
+`:note-label` is your choice. With `:fill none` there are no squares,
+so the group needs a `:note-label`.
 
 A note that lasts one column shows its **damped** name, if its pitch
 has one (`:damped "na'"`; see [Scales and stroke sets](scales-and-strokes.md));

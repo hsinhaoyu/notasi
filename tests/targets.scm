@@ -304,7 +304,7 @@ when it isn't in the gallery (07, ADR 0052)."
          (let ((label (format #f "group ~s: " (group-label g))))
            (test-equal (string-append label "rows notes") 'notes (group-rows g))
            (test-equal (string-append label "fill colour") 'colour (group-fill g))
-           (test-equal (string-append label "no note names") #f (group-note-names? g))
+           (test-equal (string-append label "no note label") 'none (group-note-label g))
            (test-equal (string-append label "keys used") 'used (group-keys g))
            (test-equal (string-append label "background grid") 'grid (group-background g))))
        (score-groups score))
@@ -330,7 +330,7 @@ when it isn't in the gallery (07, ADR 0052)."
         (when (and (vector? systems) (> (vector-length systems) 0) i)
           (let* ((groups (ref (vector-ref systems 0) 'groups))
                  (lanes (and (vector? groups) (< i (vector-length groups))
-                             (vector->list (ref (vector-ref groups i) 'lanes)))))
+                             (vector->list (ref (vector-ref groups i) 'rows)))))
             (test-assert "the gong group's lanes include \"G\""
               (and lanes (member "G" lanes)))
             (test-assert "the gong group's lanes don't include \"GL\" (gilak-2)"

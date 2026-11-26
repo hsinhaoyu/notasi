@@ -279,19 +279,19 @@ This cycle has 8 pulses, so there is no pulse 9. A position is
 
 `:from` must come before `:to`. Here they are the wrong way round.
 
-### A group of names without names
+### Notes with neither a box nor a label
 
 ```scheme
-{{#include ../../../examples/manual/mistakes/needs-note-names.nts}}
+{{#include ../../../examples/manual/mistakes/needs-note-label.nts}}
 ```
 
 ```text
-{{#include ../../../examples/manual/mistakes/needs-note-names.txt}}
+{{#include ../../../examples/manual/mistakes/needs-note-label.txt}}
 ```
 
-Rows of parts, one row, and `:fill none` show the notes only by their
-names. Add `:note-names yes` to the group or the score (see
-[Scores](scores.md#rows-of-names)).
+`:fill none` draws no coloured box, so without a label nothing at all
+would be drawn. Give the group or the score a `:note-label`, such as
+`pitch-display-name` (see [Scores](scores.md#rows-of-names)).
 
 ### Two notes in one place on a single row
 

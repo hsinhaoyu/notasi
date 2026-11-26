@@ -12,14 +12,15 @@ lighter stroke grey (ADR 0041) since `feat/drawing-lines`; strokes one
 column wide (ADR 0042), `:keys`, `:octave-numbers`, `:display`, key
 numbers and row labels left out (ADR 0047) since `feat/drawing-rows`;
 golden files named `NAME_SCORE` (ADR 0040) since `feat/drawing-output`.
-Iteration 3's layout is implemented.
+Iteration 3's layout is implemented. `by-pitch` and `pitch-colors`
+since iteration 5's `feat/collapsed-terms`. Contract version 4 opened,
+with `rows`, `row` and `row_label_width` (ADR 0059), and the note label
+and the pitch column's forms (ADR 0054), since `feat/collapsed-labels`.
 
-**Planned** for iteration 5 (ADRs 0051, 0054–0057, 0059, 0060): contract
-version 4 (`rows`, `row` and `row_label_width` for `lanes`, `lane` and
-`lane_width`; the annotation row in place of `overlays`; each voice's
-`marker`); compact rows in place of `single`; the note label and the
-pitch column's forms; part markers; the annotation row. See
-"Iteration 5". `by-pitch` and `pitch-colors` since `feat/collapsed-terms`.
+**Planned** for iteration 5 (ADRs 0055–0057, 0059, 0060): the rest of
+contract version 4 (the annotation row in place of `overlays`; each
+voice's `marker`); compact rows in place of `single`; part markers;
+the annotation row. See "Iteration 5".
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -44,25 +45,27 @@ label it draws is in the figure.
 'full)`. Its groups already carry their effective settings (ADR 0033),
 so layout reads plain values. `layout-score` replaces `layout-piece`.
 
-The figure is the JSON value of 05's contract itself, version 2 (ADR
-0036), as `(notasi json)` writes it: alists with symbol keys for
+The figure is the JSON value of 05's contract itself, version 4 (ADR
+0059) as far as it is built, as `(notasi json)` writes it: alists with symbol keys for
 objects, vectors for arrays, the symbol `null` for null. Writing it out
 is then just `write-json`, and layout is tested with `equal?`. Keys come
 in this order:
 
 | Object | Keys |
 |---|---|
-| figure | `version` (3, ADR 0043), `title`, `subtitle`, `steps_per_pulse`, `sizes`, `systems`, `caption` |
-| sizes | `font_size`, `label_width`, `key_width`, `lane_width`, `cell_width`, `cell_height` |
+| figure | `version` (4, ADR 0059), `title`, `subtitle`, `steps_per_pulse`, `sizes`, `systems`, `caption` |
+| sizes | `font_size`, `label_width`, `key_width`, `row_label_width`, `cell_width`, `cell_height` |
 | system | `start`, `steps`, `header`, `lines`, `groups` |
 | header | `cycle_label`, `pulse_label`, `cycles`, `pulses`, `pulse_lines` |
 | cycle mark | `column`, `text` |
-| group | `label`, `subtitle`, `lanes`, `key_numbers`, `voices`, `overlays`, `pulse_lines`, `row_lines` |
+| group | `label`, `subtitle`, `rows`, `key_numbers`, `voices`, `overlays`, `pulse_lines`, `row_lines` |
 | voice | `name`, `events` |
-| event | `start`, `dur`, `lane`, `text`, `fill`, `text_color`, `continued` |
+| event | `start`, `dur`, `row`, `text`, `fill`, `text_color`, `continued` |
 | overlay | `start`, `dur`, `row`, `rows`, `text`, `continued` |
 
-**Planned**: contract version 4 (ADR 0059):
+Since `feat/collapsed-labels` the figure is version 4 with `rows`,
+`row` and `row_label_width` (version 3's `lanes`, `lane` and
+`lane_width`); the rest of version 4 is **Planned** (ADR 0059):
 
 | Object | Keys |
 |---|---|
@@ -87,8 +90,7 @@ group asks for none.
   written.
 - A group's `subtitle` is `null` when it has none; a voice's `name` is
   its part's name as a string.
-- An event's `text` is `null` unless its group has `note-names?`
-  (**Planned**: unless its group's `note-label` is other than `none`); its
+- An event's `text` is `null` when its group's `note-label` is `none`; its
   `fill` is `null` when the group's `fill` is `none`, or when a custom
   scheme's look has no fill.
 
@@ -169,10 +171,10 @@ Layout works out every header number and every line, for every column:
 - A group's label in each system is the long or short label, as its
   `labels` says: `first-long` gives the long label in the first system
   and the short one after.
-- **`rows` `notes`**: `lanes` is the group's row labels, top first,
-  the same in every system. An event's `lane` is the 0-based index of
+- **`rows` `notes`**: `rows` is the group's row labels, top first,
+  the same in every system. An event's `row` is the 0-based index of
   its row in that list. The rows are the keys the group actually plays
-  in the score's range (`from` to `to`), in `group-lanes` order: highest
+  in the score's range (`from` to `to`), in `group-row-keys` order: highest
   pitch at the top; stroke instruments give one row per stroke, in
   instrument order, so an excerpt shows only the keys it uses.
   By the group's `keys` (iteration 3): `used` is the rule
@@ -184,11 +186,10 @@ Layout works out every header number and every line, for every column:
   stroke instruments (02-piece.md, invariant 6), so its rows never mix
   ranges or pitches with strokes.
 - **`rows` `parts`**: one row per member, labelled with its row label;
-  an event's `lane` is its part's row. Notes are told apart by their
-  names (`note-names?` is true, invariant 7). **Planned**: by their
+  an event's `row` is its part's row. Notes are told apart by their
   colour, and by their note labels when the group has them.
 - **`rows` `single`**: one row for all the members, labelled `""`; every
-  event's `lane` is 0. The reader has checked that no two notes share a
+  event's `row` is 0. The reader has checked that no two notes share a
   cell. **Planned**: replaced by `compact` (see "Iteration 5").
 - On `notes` rows, a unison (two parts striking one key at the same
   start, for the same length) is written once, under the first member
@@ -203,14 +204,11 @@ Layout works out every header number and every line, for every column:
 
 ### Note text, fill and holds
 
-- Each event's `text`, `fill` and `text_color` come from
+- Each event's `fill` and `text_color` come from
   `(note-look style instrument note)` (see "Note style"), with the
-  group's style.
-- With `note-names?`, the text is the note's damped form when the event
-  lasts no longer than one column, and its pitch or stroke display name
-  otherwise (`note-display` with `#:damped?`). Without it, `text` is
-  `null`. **Planned**: chosen by the group's `note-label` (see
-  "Iteration 5").
+  group's style; its `text` is the note label, chosen by the group's
+  `note-label` (see "What a note shows" under "Iteration 5", built
+  since `feat/collapsed-labels`).
 - With `fill` `none`, `fill` is `null`: the template draws the name
   alone.
 - With `holds` `dash`, every column a note is held after its first gets
@@ -248,17 +246,16 @@ the group's `pattern-level`:
 
 ### Row labels
 
-Row labels show the pitch display name followed by the octave number
-(`i2`) in small grey text; a stroke's label is its stroke display name
-(**Implemented**, `note-label`). With `parts` rows the labels are the
-parts' row labels. With `octave-numbers?` false, a
-pitched row is labelled with its pitch display name alone (`i`), even
-when two rows then read alike; a stroke in the group's `display` is
-labelled with that display name. **Planned**: chosen by the group's
-`row-labels` and `row-label-octave?` (see "Iteration 5").
+Row labels are chosen by the group's `row-labels` and
+`row-label-octave?` (see "The pitch column" under "Iteration 5", built
+since `feat/collapsed-labels`), in small grey text. By default a row
+shows the pitch display name followed by the octave number (`i2`,
+`note-row-label`); a stroke's label is its stroke display name, or
+the one the group's `display` gives. With `parts` rows the labels are
+the parts' row labels.
 
-(ADR 0047) With `row-labels?` false, every entry of the
-group's `lanes` is `""`. With `key-numbers?` true (pitched `notes` rows
+(ADR 0047) With `row-labels` `none`, every entry of the
+group's `rows` is `""`. With `key-numbers?` true (pitched `notes` rows
 only), the group's `key_numbers` holds each row's key number on its
 instrument, counted from 1, as a string (`"4"` for the ugal's `a1`);
 otherwise it is `null`. With `keys` `used` the numbers skip the keys not
@@ -306,9 +303,9 @@ picks colours (ADR 0005).
   colours, the palette repeats.
 - The note's text is the pitch display name (`"i"` for `ding`, or
   the pitch name if the scale sets none), without the octave number,
-  since the row already shows the octave. **Planned**: layout replaces
-  a look's text with the note label (see "Iteration 5"); a scheme
-  chooses only the fill and the text colour.
+  since the row already shows the octave. Layout replaces a look's
+  text with the note label (ADR 0054, since `feat/collapsed-labels`),
+  so a scheme chooses only the fill and the text colour.
 - The text colour is `(text-color-for fill)`: white (`#ffffff`) if its
   WCAG contrast ratio with the fill is at least 3:1 (the minimum for
   bold text, which note text is), otherwise near-black (`#222222`).
@@ -321,8 +318,8 @@ picks colours (ADR 0005).
   0041: lighter than before, so the note border shows against it;
   clearly grey and no palette's colour),
   with the stroke display name (or its name) as text, in the colour
-  `text-color-for` gives (near-black on this grey). The text is shown
-  when the group has `note-names?` (ADR 0031).
+  `text-color-for` gives (near-black on this grey). The text shown is
+  the note label (ADR 0054).
 - Parts are not told apart by colour: polos and sangsih in one group
   are drawn in the same pitch colours, so the group shows the composite
   melody. The group's label and subtitle say which parts it holds.
@@ -395,10 +392,10 @@ text. `dark2` gives strong colours with mostly white text.
     spaces and the subtitle (decided in `feat/targets`, for Baris).
     The header labels printed (`cycle_label`, `pulse_label`) count too,
     since they sit in the same column (`feat/drawing-header`).
-  - `lane_width` (row labels): 0.52em × the longest label +
-    1em; `"0.0em"` when no group shows row labels (ADR 0047).
-    **Planned**: `row_label_width` (ADR 0059); an annotation row's
-    label counts, since it sits in that column.
+  - `row_label_width` (row labels; `lane_width` before version 4,
+    ADR 0059): 0.52em × the longest label + 1em; `"0.0em"` when no
+    group shows row labels (ADR 0047). **Planned**: an annotation
+    row's label counts, since it sits in that column.
   - (ADR 0047) `key_width` (key numbers): 0.52em × the
     longest number + 1em, or `"0.0em"` when no group shows key numbers.
   - Lengths are strings in `em` with one decimal, even when whole,
@@ -411,10 +408,15 @@ text. `dark2` gives strong colours with mostly white text.
 
 ## Iteration 5
 
-**Planned** (ADRs 0051, 0054–0057, 0059). What layout does when the
+**Planned** (ADRs 0051, 0054–0057, 0059), except what is marked built.
+What layout does when the
 milestones are built. The group settings are 02's ("Iteration 5").
 
 ### The figure, version 4
+
+**Implemented** in part since `feat/collapsed-labels`: `version` 4,
+`rows`, `row` and `row_label_width`. `annotation` and `marker` come
+with their slices.
 
 Layout writes contract version 4 (ADR 0059; keys in "Public
 interface"). `lanes`, `lane` and `lane_width` become `rows`, `row` and
@@ -422,6 +424,8 @@ interface"). `lanes`, `lane` and `lane_width` become `rows`, `row` and
 (below) where it had `overlays`, and each voice has `marker` (below).
 
 ### What a note shows
+
+**Implemented** since `feat/collapsed-labels`.
 
 Each event's `text` comes from the group's `note-label` (ADR 0054):
 
@@ -443,6 +447,9 @@ Each event's `text` comes from the group's `note-label` (ADR 0054):
   has checked it isn't `none`.
 
 ### The pitch column
+
+**Implemented** since `feat/collapsed-labels`, for `notes` and `parts`
+rows (and `single` rows, whose label is `""`, until compact rows).
 
 Each entry of a group's `rows` comes from its `row-labels` and
 `row-label-octave?`:

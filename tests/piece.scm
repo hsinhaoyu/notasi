@@ -34,7 +34,7 @@
 ;;; score where a piece needs one.
 ;;; Choices made where the docs are not explicit:
 ;;; - Accessors follow 02's field names, `?` included:
-;;;   `group-note-names?`, `score-cycle-numbers?`, `score-pulse-numbers?`.
+;;;   `group-note-label`, `score-cycle-numbers?`, `score-pulse-numbers?`.
 ;;; - `piece-score` of a name the piece has no score for is #f, and the
 ;;;   first of two scores with one name is returned (the reader forbids
 ;;;   them; this only pins down that it looks names up, not positions).
@@ -47,7 +47,7 @@
 ;;; - Strokes take `:damped` like degrees (01, `strokes`: "the same
 ;;;   syntax and options as a scale degree"), so `#:damped?` works on
 ;;;   them too.
-;;; - `note-label` is unchanged by a damped form.
+;;; - `note-row-label` is unchanged by a damped form.
 ;;;
 ;;; Slice feat/collapsed-terms (iteration 5; 02, "Iteration 5"): the
 ;;; glossary's names (ADR 0051): the record `pitch` (`make-pitch`,
@@ -170,18 +170,20 @@
 
 (define* (mk-group* label parts
                     #:key (short label) (subtitle #f) (labels 'first-long)
-                    (rows 'notes) (note-names? #f) (fill 'colour)
+                    (rows 'notes) (note-label 'none) (note-label-octave? #t)
+                    (fill 'colour)
                     (holds 'none) (pattern-names 'none) (pattern-level 0)
-                    (keys 'used) (octave-numbers? #t) (key-numbers? #f)
-                    (row-labels? #t) (display '())
+                    (keys 'used) (row-label-octave? #t) (key-numbers? #f)
+                    (row-labels 'pitch-display-name) (display '())
                     (scheme 'by-pitch) (palette 'pastel1) (colors '())
                     (background 'grid) (location #f))
   "A group of PARTS, each with its name as row label; every other
 setting at its default unless given."
   (make-group label short subtitle labels rows
               (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
-              note-names? fill holds pattern-names pattern-level
-              keys octave-numbers? key-numbers? row-labels? display
+              note-label note-label-octave? fill holds pattern-names
+              pattern-level keys row-label-octave? key-numbers? row-labels
+              display
               scheme palette colors background location))
 
 (define (mk-group label . parts)
@@ -200,7 +202,7 @@ one score holding GROUPS."
               '()))
 
 (define (lane-names group)
-  (map note-name (group-lanes group)))
+  (map note-name (group-row-keys group)))
 
 ;;; ------------------------------------------------------------------
 
@@ -297,8 +299,8 @@ one score holding GROUPS."
          (s (mk-part 'sangsih reyong))
          (members (list (cons p "polos") (cons s "S.")))
          (g (make-group "Reyong" "Rey." "polos + sangsih" 'short 'parts
-                        members #t 'none 'dash 'long 1
-                        'used #t #f #t '()
+                        members 'pitch-display-name #t 'none 'dash 'long 1
+                        'used #t #f 'pitch-display-name '()
                         'by-pitch '("#111111" "#eeeeee")
                         '((ding . "#000000")) 'vertical loc))
          (d (mk-group "polos" p)))
@@ -313,7 +315,7 @@ one score holding GROUPS."
     (test-assert "members hold the part records themselves"
       (and (eq? p (car (car (group-members g))))
            (eq? s (car (cadr (group-members g))))))
-    (test-eq "note-names?" #t (group-note-names? g))
+    (test-eq "note-label" 'pitch-display-name (group-note-label g))
     (test-eq "background" 'vertical (group-background g))
     (test-eq "fill" 'none (group-fill g))
     (test-eq "holds" 'dash (group-holds g))
@@ -326,10 +328,10 @@ one score holding GROUPS."
     (test-eq "location" loc (group-location g))
     (test-equal "a default group: its settings"
       (list "polos" "polos" #f 'first-long 'notes (list (cons p "polos"))
-            #f 'colour 'none 'none 0 'by-pitch 'pastel1 '() #f)
+            'none 'colour 'none 'none 0 'by-pitch 'pastel1 '() #f)
       (list (group-label d) (group-short d) (group-subtitle d)
             (group-labels d) (group-rows d) (group-members d)
-            (group-note-names? d) (group-fill d) (group-holds d)
+            (group-note-label d) (group-fill d) (group-holds d)
             (group-pattern-names d) (group-pattern-level d)
             (group-scheme d) (group-palette d) (group-colors d)
             (group-location d)))
@@ -585,24 +587,24 @@ one score holding GROUPS."
     (note-display kajar (inst-note kajar 1) #:damped? #t))
   (test-equal "a stroke without either option, damped? #t" "du"
     (note-display kendang (inst-note kendang 2) #:damped? #t))
-  (test-equal "note-label keeps the display form" "nang1"
-    (note-label suling (inst-note suling 2))))
+  (test-equal "note-row-label keeps the display form" "nang1"
+    (note-row-label suling (inst-note suling 2))))
 
-;;; note-label
+;;; note-row-label
 
-(test-group "note-label"
-  (test-equal "ding2 -> \"i2\"" "i2" (note-label reyong (inst-note reyong 3)))
-  (test-equal "dang1 -> \"a1\"" "a1" (note-label reyong (inst-note reyong 2)))
+(test-group "note-row-label"
+  (test-equal "ding2 -> \"i2\"" "i2" (note-row-label reyong (inst-note reyong 3)))
+  (test-equal "dang1 -> \"a1\"" "a1" (note-row-label reyong (inst-note reyong 2)))
   (test-equal "display defaulted to name, plus octave" "dung1"
-    (note-label plain-instrument (inst-note plain-instrument 1)))
-  (test-equal "stroke dag -> \"D\"" "D" (note-label kendang (inst-note kendang 0)))
-  (test-equal "stroke du -> \"du\"" "du" (note-label kendang (inst-note kendang 2)))
-  (test-equal "stroke G -> \"G\"" "G" (note-label gong (inst-note gong 0))))
+    (note-row-label plain-instrument (inst-note plain-instrument 1)))
+  (test-equal "stroke dag -> \"D\"" "D" (note-row-label kendang (inst-note kendang 0)))
+  (test-equal "stroke du -> \"du\"" "du" (note-row-label kendang (inst-note kendang 2)))
+  (test-equal "stroke G -> \"G\"" "G" (note-row-label gong (inst-note gong 0))))
 
 ;;; ------------------------------------------------------------------
 ;;; Slice feat/drawing-rows (iteration 3, milestone 2, slice 3; 04,
 ;;; "Slices (iteration 3)"; 02, "Records" and "Derived values"):
-;;; `note-label` takes `#:octave?` (default #t): with #f, the display
+;;; `note-row-label` takes `#:octave?` (default #t): with #f, the display
 ;;; form alone. The group gains `keys` (used | all | (note . note)),
 ;;; `octave-numbers?`, `key-numbers?`, `row-labels?` and `display` (a
 ;;; list of (stroke-name . string)).
@@ -630,74 +632,75 @@ constructor of another arity fails the tests instead of the file."
          (low (inst-note reyong 1))
          (high (inst-note reyong 5))
          (g (rows3-group "Reyong" "Rey." #f 'first-long 'notes members
-                         #f 'colour 'none 'none 0
-                         (cons low high) #f #t #f '()
+                         'none #t 'colour 'none 'none 0
+                         (cons low high) #f #t 'none '()
                          'by-pitch 'pastel1 '() 'grid loc))
          (k (mk-part 'gong gong))
          (s (rows3-group "Gong" "Gong" #f 'first-long 'notes
                          (list (cons k "gong"))
-                         #f 'colour 'none 'none 0
-                         'all #t #f #t '((G . "Gong") (P . "Kempur"))
+                         'none #t 'colour 'none 'none 0
+                         'all #t #f 'pitch-display-name
+                         '((G . "Gong") (P . "Kempur"))
                          'by-pitch 'pastel1 '() 'vertical loc)))
     (test-assert "predicate" (group? g))
     (test-assert "keys: a range, the note records themselves"
       (and (group? g)
            (eq? low (car (group-keys g)))
            (eq? high (cdr (group-keys g)))))
-    (test-eq "octave-numbers?" #f (and (group? g) (group-octave-numbers? g)))
+    (test-eq "row-label-octave?" #f (and (group? g) (group-row-label-octave? g)))
     (test-eq "key-numbers?" #t (and (group? g) (group-key-numbers? g)))
-    (test-eq "row-labels?" #f (and (group? g) (group-row-labels? g)))
+    (test-eq "row-labels" 'none (and (group? g) (group-row-labels g)))
     (test-equal "display: none" '() (and (group? g) (group-display g)))
     (test-eq "keys: all" 'all (and (group? s) (group-keys s)))
     (test-equal "display: strokes and their forms, in order"
       '((G . "Gong") (P . "Kempur"))
       (and (group? s) (group-display s)))
     (test-equal "the other fields keep their places"
-      (list "Gong" 'notes #f 0 'by-pitch 'pastel1 '() 'vertical loc)
+      (list "Gong" 'notes 'none 0 'by-pitch 'pastel1 '() 'vertical loc)
       (and (group? s)
-           (list (group-label s) (group-rows s) (group-note-names? s)
+           (list (group-label s) (group-rows s) (group-note-label s)
                  (group-pattern-level s) (group-scheme s) (group-palette s)
                  (group-colors s) (group-background s) (group-location s))))
     (test-equal "keys: used"
       'used
       (let ((u (rows3-group "U" "U" #f 'first-long 'notes members
-                            #f 'colour 'none 'none 0
-                            'used #t #f #t '()
+                            'none #t 'colour 'none 'none 0
+                            'used #t #f 'pitch-display-name '()
                             'by-pitch 'pastel1 '() 'grid #f)))
         (and (group? u) (group-keys u))))))
 
-;;; note-label #:octave? (slice feat/drawing-rows)
+;;; note-row-label #:octave? (slice feat/drawing-rows)
 
-(test-group "note-label #:octave?"
+(test-group "note-row-label #:octave?"
   (test-equal "#:octave? #f: the display form alone" "i"
-    (note-label reyong (inst-note reyong 3) #:octave? #f))
+    (note-row-label reyong (inst-note reyong 3) #:octave? #f))
   (test-equal "deng1 and deng2: the same label" '("e" "e")
-    (list (note-label reyong (inst-note reyong 0) #:octave? #f)
-          (note-label reyong (inst-note reyong 5) #:octave? #f)))
+    (list (note-row-label reyong (inst-note reyong 0) #:octave? #f)
+          (note-row-label reyong (inst-note reyong 5) #:octave? #f)))
   (test-equal "dang1 without its octave" "a"
-    (note-label reyong (inst-note reyong 2) #:octave? #f))
+    (note-row-label reyong (inst-note reyong 2) #:octave? #f))
   (test-equal "#:octave? #t: the octave as before" "i2"
-    (note-label reyong (inst-note reyong 3) #:octave? #t))
+    (note-row-label reyong (inst-note reyong 3) #:octave? #t))
   (test-equal "without #:octave?: the octave" "a1"
-    (note-label reyong (inst-note reyong 2)))
+    (note-row-label reyong (inst-note reyong 2)))
   (test-equal "display defaulted to the degree name" "dung"
-    (note-label plain-instrument (inst-note plain-instrument 1) #:octave? #f))
+    (note-row-label plain-instrument (inst-note plain-instrument 1) #:octave? #f))
   (test-equal "the display form, not the damped one" "nang"
-    (note-label suling (inst-note suling 2) #:octave? #f))
+    (note-row-label suling (inst-note suling 2) #:octave? #f))
   (test-equal "a stroke: its display form, #:octave? #f" "D"
-    (note-label kendang (inst-note kendang 0) #:octave? #f))
+    (note-row-label kendang (inst-note kendang 0) #:octave? #f))
   (test-equal "a stroke: its display form, #:octave? #t" "D"
-    (note-label kendang (inst-note kendang 0) #:octave? #t))
+    (note-row-label kendang (inst-note kendang 0) #:octave? #t))
   (test-equal "a stroke without a display option" "du"
-    (note-label kendang (inst-note kendang 2) #:octave? #f)))
+    (note-row-label kendang (inst-note kendang 2) #:octave? #f)))
 
 
-;;; group-lanes
+;;; group-row-keys
 
-(test-group "group-lanes"
+(test-group "group-row-keys"
   (let* ((p (mk-part 'polos reyong
                      (ev 0 1 3) (ev 1 1 1) (ev 2 1 3) (ev 3 1 5)))
-         (lanes (group-lanes (mk-group "R" p))))
+         (lanes (group-row-keys (mk-group "R" p))))
     (test-assert "returns note records" (every note? lanes))
     (test-assert "the instrument's own note records"
       (every (lambda (n) (any (lambda (m) (eq? n m))
@@ -1064,6 +1067,184 @@ wrong count would stop the whole file instead of failing one test."
             (piece-patterns pc) (piece-parts pc) (piece-scores pc))))
   (test-assert "make-piece without info raises"
     (raises? (lambda () (make-piece* "T" 0 0 '() '() '() '() '() '())))))
+
+;;; ------------------------------------------------------------------
+;;; Slice feat/collapsed-labels (iteration 5; 02, "Iteration 5", ADR
+;;; 0054): the group's `note-label`, `note-label-octave?`, `row-labels`
+;;; and `row-label-octave?` in place of `note-names?`,
+;;; `octave-numbers?` and `row-labels?`; `group-lanes` renamed
+;;; `group-row-keys` and the procedure `note-label` (the row label)
+;;; renamed `note-row-label`.
+;;; Choices made where the docs are not explicit:
+;;; - make-group's order follows 02's paragraph: (make-group label short
+;;;   subtitle labels rows members note-label note-label-octave? fill
+;;;   holds pattern-names pattern-level keys row-label-octave?
+;;;   key-numbers? row-labels display scheme palette colors background
+;;;   location), 22 arguments; the old 21 raise.
+;;; - The new names are looked up in (notasi piece)'s interface when a
+;;;   test runs, and make-group is called through apply, so the file
+;;;   compiles before the code exists.
+;;; - The record holds the symbols as given; it checks nothing (the
+;;;   reader does).
+
+(define (piece-proc name)
+  "The procedure (notasi piece) exports as NAME, or one that raises when
+called, so that a missing export fails one test, not the file."
+  (let* ((interface (resolve-interface '(notasi piece)))
+         (v (module-variable interface name)))
+    (cond ((not v)
+           (lambda args (error "not exported by (notasi piece):" name)))
+          ;; A record accessor is a macro that names its procedure when
+          ;; used as a value; evaluating the name gives the procedure.
+          ((macro? (variable-ref v)) (eval name (resolve-module '(notasi piece))))
+          (else (variable-ref v)))))
+
+(define (labels-make-group . args)
+  "make-group applied to ARGS, or the condition it raises."
+  (guard (c (#t c)) (apply make-group args)))
+
+(define* (labels-group label parts
+                       #:key (rows 'notes) (note-label 'none)
+                       (note-label-octave? #t) (fill 'colour) (keys 'used)
+                       (row-label-octave? #t) (key-numbers? #f)
+                       (row-labels 'pitch-display-name) (display '())
+                       (location #f))
+  "A group of PARTS with this slice's fields, through make-group's new
+order (02), every other setting at its default; or the condition
+make-group raises."
+  (labels-make-group
+   label label #f 'first-long rows
+   (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
+   note-label note-label-octave? fill 'none 'none 0
+   keys row-label-octave? key-numbers? row-labels display
+   'by-pitch 'pastel1 '() 'grid location))
+
+(define (group-field name g)
+  "The value of the accessor NAME on G, or #f when G is not a group."
+  (and (group? g) ((piece-proc name) g)))
+
+(test-group "[collapsed-labels] group record: the label fields"
+  (let* ((p (mk-part 'polos reyong))
+         (members (list (cons p "Polos")))
+         (low (inst-note reyong 1))
+         (high (inst-note reyong 5))
+         (g (labels-make-group "Reyong" "Rey." "sub" 'short 'parts members
+                               'key-number #f 'none 'dash 'long 2
+                               (cons low high) #f #t 'pitch-name
+                               '((G . "Gong"))
+                               'by-pitch '("#111111") '((ding . "#000000"))
+                               'vertical loc)))
+    (test-assert "make-group takes 22 arguments" (group? g))
+    (test-eq "note-label" 'key-number (group-field 'group-note-label g))
+    (test-eq "note-label-octave?" #f (group-field 'group-note-label-octave? g))
+    (test-eq "row-label-octave?" #f (group-field 'group-row-label-octave? g))
+    (test-eq "row-labels: a symbol" 'pitch-name (group-field 'group-row-labels g))
+    (test-equal "the other fields keep their places"
+      (list "Reyong" "Rey." "sub" 'short 'parts members 'none 'dash 'long 2
+            #t '((G . "Gong")) 'by-pitch '("#111111") '((ding . "#000000"))
+            'vertical loc)
+      (and (group? g)
+           (list (group-label g) (group-short g) (group-subtitle g)
+                 (group-labels g) (group-rows g) (group-members g)
+                 (group-fill g) (group-holds g) (group-pattern-names g)
+                 (group-pattern-level g) (group-key-numbers? g)
+                 (group-display g) (group-scheme g) (group-palette g)
+                 (group-colors g) (group-background g) (group-location g))))
+    (test-assert "keys: the range's note records, in its place"
+      (and (group? g)
+           (eq? low (car (group-keys g)))
+           (eq? high (cdr (group-keys g))))))
+  (let ((g (labels-group "U" (list (mk-part 'polos reyong)))))
+    (test-equal "the defaults as the reader fills them: none, yes, pitch-display-name, yes"
+      '(none #t pitch-display-name #t)
+      (map (lambda (name) (group-field name g))
+           '(group-note-label group-note-label-octave?
+             group-row-labels group-row-label-octave?))))
+  (for-each
+   (lambda (value)
+     (test-eq (format #f "note-label ~a" value) value
+       (group-field 'group-note-label
+                    (labels-group "U" (list (mk-part 'polos reyong))
+                                  #:note-label value))))
+   '(none pitch-name pitch-display-name key-number))
+  (for-each
+   (lambda (value)
+     (test-eq (format #f "row-labels ~a" value) value
+       (group-field 'group-row-labels
+                    (labels-group "U" (list (mk-part 'polos reyong))
+                                  #:row-labels value))))
+   '(none pitch-name pitch-display-name))
+  (test-assert "make-group with the old 21 arguments raises"
+    (raises? (lambda ()
+               (apply make-group
+                      (list "U" "U" #f 'first-long 'notes '()
+                            #f 'colour 'none 'none 0
+                            'used #t #f #t '()
+                            'by-pitch 'pastel1 '() 'grid #f))))))
+
+(test-group "[collapsed-labels] the new names are exported, the old ones gone"
+  (for-each
+   (lambda (name)
+     (test-assert (format #f "~a is exported" name) (exported-by-piece? name)))
+   '(group-note-label group-note-label-octave? group-row-labels
+     group-row-label-octave? group-row-keys note-row-label))
+  (for-each
+   (lambda (name)
+     (test-assert (format #f "~a is not exported" name)
+       (not (exported-by-piece? name))))
+   '(group-note-names? group-octave-numbers? group-row-labels?
+     group-lanes note-label)))
+
+(test-group "[collapsed-labels] note-row-label: note-label renamed"
+  (let ((row-label (lambda args (apply (piece-proc 'note-row-label) args))))
+    (test-equal "ding2 -> \"i2\"" "i2" (row-label reyong (inst-note reyong 3)))
+    (test-equal "dang1 -> \"a1\"" "a1" (row-label reyong (inst-note reyong 2)))
+    (test-equal "#:octave? #f: the pitch display name alone" "i"
+      (row-label reyong (inst-note reyong 3) #:octave? #f))
+    (test-equal "#:octave? #t: with the octave" "i2"
+      (row-label reyong (inst-note reyong 3) #:octave? #t))
+    (test-equal "display defaulted to the pitch name" "dung1"
+      (row-label plain-instrument (inst-note plain-instrument 1)))
+    (test-equal "the display form, not the damped one" "nang"
+      (row-label suling (inst-note suling 2) #:octave? #f))
+    (test-equal "a stroke: its display name" "D"
+      (row-label kendang (inst-note kendang 0)))
+    (test-equal "a stroke: #:octave? changes nothing" "D"
+      (row-label kendang (inst-note kendang 0) #:octave? #f))
+    (test-equal "a stroke without a display option" "du"
+      (row-label kendang (inst-note kendang 2)))))
+
+(test-group "[collapsed-labels] group-row-keys: group-lanes renamed"
+  (let ((row-keys (lambda (g)
+                    (and (group? g)
+                         (map note-name ((piece-proc 'group-row-keys) g))))))
+    (test-equal "pitched: only used notes, each once, highest first"
+      '(deng2 ding2 dung1)
+      (row-keys (labels-group "R" (list (mk-part 'polos reyong
+                                                 (ev 0 1 3) (ev 1 1 1)
+                                                 (ev 2 1 3) (ev 3 1 5))))))
+    (test-assert "the instrument's own note records"
+      (let ((g (labels-group "R" (list (mk-part 'polos reyong (ev 0 1 3))))))
+        (and (group? g)
+             (eq? (inst-note reyong 3)
+                  (car ((piece-proc 'group-row-keys) g))))))
+    (test-equal "chords and two parts merged, highest first"
+      '(dung2 deng2 dong2 ding2 dang1)
+      (row-keys (labels-group
+                 "Reyong"
+                 (list (mk-part 'polos reyong (ev 0 1 3) (ev 1 1 4) (ev 3 1 3))
+                       (mk-part 'sangsih reyong (ev 0 1 6) (ev 2 1 5)
+                                (ev 3 1 2 4))))))
+    (test-equal "no events: no rows" '()
+      (row-keys (labels-group "R" (list (mk-part 'polos reyong)))))
+    (test-equal "strokes follow the instrument's order" '(dag du)
+      (row-keys (labels-group "Kendang"
+                              (list (mk-part 'kendang kendang
+                                             (ev 0 1 2) (ev 1 1 2) (ev 2 1 0))))))
+    (test-equal "two stroke instruments: a block each, in part order" '(K G P)
+      (row-keys (labels-group "Pulse"
+                              (list (mk-part 'kempli kempli (ev 0 1 0) (ev 4 1 0))
+                                    (mk-part 'gong gong (ev 0 1 1) (ev 7 1 0))))))))
 
 (define runner (test-runner-current))
 (test-end "piece")

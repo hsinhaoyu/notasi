@@ -1211,7 +1211,9 @@ cut at the piece's end, on the piece's kempli or a built-in one."
 (define (yes-no? v) (memq v '(yes no)))
 
 (define style-options
-  `((note-names ,yes-no? . "yes or no")
+  `((note-label ,(lambda (v) (memq v '(none pitch-name pitch-display-name key-number)))
+                . "none, pitch-name, pitch-display-name or key-number")
+    (note-label-octave ,yes-no? . "yes or no")
     (scheme ,(lambda (v) (eq? v 'by-pitch)) . "a colour scheme: by-pitch")
     (palette ,palette? . "a palette name or a list of \"#rrggbb\" colours")
     (colors ,colors? . "a list of (PITCH \"#rrggbb\")")
@@ -1231,9 +1233,10 @@ cut at the piece's end, on the piece's kempli or a built-in one."
                 #t)
                (_ #f)))
           . "used, all or (LOW HIGH)")
-    (octave-numbers ,yes-no? . "yes or no")
+    (row-label-octave ,yes-no? . "yes or no")
     (key-numbers ,yes-no? . "yes or no")
-    (row-labels ,yes-no? . "yes or no")
+    (row-labels ,(lambda (v) (memq v '(none pitch-name pitch-display-name)))
+                . "none, pitch-name or pitch-display-name")
     (display ,(lambda (v)
                 (and (list? v)
                      (every (match-lambda
@@ -1402,16 +1405,17 @@ A group's own strokes must be strokes of its instruments."
                 (setting 'labels own score-opts 'first-long)
                 rows
                 members
-                (eq? (setting 'note-names own score-opts 'no) 'yes)
+                (setting 'note-label own score-opts 'none)
+                (not (eq? (setting 'note-label-octave own score-opts 'yes) 'no))
                 (setting 'fill own score-opts 'colour)
                 (setting 'holds own score-opts 'none)
                 (setting 'pattern-names own score-opts 'none)
                 (setting 'pattern-level own score-opts 0)
                 (group-keys-setting own score-opts rows pitched?
                                     (car instruments) line score-line)
-                (not (eq? (setting 'octave-numbers own score-opts 'yes) 'no))
+                (not (eq? (setting 'row-label-octave own score-opts 'yes) 'no))
                 (group-key-numbers-setting own score-opts key-rows? line)
-                (not (eq? (setting 'row-labels own score-opts 'yes) 'no))
+                (setting 'row-labels own score-opts 'pitch-display-name)
                 (group-display-setting own score-opts instruments line)
                 (setting 'scheme own score-opts 'by-pitch)
                 (setting 'palette own score-opts 'pastel1)
@@ -1450,13 +1454,13 @@ instruments."
         others)))))
 
 (define (check-group-names group line)
-  "A group whose rows show pitch by name needs names (invariant 7)."
-  (when (and (or (memq (group-rows group) '(parts single))
-                 (eq? (group-fill group) 'none))
-             (not (group-note-names? group)))
-    (syntax-error 'needs-note-names line
-                  "group `~a' shows its notes by name (:rows ~a, :fill ~a), so it needs :note-names yes"
-                  (group-label group) (group-rows group) (group-fill group))))
+  "A group drawn without boxes needs a note label (invariant 7, ADR 0054):
+with :fill none and :note-label none, nothing would be drawn."
+  (when (and (eq? (group-fill group) 'none)
+             (eq? (group-note-label group) 'none))
+    (syntax-error 'needs-note-label line
+                  "group `~a' draws no boxes (:fill none), so its notes need a label: give it a :note-label, such as pitch-display-name"
+                  (group-label group))))
 
 (define (part-cells group part)
   "Where PART's notes sit in GROUP: (START END KEY) for each note, KEY
@@ -1747,8 +1751,8 @@ print."
                      (let ((name (symbol->string (part-name part))))
                        (make-group name name #f 'first-long 'notes
                                    (list (cons part name))
-                                   #f 'colour 'none 'none 0
-                                   'used #t #f #t '()
+                                   'none #t 'colour 'none 'none 0
+                                   'used #t #f 'pitch-display-name '()
                                    'by-pitch 'pastel1 '() 'grid #f)))
                    parts)
               #f))

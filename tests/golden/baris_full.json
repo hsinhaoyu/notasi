@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "title": "Baris",
   "subtitle": null,
   "steps_per_pulse": 4,
@@ -7,7 +7,7 @@
     "font_size": null,
     "label_width": "12.9em",
     "key_width": "0.0em",
-    "lane_width": "7.8em",
+    "row_label_width": "7.8em",
     "cell_width": "3em",
     "cell_height": "2em"
   },
@@ -36,7 +36,7 @@
         {
           "label": "Reyong",
           "subtitle": "sangsih, polos",
-          "lanes": ["neng3", "nong3", "ning3", "nang2"],
+          "rows": ["neng3", "nong3", "ning3", "nang2"],
           "key_numbers": null,
           "voices": [
             {
@@ -45,7 +45,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
@@ -54,7 +54,7 @@
                 {
                   "start": 1,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
@@ -63,7 +63,7 @@
                 {
                   "start": 2,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
@@ -72,7 +72,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
@@ -81,7 +81,7 @@
                 {
                   "start": 5,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
@@ -90,7 +90,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
@@ -104,7 +104,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "na'",
                   "fill": null,
                   "text_color": "#222222",
@@ -113,7 +113,7 @@
                 {
                   "start": 2,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "na'",
                   "fill": null,
                   "text_color": "#222222",
@@ -122,7 +122,7 @@
                 {
                   "start": 3,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": "ni'",
                   "fill": null,
                   "text_color": "#222222",
@@ -131,7 +131,7 @@
                 {
                   "start": 5,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "na'",
                   "fill": null,
                   "text_color": "#222222",
@@ -140,7 +140,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": "ni'",
                   "fill": null,
                   "text_color": "#222222",
@@ -156,7 +156,7 @@
         {
           "label": "Ugal",
           "subtitle": "main melody",
-          "lanes": ["ugal"],
+          "rows": ["ugal"],
           "key_numbers": null,
           "voices": [
             {
@@ -165,7 +165,7 @@
                 {
                   "start": 0,
                   "dur": 4,
-                  "lane": 0,
+                  "row": 0,
                   "text": "nang",
                   "fill": null,
                   "text_color": "#222222",
@@ -174,7 +174,7 @@
                 {
                   "start": 4,
                   "dur": 4,
-                  "lane": 0,
+                  "row": 0,
                   "text": "nong",
                   "fill": null,
                   "text_color": "#222222",
@@ -190,7 +190,7 @@
         {
           "label": "Calung",
           "subtitle": "core melody",
-          "lanes": ["calung"],
+          "rows": ["calung"],
           "key_numbers": null,
           "voices": [
             {
@@ -199,7 +199,7 @@
                 {
                   "start": 0,
                   "dur": 8,
-                  "lane": 0,
+                  "row": 0,
                   "text": "nang",
                   "fill": null,
                   "text_color": "#222222",
@@ -215,7 +215,7 @@
         {
           "label": "",
           "subtitle": null,
-          "lanes": ["Kempli", "Gong & Kempur"],
+          "rows": ["Kempli", "Gong & Kempur"],
           "key_numbers": null,
           "voices": [
             {
@@ -224,7 +224,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "K",
                   "fill": null,
                   "text_color": "#222222",
@@ -233,7 +233,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "K",
                   "fill": null,
                   "text_color": "#222222",
@@ -247,7 +247,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "G",
                   "fill": null,
                   "text_color": "#222222",
@@ -263,7 +263,7 @@
         {
           "label": "Kendang lanang",
           "subtitle": null,
-          "lanes": ["LH", "RH"],
+          "rows": ["LH", "RH"],
           "key_numbers": null,
           "voices": [
             {
@@ -276,7 +276,7 @@
                 {
                   "start": 1,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dug",
                   "fill": null,
                   "text_color": "#222222",
@@ -285,7 +285,7 @@
                 {
                   "start": 3,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "du'",
                   "fill": null,
                   "text_color": "#222222",
@@ -294,7 +294,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dug",
                   "fill": null,
                   "text_color": "#222222",
@@ -303,7 +303,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dug",
                   "fill": null,
                   "text_color": "#222222",
@@ -319,7 +319,7 @@
         {
           "label": "Kendang wadon",
           "subtitle": null,
-          "lanes": ["LH", "RH"],
+          "rows": ["LH", "RH"],
           "key_numbers": null,
           "voices": [
             {
@@ -332,7 +332,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dag",
                   "fill": null,
                   "text_color": "#222222",
@@ -341,7 +341,7 @@
                 {
                   "start": 2,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dag",
                   "fill": null,
                   "text_color": "#222222",
@@ -350,7 +350,7 @@
                 {
                   "start": 5,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dag",
                   "fill": null,
                   "text_color": "#222222",
@@ -359,7 +359,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dag",
                   "fill": null,
                   "text_color": "#222222",
@@ -389,7 +389,7 @@
         {
           "label": "Reyong",
           "subtitle": "sangsih, polos",
-          "lanes": ["neng3", "nong3", "ning3", "nang2"],
+          "rows": ["neng3", "nong3", "ning3", "nang2"],
           "key_numbers": null,
           "voices": [
             {
@@ -398,7 +398,7 @@
                 {
                   "start": 1,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
@@ -407,7 +407,7 @@
                 {
                   "start": 2,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
@@ -416,7 +416,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
@@ -425,7 +425,7 @@
                 {
                   "start": 5,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
@@ -434,7 +434,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
@@ -443,7 +443,7 @@
                 {
                   "start": 8,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
@@ -452,7 +452,7 @@
                 {
                   "start": 9,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
@@ -461,7 +461,7 @@
                 {
                   "start": 10,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
@@ -470,7 +470,7 @@
                 {
                   "start": 12,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
@@ -479,7 +479,7 @@
                 {
                   "start": 13,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
@@ -488,7 +488,7 @@
                 {
                   "start": 15,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
@@ -497,7 +497,7 @@
                 {
                   "start": 16,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
@@ -506,7 +506,7 @@
                 {
                   "start": 18,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
@@ -515,7 +515,7 @@
                 {
                   "start": 19,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
@@ -524,7 +524,7 @@
                 {
                   "start": 21,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
@@ -533,7 +533,7 @@
                 {
                   "start": 22,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
@@ -542,7 +542,7 @@
                 {
                   "start": 24,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
@@ -551,7 +551,7 @@
                 {
                   "start": 25,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
@@ -560,7 +560,7 @@
                 {
                   "start": 26,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
@@ -574,7 +574,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": "ni'",
                   "fill": null,
                   "text_color": "#222222",
@@ -583,7 +583,7 @@
                 {
                   "start": 1,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "na'",
                   "fill": null,
                   "text_color": "#222222",
@@ -592,7 +592,7 @@
                 {
                   "start": 3,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": "ni'",
                   "fill": null,
                   "text_color": "#222222",
@@ -601,7 +601,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "na'",
                   "fill": null,
                   "text_color": "#222222",
@@ -610,7 +610,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "na'",
                   "fill": null,
                   "text_color": "#222222",
@@ -619,7 +619,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": "ni'",
                   "fill": null,
                   "text_color": "#222222",
@@ -628,7 +628,7 @@
                 {
                   "start": 9,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "na'",
                   "fill": null,
                   "text_color": "#222222",
@@ -637,7 +637,7 @@
                 {
                   "start": 11,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": "ni'",
                   "fill": null,
                   "text_color": "#222222",
@@ -646,7 +646,7 @@
                 {
                   "start": 12,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "na'",
                   "fill": null,
                   "text_color": "#222222",
@@ -655,7 +655,7 @@
                 {
                   "start": 14,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": "ni'",
                   "fill": null,
                   "text_color": "#222222",
@@ -664,7 +664,7 @@
                 {
                   "start": 15,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "na'",
                   "fill": null,
                   "text_color": "#222222",
@@ -673,7 +673,7 @@
                 {
                   "start": 17,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": "ni'",
                   "fill": null,
                   "text_color": "#222222",
@@ -682,7 +682,7 @@
                 {
                   "start": 18,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "na'",
                   "fill": null,
                   "text_color": "#222222",
@@ -691,7 +691,7 @@
                 {
                   "start": 20,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": "ni'",
                   "fill": null,
                   "text_color": "#222222",
@@ -700,7 +700,7 @@
                 {
                   "start": 21,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "na'",
                   "fill": null,
                   "text_color": "#222222",
@@ -709,7 +709,7 @@
                 {
                   "start": 23,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": "ni'",
                   "fill": null,
                   "text_color": "#222222",
@@ -718,7 +718,7 @@
                 {
                   "start": 24,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "na'",
                   "fill": null,
                   "text_color": "#222222",
@@ -727,7 +727,7 @@
                 {
                   "start": 26,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "na'",
                   "fill": null,
                   "text_color": "#222222",
@@ -736,7 +736,7 @@
                 {
                   "start": 27,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": "ni'",
                   "fill": null,
                   "text_color": "#222222",
@@ -752,7 +752,7 @@
         {
           "label": "Ugal",
           "subtitle": "main melody",
-          "lanes": ["ugal"],
+          "rows": ["ugal"],
           "key_numbers": null,
           "voices": [
             {
@@ -761,7 +761,7 @@
                 {
                   "start": 0,
                   "dur": 4,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ning",
                   "fill": null,
                   "text_color": "#222222",
@@ -770,7 +770,7 @@
                 {
                   "start": 4,
                   "dur": 4,
-                  "lane": 0,
+                  "row": 0,
                   "text": "neng",
                   "fill": null,
                   "text_color": "#222222",
@@ -779,7 +779,7 @@
                 {
                   "start": 8,
                   "dur": 4,
-                  "lane": 0,
+                  "row": 0,
                   "text": "nong",
                   "fill": null,
                   "text_color": "#222222",
@@ -788,7 +788,7 @@
                 {
                   "start": 12,
                   "dur": 4,
-                  "lane": 0,
+                  "row": 0,
                   "text": "nang",
                   "fill": null,
                   "text_color": "#222222",
@@ -797,7 +797,7 @@
                 {
                   "start": 16,
                   "dur": 4,
-                  "lane": 0,
+                  "row": 0,
                   "text": "nong",
                   "fill": null,
                   "text_color": "#222222",
@@ -806,7 +806,7 @@
                 {
                   "start": 20,
                   "dur": 4,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ning",
                   "fill": null,
                   "text_color": "#222222",
@@ -815,7 +815,7 @@
                 {
                   "start": 24,
                   "dur": 4,
-                  "lane": 0,
+                  "row": 0,
                   "text": "nang",
                   "fill": null,
                   "text_color": "#222222",
@@ -831,7 +831,7 @@
         {
           "label": "Calung",
           "subtitle": "core melody",
-          "lanes": ["calung"],
+          "rows": ["calung"],
           "key_numbers": null,
           "voices": [
             {
@@ -840,7 +840,7 @@
                 {
                   "start": 0,
                   "dur": 8,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ning",
                   "fill": null,
                   "text_color": "#222222",
@@ -849,7 +849,7 @@
                 {
                   "start": 8,
                   "dur": 8,
-                  "lane": 0,
+                  "row": 0,
                   "text": "nong",
                   "fill": null,
                   "text_color": "#222222",
@@ -858,7 +858,7 @@
                 {
                   "start": 16,
                   "dur": 8,
-                  "lane": 0,
+                  "row": 0,
                   "text": "ning",
                   "fill": null,
                   "text_color": "#222222",
@@ -867,7 +867,7 @@
                 {
                   "start": 24,
                   "dur": 4,
-                  "lane": 0,
+                  "row": 0,
                   "text": "nang",
                   "fill": null,
                   "text_color": "#222222",
@@ -883,7 +883,7 @@
         {
           "label": "",
           "subtitle": null,
-          "lanes": ["Kempli", "Gong & Kempur"],
+          "rows": ["Kempli", "Gong & Kempur"],
           "key_numbers": null,
           "voices": [
             {
@@ -892,7 +892,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "K",
                   "fill": null,
                   "text_color": "#222222",
@@ -901,7 +901,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "K",
                   "fill": null,
                   "text_color": "#222222",
@@ -910,7 +910,7 @@
                 {
                   "start": 8,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "K",
                   "fill": null,
                   "text_color": "#222222",
@@ -919,7 +919,7 @@
                 {
                   "start": 12,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "K",
                   "fill": null,
                   "text_color": "#222222",
@@ -928,7 +928,7 @@
                 {
                   "start": 16,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "K",
                   "fill": null,
                   "text_color": "#222222",
@@ -937,7 +937,7 @@
                 {
                   "start": 20,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "K",
                   "fill": null,
                   "text_color": "#222222",
@@ -946,7 +946,7 @@
                 {
                   "start": 24,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "K",
                   "fill": null,
                   "text_color": "#222222",
@@ -960,7 +960,7 @@
                 {
                   "start": 8,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "G",
                   "fill": null,
                   "text_color": "#222222",
@@ -969,7 +969,7 @@
                 {
                   "start": 12,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "P",
                   "fill": null,
                   "text_color": "#222222",
@@ -978,7 +978,7 @@
                 {
                   "start": 20,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "P",
                   "fill": null,
                   "text_color": "#222222",
@@ -987,7 +987,7 @@
                 {
                   "start": 24,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "G",
                   "fill": null,
                   "text_color": "#222222",
@@ -1003,7 +1003,7 @@
         {
           "label": "Kendang lanang",
           "subtitle": null,
-          "lanes": ["LH", "RH"],
+          "rows": ["LH", "RH"],
           "key_numbers": null,
           "voices": [
             {
@@ -1012,7 +1012,7 @@
                 {
                   "start": 9,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "pak",
                   "fill": null,
                   "text_color": "#222222",
@@ -1021,7 +1021,7 @@
                 {
                   "start": 13,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "pak",
                   "fill": null,
                   "text_color": "#222222",
@@ -1030,7 +1030,7 @@
                 {
                   "start": 15,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "pak",
                   "fill": null,
                   "text_color": "#222222",
@@ -1039,7 +1039,7 @@
                 {
                   "start": 19,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "pak",
                   "fill": null,
                   "text_color": "#222222",
@@ -1048,7 +1048,7 @@
                 {
                   "start": 21,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "pak",
                   "fill": null,
                   "text_color": "#222222",
@@ -1062,7 +1062,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dug",
                   "fill": null,
                   "text_color": "#222222",
@@ -1071,7 +1071,7 @@
                 {
                   "start": 2,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dug",
                   "fill": null,
                   "text_color": "#222222",
@@ -1080,7 +1080,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dug",
                   "fill": null,
                   "text_color": "#222222",
@@ -1089,7 +1089,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dug",
                   "fill": null,
                   "text_color": "#222222",
@@ -1098,7 +1098,7 @@
                 {
                   "start": 11,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dug",
                   "fill": null,
                   "text_color": "#222222",
@@ -1107,7 +1107,7 @@
                 {
                   "start": 17,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dug",
                   "fill": null,
                   "text_color": "#222222",
@@ -1116,7 +1116,7 @@
                 {
                   "start": 23,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dug",
                   "fill": null,
                   "text_color": "#222222",
@@ -1125,7 +1125,7 @@
                 {
                   "start": 25,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dug",
                   "fill": null,
                   "text_color": "#222222",
@@ -1134,7 +1134,7 @@
                 {
                   "start": 27,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "du'",
                   "fill": null,
                   "text_color": "#222222",
@@ -1150,7 +1150,7 @@
         {
           "label": "Kendang wadon",
           "subtitle": null,
-          "lanes": ["LH", "RH"],
+          "rows": ["LH", "RH"],
           "key_numbers": null,
           "voices": [
             {
@@ -1159,7 +1159,7 @@
                 {
                   "start": 10,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "kap",
                   "fill": null,
                   "text_color": "#222222",
@@ -1168,7 +1168,7 @@
                 {
                   "start": 14,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "kap",
                   "fill": null,
                   "text_color": "#222222",
@@ -1177,7 +1177,7 @@
                 {
                   "start": 16,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "kap",
                   "fill": null,
                   "text_color": "#222222",
@@ -1186,7 +1186,7 @@
                 {
                   "start": 20,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "kap",
                   "fill": null,
                   "text_color": "#222222",
@@ -1195,7 +1195,7 @@
                 {
                   "start": 22,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "kap",
                   "fill": null,
                   "text_color": "#222222",
@@ -1209,7 +1209,7 @@
                 {
                   "start": 1,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dag",
                   "fill": null,
                   "text_color": "#222222",
@@ -1218,7 +1218,7 @@
                 {
                   "start": 3,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dag",
                   "fill": null,
                   "text_color": "#222222",
@@ -1227,7 +1227,7 @@
                 {
                   "start": 5,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "da'",
                   "fill": null,
                   "text_color": "#222222",
@@ -1236,7 +1236,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dag",
                   "fill": null,
                   "text_color": "#222222",
@@ -1245,7 +1245,7 @@
                 {
                   "start": 8,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dag",
                   "fill": null,
                   "text_color": "#222222",
@@ -1254,7 +1254,7 @@
                 {
                   "start": 12,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dag",
                   "fill": null,
                   "text_color": "#222222",
@@ -1263,7 +1263,7 @@
                 {
                   "start": 18,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dag",
                   "fill": null,
                   "text_color": "#222222",
@@ -1272,7 +1272,7 @@
                 {
                   "start": 24,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dag",
                   "fill": null,
                   "text_color": "#222222",
@@ -1281,7 +1281,7 @@
                 {
                   "start": 26,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "dag",
                   "fill": null,
                   "text_color": "#222222",

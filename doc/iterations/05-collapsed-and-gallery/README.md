@@ -131,10 +131,13 @@ changes the figure, and each later one adds to it.
       last field of the piece); `bapang-8`, `bapang-16` and `gegaboran`,
       with the manual's pages on colotomies (what a colotomy is, the
       32-pulse bapang in place of `own-colotomy.nts`).
-   2. `feat/collapsed-labels`: `:note-label`, `:row-labels`,
+   2. `feat/collapsed-labels` (done): `:note-label`, `:row-labels`,
       `:row-label-octave` and `:note-label-octave` in place of
       `:note-names` and `:octave-numbers`; `needs-note-label`; contract
-      version 4 opened, with `rows`, `row` and `row_label_width`.
+      version 4 opened, with `rows`, `row` and `row_label_width`;
+      `group-row-keys` and `note-row-label`. The examples that showed
+      names add `:note-label-octave no`, so their drawings keep their
+      look.
    3. `feat/collapsed-compact`: `:rows compact` in place of `single`,
       rows by key, and `notes-collide` on compact rows.
    4. `feat/collapsed-markers`: `:part-marker`, each voice's `marker`,

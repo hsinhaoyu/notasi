@@ -42,9 +42,10 @@ must work in both places; see "Typst template design", points 6 and 7.
 
 ## JSON contract (version 4)
 
-**Planned** (ADR 0059), built over iteration 5. Version 3 below, with
-these changes (04 lists the keys in order, and says how layout fills
-them):
+ADR 0059, built over iteration 5. Version 3 below, with these changes
+(04 lists the keys in order, and says how layout fills them). The
+first two are **Implemented** since `feat/collapsed-labels`, and the
+template reads them; the rest is **Planned**:
 
 - `version` is 4.
 - `lanes`, `lane` and `sizes.lane_width` become `rows`, `row` and
@@ -399,7 +400,7 @@ version 3's drawing, which follows:
   border but small enough not to hide a gangsa note's fill. A note
   drawn as text alone (`fill` `null`) gets the symbol but no border.
 - `lanes`, `lane` and `lane_width` are read as `rows`, `row` and
-  `row_label_width`.
+  `row_label_width` (**Implemented** since `feat/collapsed-labels`).
 
 **Implemented** for version 3 (ADRs 0039, 0041, 0043, 0044, 0047),
 changing the above:

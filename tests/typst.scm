@@ -173,7 +173,7 @@ these tests from passing by accident."
 ;;; A small figure with nested values and non-ASCII text.
 (define small-figure
   `((title . "Tabuh · Pelegongan é")
-    (systems . #(((label . "Gangsa") (lanes . #("dong" "dèng")))))
+    (systems . #(((label . "Gangsa") (rows . #("dong" "dèng")))))
     (count . 3)
     (ready . #t)
     (subtitle . null)))
@@ -475,9 +475,9 @@ write-entry-file, compile it to NAME.png and return the PNG's
                   (drawn-size "cap" (with-sizes (set-field base-figure 'caption
                                                            "A caption")
                                                 'font_size 'null)))))
-    (test-assert "(tenzer1's figure is version 3, with every field null)"
+    (test-assert "(tenzer1's figure is version 4, with every field null)"
       (and base-figure
-           (eqv? 3 (assq-ref base-figure 'version))
+           (eqv? 4 (assq-ref base-figure 'version))
            (eq? 'null (assq-ref base-figure 'subtitle))
            (eq? 'null (assq-ref base-figure 'caption))
            (eq? 'null (assq-ref (assq-ref base-figure 'sizes) 'font_size))))

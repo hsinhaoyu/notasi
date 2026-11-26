@@ -15,11 +15,12 @@ score names (ADR 0040) since `feat/drawing-output`. Information about
 a piece, `bapang-8`, `bapang-16` and `gegaboran` in place of `bapang`
 (ADR 0053), `:scheme by-pitch` in place of `by-degree` (ADR 0056) and
 the glossary's pitch terms (ADR 0051) since iteration 5's
-`feat/collapsed-terms`.
-
-**Planned** for iteration 5 (ADRs 0054–0057): `:note-label`, a widened `:row-labels`, and
+`feat/collapsed-terms`. `:note-label`, a widened `:row-labels`, and
 `:row-label-octave` and `:note-label-octave`, in place of
-`:note-names` and `:octave-numbers`; `:rows compact` in place of
+`:note-names` and `:octave-numbers` (ADR 0054), since
+`feat/collapsed-labels`.
+
+**Planned** for iteration 5 (ADRs 0055–0057): `:rows compact` in place of
 `single`; `:part-marker`; the annotation row, pattern annotations and
 `(text ...)`, in place of `:pattern-names` and `:pattern-level`.
 Until they are built, the reader takes the old options and names. The
@@ -600,14 +601,14 @@ In the grid:
 
 | Option | Level | Default | Meaning |
 |---|---|---|---|
-| `:note-label none/pitch-name/pitch-display-name/key-number` | score, group | `none` | **Planned** (ADR 0054). What is written in each note: nothing (colour only), its pitch name (`dong2`), its pitch display name (`o2`), or its key number (`2` on the jublag, from 1 at the lowest key). See "What a note shows". |
-| `:note-label-octave yes/no` | score, group | `yes` | **Planned** (ADR 0054). With `pitch-name` or `pitch-display-name`, whether a note's label ends in its octave number (`o2`) or not (`o`). |
+| `:note-label none/pitch-name/pitch-display-name/key-number` | score, group | `none` | (ADR 0054). What is written in each note: nothing (colour only), its pitch name (`dong2`), its pitch display name (`o2`), or its key number (`2` on the jublag, from 1 at the lowest key). See "What a note shows". |
+| `:note-label-octave yes/no` | score, group | `yes` | (ADR 0054). With `pitch-name` or `pitch-display-name`, whether a note's label ends in its octave number (`o2`) or not (`o`). |
 | `:fill colour/none` | score, group | `colour` | `none` draws the labels alone, without a coloured box. |
 | `:holds none/dash` | score, group | `none` | `dash` writes "-" in every step a note is held, as in a sung line. |
 | `:rows notes/parts/compact` | score, group | `notes` | What a row stands for. `notes`: one row per key or stroke used. `parts`: one row per part, labelled. `compact` (**Planned**, ADR 0055): the group's parts merged into one line, with a row added where keys sound together. |
 | `:keys used/all/(LOW HIGH)` | score, group | `used` | With `:rows notes`, which rows a group has: the keys or strokes played in the score's range, every key or stroke of the instrument, or the keys from LOW up to HIGH, both included (`:keys (a1 u2)`). |
-| `:row-labels none/pitch-name/pitch-display-name` | score, group | `pitch-display-name` | **Planned** (ADR 0054). The pitch column on `notes` rows: each row's pitch name (`dong2`) or pitch display name (`o2`); on `parts` rows the part's label, on `compact` rows nothing. `none` leaves the column out on every kind of row. |
-| `:row-label-octave yes/no` | score, group | `yes` | **Planned** (ADR 0054). Whether the pitch column's labels end in the octave number (`i2`) or not (`i`). Only rows of pitched keys change. |
+| `:row-labels none/pitch-name/pitch-display-name` | score, group | `pitch-display-name` | (ADR 0054). The pitch column on `notes` rows: each row's pitch name (`dong2`) or pitch display name (`o2`); on `parts` rows the part's label, on `compact` rows nothing. `none` leaves the column out on every kind of row. |
+| `:row-label-octave yes/no` | score, group | `yes` | (ADR 0054). Whether the pitch column's labels end in the octave number (`i2`) or not (`i`). Only rows of pitched keys change. |
 | `:key-numbers yes/no` | score, group | `no` | A column of key numbers to the left of the pitch column: each row's key on its instrument, from 1 (on the ugal, `a1` is key 4). Pitched keys on `notes` rows only. |
 | `:display ((STROKE STRING) ...)` | score, group | none | Show these strokes with these stroke display names in this score, in row labels and note labels: `:display ((GL "G"))`. |
 | `:background grid/vertical/horizontal/empty` | score, group | `grid` | The lines behind the notes: pulse lines and a line between every two rows (`grid`), pulse lines only (`vertical`), row lines only (`horizontal`), or neither (`empty`). The lines between groups and the cycle lines are always drawn (ADR 0041). |
@@ -616,13 +617,6 @@ In the grid:
 **Implemented** until the planned options above are built, and then
 removed, with no migration:
 
-- `:note-names yes/no` (default `no`): write each note's or stroke's
-  name in its cell. Replaced by `:note-label`.
-- `:octave-numbers yes/no` (default `yes`): the octave number after
-  each row label and note label. Replaced by `:row-label-octave` and
-  `:note-label-octave`.
-- `:row-labels yes/no` (default `yes`): `yes` is today's
-  `pitch-display-name`, `no` is `none`.
 - `:rows single`: all the group's parts on one row, an error where two
   notes fall in one cell. Replaced by `compact`.
 - `:pattern-names none/short/long` (default `none`) and
@@ -671,14 +665,14 @@ A LENGTH is a string holding a Typst length, a number and a unit
 
 #### What a note shows
 
-**Implemented**, with `:note-names yes`: a note shows its damped form
+With `:note-label pitch-display-name`, a note shows its damped form
 (`:damped`) when it lasts no longer than one column of the grid, and
 its pitch display name otherwise. Without a damped form, the pitch
 display name is used for both. The test uses the note's written
-duration: strokes, which are to be drawn one column wide (04,
-ADR 0042), still show `du` or `du'` as written.
+duration: strokes, which are drawn one column wide (04, ADR 0042),
+still show `du` or `du'` as written.
 
-**Planned** (ADR 0054), with `:note-label`:
+`:note-label` (ADR 0054) chooses the label:
 
 | `:note-label` | A jublag `o2` | Kendang `du` | Gong lanang `GL` |
 |---|---|---|---|
@@ -773,11 +767,9 @@ pitched and stroke groups alike:
   level, or a bad value (an unknown palette, a colour that is not
   `"#rrggbb"`, a length without a unit) is an error.
 - `:from` must come before `:to`, and both must lie in the piece.
-- `:rows parts`, `:rows single` and `:fill none` need `:note-names yes`
-  on the group, since without names those rows would not show pitch.
-  **Planned** (ADR 0054): only `:fill none` needs a label (a
-  `:note-label` other than `none`), since it draws no box; `parts` and
-  `compact` rows may be colour only.
+- `:fill none` needs a label (a `:note-label` other than `none`),
+  since it draws no box (ADR 0054); `parts`, `single` and compact rows
+  may be colour only.
 - `:keys`: LOW and HIGH are keys of the group's
   instrument, written as in a part, LOW not above HIGH; a range is an
   error on a group of strokes, which has only `used` and `all`; `:keys`

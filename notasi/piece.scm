@@ -9,8 +9,8 @@
   #:use-module (srfi srfi-9)
   #:use-module (ice-9 exceptions)
   #:use-module (ice-9 match)
-  #:export (note-pitch-index note-display note-label
-            group-lanes part-end events-at
+  #:export (note-pitch-index note-display note-row-label
+            group-row-keys part-end events-at
             time->position position->time
 
 make-source-location source-location?
@@ -65,11 +65,12 @@ make-source-location source-location?
 
             make-group group?
             group-label group-short group-subtitle group-labels group-rows
-            group-members group-note-names? group-fill group-holds
+            group-members group-note-label group-note-label-octave?
+            group-fill group-holds
             group-pattern-names group-pattern-level group-scheme
             group-palette group-colors group-background group-location
-            group-keys group-octave-numbers? group-key-numbers?
-            group-row-labels? group-display
+            group-keys group-row-label-octave? group-key-numbers?
+            group-row-labels group-display
             group-parts))
 
 ;;; Where a record came from, for error messages.  FILE is #f when the
@@ -224,10 +225,10 @@ make-source-location source-location?
 ;;; (ADR 0033).  MEMBERS are (PART . ROW-LABEL).  LOCATION is #f for a
 ;;; group of the default score.
 (define-record-type <group>
-  (make-group label short subtitle labels rows members note-names? fill
-              holds pattern-names pattern-level keys octave-numbers?
-              key-numbers? row-labels? display scheme palette colors
-              background location)
+  (make-group label short subtitle labels rows members note-label
+              note-label-octave? fill holds pattern-names pattern-level keys
+              row-label-octave? key-numbers? row-labels display scheme
+              palette colors background location)
   group?
   (label         group-label)
   (short         group-short)
@@ -235,15 +236,17 @@ make-source-location source-location?
   (labels        group-labels)
   (rows          group-rows)
   (members       group-members)
-  (note-names?   group-note-names?)
+  (note-label    group-note-label)      ; none | pitch-name |
+                                        ; pitch-display-name | key-number
+  (note-label-octave? group-note-label-octave?)
   (fill          group-fill)
   (holds         group-holds)
   (pattern-names group-pattern-names)
   (pattern-level group-pattern-level)
   (keys          group-keys)            ; used | all | (LOW . HIGH) notes
-  (octave-numbers? group-octave-numbers?)
+  (row-label-octave? group-row-label-octave?)
   (key-numbers?  group-key-numbers?)
-  (row-labels?   group-row-labels?)
+  (row-labels    group-row-labels)      ; none | pitch-name | pitch-display-name
   (display       group-display)         ; ((STROKE . STRING) ...)
   (scheme        group-scheme)
   (palette       group-palette)
@@ -292,21 +295,21 @@ none."
     (or (and damped? (pitch-damped pitch))
         (pitch-display pitch))))
 
-(define* (note-label instrument note #:key (octave? #t))
-  "Return NOTE's lane label: the display form plus the octave (\"i2\"),
-or just the display form for a stroke, or with OCTAVE? false."
+(define* (note-row-label instrument note #:key (octave? #t))
+  "Return NOTE's row label: the pitch display name plus the octave
+(\"i2\"), or just the display name for a stroke, or with OCTAVE? false."
   (let ((shown (note-display instrument note))
         (octave (note-octave note)))
     (if (and octave octave?)
         (string-append shown (number->string octave))
         shown)))
 
-(define (group-lanes group)
+(define (group-row-keys group)
   "Return the notes the parts of GROUP play, each once, as note records:
-one lane per note.  Pitched notes come highest first; strokes in their
+one row per key or stroke.  Pitched notes come highest first; strokes in their
 instrument's order.  With several instruments, each instrument's lanes
 follow in the order its first part appears in GROUP."
-  (define (instrument-lanes instrument)
+  (define (instrument-keys instrument)
     (let* ((used (append-map
                   (lambda (part)
                     (if (eq? (part-instrument part) instrument)
@@ -315,12 +318,12 @@ follow in the order its first part appears in GROUP."
                   (group-parts group)))
            (notes (map (lambda (i) (vector-ref (instrument-notes instrument) i))
                        (sort (delete-duplicates used) <))))
-      ;; Notes of a pitched instrument are in ascending pitch order
+      ;; Keys of a pitched instrument are in ascending pitch order
       ;; (invariant 5), so reversing puts the highest first.
       (if (scale-pitched? (instrument-scale instrument))
           (reverse notes)
           notes)))
-  (append-map instrument-lanes
+  (append-map instrument-keys
               (delete-duplicates (map part-instrument (group-parts group))
                                  eq?)))
 

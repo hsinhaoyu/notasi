@@ -2,5 +2,5 @@
 (use gong-kebyar)
 (part :instrument reyong :name polos 1 _ - -)
 (part :instrument reyong :name sangsih - 2 _ -)
-(score full :note-names yes
+(score full :note-label pitch-display-name :note-label-octave no
   (group "Reyong" :rows single polos sangsih))

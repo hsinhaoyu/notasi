@@ -194,11 +194,11 @@
 ;;; score and on a group; they leave the `not-implemented` lists, and
 ;;; the two tests that used `:holds dash` or `:rows parts` to stand for
 ;;; "a group option not built yet" use `:labels long` instead. New
-;;; cases: `needs-note-names` and `notes-collide`.
+;;; cases: `needs-note-label` and `notes-collide`.
 ;;; Choices made where the docs are not explicit:
 ;;; - `:fill color` (American spelling) is `bad-option`: the choices are
 ;;;   `colour` and `none`.
-;;; - `needs-note-names` is at the group's line, whether `:rows` or
+;;; - `needs-note-label` is at the group's line, whether `:rows` or
 ;;;   `:fill` was set on the group or inherited from the score; only its
 ;;;   kind and line are tested.
 ;;; - `notes-collide`: `part` is the later of the two parts in the
@@ -208,7 +208,7 @@
 ;;;   decides, and the later part of the pair sounding there is named.
 ;;; - A chord in one part on a `single` row is not a collision: 04 draws
 ;;;   it as one event on that row.
-;;; - `needs-note-names` (the group's options) comes before
+;;; - `needs-note-label` (the group's options) comes before
 ;;;   `notes-collide` (the checks that need the music), and a later
 ;;;   group's member errors come before an earlier group's collision
 ;;;   (03, check 16: "then the checks that need the music"); a score's
@@ -238,7 +238,7 @@
 ;;;   identical ones are fine at level 0, and depth-0 spans are not
 ;;;   checked at level 1.
 ;;; - Like `notes-collide`, `pattern-names-overlap` comes after the
-;;;   group's options (`bad-option`, `needs-note-names`) and after every
+;;;   group's options (`bad-option`, `needs-note-label`) and after every
 ;;;   group's members, and before a later score's errors. Its order
 ;;;   against `notes-collide` in the same group is not tested.
 ;;;
@@ -1060,13 +1060,13 @@ so a test using it fails rather than passing on #f."
       (let ((inst (instrument-named pc 'x)))
         (map (lambda (n) (note-display inst n))
              (vector->list (instrument-notes inst)))))
-    (test-equal "note-label on a read instrument" '("i1" "dong1" "i2")
+    (test-equal "note-row-label on a read instrument" '("i1" "dong1" "i2")
       (let ((inst (instrument-named pc 'x)))
-        (map (lambda (n) (note-label inst n))
+        (map (lambda (n) (note-row-label inst n))
              (vector->list (instrument-notes inst)))))
-    (test-equal "note-label for strokes is the display" '("G" "D")
+    (test-equal "note-row-label for strokes is the display" '("G" "D")
       (let ((inst (instrument-named pc 'y)))
-        (map (lambda (n) (note-label inst n))
+        (map (lambda (n) (note-row-label inst n))
              (vector->list (instrument-notes inst)))))))
 
 (test-group "definitions read from a file"
@@ -1155,8 +1155,8 @@ so a test using it fails rather than passing on #f."
       '("deng1" "dung3")
       (let* ((inst (instrument-named pc 'reyong))
              (v (instrument-notes inst)))
-        (list (note-label inst (vector-ref v 0))
-              (note-label inst (vector-ref v 11)))))
+        (list (note-row-label inst (vector-ref v 0))
+              (note-row-label inst (vector-ref v 11)))))
     (test-equal "length 0, only the timekeeper, its default group"
       '(0 (kempli) ("kempli"))
       (list (piece-length pc) (map part-name (piece-parts pc))
@@ -2019,8 +2019,8 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
     (test-equal "two parts on one instrument: two groups, then kempli"
       '("polos" "sangsih" "kempli")
       (map group-label (default-groups pc)))
-    (test-equal "group-lanes of each" '((dung1 deng1) (ding2 dang1) (K))
-      (map (lambda (g) (map note-name (group-lanes g)))
+    (test-equal "group-row-keys of each" '((dung1 deng1) (ding2 dang1) (K))
+      (map (lambda (g) (map note-name (group-row-keys g)))
            (default-groups pc)))))
 
 ;;; ------------------------------------------------------------------
@@ -2064,12 +2064,12 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
       (map group-part-names (default-groups pc)))
     (test-equal "group lines" '(#f #f #f) (map group-line (default-groups pc)))
     ;; Light checks with the derived functions of (notasi piece).
-    (test-equal "group-lanes: polos, highest first" '(ning1 nang1)
-      (map note-name (group-lanes (group-labelled pc "polos"))))
-    (test-equal "group-lanes: sangsih, highest first" '(neng1 nong1)
-      (map note-name (group-lanes (group-labelled pc "sangsih"))))
-    (test-equal "group-lanes: gong" '(G)
-      (map note-name (group-lanes (group-labelled pc "gong"))))
+    (test-equal "group-row-keys: polos, highest first" '(ning1 nang1)
+      (map note-name (group-row-keys (group-labelled pc "polos"))))
+    (test-equal "group-row-keys: sangsih, highest first" '(neng1 nong1)
+      (map note-name (group-row-keys (group-labelled pc "sangsih"))))
+    (test-equal "group-row-keys: gong" '(G)
+      (map note-name (group-row-keys (group-labelled pc "gong"))))
     (test-equal "part-end" '(3 3 1/4 3) (map part-end (piece-parts pc)))
     (test-assert "part-end <= piece-length"
       (every (lambda (p) (<= (part-end p) (piece-length pc)))
@@ -4438,8 +4438,8 @@ line 12."
       '("o1" "i3")
       (let* ((inst (instrument-named pc 'ugal))
              (v (instrument-notes inst)))
-        (list (note-label inst (vector-ref v 0))
-              (note-label inst (vector-ref v 9)))))
+        (list (note-row-label inst (vector-ref v 0))
+              (note-row-label inst (vector-ref v 9)))))
     (test-equal "selisir's file and line"
       (list "selisir.nts" (line-in selisir-file "(scale selisir"))
       (let ((loc (scale-location (scale-named pc 'selisir))))
@@ -5024,13 +5024,13 @@ STR, or the raised object (or no-error) unchanged."
 (define (group-settings g)
   "Every setting of G but its members and location, in 02's order."
   (list (group-label g) (group-short g) (group-subtitle g) (group-labels g)
-        (group-rows g) (group-note-names? g) (group-fill g) (group-holds g)
+        (group-rows g) (group-note-label g) (group-fill g) (group-holds g)
         (group-pattern-names g) (group-pattern-level g) (group-scheme g)
         (group-palette g) (group-colors g)))
 
 (define (default-group-settings label)
   "group-settings of a group LABEL with every option at its default."
-  (list label label #f 'first-long 'notes #f 'colour 'none 'none 0
+  (list label label #f 'first-long 'notes 'none 'colour 'none 'none 0
         'by-pitch 'pastel1 '()))
 
 (define (member-names g)
@@ -5070,11 +5070,11 @@ STR, or the raised object (or no-error) unchanged."
 
 (test-group "[scores] reading scores and groups"
   (let ((pc (read-scores+
-             "(score full :title \"Full\" :system-length 2 :note-names yes"   ; 14
+             "(score full :title \"Full\" :system-length 2 :note-label pitch-display-name :note-label-octave no"   ; 14
              "  :palette set1 :colors ((ding \"#000000\"))"                    ; 15
              "  :cell-width \"3em\" :cell-height \"1.5em\""                    ; 16
              "  (group \"Gangsa\" :subtitle \"norot\"  polos sangsih)"         ; 17
-             "  (group \"Ugal\" :note-names no :palette dark2  ugal)"          ; 18
+             "  (group \"Ugal\" :note-label none :palette dark2  ugal)"          ; 18
              "  (group \"\" :colors ((dong \"#ffffff\")) :scheme by-pitch  gong kempli))" ; 19
              "(score parts"                                                    ; 20
              "  (group \"P\"  (polos :label \"Pol.\") sangsih))")))             ; 21
@@ -5115,15 +5115,15 @@ STR, or the raised object (or no-error) unchanged."
                              (source-location-line (group-location g))))
            (score-groups (score-named pc 'full))))
     (test-equal "a group without options: the score's settings, else the defaults"
-      (list "Gangsa" "Gangsa" "norot" 'first-long 'notes #t 'colour 'none 'none 0
+      (list "Gangsa" "Gangsa" "norot" 'first-long 'notes 'pitch-display-name 'colour 'none 'none 0
             'by-pitch 'set1 '((ding . "#000000")))
       (group-settings (car (score-groups (score-named pc 'full)))))
-    (test-equal "a group's own :note-names and :palette override the score's"
-      (list "Ugal" "Ugal" #f 'first-long 'notes #f 'colour 'none 'none 0
+    (test-equal "a group's own :note-label and :palette override the score's"
+      (list "Ugal" "Ugal" #f 'first-long 'notes 'none 'colour 'none 'none 0
             'by-pitch 'dark2 '((ding . "#000000")))
       (group-settings (cadr (score-groups (score-named pc 'full)))))
     (test-equal "a group's own :colors replace the score's; an empty label"
-      (list "" "" #f 'first-long 'notes #t 'colour 'none 'none 0
+      (list "" "" #f 'first-long 'notes 'pitch-display-name 'colour 'none 'none 0
             'by-pitch 'set1 '((dong . "#ffffff")))
       (group-settings (caddr (score-groups (score-named pc 'full)))))
     (test-equal "members: (part . row-label), the label the part's name"
@@ -5169,10 +5169,10 @@ STR, or the raised object (or no-error) unchanged."
       '(((ding . "#000000") (dang . "#ff0000")))
       (map group-colors (score-groups (score-named pc 's)))))
 
-  (let ((pc (read-scores+ "(score s :note-names no (group \"U\" :note-names yes ugal)"
+  (let ((pc (read-scores+ "(score s :note-label none (group \"U\" :note-label pitch-display-name :note-label-octave no ugal)"
                           "  (group \"G\" gong))")))
-    (test-equal ":note-names: the group's yes over the score's no" '(#t #f)
-      (map group-note-names? (score-groups (score-named pc 's)))))
+    (test-equal ":note-label: the group's over the score's" '(pitch-display-name none)
+      (map group-note-label (score-groups (score-named pc 's)))))
 
   (for-each
    (match-lambda
@@ -5319,7 +5319,7 @@ STR, or the raised object (or no-error) unchanged."
     (list "an empty group" 15 (one-group "(group)"))
     (list "a group with no parts" 15 (one-group "(group \"U\")"))
     (list "a group with options and no parts" 15
-          (one-group "(group \"U\" :note-names yes)"))
+          (one-group "(group \"U\" :note-label pitch-display-name :note-label-octave no)"))
     (list "a member that is a string" 15 (one-group "(group \"U\" \"ugal\")"))
     (list "a member that is a number" 15 (one-group "(group \"U\" ugal 3)"))
     (list "a member's :label that is not a string" 15
@@ -5347,11 +5347,11 @@ STR, or the raised object (or no-error) unchanged."
     (list "unknown-option" '(unknown-option 14) ":tempo 60")
     (list "a part's key is not a score option: :name" '(unknown-option 14)
           ":name x")
-    (list "duplicate-option" '(duplicate-option 14) ":note-names yes :note-names no")
+    (list "duplicate-option" '(duplicate-option 14) ":note-label pitch-display-name :note-label-octave no :note-label none")
     (list "duplicate-option: :palette" '(duplicate-option 14)
           ":palette set1 :palette set2")
     (list "a key with no value, followed by another key" '(bad-option 14)
-          ":title :note-names yes")
+          ":title :note-label pitch-display-name :note-label-octave no")
     (list ":title not a string: a symbol" '(bad-option 14) ":title full")
     (list ":title not a string: a number" '(bad-option 14) ":title 3")
     (list ":system-length 0" '(bad-option 14) ":system-length 0")
@@ -5359,9 +5359,9 @@ STR, or the raised object (or no-error) unchanged."
     (list ":system-length a decimal" '(bad-option 14) ":system-length 1.5")
     (list ":system-length a string" '(bad-option 14) ":system-length \"4\"")
     (list ":system-length a symbol" '(bad-option 14) ":system-length four")
-    (list ":note-names not yes or no" '(bad-option 14) ":note-names maybe")
-    (list ":note-names a string" '(bad-option 14) ":note-names \"yes\"")
-    (list ":note-names #t" '(bad-option 14) ":note-names #t")
+    (list ":note-label not one of its values" '(bad-option 14) ":note-label maybe")
+    (list ":note-label a string" '(bad-option 14) ":note-label \"none\"")
+    (list ":note-label #t" '(bad-option 14) ":note-label #t")
     (list ":palette an unknown name" '(bad-option 14) ":palette rainbow")
     (list ":palette a string" '(bad-option 14) ":palette \"set1\"")
     (list ":palette a number" '(bad-option 14) ":palette 3")
@@ -5401,20 +5401,20 @@ STR, or the raised object (or no-error) unchanged."
    (list
     (list "unknown-option" '(unknown-option 15) "(group \"U\" :tempo 60 ugal)")
     (list "duplicate-option" '(duplicate-option 15)
-          "(group \"U\" :note-names yes :note-names no ugal)")
+          "(group \"U\" :note-label pitch-display-name :note-label-octave no :note-label none ugal)")
     (list "a key with no value, followed by another key" '(bad-option 15)
-          "(group \"U\" :subtitle :note-names yes ugal)")
+          "(group \"U\" :subtitle :note-label pitch-display-name :note-label-octave no ugal)")
     (list ":subtitle a symbol" '(bad-option 15) "(group \"U\" :subtitle norot ugal)")
     (list ":subtitle a number" '(bad-option 15) "(group \"U\" :subtitle 3 ugal)")
-    (list ":note-names not yes or no" '(bad-option 15)
-          "(group \"U\" :note-names maybe ugal)")
+    (list ":note-label not one of its values" '(bad-option 15)
+          "(group \"U\" :note-label maybe ugal)")
     (list ":palette an unknown name" '(bad-option 15) "(group \"U\" :palette rainbow ugal)")
     (list ":palette a bad colour" '(bad-option 15) "(group \"U\" :palette (\"#12\") ugal)")
     (list ":scheme an unknown name" '(bad-option 15) "(group \"U\" :scheme rainbow ugal)")
     (list ":colors a bad colour" '(bad-option 15)
           "(group \"U\" :colors ((ding \"black\")) ugal)")
     (list "option-after-body: a key after a member" '(option-after-body 15)
-          "(group \"U\" ugal :note-names yes)")))
+          "(group \"U\" ugal :note-label pitch-display-name :note-label-octave no)")))
   (test-equal "the group's line, not the score's" '(unknown-option 16)
     (score-error "(score s" "  (group \"U\" ugal)" "  (group \"G\" :tempo 1 gong))")))
 
@@ -5473,12 +5473,12 @@ colotomy, 4 pulses."
              "  :from (1 1) :to (2 8) :system-length 4 :breaks ((2 1))"
              "  :cycle-numbers yes :pulse-numbers yes :numbering gong-last"
              "  :pulse-label \"Beats\" :font-size \"10pt\""
-             "  :note-names yes :scheme by-pitch :palette set1"
+             "  :note-label pitch-display-name :note-label-octave no :scheme by-pitch :palette set1"
              "  :colors ((ding \"#000000\")) :cell-width \"2em\" :cell-height \"2em\""
              "  :rows notes :fill colour :holds none :pattern-names none"
              "  :pattern-level 0 :labels short"
              "  (group \"Ugal\" :short \"U.\" :subtitle \"s\" :labels long"
-             "    :note-names yes :scheme by-pitch :palette set2"
+             "    :note-label pitch-display-name :note-label-octave no :scheme by-pitch :palette set2"
              "    :colors ((dong \"#ffffff\")) :rows notes :fill colour"
              "    :holds none :pattern-names short :pattern-level 1 ugal)"
              "  (group \"Gong\" gong))")))
@@ -5671,7 +5671,7 @@ colotomy, 4 pulses."
         (score-error (string-append "(score s " options " (group \"U\" ugal))")))))
    '((":labels not a choice" ":labels medium")
      (":labels a string" ":labels \"short\"")
-     (":labels a key with no value" ":labels :note-names yes")))
+     (":labels a key with no value" ":labels :note-label pitch-display-name :note-label-octave no")))
   (for-each
    (match-lambda
      ((name group)
@@ -5919,54 +5919,54 @@ colotomy, 4 pulses."
 
 (define (rows-settings g)
   "G's rows, note-names?, fill and holds."
-  (list (group-rows g) (group-note-names? g) (group-fill g) (group-holds g)))
+  (list (group-rows g) (group-note-label g) (group-fill g) (group-holds g)))
 
 (define (groups-rows-settings pc name)
   (map rows-settings (score-groups (score-named pc name))))
 
 (test-group "[scores] reading :rows, :fill and :holds"
-  (let ((pc (read-scores+ "(score s :rows parts :fill none :holds dash :note-names yes"
+  (let ((pc (read-scores+ "(score s :rows parts :fill none :holds dash :note-label pitch-display-name :note-label-octave no"
                           "  (group \"U\" ugal)"
                           "  (group \"R\" polos sangsih))")))
     (test-equal "on a score: every group takes them"
-      '((parts #t none dash) (parts #t none dash))
+      '((parts pitch-display-name none dash) (parts pitch-display-name none dash))
       (and pc (groups-rows-settings pc 's))))
-  (let ((pc (read-scores+ "(score s :rows single :fill none :holds dash :note-names yes"
+  (let ((pc (read-scores+ "(score s :rows single :fill none :holds dash :note-label pitch-display-name :note-label-octave no"
                           "  (group \"U\" :rows notes :fill colour :holds none ugal)"
                           "  (group \"R\" :rows parts polos sangsih)"
                           "  (group \"G\" gong))")))
     (test-equal "a group's own values override the score's"
-      '((notes #t colour none) (parts #t none dash) (single #t none dash))
+      '((notes pitch-display-name colour none) (parts pitch-display-name none dash) (single pitch-display-name none dash))
       (and pc (groups-rows-settings pc 's))))
-  (let ((pc (read-scores+ "(score s :note-names yes"
+  (let ((pc (read-scores+ "(score s :note-label pitch-display-name :note-label-octave no"
                           "  (group \"U\" :rows single ugal)"
                           "  (group \"R\" :rows parts :fill none polos sangsih)"
                           "  (group \"G\" :holds dash gong))")))
     (test-equal "on groups only: the others keep the defaults"
-      '((single #t colour none) (parts #t none none) (notes #t colour dash))
+      '((single pitch-display-name colour none) (parts pitch-display-name none none) (notes pitch-display-name colour dash))
       (and pc (groups-rows-settings pc 's))))
   (let ((pc (read-scores+ "(score s :rows notes :fill colour :holds none"
                           "  (group \"U\" ugal))")))
     (test-equal "the defaults written out"
-      '((notes #f colour none))
+      '((notes none colour none))
       (and pc (groups-rows-settings pc 's))))
   (let ((pc (read-scores+ "(score s (group \"U\" ugal))")))
     (test-equal "not written: notes, colour, none"
-      '((notes #f colour none))
+      '((notes none colour none))
       (and pc (groups-rows-settings pc 's))))
-  (let ((pc (read-scores+ "(score s :rows parts :note-names yes"
+  (let ((pc (read-scores+ "(score s :rows parts :note-label pitch-display-name :note-label-octave no"
                           "  (group \"R\" (polos :label \"Pol.\") (sangsih :label \"\")))")))
     (test-equal "row labels with :rows parts, an empty one kept"
       '(((polos "Pol.") (sangsih "")))
       (and pc (map member-names (score-groups (score-named pc 's)))))
     (test-equal "every other setting as before"
-      (list (list "R" "R" #f 'first-long 'parts #t 'colour 'none 'none 0
+      (list (list "R" "R" #f 'first-long 'parts 'pitch-display-name 'colour 'none 'none 0
                   'by-pitch 'pastel1 '()))
       (and pc (map group-settings (score-groups (score-named pc 's))))))
-  (let ((pc (read-scores+ "(score s :note-names yes"
+  (let ((pc (read-scores+ "(score s :note-label pitch-display-name :note-label-octave no"
                           "  (group \"K\" :rows single gong))")))
     (test-equal "stroke parts on a single row"
-      '((single #t colour none))
+      '((single pitch-display-name colour none))
       (and pc (groups-rows-settings pc 's))))
   (test-assert ":holds dash needs no note names"
     (piece? (read-scores+ "(score s :holds dash (group \"U\" ugal))")))
@@ -5978,11 +5978,11 @@ colotomy, 4 pulses."
    (match-lambda
      ((name options)
       (test-equal (string-append "on a score: " name) '(bad-option 14)
-        (score-error (string-append "(score s :note-names yes " options
+        (score-error (string-append "(score s :note-label pitch-display-name :note-label-octave no " options
                                     " (group \"U\" ugal))")))
       (test-equal (string-append "on a group: " name) '(bad-option 15)
         (string-error
-         (one-group (string-append "(group \"U\" :note-names yes " options
+         (one-group (string-append "(group \"U\" :note-label pitch-display-name :note-label-octave no " options
                                    " ugal)"))))))
    (list
     (list ":rows not a choice" ":rows lanes")
@@ -5999,37 +5999,33 @@ colotomy, 4 pulses."
     (list ":holds a string" ":holds \"dash\"")
     (list ":holds with no value" ":holds :rows parts")))
   (test-equal "duplicate-option: :rows" '(duplicate-option 14)
-    (score-error "(score s :note-names yes :rows parts :rows single (group \"U\" ugal))"))
+    (score-error "(score s :note-label pitch-display-name :note-label-octave no :rows parts :rows single (group \"U\" ugal))"))
   (test-equal "duplicate-option on a group: :fill" '(duplicate-option 15)
-    (string-error (one-group "(group \"U\" :note-names yes :fill none :fill none ugal)"))))
+    (string-error (one-group "(group \"U\" :note-label pitch-display-name :note-label-octave no :fill none :fill none ugal)"))))
 
-(test-group "[scores] needs-note-names"
+(test-group "[scores] needs-note-label"
   (for-each
    (match-lambda
      ((name expected . more)
       (test-equal name expected (apply score-error more))))
    (list
-    (list "a group with :rows parts" '(needs-note-names 15)
-          "(score s" "  (group \"R\" :rows parts polos sangsih))")
-    (list "a group with :rows single" '(needs-note-names 15)
-          "(score s" "  (group \"U\" :rows single ugal))")
-    (list "a group with :fill none" '(needs-note-names 15)
+    (list "a group with :rows parts and :fill none" '(needs-note-label 15)
+          "(score s" "  (group \"R\" :rows parts :fill none polos sangsih))")
+    (list "a group with :fill none" '(needs-note-label 15)
           "(score s" "  (group \"U\" :fill none ugal))")
-    (list "a group with :fill none, strokes" '(needs-note-names 15)
+    (list "a group with :fill none, strokes" '(needs-note-label 15)
           "(score s" "  (group \"G\" :fill none gong))")
-    (list "the score's :rows parts: at the group's line" '(needs-note-names 15)
-          "(score s :rows parts" "  (group \"U\" ugal))")
-    (list "the score's :fill none: at the group's line" '(needs-note-names 15)
+    (list "the score's :fill none: at the group's line" '(needs-note-label 15)
           "(score s :fill none" "  (group \"U\" ugal))")
-    (list "the second group, the first naming its notes" '(needs-note-names 16)
-          "(score s :rows single" "  (group \"U\" :note-names yes ugal)"
+    (list "the second group, the first naming its notes" '(needs-note-label 16)
+          "(score s :fill none" "  (group \"U\" :note-label pitch-display-name :note-label-octave no ugal)"
           "  (group \"G\" gong))")
-    (list "a group's :note-names no over the score's yes" '(needs-note-names 16)
-          "(score s :rows parts :note-names yes" "  (group \"U\" ugal)"
-          "  (group \"G\" :note-names no gong))")
-    (list ":note-names no written on the group" '(needs-note-names 15)
-          "(score s" "  (group \"U\" :rows single :note-names no ugal))")
-    (list "the first group in order" '(needs-note-names 15)
+    (list "a group's :note-label none over the score's label" '(needs-note-label 16)
+          "(score s :fill none :note-label pitch-display-name :note-label-octave no" "  (group \"U\" ugal)"
+          "  (group \"G\" :note-label none gong))")
+    (list ":note-label none written on the group" '(needs-note-label 15)
+          "(score s" "  (group \"U\" :fill none :note-label none ugal))")
+    (list "the first group in order" '(needs-note-label 15)
           "(score s" "  (group \"U\" :fill none ugal)"
           "  (group \"G\" :rows parts gong))")))
   (for-each
@@ -6037,10 +6033,10 @@ colotomy, 4 pulses."
      ((name . more)
       (test-assert name (piece? (apply read-scores+ more)))))
    (list
-    (list "the score's :note-names yes covers a group's :rows parts"
-          "(score s :note-names yes" "  (group \"R\" :rows parts polos sangsih))")
-    (list "a group's own :note-names yes"
-          "(score s :rows single :fill none" "  (group \"U\" :note-names yes ugal))")
+    (list "the score's :note-label pitch-display-name :note-label-octave no covers a group's :rows parts"
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows parts polos sangsih))")
+    (list "a group's own :note-label pitch-display-name :note-label-octave no"
+          "(score s :rows single :fill none" "  (group \"U\" :note-label pitch-display-name :note-label-octave no ugal))")
     (list ":rows notes and :fill colour need no names"
           "(score s :rows notes :fill colour" "  (group \"U\" ugal))"))))
 
@@ -6059,36 +6055,36 @@ colotomy, 4 pulses."
    (list
     (list "two parts striking together: the later part, the first time"
           '(notes-collide 15 sangsih 0)
-          "(score s :note-names yes" "  (group \"R\" :rows single polos sangsih))")
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single polos sangsih))")
     (list "a note struck while another is held"
           '(notes-collide 17 b 1)
           "(part :instrument reyong :name a 1 _ - -)"                         ; 14
           "(part :instrument reyong :name b - 2 - -)"                         ; 15
-          "(score s :note-names yes" "  (group \"R\" :rows single a b))") ; 16, 17
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a b))") ; 16, 17
     (list "two held notes overlapping: the first shared column"
           '(notes-collide 17 b 2)
           "(part :instrument reyong :name a 1 _ _ -)"
           "(part :instrument reyong :name b - - 2 _)"
-          "(score s :note-names yes" "  (group \"R\" :rows single a b))")
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a b))")
     (list "half pulses: the time of the shared column"
           '(notes-collide 17 b 1/2)
           "(part :instrument reyong :name a 1:1/2 _ - - - - - -)"
           "(part :instrument reyong :name b -:1/2 2 - - - - - -)"
-          "(score s :note-names yes" "  (group \"R\" :rows single a b))")
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a b))")
     (list "three parts: the earliest collision decides"
           '(notes-collide 18 c 1)
           "(part :instrument reyong :name a - - 1 -)"                         ; 14
           "(part :instrument reyong :name b - 2 _ -)"                         ; 15
           "(part :instrument reyong :name c 3 _ _ -)"                         ; 16
-          "(score s :note-names yes" "  (group \"R\" :rows single a b c))") ; 17, 18
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a b c))") ; 17, 18
     (list "the score's :rows single" '(notes-collide 18 b 1)
           "(part :instrument reyong :name a 1 _ - -)"
           "(part :instrument reyong :name b - 2 - -)"
-          "(score s :rows single :note-names yes"                 ; 16
+          "(score s :rows single :note-label pitch-display-name :note-label-octave no"                 ; 16
           "  (group \"U\" ugal)"                                  ; 17
           "  (group \"R\" a b))")                                 ; 18
     (list "the second group's line" '(notes-collide 16 sangsih 0)
-          "(score s :note-names yes"
+          "(score s :note-label pitch-display-name :note-label-octave no"
           "  (group \"U\" :rows single ugal)"
           "  (group \"R\" :rows single polos sangsih))")))
   (for-each
@@ -6099,26 +6095,26 @@ colotomy, 4 pulses."
     (list "notes one after the other do not collide"
           "(part :instrument reyong :name a 1 - - -)"
           "(part :instrument reyong :name b - 2 - 3)"
-          "(score s :note-names yes" "  (group \"R\" :rows single a b))")
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a b))")
     (list "a held note ending where the next starts"
           "(part :instrument reyong :name a 1 _ - -)"
           "(part :instrument reyong :name b - - 2 _)"
-          "(score s :note-names yes" "  (group \"R\" :rows single a b))")
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a b))")
     (list "half pulses that interleave"
           "(part :instrument reyong :name a 1:1/2 - 1 - 1 - 1 -)"
           "(part :instrument reyong :name b -:1/2 2 - 2 - 2 - 2)"
-          "(score s :note-names yes" "  (group \"R\" :rows single a b))")
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a b))")
     (list "a chord in one part is one event on its row"
           "(part :instrument reyong :name a (1 3) - - -)"
-          "(score s :note-names yes" "  (group \"R\" :rows single a))")
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a))")
     (list "the same parts on :rows parts"
-          "(score s :note-names yes" "  (group \"R\" :rows parts polos sangsih))")
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows parts polos sangsih))")
     (list "the same parts on :rows notes"
           "(score s" "  (group \"R\" polos sangsih))")
     (list "one part alone on a single row"
-          "(score s :note-names yes" "  (group \"U\" :rows single ugal))")
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"U\" :rows single ugal))")
     (list "colliding parts in a score where they are on separate rows"
-          "(score a :note-names yes" "  (group \"R\" :rows single polos)"
+          "(score a :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single polos)"
           "  (group \"S\" :rows single sangsih))")))
 
 ;;; notes-collide on `notes' rows (milestone 3, decided while drawing
@@ -6169,12 +6165,12 @@ colotomy, 4 pulses."
     (list "the same key on :rows parts"
           "(part :instrument reyong :name a 1 _ - -)"
           "(part :instrument reyong :name b - 1 - -)"
-          "(score s :note-names yes" "  (group \"R\" :rows parts a b))"))))
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows parts a b))"))))
   (test-assert "notes-collide is a &notasi-syntax-error with file #f"
     (let ((c (catch-syntax-error
               (lambda ()
                 (read-piece-string
-                 (scores+ "(score s :note-names yes"
+                 (scores+ "(score s :note-label pitch-display-name :note-label-octave no"
                           "  (group \"R\" :rows single polos sangsih))"))))))
       (and (notasi-syntax-error? c)
            (eq? 'notes-collide (notasi-syntax-error-kind c))
@@ -6185,13 +6181,13 @@ colotomy, 4 pulses."
                        (read-piece-string
                         (scores+ "(part :instrument reyong :name a 1:1/2 _ - - - - - -)"
                                  "(part :instrument reyong :name b -:1/2 2 - - - - - -)"
-                                 "(score s :note-names yes"
+                                 "(score s :note-label pitch-display-name :note-label-octave no"
                                  "  (group \"R\" :rows single a b))"))))))
              (and (notasi-syntax-error? c) (notasi-syntax-error-time c)))))
     (test-assert "the time is an exact rational"
       (and (rational? t) (exact? t))))
   (let* ((path (write-temp-file "collide.nts"
-                                (scores+ "(score s :note-names yes"
+                                (scores+ "(score s :note-label pitch-display-name :note-label-octave no"
                                          "  (group \"R\" :rows single polos sangsih))")))
          (c (catch-syntax-error (lambda () (read-piece-file path)))))
     (test-equal "from a file: kind, file, line, part and time"
@@ -6207,24 +6203,24 @@ colotomy, 4 pulses."
      ((name expected . more)
       (test-equal name expected (apply score-error more))))
    (list
-    (list "needs-note-names before notes-collide, in one group"
-          '(needs-note-names 15)
-          "(score s" "  (group \"R\" :rows single polos sangsih))")
+    (list "needs-note-label before notes-collide, in one group"
+          '(needs-note-label 15)
+          "(score s" "  (group \"R\" :rows single :fill none polos sangsih))")
     (list "a bad :rows value before the members" '(bad-option 15)
-          "(score s :note-names yes" "  (group \"R\" :rows lanes nope))")
-    (list "a later group's needs-note-names before an earlier collision"
-          '(needs-note-names 16)
-          "(score s :note-names yes"
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows lanes nope))")
+    (list "a later group's needs-note-label before an earlier collision"
+          '(needs-note-label 16)
+          "(score s :note-label pitch-display-name :note-label-octave no"
           "  (group \"R\" :rows single polos sangsih)"
-          "  (group \"U\" :fill none :note-names no ugal))")
+          "  (group \"U\" :fill none :note-label none ugal))")
     (list "a later group's member before an earlier collision"
           '(undefined-part 16)
-          "(score s :note-names yes"
+          "(score s :note-label pitch-display-name :note-label-octave no"
           "  (group \"R\" :rows single polos sangsih)"
           "  (group \"U\" nope))")
     (list "a score's collision before a later score's errors"
           '(notes-collide 15)
-          "(score a :note-names yes"
+          "(score a :note-label pitch-display-name :note-label-octave no"
           "  (group \"R\" :rows single polos sangsih))"
           "(score b (group \"U\" nope))"))))
 
@@ -6269,7 +6265,7 @@ colotomy, 4 pulses."
   (let ((pc (read-scores+ "(score s :pattern-names long :pattern-level 2"
                           "  (group \"R\" polos sangsih))")))
     (test-equal "every other setting as before"
-      (list (list "R" "R" #f 'first-long 'notes #f 'colour 'none 'long 2
+      (list (list "R" "R" #f 'first-long 'notes 'none 'colour 'none 'long 2
                   'by-pitch 'pastel1 '()))
       (and pc (map group-settings (score-groups (score-named pc 's))))))
   (let ((pc (read-scores+ "(score s :pattern-names short"
@@ -6296,7 +6292,7 @@ colotomy, 4 pulses."
     (list ":pattern-names yes" ":pattern-names yes")
     (list ":pattern-names a string" ":pattern-names \"short\"")
     (list ":pattern-names a number" ":pattern-names 1")
-    (list ":pattern-names with no value" ":pattern-names :note-names yes")
+    (list ":pattern-names with no value" ":pattern-names :note-label pitch-display-name :note-label-octave no")
     (list ":pattern-level negative" ":pattern-level -1")
     (list ":pattern-level a decimal" ":pattern-level 1.5")
     (list ":pattern-level an inexact whole number" ":pattern-level 1.0")
@@ -6504,12 +6500,12 @@ colotomy, 4 pulses."
           "(part :instrument reyong :name b @beta @alpha)"
           "(score s :pattern-names short"
           "  (group \"R\" :pattern-level -1 a b))")
-    (list "needs-note-names before the overlap, in one group"
-          '(needs-note-names 23)
+    (list "needs-note-label before the overlap, in one group"
+          '(needs-note-label 23)
           "(part :instrument reyong :name a @alpha @beta)"
           "(part :instrument reyong :name b @beta @alpha)"
           "(score s :pattern-names short"
-          "  (group \"R\" :rows parts a b))")
+          "  (group \"R\" :rows parts :fill none a b))")
     (list "a later group's member before an earlier overlap"
           '(undefined-part 24)
           "(part :instrument reyong :name a @alpha @beta)"
@@ -6543,7 +6539,7 @@ colotomy, 4 pulses."
 ;;; - Keys are compared by note name (the degree's own name, aliases
 ;;;   resolved), in the instrument's order.
 ;;; - "Shown by its name": each gong stroke's display form, and its
-;;;   note-label, is the stroke's name.
+;;;   note-row-label, is the stroke's name.
 ;;; - The kempli's and kendang's strokes are not checked, only that the
 ;;;   instruments are there.
 ;;; - A colotomy the template doesn't define is undefined-colotomy at the
@@ -6591,7 +6587,7 @@ colotomy, 4 pulses."
     (test-equal "gong: each stroke's label is its name"
       '("G" "GL" "P" "T")
       (and pc (let ((inst (instrument-named pc 'gong)))
-                (map (lambda (n) (note-label inst n))
+                (map (lambda (n) (note-row-label inst n))
                      (vector->list (instrument-notes inst))))))
     (test-assert "kempli is still there"
       (and pc (instrument? (instrument-named pc 'kempli))))
@@ -6782,7 +6778,7 @@ colotomy, 4 pulses."
     (test-equal "a group's own value overrides the score's"
       '(empty grid horizontal)
       (and pc (score-backgrounds pc 's))))
-  (let ((pc (read-scores+ "(score s :background empty :rows parts :note-names yes"
+  (let ((pc (read-scores+ "(score s :background empty :rows parts :note-label pitch-display-name :note-label-octave no"
                           "  (group \"R\" :background vertical polos sangsih)"
                           "  (group \"G\" :rows single gong))")))
     (test-equal "on parts and single rows" '(vertical empty)
@@ -6816,7 +6812,7 @@ colotomy, 4 pulses."
     (list "a string" "\"grid\"")
     (list "a number" "1")
     (list "a list" "(grid)")
-    (list "a key with no value" ":note-names yes")))
+    (list "a key with no value" ":note-label pitch-display-name :note-label-octave no")))
   (test-equal ":background not a choice: no part, no time"
     '(bad-option 14 #f #f)
     (error-fields (scores+ "(score s :background none (group \"U\" ugal))")))
@@ -6853,7 +6849,7 @@ colotomy, 4 pulses."
 ;;; range is `outside-keys`, at the group's line, with its part and time.
 ;;; Choices made where the docs are not explicit:
 ;;; - Accessors follow 02's field names: `group-keys`,
-;;;   `group-octave-numbers?`, `group-key-numbers?`, `group-row-labels?`,
+;;;   `group-row-label-octave?`, `group-key-numbers?`, `group-row-labels`,
 ;;;   `group-display`. `display` is a list of (STROKE . STRING) pairs in
 ;;;   the order written.
 ;;; - A group's own `:display` replaces the score's (own, else the
@@ -6885,10 +6881,10 @@ colotomy, 4 pulses."
 (define (rows3-settings g)
   "G's settings of this slice: (KEYS OCTAVE-NUMBERS? KEY-NUMBERS?
 ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
-  (list (keys-shown g) (group-octave-numbers? g) (group-key-numbers? g)
-        (group-row-labels? g) (group-display g)))
+  (list (keys-shown g) (group-row-label-octave? g) (group-key-numbers? g)
+        (group-row-labels g) (group-display g)))
 
-(define default-rows3 '(used #t #f #t ()))
+(define default-rows3 '(used #t #f pitch-display-name ()))
 
 (define (score-rows3 pc name)
   (map rows3-settings (score-groups (score-named pc name))))
@@ -6909,13 +6905,13 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
     (test-equal "a score without these options"
       (list default-rows3 default-rows3 default-rows3)
       (and pc (score-rows3 pc 's))))
-  (let ((pc (read-scores+ "(score s :note-names yes"
+  (let ((pc (read-scores+ "(score s :note-label pitch-display-name :note-label-octave no"
                           "  (group \"P\" :rows parts polos)"
                           "  (group \"S\" :rows single sangsih))")))
     (test-equal "parts and single rows: the same defaults"
       (list default-rows3 default-rows3)
       (and pc (score-rows3 pc 's))))
-  (let ((pc (read-scores+ "(score s :keys all :octave-numbers no :row-labels no"
+  (let ((pc (read-scores+ "(score s :keys all :row-label-octave no :row-labels none"
                           "  :display ((G \"Gong\")) (group \"G\" gong))")))
     (test-equal "these options change no other setting"
       (list (default-group-settings "G"))
@@ -6929,7 +6925,7 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
   (let ((pc (read-scores+ "(score s (group \"U\" :keys used ugal))")))
     (test-equal "used written" '(used) (and pc (score-keys pc 's))))
   (let ((pc (read-scores+ "(score s :keys all (group \"U\" ugal) (group \"G\" gong)"
-                          "  (group \"R\" :rows parts :note-names yes polos sangsih))")))
+                          "  (group \"R\" :rows parts :note-label pitch-display-name :note-label-octave no polos sangsih))")))
     (test-equal "all on a score: notes groups take it, a parts group keeps used"
       '(all all used)
       (and pc (score-keys pc 's))))
@@ -6970,11 +6966,11 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
       (and pc (score-keys pc 's))))
   (let ((pc (read-scores+ "(score s :keys (e1 i2) (group \"R\" polos sangsih)"
                           "  (group \"G\" gong)"
-                          "  (group \"P\" :rows parts :note-names yes ugal))")))
+                          "  (group \"P\" :rows parts :note-label pitch-display-name :note-label-octave no ugal))")))
     (test-equal "names on a score: parts and stroke groups keep used"
       '((deng1 ding2) used used)
       (and pc (score-keys pc 's))))
-  (let ((pc (read-scores+ "(score s :keys (o1 a1) :note-names yes (group \"U\" ugal)"
+  (let ((pc (read-scores+ "(score s :keys (o1 a1) :note-label pitch-display-name :note-label-octave no (group \"U\" ugal)"
                           "  (group \"R\" :rows single polos))")))
     (test-equal "a single group without LOW among its keys ignores the score's range"
       '((dong1 dang1) used)
@@ -7037,16 +7033,16 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
     (string-error (one-group "(group \"G\" :keys (1 2) gong)")))
   (test-equal ":keys all on a parts group" '(bad-option 15)
     (string-error
-     (one-group "(group \"R\" :rows parts :note-names yes :keys all polos sangsih)")))
+     (one-group "(group \"R\" :rows parts :note-label pitch-display-name :note-label-octave no :keys all polos sangsih)")))
   (test-equal ":keys used on a parts group" '(bad-option 15)
     (string-error
-     (one-group "(group \"R\" :rows parts :note-names yes :keys used polos sangsih)")))
+     (one-group "(group \"R\" :rows parts :note-label pitch-display-name :note-label-octave no :keys used polos sangsih)")))
   (test-equal "a range on a single group" '(bad-option 15)
     (string-error
-     (one-group "(group \"R\" :rows single :note-names yes :keys (e1 i2) polos)")))
+     (one-group "(group \"R\" :rows single :note-label pitch-display-name :note-label-octave no :keys (e1 i2) polos)")))
   (test-equal ":keys on a group whose :rows parts comes from the score"
     '(bad-option 15)
-    (score-error "(score s :rows parts :note-names yes"
+    (score-error "(score s :rows parts :note-label pitch-display-name :note-label-octave no"
                  "  (group \"U\" :keys all ugal))"))
   (test-equal "on a later group, at that group's line" '(bad-option 16)
     (score-error "(score s" "  (group \"U\" ugal)"
@@ -7057,30 +7053,30 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
     (string-error (one-group "(group \"U\" :keys all :keys all ugal)"))))
 
 (test-group "[score-options] :octave-numbers, :key-numbers, :row-labels: reading"
-  (let ((pc (read-scores+ "(score s :octave-numbers no (group \"U\" ugal)"
-                          "  (group \"R\" :octave-numbers yes polos sangsih)"
+  (let ((pc (read-scores+ "(score s :row-label-octave no (group \"U\" ugal)"
+                          "  (group \"R\" :row-label-octave yes polos sangsih)"
                           "  (group \"G\" gong))")))
     (test-equal ":octave-numbers: the score's, a group's own" '(#f #t #f)
-      (and pc (score-field pc 's group-octave-numbers?))))
-  (let ((pc (read-scores+ "(score s (group \"U\" :octave-numbers no ugal)"
-                          "  (group \"G\" :octave-numbers no gong))")))
-    (test-equal ":octave-numbers no on a group, strokes too" '(#f #f)
-      (and pc (score-field pc 's group-octave-numbers?))))
-  (let ((pc (read-scores+ "(score s :row-labels no :note-names yes (group \"U\" ugal)"
+      (and pc (score-field pc 's group-row-label-octave?))))
+  (let ((pc (read-scores+ "(score s (group \"U\" :row-label-octave no ugal)"
+                          "  (group \"G\" :row-label-octave no gong))")))
+    (test-equal ":row-label-octave no on a group, strokes too" '(#f #f)
+      (and pc (score-field pc 's group-row-label-octave?))))
+  (let ((pc (read-scores+ "(score s :row-labels none :note-label pitch-display-name :note-label-octave no (group \"U\" ugal)"
                           "  (group \"P\" :rows parts polos)"
                           "  (group \"S\" :rows single sangsih)"
-                          "  (group \"G\" :row-labels yes gong))")))
+                          "  (group \"G\" :row-labels pitch-display-name gong))")))
     (test-equal ":row-labels: the score's on every kind of rows, a group's own"
-      '(#f #f #f #t)
-      (and pc (score-field pc 's group-row-labels?))))
+      '(none none none pitch-display-name)
+      (and pc (score-field pc 's group-row-labels))))
   (let ((pc (read-scores+ "(score s (group \"U\" :key-numbers yes ugal)"
                           "  (group \"R\" polos sangsih) (group \"G\" gong))")))
     (test-equal ":key-numbers yes on a group" '(#t #f #f)
       (and pc (score-field pc 's group-key-numbers?))))
   (let ((pc (read-scores+ "(score s :key-numbers yes (group \"U\" ugal)"
                           "  (group \"G\" gong)"
-                          "  (group \"S\" :rows single :note-names yes polos)"
-                          "  (group \"P\" :rows parts :note-names yes sangsih))")))
+                          "  (group \"S\" :rows single :note-label pitch-display-name :note-label-octave no polos)"
+                          "  (group \"P\" :rows parts :note-label pitch-display-name :note-label-octave no sangsih))")))
     (test-equal ":key-numbers yes on a score: ignored by strokes, parts and single"
       '(#t #f #f #f)
       (and pc (score-field pc 's group-key-numbers?))))
@@ -7091,10 +7087,10 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
   (test-assert ":key-numbers no written on a stroke group reads"
     (piece? (read-scores+ "(score s (group \"G\" :key-numbers no gong))")))
   (test-assert ":key-numbers no written on a parts group reads"
-    (piece? (read-scores+ "(score s (group \"P\" :rows parts :note-names yes"
+    (piece? (read-scores+ "(score s (group \"P\" :rows parts :note-label pitch-display-name :note-label-octave no"
                           "  :key-numbers no polos))"))))
 
-(test-group "[score-options] :octave-numbers, :key-numbers, :row-labels: errors"
+(test-group "[score-options] :row-label-octave, :key-numbers: errors"
   (for-each
    (lambda (option)
      (for-each
@@ -7115,18 +7111,18 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
      (test-equal (string-append "duplicate-option: " option) '(duplicate-option 15)
        (string-error
         (one-group (string-append "(group \"U\" " option " yes " option " no ugal)")))))
-   '(":octave-numbers" ":key-numbers" ":row-labels"))
+   '(":row-label-octave" ":key-numbers"))
   (test-equal ":key-numbers yes written on a stroke group" '(bad-option 15)
     (string-error (one-group "(group \"G\" :key-numbers yes gong)")))
   (test-equal ":key-numbers yes written on a parts group" '(bad-option 15)
     (string-error
-     (one-group "(group \"P\" :rows parts :note-names yes :key-numbers yes polos)")))
+     (one-group "(group \"P\" :rows parts :note-label pitch-display-name :note-label-octave no :key-numbers yes polos)")))
   (test-equal ":key-numbers yes written on a single group" '(bad-option 15)
     (string-error
-     (one-group "(group \"S\" :rows single :note-names yes :key-numbers yes polos)")))
+     (one-group "(group \"S\" :rows single :note-label pitch-display-name :note-label-octave no :key-numbers yes polos)")))
   (test-equal ":key-numbers yes on a group whose :rows parts comes from the score"
     '(bad-option 15)
-    (score-error "(score s :rows parts :note-names yes"
+    (score-error "(score s :rows parts :note-label pitch-display-name :note-label-octave no"
                  "  (group \"U\" :key-numbers yes ugal))")))
 
 (test-group "[score-options] :display: reading"
@@ -7151,7 +7147,7 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
                           "  (group \"K\" kempli))")))
     (test-equal "on a score: a stroke of any of its groups" '((K . "k"))
       (and pc (group-display (cadr (score-groups (score-named pc 's)))))))
-  (let ((pc (read-scores+ "(score s :note-names yes"
+  (let ((pc (read-scores+ "(score s :note-label pitch-display-name :note-label-octave no"
                           "  (group \"G\" :rows single :display ((G \"Gong\")) gong))")))
     (test-equal "on a single row" '(((G . "Gong")))
       (and pc (score-field pc 's group-display)))))
@@ -7230,7 +7226,7 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
     (list ":keys all" "(score s (group \"U\" :keys all ugal))")
     (list ":keys used" "(score s (group \"U\" :keys used ugal))")
     (list "a score's range ignored by a parts group"
-          "(score s :keys (e1 a1) :note-names yes"
+          "(score s :keys (e1 a1) :note-label pitch-display-name :note-label-octave no"
           "  (group \"U\" :rows parts ugal))")))
   (let ((c (catch-syntax-error
             (lambda ()
@@ -7325,7 +7321,7 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
     (let ((m (gilak-score-message
               "(part :instrument reyong :name a - || - i3 _ - | - - - - ||)"
               "(part :instrument reyong :name b - || - - o3 - | - - - - ||)"
-              "(score s :note-names yes (group \"R\" :rows single a b))")))
+              "(score s :note-label pitch-display-name :note-label-octave no (group \"R\" :rows single a b))")))
       (and m (string-contains m "cycle 1, pulse 3"))))
   (test-assert "pattern-names-overlap: cycle 1, pulse 2"
     (let ((m (gilak-score-message
@@ -7594,6 +7590,219 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
     (score-error "(score s :composer \"X\" (group \"U\" ugal))"))
   (test-equal "not a group option" '(unknown-option 15)
     (string-error (one-group "(group \"U\" :composer \"X\" ugal)"))))
+
+;;; ==================================================================
+;;; [iteration 5] Slice feat/collapsed-labels (01, "In the grid" and
+;;; "What a note shows"; 02, "Iteration 5"; 03, the [iteration 5]
+;;; cases; ADR 0054): `:note-label`, `:note-label-octave`, `:row-labels`
+;;; widened and `:row-label-octave`, in place of `:note-names` and
+;;; `:octave-numbers`; `needs-note-label` in place of
+;;; `needs-note-names`.
+;;; ==================================================================
+;;; Choices made where the docs are not explicit:
+;;; - The group's new accessors are looked up in (notasi piece)'s
+;;;   interface when a test runs, so the file compiles before they
+;;;   exist.
+;;; - `:rows single` is still read in this slice (it goes in
+;;;   feat/collapsed-compact); like `parts`, it needs no note label.
+;;; - The values are symbols; a string, `#t` or a number is
+;;;   `bad-option`, as for the other symbol options.
+
+(define (labels-accessor name)
+  "The accessor (notasi piece) exports as NAME, or one that raises."
+  (let ((v (module-variable (resolve-interface '(notasi piece)) name)))
+    (cond ((not v)
+           (lambda args (error "not exported by (notasi piece):" name)))
+          ;; A record accessor is a macro that names its procedure when
+          ;; used as a value; evaluating the name in its module gives it.
+          ((macro? (variable-ref v)) (eval name (resolve-module '(notasi piece))))
+          (else (variable-ref v)))))
+
+(define (label-settings g)
+  "G's (NOTE-LABEL NOTE-LABEL-OCTAVE? ROW-LABELS ROW-LABEL-OCTAVE?)."
+  (map (lambda (name) ((labels-accessor name) g))
+       '(group-note-label group-note-label-octave?
+         group-row-labels group-row-label-octave?)))
+
+(define default-label-settings '(none #t pitch-display-name #t))
+
+(define (score-label-settings pc name)
+  "label-settings of each group of score NAME, or #f if PC is #f or an
+accessor is missing."
+  (and pc
+       (guard (c (#t #f))
+         (map label-settings (score-groups (score-named pc name))))))
+
+(test-group "[iteration 5] :note-label and :row-labels: the defaults"
+  (let ((pc (read-scores+)))
+    (test-equal "the default score: none, yes, pitch-display-name, yes"
+      (and pc (map (const default-label-settings)
+                   (score-groups (score-named pc 'default))))
+      (score-label-settings pc 'default)))
+  (let ((pc (read-scores+ "(score s (group \"U\" ugal) (group \"G\" gong))")))
+    (test-equal "a score without these options"
+      (list default-label-settings default-label-settings)
+      (score-label-settings pc 's)))
+  (let ((pc (read-scores+ "(score s (group \"P\" :rows parts polos sangsih))")))
+    (test-equal "parts rows: the same defaults, no label needed"
+      (list default-label-settings)
+      (score-label-settings pc 's))))
+
+(test-group "[iteration 5] :note-label and :row-labels: reading"
+  (for-each
+   (lambda (value)
+     (let ((pc (read-scores+ (string-append "(score s :note-label " value
+                                            " (group \"U\" ugal) (group \"G\" gong))"))))
+       (test-equal (string-append ":note-label " value " on a score")
+         (list (string->symbol value) (string->symbol value))
+         (and=> (score-label-settings pc 's) (lambda (l) (map car l)))))
+     (let ((pc (read-scores+ (string-append "(score s (group \"U\" :note-label "
+                                            value " ugal))"))))
+       (test-equal (string-append ":note-label " value " on a group")
+         (list (string->symbol value))
+         (and=> (score-label-settings pc 's) (lambda (l) (map car l))))))
+   '("none" "pitch-name" "pitch-display-name" "key-number"))
+  (for-each
+   (lambda (value)
+     (let ((pc (read-scores+ (string-append "(score s :row-labels " value
+                                            " (group \"U\" ugal) (group \"G\" gong))"))))
+       (test-equal (string-append ":row-labels " value " on a score")
+         (list (string->symbol value) (string->symbol value))
+         (and=> (score-label-settings pc 's) (lambda (l) (map caddr l)))))
+     (let ((pc (read-scores+ (string-append "(score s (group \"U\" :row-labels "
+                                            value " ugal))"))))
+       (test-equal (string-append ":row-labels " value " on a group")
+         (list (string->symbol value))
+         (and=> (score-label-settings pc 's) (lambda (l) (map caddr l))))))
+   '("none" "pitch-name" "pitch-display-name"))
+  (let ((pc (read-scores+ "(score s :note-label-octave no :row-label-octave no"
+                          "  (group \"U\" ugal) (group \"G\" gong))")))
+    (test-equal "the octave options on a score: no"
+      '((none #f pitch-display-name #f) (none #f pitch-display-name #f))
+      (score-label-settings pc 's)))
+  (let ((pc (read-scores+ "(score s (group \"U\" :note-label-octave no ugal)"
+                          "  (group \"G\" :row-label-octave no gong))")))
+    (test-equal "the octave options on groups, each its own"
+      '((none #f pitch-display-name #t) (none #t pitch-display-name #f))
+      (score-label-settings pc 's)))
+  (let ((pc (read-scores+ "(score s :note-label-octave yes :row-label-octave yes"
+                          "  (group \"U\" ugal))")))
+    (test-equal "yes written: the defaults"
+      (list default-label-settings)
+      (score-label-settings pc 's)))
+  (let ((pc (read-scores+ "(score s :note-label pitch-name :note-label-octave no"
+                          "  :row-labels pitch-name :row-label-octave no"
+                          "  (group \"U\" :note-label key-number :note-label-octave yes"
+                          "    :row-labels none :row-label-octave yes ugal)"
+                          "  (group \"G\" gong))")))
+    (test-equal "a group's own values override the score's (ADR 0033)"
+      '((key-number #t none #t) (pitch-name #f pitch-name #f))
+      (score-label-settings pc 's)))
+  (let ((pc (read-scores+ "(score s :row-labels pitch-name :note-label pitch-display-name"
+                          "  (group \"G\" gong))")))
+    (test-equal "these options change no other setting"
+      (list "G" "G" #f 'first-long 'notes 'colour 'none 'by-pitch 'pastel1 '())
+      (and pc
+           (let ((g (car (score-groups (score-named pc 's)))))
+             (list (group-label g) (group-short g) (group-subtitle g)
+                   (group-labels g) (group-rows g) (group-fill g)
+                   (group-holds g) (group-scheme g) (group-palette g)
+                   (group-colors g))))))
+  (test-assert ":note-label key-number on a stroke group"
+    (piece? (read-scores+ "(score s (group \"G\" :note-label key-number gong))")))
+  (test-assert ":row-labels none on parts rows"
+    (piece? (read-scores+ "(score s (group \"P\" :rows parts :row-labels none polos))"))))
+
+(test-group "[iteration 5] :note-label and :row-labels: bad-option"
+  (for-each
+   (match-lambda
+     ((name options)
+      (test-equal (string-append "on a score: " name) '(bad-option 14)
+        (score-error (string-append "(score s " options " (group \"U\" ugal))")))
+      (test-equal (string-append "on a group: " name) '(bad-option 15)
+        (string-error
+         (one-group (string-append "(group \"U\" " options " ugal)"))))))
+   (list
+    (list ":note-label not a choice" ":note-label pitch")
+    (list ":note-label yes (the old :note-names)" ":note-label yes")
+    (list ":note-label no" ":note-label no")
+    (list ":note-label a string" ":note-label \"pitch-name\"")
+    (list ":note-label a number" ":note-label 2")
+    (list ":note-label with no value" ":note-label :fill colour")
+    (list ":row-labels yes (removed)" ":row-labels yes")
+    (list ":row-labels no (removed)" ":row-labels no")
+    (list ":row-labels key-number (a note label only)" ":row-labels key-number")
+    (list ":row-labels a string" ":row-labels \"none\"")
+    (list ":note-label-octave not yes or no" ":note-label-octave maybe")
+    (list ":note-label-octave #t" ":note-label-octave #t")
+    (list ":note-label-octave a string" ":note-label-octave \"no\"")
+    (list ":row-label-octave not yes or no" ":row-label-octave none")
+    (list ":row-label-octave #f" ":row-label-octave #f")))
+  (test-equal "duplicate-option: :note-label" '(duplicate-option 14)
+    (score-error "(score s :note-label none :note-label pitch-name (group \"U\" ugal))"))
+  (test-equal "duplicate-option on a group: :row-label-octave" '(duplicate-option 15)
+    (string-error (one-group "(group \"U\" :row-label-octave no :row-label-octave yes ugal)"))))
+
+(test-group "[iteration 5] :note-names and :octave-numbers removed: unknown-option"
+  (for-each
+   (match-lambda
+     ((name options)
+      (test-equal (string-append "on a score: " name) '(unknown-option 14)
+        (score-error (string-append "(score s " options " (group \"U\" ugal))")))
+      (test-equal (string-append "on a group: " name) '(unknown-option 15)
+        (string-error
+         (one-group (string-append "(group \"U\" " options " ugal)"))))))
+   (list
+    (list ":note-names yes" ":note-names yes")
+    (list ":note-names no" ":note-names no")
+    (list ":octave-numbers no" ":octave-numbers no")
+    (list ":octave-numbers yes" ":octave-numbers yes"))))
+
+(test-group "[iteration 5] needs-note-label"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (apply score-error more))))
+   (list
+    (list "a group with :fill none" '(needs-note-label 15)
+          "(score s" "  (group \"U\" :fill none ugal))")
+    (list "a group with :fill none, strokes" '(needs-note-label 15)
+          "(score s" "  (group \"G\" :fill none gong))")
+    (list "the score's :fill none: at the group's line" '(needs-note-label 15)
+          "(score s :fill none" "  (group \"U\" ugal))")
+    (list ":note-label none written" '(needs-note-label 15)
+          "(score s" "  (group \"U\" :fill none :note-label none ugal))")
+    (list "a group's :note-label none over the score's" '(needs-note-label 16)
+          "(score s :fill none :note-label pitch-name" "  (group \"U\" ugal)"
+          "  (group \"G\" :note-label none gong))")
+    (list "the second group, the first with a label" '(needs-note-label 16)
+          "(score s :fill none" "  (group \"U\" :note-label pitch-display-name ugal)"
+          "  (group \"G\" gong))")
+    (list "on parts rows too" '(needs-note-label 15)
+          "(score s" "  (group \"R\" :rows parts :fill none polos sangsih))")))
+  (test-assert "the message names :note-label"
+    (let ((m (error-message (scores+ "(score s" "  (group \"U\" :fill none ugal))"))))
+      (and (string? m) (string-contains m ":note-label") #t)))
+  (for-each
+   (match-lambda
+     ((name . more)
+      (test-assert name (piece? (apply read-scores+ more)))))
+   (list
+    (list ":rows parts with no note label (colour only)"
+          "(score s" "  (group \"R\" :rows parts polos sangsih))")
+    (list "the score's :rows parts with no note label"
+          "(score s :rows parts" "  (group \"U\" ugal) (group \"G\" gong))")
+    (list ":rows single with no note label"
+          "(score s" "  (group \"U\" :rows single ugal))")
+    (list ":fill none with :note-label pitch-name"
+          "(score s :fill none :note-label pitch-name" "  (group \"U\" ugal))")
+    (list ":fill none with a group's :note-label key-number"
+          "(score s :fill none" "  (group \"U\" :note-label key-number ugal))")
+    (list ":fill none with :note-label pitch-display-name on strokes"
+          "(score s" "  (group \"G\" :fill none :note-label pitch-display-name gong))")
+    (list ":fill none with a label and no octave"
+          "(score s :fill none :note-label pitch-name :note-label-octave no"
+          "  (group \"U\" ugal))"))))
 
 (define runner (test-runner-current))
 (test-end "reader")

@@ -95,7 +95,7 @@
 ;; part except the reyong; beats numbered with the gong as 1; a break
 ;; after his beat 3 (before our cycle 1, pulse 3).
 
-(score full :fill none :note-names yes :numbering gong-first :cell-width "3em"
+(score full :fill none :note-label pitch-display-name :note-label-octave no :numbering gong-first :cell-width "3em"
     :pulse-label "Beats" :breaks ((1 3))
     :caption "Notation of reyong and kendang parts, with gong, kempur, kempli and calung (core melody)."
   (group "Reyong" :subtitle "sangsih, polos"  sangsih polos)
@@ -109,18 +109,18 @@
     (wadon-lh :label "LH") (wadon-rh :label "RH")))
 
 ;; The sung lines: one part on one row, "-" for each held step.
-(score polos-alone :fill none :note-names yes :numbering gong-first :cell-width "3em"
+(score polos-alone :fill none :note-label pitch-display-name :note-label-octave no :numbering gong-first :cell-width "3em"
     :pulse-label "Beats (Clap)" :breaks ((1 3)) :holds dash
     :caption "Singing the reyong polos part alone"
   (group "Reyong/Polos" :rows parts  polos))
 
-(score sangsih-alone :fill none :note-names yes :numbering gong-first :cell-width "3em"
+(score sangsih-alone :fill none :note-label pitch-display-name :note-label-octave no :numbering gong-first :cell-width "3em"
     :pulse-label "Beats (Clap)" :breaks ((1 3)) :holds dash
     :caption "Singing the reyong sangsih part alone"
   (group "Reyong/Sangsih" :rows parts  sangsih))
 
 ;; All four hands on one row: the composite drum part.
-(score kendang-composite :fill none :note-names yes :numbering gong-first :cell-width "3em"
+(score kendang-composite :fill none :note-label pitch-display-name :note-label-octave no :numbering gong-first :cell-width "3em"
     :pulse-label "Beats (Clap)" :breaks ((1 3))
     :caption "Singing the composite drum part (for one person)"
   (group "Kendang" :rows single  lanang-lh lanang-rh wadon-lh wadon-rh))
@@ -146,9 +146,9 @@
 ;; hands share one row (they never strike together, as the composite
 ;; drum score shows). The gongs and kempli keep one row per stroke, with
 ;; their letters.
-(score collapsed :note-names yes :rows single
+(score collapsed :note-label pitch-display-name :note-label-octave no :rows single
     :caption "Source: Michael Tenzer, Balinese Gamelan Music, 3rd edition (Tuttle Publishing, 2011)."
-  (group "Reyong" :subtitle "polos, sangsih" :rows notes :note-names no
+  (group "Reyong" :subtitle "polos, sangsih" :rows notes :note-label none
     polos sangsih)
   (group "Gangsa-1"         pemade-1)
   (group "Gangsa-2"         pemade-2)

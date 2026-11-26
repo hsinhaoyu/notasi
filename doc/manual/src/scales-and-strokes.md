@@ -33,8 +33,8 @@ no octave and no order:
 ```
 
 `:display "D"` sets how a stroke or pitch is shown in the score's row
-labels and, with `:note-names yes`, in its squares. Without it, notasi
-shows the name itself.
+labels and, with `:note-label pitch-display-name`, in its squares.
+Without it, notasi shows the name itself.
 
 `:damped "na'"` gives a second name, for a note that is cut short: a
 score shows it for a note that lasts one column, and the usual name for

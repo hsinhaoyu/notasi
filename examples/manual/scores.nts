@@ -10,4 +10,4 @@
 ;; two pulses on each line.
 (score full :palette set2 :system-length 2
   (group "Reyong" :subtitle "polos + sangsih"  polos sangsih)
-  (group "Gong" :note-names yes  gong kempli))
+  (group "Gong" :note-label pitch-display-name :note-label-octave no  gong kempli))
