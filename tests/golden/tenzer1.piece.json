@@ -1,0 +1,518 @@
+{
+  "version": 1,
+  "title": "Eight-pulse gong cycle",
+  "length": 9,
+  "pickup": 1,
+  "info": {},
+  "colotomies": [
+    {
+      "start": 0,
+      "name": "gilak",
+      "length": 8,
+      "timekeeper": "kempli",
+      "parts": ["gong"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 42
+      }
+    }
+  ],
+  "scales": [
+    {
+      "name": "selisir",
+      "pitched": true,
+      "pitches": [
+        {
+          "name": "ding",
+          "aliases": ["i"],
+          "display": "i",
+          "damped": null
+        },
+        {
+          "name": "dong",
+          "aliases": ["o"],
+          "display": "o",
+          "damped": null
+        },
+        {
+          "name": "deng",
+          "aliases": ["e"],
+          "display": "e",
+          "damped": null
+        },
+        {
+          "name": "dung",
+          "aliases": ["u"],
+          "display": "u",
+          "damped": null
+        },
+        {
+          "name": "dang",
+          "aliases": ["a"],
+          "display": "a",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/selisir.nts",
+        "line": 5
+      }
+    },
+    {
+      "name": "kempli-strokes",
+      "pitched": false,
+      "pitches": [
+        {
+          "name": "K",
+          "aliases": [],
+          "display": "K",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 10
+      }
+    },
+    {
+      "name": "gong-strokes",
+      "pitched": false,
+      "pitches": [
+        {
+          "name": "G",
+          "aliases": [],
+          "display": "G",
+          "damped": null
+        },
+        {
+          "name": "GL",
+          "aliases": [],
+          "display": "GL",
+          "damped": null
+        },
+        {
+          "name": "P",
+          "aliases": [],
+          "display": "P",
+          "damped": null
+        },
+        {
+          "name": "T",
+          "aliases": [],
+          "display": "T",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 11
+      }
+    },
+    {
+      "name": "kendang-strokes",
+      "pitched": false,
+      "pitches": [
+        {
+          "name": "dag",
+          "aliases": [],
+          "display": "dag",
+          "damped": null
+        },
+        {
+          "name": "dug",
+          "aliases": [],
+          "display": "dug",
+          "damped": null
+        },
+        {
+          "name": "du",
+          "aliases": [],
+          "display": "du",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 12
+      }
+    }
+  ],
+  "instruments": [
+    {
+      "name": "jegogan",
+      "scale": "selisir",
+      "keys": ["ding1", "dong1", "deng1", "dung1", "dang1"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 16
+      }
+    },
+    {
+      "name": "jublag",
+      "scale": "selisir",
+      "keys": ["ding2", "dong2", "deng2", "dung2", "dang2"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 17
+      }
+    },
+    {
+      "name": "calung",
+      "scale": "selisir",
+      "keys": ["ding2", "dong2", "deng2", "dung2", "dang2"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 18
+      }
+    },
+    {
+      "name": "panyacah",
+      "scale": "selisir",
+      "keys": ["ding3", "dong3", "deng3", "dung3", "dang3"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 19
+      }
+    },
+    {
+      "name": "ugal",
+      "scale": "selisir",
+      "keys": ["dong1", "deng1", "dung1", "dang1", "ding2", "dong2", "deng2", "dung2", "dang2", "ding3"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 20
+      }
+    },
+    {
+      "name": "pemade",
+      "scale": "selisir",
+      "keys": ["dong2", "deng2", "dung2", "dang2", "ding3", "dong3", "deng3", "dung3", "dang3", "ding4"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 21
+      }
+    },
+    {
+      "name": "kantilan",
+      "scale": "selisir",
+      "keys": ["dong3", "deng3", "dung3", "dang3", "ding4", "dong4", "deng4", "dung4", "dang4", "ding5"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 22
+      }
+    },
+    {
+      "name": "trompong",
+      "scale": "selisir",
+      "keys": ["dang1", "ding2", "dong2", "deng2", "dung2", "dang2", "ding3", "dong3", "deng3", "dung3"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 23
+      }
+    },
+    {
+      "name": "reyong",
+      "scale": "selisir",
+      "keys": ["deng2", "dung2", "dang2", "ding3", "dong3", "deng3", "dung3", "dang3", "ding4", "dong4", "deng4", "dung4"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 24
+      }
+    },
+    {
+      "name": "kempli",
+      "scale": "kempli-strokes",
+      "keys": ["K"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 27
+      }
+    },
+    {
+      "name": "gong",
+      "scale": "gong-strokes",
+      "keys": ["G", "GL", "P", "T"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 28
+      }
+    },
+    {
+      "name": "kendang",
+      "scale": "kendang-strokes",
+      "keys": ["dag", "dug", "du"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 29
+      }
+    }
+  ],
+  "patterns": [],
+  "parts": [
+    {
+      "name": "ugal",
+      "instrument": "ugal",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": 1,
+          "notes": ["dang1"]
+        },
+        {
+          "start": 1,
+          "dur": 1,
+          "notes": ["dong2"]
+        },
+        {
+          "start": 2,
+          "dur": 1,
+          "notes": ["ding2"]
+        },
+        {
+          "start": 3,
+          "dur": 1,
+          "notes": ["deng2"]
+        },
+        {
+          "start": 4,
+          "dur": 1,
+          "notes": ["dong2"]
+        },
+        {
+          "start": 5,
+          "dur": 1,
+          "notes": ["dang1"]
+        },
+        {
+          "start": 6,
+          "dur": 1,
+          "notes": ["dong2"]
+        },
+        {
+          "start": 7,
+          "dur": 1,
+          "notes": ["ding2"]
+        },
+        {
+          "start": 8,
+          "dur": 1,
+          "notes": ["dang1"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "examples/demos/tenzer1.nts",
+        "line": 21
+      }
+    },
+    {
+      "name": "gong",
+      "instrument": "gong",
+      "origin": "colotomy",
+      "events": [
+        {
+          "start": 0,
+          "dur": 1,
+          "notes": ["G"]
+        },
+        {
+          "start": 4,
+          "dur": 1,
+          "notes": ["GL"]
+        },
+        {
+          "start": 5,
+          "dur": 1,
+          "notes": ["P"]
+        },
+        {
+          "start": 7,
+          "dur": 1,
+          "notes": ["P"]
+        },
+        {
+          "start": 8,
+          "dur": 1,
+          "notes": ["G"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 42
+      }
+    },
+    {
+      "name": "kempli",
+      "instrument": "kempli",
+      "origin": "timekeeper",
+      "events": [
+        {
+          "start": 0,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 1,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 2,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 3,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 4,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 5,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 6,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 7,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 8,
+          "dur": 1,
+          "notes": ["K"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 42
+      }
+    }
+  ],
+  "scores": [
+    {
+      "name": "default",
+      "title": "Eight-pulse gong cycle",
+      "subtitle": null,
+      "caption": null,
+      "from": 0,
+      "to": 9,
+      "system_length": null,
+      "breaks": [],
+      "cycle_numbers": true,
+      "pulse_numbers": true,
+      "numbering": "gong-last",
+      "background": "grid",
+      "cycle_label": "Cycle",
+      "pulse_label": "Pulse",
+      "font_size": null,
+      "cell_width": "2em",
+      "cell_height": "2em",
+      "groups": [
+        {
+          "label": "ugal",
+          "short": "ugal",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "ugal",
+              "label": "ugal"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": null
+        },
+        {
+          "label": "gong",
+          "short": "gong",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "gong",
+              "label": "gong"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": null
+        },
+        {
+          "label": "kempli",
+          "short": "kempli",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "kempli",
+              "label": "kempli"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": null
+        }
+      ],
+      "source": null
+    }
+  ]
+}

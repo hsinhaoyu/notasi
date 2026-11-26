@@ -826,6 +826,231 @@ tenzer1.nts (no score form)."
         '("--all" "--one-file" "--list" "--format" "--ppi")))))
  '(("--help") ("render" "--help")))
 
+
+;;; ==================================================================
+;;; Milestone feat/save-piece (iteration 5; 05, "The `notasi' command",
+;;; --save-piece; 02, "Saving the piece"; ADR 0058).
+;;;
+;;; Choices where the spec leaves room:
+;;; - What is saved is checked against save-piece from (notasi save),
+;;;   called on the piece read from the same path as given to the
+;;;   command (so the source file names match): the file's text, or
+;;;   stdout for `-', must be exactly what save-piece writes.  The
+;;;   shape is also checked on its own: JSON starts with "{" and ends
+;;;   with "}\n"; the .scm file holds (piece (version 1) ...).
+;;; - "Saving prints nothing": with a file, stdout is exactly the lines
+;;;   it has without --save-piece, and stderr is empty.
+;;; - With `-', stdout is the JSON alone: no path, no score name, though
+;;;   the drawing is still written.
+;;; - A drawing that fails: the --all trick above (a folder where one
+;;;   score's file goes); the saved file is still there.
+;;; - A notation mistake saves nothing (nothing is read), status 1, the
+;;;   reader's message as when drawing; with `-', stdout is empty.
+;;; - "The same whatever is drawn": the files saved with --score alpha,
+;;;   --score mid, --all and --list are byte for byte the same.
+;;; - Usage errors: `--save-piece' as the last argument (no value),
+;;;   an extension other than .json or .scm (out.txt, out.JSON is not
+;;;   tested), and no extension; each writes nothing.
+
+(define save-piece-proc
+  (let ((iface (false-if-exception (resolve-interface '(notasi save)))))
+    (and iface
+         (module-variable iface 'save-piece)
+         (module-ref iface 'save-piece))))
+
+(define (expected-json nts)
+  "What save-piece writes for NTS's piece to standard output, or #f
+while (notasi save) doesn't exist."
+  (and save-piece-proc
+       (let ((piece (read-piece-file nts)))
+         (call-with-output-string
+           (lambda (port)
+             (parameterize ((current-output-port port))
+               (save-piece-proc piece "-")))))))
+
+(define (json-document? text)
+  (and (string? text)
+       (string-prefix? "{" text)
+       (string-suffix? "}\n" text)))
+
+(define (read-file-text path)
+  (and (file-exists? path)
+       (call-with-input-file path get-string-all #:encoding "UTF-8")))
+
+(test-group "render --save-piece FILE.json"
+  (let* ((nts (make-piece-dir "save-json" 'three))
+         (dir (dirname nts))
+         (saved (string-append dir "/saved.json"))
+         (out (string-append dir "/three.pdf"))
+         (r (run "render" nts "--save-piece" saved)))
+    (success-checks "draws as usual, saving prints nothing" r (lines out))
+    (test-assert "draws the first score" (pdf-file? out))
+    (test-assert "writes FILE, a JSON document" (json-document? (read-file-text saved)))
+    (test-equal "FILE holds the saved piece"
+      (or (expected-json nts) 'no-save-piece) (read-file-text saved))
+    (test-equal "writes nothing else"
+      '("saved.json" "three.nts" "three.pdf") (entries dir)))
+  (let* ((nts (make-piece-dir "save-json-first" 'none))
+         (dir (dirname nts))
+         (saved (string-append dir "/saved.json"))
+         (out (string-append dir "/tenzer1.svg"))
+         (r (run "render" "--save-piece" saved "-o" out nts)))
+    (success-checks "before PIECE, with -o" r (lines out))
+    (test-assert "before PIECE: draws OUT" (svg-file? out))
+    (test-equal "before PIECE: FILE holds the saved piece"
+      (or (expected-json nts) 'no-save-piece) (read-file-text saved))))
+
+(test-group "render --save-piece FILE.scm"
+  (let* ((nts (make-piece-dir "save-scm" 'three))
+         (dir (dirname nts))
+         (saved (string-append dir "/saved.scm"))
+         (out (string-append dir "/three.pdf"))
+         (r (run "render" nts "--save-piece" saved)))
+    (success-checks "draws as usual" r (lines out))
+    (test-assert "draws the first score" (pdf-file? out))
+    (let ((datum (and (file-exists? saved)
+                      (guard (e (#t 'unreadable))
+                        (call-with-input-file saved read)))))
+      (test-assert "FILE is an s-expression: (piece (version 1) ...)"
+        (and (pair? datum)
+             (eq? 'piece (car datum))
+             (pair? (cdr datum))
+             (equal? '(version 1) (cadr datum)))))))
+
+(test-group "render --save-piece -"
+  (let* ((nts (make-piece-dir "save-stdout" 'three))
+         (dir (dirname nts))
+         (out (string-append dir "/three.pdf"))
+         (r (run "render" nts "--save-piece" "-")))
+    (test-equal "exits with status 0" 0 (status-of r))
+    (test-equal "prints nothing to stderr" "" (stderr-of r))
+    (test-assert "stdout is one JSON document" (json-document? (stdout-of r)))
+    (test-equal "stdout is the saved piece, and nothing else"
+      (or (expected-json nts) 'no-save-piece) (stdout-of r))
+    (test-assert "no path on stdout" (not (string-contains (stdout-of r) out)))
+    (test-assert "still draws" (pdf-file? out))
+    (test-equal "writes no file called -" '("three.nts" "three.pdf") (entries dir))))
+
+(test-group "render --list --save-piece"
+  (let* ((nts (make-piece-dir "save-list" 'three))
+         (dir (dirname nts))
+         (saved (string-append dir "/saved.json"))
+         (r (run "render" nts "--list" "--save-piece" saved)))
+    (success-checks "FILE: lists the names" r (apply lines score-order))
+    (test-equal "FILE: holds the saved piece"
+      (or (expected-json nts) 'no-save-piece) (read-file-text saved))
+    (test-equal "FILE: draws nothing" '("saved.json" "three.nts") (entries dir)))
+  (let* ((nts (make-piece-dir "save-list-stdout" 'three))
+         (dir (dirname nts))
+         (r (run "render" "--save-piece" "-" nts "--list")))
+    (test-equal "-: exits with status 0" 0 (status-of r))
+    (test-equal "-: prints nothing to stderr" "" (stderr-of r))
+    (test-equal "-: stdout is the saved piece only, no score names"
+      (or (expected-json nts) 'no-save-piece) (stdout-of r))
+    (test-assert "-: stdout is one JSON document" (json-document? (stdout-of r)))
+    (test-equal "-: draws nothing" '("three.nts") (entries dir)))
+  (let* ((nts (make-piece-dir "save-list-no-typst" 'three))
+         (dir (dirname nts))
+         (saved (string-append dir "/saved.json"))
+         (path (path-without-typst))
+         (r (call-with-env "PATH" path
+              (lambda () (run "render" nts "--list" "--save-piece" saved)))))
+    (success-checks "without Typst: lists all the same" r (apply lines score-order))
+    (test-assert "without Typst: saves all the same"
+      (json-document? (read-file-text saved)))))
+
+(test-group "render --all --save-piece"
+  (let* ((nts (make-piece-dir "save-all" 'three))
+         (dir (dirname nts))
+         (saved (string-append dir "/saved.json"))
+         (outs (score-files dir "three" "pdf"))
+         (r (run "render" nts "--all" "--save-piece" saved)))
+    (success-checks "draws every score" r (apply lines outs))
+    (test-assert "each drawn" (every pdf-file? outs))
+    (test-equal "saves once, the whole piece"
+      (or (expected-json nts) 'no-save-piece) (read-file-text saved))
+    (test-equal "writes nothing else"
+      (sort (append '("saved.json" "three.nts") (map basename outs)) string<?)
+      (entries dir))))
+
+(test-group "render --save-piece: the same whatever is drawn"
+  (let* ((nts (make-piece-dir "save-same" 'three))
+         (dir (dirname nts))
+         (saved (lambda (name) (string-append dir "/" name ".json"))))
+    (run "render" nts "--score" "alpha" "--save-piece" (saved "alpha"))
+    (run "render" nts "--score" "mid" "--save-piece" (saved "mid"))
+    (run "render" nts "--all" "--save-piece" (saved "all"))
+    (run "render" nts "--list" "--save-piece" (saved "list"))
+    (test-assert "(each saved)"
+      (every (lambda (n) (file-exists? (saved n))) '("alpha" "mid" "all" "list")))
+    (test-assert "--score alpha, --score mid, --all and --list save the same"
+      (and (same-bytes? (saved "alpha") (saved "mid"))
+           (same-bytes? (saved "alpha") (saved "all"))
+           (same-bytes? (saved "alpha") (saved "list"))))))
+
+(test-group "render --save-piece, a drawing that fails"
+  (let* ((nts (make-piece-dir "save-fail" 'three))
+         (dir (dirname nts))
+         (saved (string-append dir "/saved.json"))
+         (out-dir (string-append dir "/out"))
+         (outs (score-files out-dir "three" "pdf"))
+         (blocked (cadr outs)))          ; three_alpha.pdf
+    (mkdir out-dir)
+    (mkdir blocked)
+    (let ((r (run "render" nts "--all" "-o" out-dir "--save-piece" saved)))
+      (test-equal "exits with status 1" 1 (status-of r))
+      (test-assert "stderr starts with \"notasi: \""
+        (starts-with-notasi? (stderr-of r)))
+      (test-equal "the piece is still saved"
+        (or (expected-json nts) 'no-save-piece) (read-file-text saved)))))
+
+(test-group "render --save-piece, a notation mistake"
+  (let* ((dir (tmp-path "save-mistake"))
+         (nts (string-append dir "/mistake.nts"))
+         (saved (string-append dir "/saved.json")))
+    (mkdir dir)
+    (write-text nts "(piece \"Gilak\")\n(pice \"Kotekan\")\n")
+    (let ((message (guard (e ((notasi-syntax-error? e) (exception-message e)))
+                     (read-piece-file nts)
+                     #f)))
+      (for-each
+       (lambda (spec)
+         (let ((name (car spec))
+               (r (apply run "render" nts (cdr spec))))
+           (test-equal (string-append name ": exits with status 1") 1 (status-of r))
+           (test-equal (string-append name ": stderr is the reader's message and a newline")
+             (and message (string-append message "\n")) (stderr-of r))
+           (test-equal (string-append name ": prints nothing to stdout") "" (stdout-of r))
+           (test-equal (string-append name ": saves and draws nothing")
+             '("mistake.nts") (entries dir))))
+       `(("FILE" "--save-piece" ,saved)
+         ("-" "--save-piece" "-")
+         ("--list, FILE" "--list" "--save-piece" ,saved))))))
+
+(test-group "usage errors of --save-piece"
+  (for-each
+   (lambda (spec)
+     (let* ((name (car spec))
+            (before (entries usage-dir))
+            (r (apply run "render" usage-piece (cdr spec))))
+       (usage-error-checks name r)
+       (test-equal (string-append name ": writes nothing")
+         before (entries usage-dir))))
+   `(("--save-piece without a value" "--save-piece")
+     ("--save-piece without a value, with --list" "--list" "--save-piece")
+     ("--save-piece out.txt" "--save-piece" ,(usage-path "out.txt"))
+     ("--save-piece out.pdf" "--save-piece" ,(usage-path "out.pdf"))
+     ("--save-piece with no extension" "--save-piece" ,(usage-path "out"))
+     ("--save-piece out.txt, with --list" "--list" "--save-piece"
+      ,(usage-path "out.txt")))))
+
+(for-each
+ (lambda (args)
+   (let ((r (apply run args)))
+     (test-assert (string-append (string-join args " ") ": mentions --save-piece")
+       (string-contains (stdout-of r) "--save-piece"))))
+ '(("--help") ("render" "--help")))
+
 (remove-tree tmp-dir)
 
 (define runner (test-runner-current))

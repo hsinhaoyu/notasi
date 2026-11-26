@@ -7,6 +7,7 @@
 (define-module (notasi command)
   #:use-module (notasi piece)
   #:use-module (notasi reader)
+  #:use-module (notasi save)
   #:use-module (notasi typst)
   #:use-module (ice-9 exceptions)
   #:use-module (ice-9 match)
@@ -21,7 +22,8 @@
 (define usage
   "usage: notasi render PIECE.nts [--score NAME | --all [--one-file]]
                     [--format pdf|png|svg] [--ppi N] [-o OUT]
-       notasi render PIECE.nts --list")
+                    [--save-piece FILE]
+       notasi render PIECE.nts --list [--save-piece FILE]")
 
 (define help
   (string-append usage "
@@ -41,6 +43,9 @@ Draw a piece of notation as a score.
                       .svg) chooses the format
   --list              print the names of the piece's scores, and draw
                       nothing
+  --save-piece FILE   save the piece as notasi read it: FILE.json,
+                      FILE.scm (an s-expression), or - for JSON on
+                      standard output
   --help              show this help
   --version           show notasi's version"))
 
@@ -133,12 +138,14 @@ their values, #t for a flag.  A help request is (help . #t)."
               ("--score" " needs a score's name")
               ((or "-o" "--output") " needs a file name")
               ("--format" " needs a format: pdf, png or svg")
-              ("--ppi" " needs a number"))))
+              ("--ppi" " needs a number")
+              ("--save-piece" " needs a file name: FILE.json, FILE.scm or -"))))
   (let loop ((args args) (options '()) (files '()))
     (match args
       (() (values options (reverse files)))
       (("--help" . _) (values '((help . #t)) '()))
-      (((and option (or "--score" "-o" "--output" "--format" "--ppi"))
+      (((and option (or "--score" "-o" "--output" "--format" "--ppi"
+                        "--save-piece"))
         . rest)
        (match rest
          (((? (lambda (v) (not (option? v))) value) . rest)
@@ -147,7 +154,8 @@ their values, #t for a flag.  A help request is (help . #t)."
                          ("--score" 'score)
                          ((or "-o" "--output") 'output)
                          ("--format" 'format)
-                         ("--ppi" 'ppi))
+                         ("--ppi" 'ppi)
+                         ("--save-piece" 'save-piece))
                        value options)
                 files))
          (_ (needs-value option))))
@@ -216,7 +224,8 @@ how (one, all or one-file), format, ppi, output, score."
                             (option options 'format))
                        (string-append output "." format))
                       (else output)))
-          (score . ,score))))))
+          (score . ,score)
+          (save-piece . ,(option options 'save-piece)))))))
 
 (define (report-problems thunk)
   "Call THUNK, which returns a status.  A notation mistake prints the
@@ -235,6 +244,38 @@ Both return status 1."
 its default score."
   (filter score-location (piece-scores piece)))
 
+(define (check-save-piece value)
+  "VALUE of --save-piece: a .json or .scm file, or - (ADR 0058)."
+  (unless (or (string=? value "-")
+              (string-suffix? ".json" value)
+              (string-suffix? ".scm" value))
+    (usage! "--save-piece saves to a .json or .scm file, or - for standard output, not "
+            value)))
+
+(define (with-piece piece-path save proc)
+  "Read the piece in PIECE-PATH, save it to SAVE when given (before
+anything is drawn, so it is saved even when a drawing fails), and call
+PROC with it.  With SAVE \"-\", the JSON is all that goes to standard
+output: PROC's paths and names are not printed."
+  (let ((piece (read-piece-file piece-path)))
+    (when save (save-piece piece save))
+    (if (equal? save "-")
+        (with-output-to-port (%make-void-port "w") (lambda () (proc piece)))
+        (proc piece))))
+
+(define (chosen-score piece piece-path name)
+  "PIECE's score NAME (a string), or its first score without NAME."
+  (if name
+      (or (piece-score piece (string->symbol name))
+          (raise-exception
+           (make-exception
+            (make-error)
+            (make-exception-with-message
+             (format #f "~a has no score called `~a'" piece-path name))
+            (make-exception-with-irritants
+             (list (string->symbol name) piece-path)))))
+      (car (piece-scores piece))))
+
 (define (draw-one piece-path plan)
   (let* ((score (assq-ref plan 'score))
          (format (assq-ref plan 'format))
@@ -244,11 +285,12 @@ its default score."
                                  "." format))))
     (report-problems
      (lambda ()
-       (render-piece piece-path out
-                     #:score (and score (string->symbol score))
-                     #:ppi (assq-ref plan 'ppi))
-       (say (current-output-port) out)
-       0))))
+       (with-piece piece-path (assq-ref plan 'save-piece)
+         (lambda (piece)
+           (render-score piece (chosen-score piece piece-path score) out
+                         #:ppi (assq-ref plan 'ppi))
+           (say (current-output-port) out)
+           0))))))
 
 (define (draw-all piece-path plan)
   "Draw every score of the piece, each to its own file; a score that
@@ -266,46 +308,50 @@ fails is reported, and the others are still drawn."
                            "." format))))
     (report-problems
      (lambda ()
-       (let* ((piece (read-piece-file piece-path))
-              (written (written-scores piece))
-              (jobs (if (null? written)
-                        (list (cons (car (piece-scores piece)) #f))
-                        (map (lambda (score)
-                               (cons score
-                                     (symbol->string (score-name score))))
-                             written))))
-         (when output (make-folders output))
-         (fold (lambda (job status)
-                 (let* ((out (out-path (cdr job)))
-                        (drawn (report-problems
-                                (lambda ()
-                                  (render-score piece (car job) out
-                                                #:ppi (assq-ref plan 'ppi))
-                                  (say (current-output-port) out)
-                                  0))))
-                   (max status drawn)))
-               0 jobs))))))
+       (with-piece piece-path (assq-ref plan 'save-piece)
+         (lambda (piece)
+           (let* ((written (written-scores piece))
+                  (jobs (if (null? written)
+                            (list (cons (car (piece-scores piece)) #f))
+                            (map (lambda (score)
+                                   (cons score
+                                         (symbol->string (score-name score))))
+                                 written))))
+             (when output (make-folders output))
+             (fold (lambda (job status)
+                     (let* ((out (out-path (cdr job)))
+                            (drawn (report-problems
+                                    (lambda ()
+                                      (render-score piece (car job) out
+                                                    #:ppi (assq-ref plan 'ppi))
+                                      (say (current-output-port) out)
+                                      0))))
+                       (max status drawn)))
+                   0 jobs))))))))
 
 (define (draw-one-file piece-path plan)
   (let ((out (or (assq-ref plan 'output)
                  (string-append (strip-nts piece-path) ".pdf"))))
     (report-problems
      (lambda ()
-       (let ((piece (read-piece-file piece-path)))
-         (render-one-file piece (piece-scores piece) out)
-         (say (current-output-port) out)
-         0)))))
+       (with-piece piece-path (assq-ref plan 'save-piece)
+         (lambda (piece)
+           (render-one-file piece (piece-scores piece) out)
+           (say (current-output-port) out)
+           0))))))
 
-(define (list-scores piece-path)
+(define (list-scores piece-path save)
   "Print the names of the piece's scores, one per line, in the order
-written, and draw nothing."
+written, and draw nothing; save the piece to SAVE when given."
   (report-problems
    (lambda ()
-     (for-each (lambda (score)
-                 (say (current-output-port)
-                      (symbol->string (score-name score))))
-               (written-scores (read-piece-file piece-path)))
-     0)))
+     (with-piece piece-path save
+       (lambda (piece)
+         (for-each (lambda (score)
+                     (say (current-output-port)
+                          (symbol->string (score-name score))))
+                   (written-scores piece))
+         0)))))
 
 (define (render-command args)
   "Parse the arguments after `render', check them, and draw the piece
@@ -320,8 +366,9 @@ written, and draw nothing."
             (() (usage! "render needs a PIECE.nts file"))
             ((piece-path)
              (let ((plan (render-plan options)))
+               (and=> (option options 'save-piece) check-save-piece)
                (if (option options 'list)
-                   (list-scores piece-path)
+                   (list-scores piece-path (option options 'save-piece))
                    (match (assq-ref plan 'how)
                      ('one (draw-one piece-path plan))
                      ('all (draw-all piece-path plan))

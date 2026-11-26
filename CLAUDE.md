@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-GNU Guile 3.0 project for notating and visualizing Balinese gamelan music. `(notasi piece)`, `(notasi reader)`, `(notasi expand)`, `(notasi json)`, `(notasi style)` and `(notasi layout)` are implemented (iteration 5 is building, from its milestones: see the current iteration), `(notasi typst)` writes figure files and draws them with Typst (`render-piece`), and `scripts/notasi render` draws a piece from the command line; `editors/emacs/notasi-mode.el` is the Emacs package (08): the major mode, the preview, and its chapter in the manual; the rest of the Typst backend and the later milestones are built in the order given under "Build order" in `doc/design/README.md`.
+GNU Guile 3.0 project for notating and visualizing Balinese gamelan music. `(notasi piece)`, `(notasi reader)`, `(notasi expand)`, `(notasi json)`, `(notasi style)` and `(notasi layout)` are implemented (iteration 5 is building, from its milestones: see the current iteration), `(notasi typst)` writes figure files and draws them with Typst (`render-piece`), `(notasi save)` saves the piece as JSON or an s-expression, and `scripts/notasi render` draws a piece from the command line (and saves it with `--save-piece`); `editors/emacs/notasi-mode.el` is the Emacs package (08): the major mode, the preview, and its chapter in the manual; the rest of the Typst backend and the later milestones are built in the order given under "Build order" in `doc/design/README.md`.
 
 ## Commands
 
@@ -31,7 +31,7 @@ The notation that `reader` parses is specified in `doc/design/01-notation.md`.
 Repository layout (entries marked *planned* don't exist yet):
 
 ```
-notasi/             Guile modules: piece, reader, expand, style, layout, json, typst, command
+notasi/             Guile modules: piece, reader, expand, style, layout, json, save, typst, command
 typst/              Typst template notasi.typ; the package's typst.toml (planned, 06)
 scripts/            the notasi command: notasi render, with --all and --list (typst, update, watch planned, 06)
 editors/emacs/      notasi-mode, the Emacs package (08), its ERT tests and check.el
@@ -41,7 +41,8 @@ examples/           pieces (.nts), in four folders (07, ADR 0052): gallery/ and 
 templates/          shared definitions (.nts) loaded with (use NAME)
 tests/              SRFI-64 test files: one per module, plus golden, syntax,
                     targets, manual, examples, iterations, decisions, readme
-tests/golden/       expected JSON figures, one per score of each example (make golden)
+tests/golden/       expected JSON figures, one per score of each example, and each
+                    example's saved piece, NAME.piece.json (make golden)
 doc/prototypes/     hand-made mockup of the target output (score.typ, piece.json)
 doc/manual/         user manual for musicians (mdBook; style in STYLE.md)
 doc/design/         design documents (the current design)
@@ -127,5 +128,5 @@ Tests use SRFI-64. Each `tests/*.scm` file is a standalone script that `make che
 
 What to test:
 - Unit tests, one file per module: reader token handling and every error case listed in `doc/design/03-reader.md`, piece derived functions, layout decisions (rows, system splitting, colours), JSON serialiser escaping.
-- Golden tests: for each score of each file in `examples/gallery/` and `examples/demos/`, the generated JSON is compared with `tests/golden/` (`NAME.json` for a file with only the default score, `NAME_SCORE.json` otherwise). When an output change is intended, regenerate them with `make golden` and review the diff in the PR.
+- Golden tests: for each score of each file in `examples/gallery/` and `examples/demos/`, the generated JSON is compared with `tests/golden/` (`NAME.json` for a file with only the default score, `NAME_SCORE.json` otherwise), and each file's saved piece with `tests/golden/NAME.piece.json` (ADR 0058). When an output change is intended, regenerate them with `make golden` and review the diff in the PR.
 - Typst template test: `tests/template.scm` compiles every golden figure with `typst/notasi.typ` and fails on an error or a warning. Changes to the template are also checked by eye with `make images`, and show in the PR as changed images.
