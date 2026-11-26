@@ -24,14 +24,17 @@ steps 10 and 11; the condition's `time` and `uses`; and every
 Since iteration 5's `feat/collapsed-terms`: the piece information,
 `:scheme by-pitch` (`by-degree` a bad value), and the error kinds
 `bad-pitch`, `duplicate-pitch` and `pitch-ends-in-digit`, with
-messages that say pitch.
+messages that say pitch. Since `feat/collapsed-labels`: `:note-label`
+and the label options, `:note-names` and `:octave-numbers` unknown
+keys and `:row-labels yes`/`no` bad values, and `needs-note-label`
+(ADR 0054).
 
-**Planned** for iteration 5 (ADRs 0054–0057): `:note-label` and the
-label options, `:rows compact`, `:part-marker`, the annotation row,
-pattern annotations and `(text ...)`; the removed options becoming
-unknown keys or values; `pattern-names-overlap` removed, and
-`notes-collide` for one key only; `needs-note-label`. See "Iteration
-5". Until they are built, the reader takes the old options.
+**Planned** for iteration 5 (ADRs 0055–0057): `:rows compact`,
+`:part-marker`, the annotation row, pattern annotations and `(text
+...)`; the other removed options becoming unknown keys or values;
+`pattern-names-overlap` removed, and `notes-collide` for one key only.
+See "Iteration 5". Until they are built, the reader takes the old
+options.
 
 ## Responsibility
 
@@ -191,16 +194,17 @@ Finding templates (**Implemented**):
     `:breaks` into times. A file with no score gets the default score:
     every part in its own group, in part order, labelled with its name,
     location `#f`. Iteration 3 adds the settings `keys`,
-    `octave-numbers?`, `key-numbers?`, `row-labels?`, `display`,
+    `octave-numbers?` (now `row-label-octave?`), `key-numbers?`,
+    `row-labels?` (now `row-labels`), `display`,
     `background`, `cycle-label` and the
     `"Pulse"` default (02), checked as they are filled in; then, with
     the music, every note against a group's `keys` range, like
-    `notes-collide`. **Planned** (iteration 5): the settings of 02's
-    "Iteration 5", `rows` (`compact`), `note-label`,
-    `note-label-octave?`, `row-labels`, `row-label-octave?`,
-    `part-marker` and `annotation`, in place of `note-names?`,
-    `octave-numbers?`, `row-labels?`, `pattern-names` and
-    `pattern-level`. A `:part-marker` entry's missing keys are `#f`
+    `notes-collide`. Since `feat/collapsed-labels`: `note-label`,
+    `note-label-octave?`, `row-labels` and `row-label-octave?`, in
+    place of `note-names?`, `octave-numbers?` and `row-labels?`.
+    **Planned** (iteration 5): the rest of 02's "Iteration 5", `rows`
+    (`compact`), `part-marker` and `annotation`, in place of
+    `pattern-names` and `pattern-level`. A `:part-marker` entry's missing keys are `#f`
     (layout's defaults); an annotation row's are its options'
     defaults. Free text is collected with the part's events (step 9).
 13. **Check the piece invariants** (02-piece.md).
@@ -504,11 +508,11 @@ All errors at a use carry the part, the time and the chain of uses.
 - [scores] A group mixing pitched and stroke instruments (ADR 0034):
   `pitched-with-strokes` (`part` set to the first part of the other
   kind).
-- [scores] `:rows parts`, `:rows single` or `:fill none` without
-  `:note-names yes` on the group: `needs-note-names`. [iteration 5]
-  Only `:fill none` with `:note-label none`: `needs-note-label`, its
-  message naming `:note-label`. `parts` and `compact` rows may be
-  colour only.
+- [scores] `:fill none` with `:note-label none`: `needs-note-label`
+  (`needs-note-names` before `feat/collapsed-labels`, which also
+  covered `parts` and `single` rows), its message naming
+  `:note-label`. `parts`, `single` and compact rows may be colour
+  only.
 - [scores] With `:rows single`, two notes in one cell; with `:rows
   notes`, two notes on one key that share a column without being a
   unison (the same key, start and length): `notes-collide` (`part` set
@@ -522,7 +526,7 @@ All errors at a use carry the part, the time and the chain of uses.
   [iteration 5] Removed with `:pattern-names`: an annotation row takes
   one part, so its names can't clash.
 - [score-options] `:cycle-label`, `:pulse-label` not a string;
-  `:octave-numbers`, `:key-numbers` or `:row-labels` not `yes` or `no`; `:background` not one of `grid`,
+  `:row-label-octave`, `:note-label-octave` or `:key-numbers` not `yes` or `no`; `:background` not one of `grid`,
   `vertical`, `horizontal`, `empty`: `bad-option`.
 - [score-options] `:keys` not `used`, `all` or `(LOW HIGH)`; a LOW or
   HIGH that is not a key of the group's instrument, or LOW above HIGH;
@@ -619,7 +623,7 @@ when the milestones are built; the records it fills are in 02,
   | `bad-degree` | `bad-pitch` | **Implemented** (`feat/collapsed-terms`) |
   | `duplicate-degree` | `duplicate-pitch` | **Implemented** (`feat/collapsed-terms`) |
   | `degree-ends-in-digit` | `pitch-ends-in-digit` | **Implemented** (`feat/collapsed-terms`) |
-  | `needs-note-names` | `needs-note-label` | `feat/collapsed-labels`, with its rule |
+  | `needs-note-names` | `needs-note-label` | **Implemented** (`feat/collapsed-labels`), with its rule |
 
   Messages say "pitch" and "key", never "degree" or "note name".
 

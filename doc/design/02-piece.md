@@ -16,7 +16,9 @@ default since `feat/drawing-header`, and the score's and group's
 `note-label`'s `#:octave?` and invariant 10 since `feat/drawing-rows`,
 and invariant 9 since `feat/drawing-output`. The glossary's names
 (`pitch`, `scale-pitches`, `note-pitch`) and the piece's `info` since
-iteration 5's `feat/collapsed-terms`. Tests in `tests/piece.scm`.
+iteration 5's `feat/collapsed-terms`; the group's label settings,
+`group-row-keys` and `note-row-label` since `feat/collapsed-labels`.
+Tests in `tests/piece.scm`.
 
 **Planned** for iteration 5: the rest of the record changes in
 "Iteration 5" below (pattern annotations, free text, the group's new
@@ -181,7 +183,9 @@ group                                  every setting filled in (ADR 0033)
   members       : list of (part . row-label)
                                        row-label: a string, the part's
                                        name unless `:label` gave one
-  note-names?   : boolean
+  note-label    : symbol               none | pitch-name |
+                                       pitch-display-name | key-number
+  note-label-octave? : boolean         octave numbers in note labels
   fill          : symbol               colour | none
   holds         : symbol               none | dash
   pattern-names : symbol               none | short | long
@@ -190,13 +194,14 @@ group                                  every setting filled in (ADR 0033)
                                        lowest and highest note shown
                                        (`:keys (LOW HIGH)`); `used`
                                        for `parts` and `single` rows
-  octave-numbers? : boolean            octave numbers on
+  row-label-octave? : boolean          octave numbers on
                                        row labels
   key-numbers?  : boolean              a column of key
                                        numbers; #f for strokes, `parts`
                                        and `single` rows
-  row-labels?   : boolean              the column of row
-                                       labels
+  row-labels    : symbol               none | pitch-name |
+                                       pitch-display-name: the pitch
+                                       column
   display       : list of (symbol . string)   stroke name
                                        and the form shown for it in this
                                        score (`:display`); '() for none
@@ -231,19 +236,20 @@ group                                  every setting filled in (ADR 0033)
   pitch display name, e.g. `"i"` for `ding2`; with `damped?` true, its
   damped form, or the pitch display name if it has none. Used for the
   text in note cells.
-- `(note-label instrument note)` (**Implemented**): the pitch display
-  name plus the octave number, e.g. `"i2"`; for a stroke, just its
-  stroke display name. Used for row labels. `#:octave?` (default `#t`);
-  with `#f`, the pitch display name alone (`"i"`), for
-  `:octave-numbers no`. A group's
+- `(note-row-label instrument note)` (`note-label` until
+  `feat/collapsed-labels`): the pitch display name plus the octave
+  number, e.g. `"i2"`; for a stroke, just its stroke display name. Used
+  for row labels. `#:octave?` (default `#t`); with `#f`, the pitch
+  display name alone (`"i"`), for `:row-label-octave no`. A group's
   `display` is applied by layout, which looks a stroke up there first.
-- `(group-lanes group)` (**Implemented**): the notes actually used by the
+- `(group-row-keys group)` (`group-lanes` until `feat/collapsed-labels`):
+  the notes actually used by the
   group's member parts, as a list of note records, each once. Determines
   the rows of a group with `rows` `notes` and `keys` `used`; with `all`
   or a range, layout takes the instrument's keys instead (04). Pitched notes come from one
   instrument (invariant 6) and are sorted highest first. Strokes follow
   the instrument's order. With several stroke instruments, each
-  instrument's lanes come as a block, in the order its first part
+  instrument's rows come as a block, in the order its first part
   appears in the group.
 - `(part-end part)` (**Implemented**): the end of the last event (`start + duration`), or
   0 for a part with no events. The reader uses it to check invariant 1.
@@ -279,9 +285,8 @@ construction, since events are built from the tokens.
    pitched parts in a group play the same instrument (ADR 0011); and a
    group's parts are either all pitched or all on stroke instruments
    (ADR 0034).
-7. A group with `rows` `parts` or `single`, or `fill` `none`, has
-   `note-names?` true. **Planned**: a group with `fill` `none` has a
-   `note-label` other than `none`; `parts` and `compact` rows need none.
+7. A group with `fill` `none` has a `note-label` other than `none`
+   (ADR 0054); `parts`, `single` and compact rows need none.
 8. Part names are unique in the piece, generated parts included, and
    score names are unique.
 9. Score names contain no `_` (ADR 0040).
@@ -308,8 +313,8 @@ touches them, in the slice named:
 | record `degree` (`make-degree`, `degree?`, `degree-…`) | `pitch` (`make-pitch`, `pitch?`, `pitch-…`) | **Implemented** (`feat/collapsed-terms`) |
 | `scale-degrees` | `scale-pitches` | **Implemented** (`feat/collapsed-terms`) |
 | `note-degree` (index into the scale) | `note-pitch` | **Implemented** (`feat/collapsed-terms`) |
-| `group-lanes` | `group-rows` | `feat/collapsed-labels`, with the JSON's `rows` |
-| `note-label` (the row label) | `note-row-label`, since `note-label` is now an option's name | `feat/collapsed-labels` |
+| `group-lanes` | `group-row-keys`, the keys or strokes its rows stand for (`group-rows` is the `:rows` setting) | **Implemented** (`feat/collapsed-labels`) |
+| `note-label` (the row label) | `note-row-label`, since `note-label` is now an option's name | **Implemented** (`feat/collapsed-labels`) |
 
 New and changed fields:
 
@@ -337,21 +342,20 @@ free-text                              (new) takes no time
                                        point, which runs to the next text
   text        : string
 
-group
+group (note-label, note-label-octave?, row-labels and
+row-label-octave? are Implemented since feat/collapsed-labels; see
+the group record above)
   rows              : symbol           notes | parts | compact
-  note-label        : symbol           none | pitch-name |
-                                       pitch-display-name | key-number;
-                                       replaces note-names?
-  note-label-octave? : boolean
-  row-labels        : symbol           none | pitch-name |
-                                       pitch-display-name; replaces
-                                       row-labels?
-  row-label-octave? : boolean          replaces octave-numbers?
   part-marker       : list of (part . marker)   '() for none
   annotation        : annotation-row | #f       #f: no annotation row
   scheme            : symbol           e.g. by-pitch
   colors            : list of (symbol . string) pitch name and "#rrggbb"
   (pattern-names and pattern-level are removed)
+
+  In make-group (feat/collapsed-labels), each new label field took its
+  old one's place: note-label and then note-label-octave? where
+  note-names? was, row-label-octave? where octave-numbers? was, and
+  row-labels where row-labels? was.
 
 marker                                 (new) a part's marks
   symbol       : symbol                none | dot | ring | cross
@@ -413,9 +417,9 @@ one score, 05):
 ## Decided
 
 - Two stroke instruments in one group whose strokes share a name (two
-  kendang both playing `dag`) get a lane each: each instrument's lanes
-  come as a block (`group-lanes`), as the prototype's kendang group
-  draws one lane per drum.
+  kendang both playing `dag`) get a row each: each instrument's rows
+  come as a block (`group-row-keys`), as the prototype's kendang group
+  draws one row per drum.
 - A chord is one event with several notes; 04 says how each kind of
   row draws it.
 

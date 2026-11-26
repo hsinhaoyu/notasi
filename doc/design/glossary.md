@@ -68,11 +68,11 @@ in one sweep.
 |---|---|---|---|
 | **score** | How the music is printed: which parts, in which groups, with which options. A file may have several | `score` | |
 | **group** | Parts drawn together in one block of rows, e.g. polos and sangsih | `group` | staff |
-| **row** | One horizontal line of cells in a group | `lane` (JSON and code) until contract version 4, then `row` | lane |
+| **row** | One horizontal line of cells in a group | `row` (JSON `rows`, `row`, `row_label_width`; contract version 4) | lane |
 | **row label** | The pitch column's text for a row | | lane label |
 | **pitch column** | The column of row labels (`:row-labels`) | | |
 | **key-number column** | The column of key numbers (`:key-numbers`) | | |
-| **note label** | What is written in a note (**Planned:** chosen with `:note-label`) | `text` (JSON) | note name |
+| **note label** | What is written in a note, chosen with `:note-label` | `text` (JSON) | note name |
 | **collapsed** | **Planned.** A group drawn with fewer rows than keys: `:rows parts` or `compact` | | |
 | **part marker** | **Planned.** A symbol and border telling a part's notes apart in a group (`:part-marker`) | | |
 | **annotation row** | **Planned.** A text-only row above or below a group | | annotation lane |
