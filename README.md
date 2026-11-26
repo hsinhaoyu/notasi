@@ -33,6 +33,7 @@ Design documents, decisions and iterations' design ideas are on the `dev` branch
     scripts/notasi render piece.nts            # writes piece.pdf
     scripts/notasi render piece.nts -o out.png # or .svg
     scripts/notasi render piece.nts --score excerpt  # writes piece_excerpt.pdf
+    scripts/notasi render piece.nts --all      # every score, piece_SCORE.pdf
 
 Needs Guile 3.0 and Typst 0.15.1. See "Drawing a score" in the manual.
 

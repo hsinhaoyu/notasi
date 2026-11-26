@@ -111,7 +111,7 @@ Each milestone, or each slice of one, is its own branch and PR into
 Contract version 4 (ADR 0059) is opened by the first slice that
 changes the figure, and each later one adds to it.
 
-1. **`feat/render-all`** (05, ADR 0061), with no slices: `notasi
+1. **`feat/render-all`** (done) (05, ADR 0061), with no slices: `notasi
    render --all`, `--one-file`, `--list`, `--format` and `--ppi`; one
    line per file drawn; `--help`; the manual's page on drawing. First,
    since `make images` uses it.
