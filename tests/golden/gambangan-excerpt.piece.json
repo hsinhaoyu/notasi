@@ -713,7 +713,7 @@
               "symbol": "dot",
               "symbol_size": null,
               "symbol_color": null,
-              "border": "#d62728",
+              "border": null,
               "border_width": null
             }
           ],

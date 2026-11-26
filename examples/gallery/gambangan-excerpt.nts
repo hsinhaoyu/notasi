@@ -47,10 +47,10 @@
     (sangsih :label "Sangsih") (polos :label "Polos")))
 
 ;; The kotekan on one row per kettle, as in `full', with the two parts
-;; told apart: each sangsih note has a dot and a red border, the polos
-;; notes are drawn as usual. Where they play the same kettle (ding, from
+;; told apart: each sangsih note has a small dot, the polos notes are
+;; drawn as usual. Where they play the same kettle (ding, from
 ;; the second bar), the marks show whose note it is.
 (score marked :caption "Source: Colin McPhee (1940)."
   (group "Reyong" :subtitle "sangsih (marked), polos" :rows notes
-         :part-marker ((sangsih :symbol dot :border "#d62728"))
+         :part-marker ((sangsih :symbol dot))
     sangsih polos))
