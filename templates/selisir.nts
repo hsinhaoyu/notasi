@@ -1,5 +1,5 @@
 ;; Selisir: the five-tone pelog scale of Balinese gong kebyar.
-;; Degrees can be written by name (ding) or by vowel (i), and are shown
+;; Pitches can be written by name (ding) or by vowel (i), and are shown
 ;; in the score by their vowel.
 
 (scale selisir

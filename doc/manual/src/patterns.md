@@ -13,8 +13,8 @@ name, so you write it once:
   it yet.
 - `@norot` plays the figure where you write it, in a part, in a `rep`,
   or in another pattern.
-- `(@ norot :step -1)` plays it moved one degree down the scale: every
-  `i` becomes `a`, every `o` becomes `i`. `:step 1` moves it one degree
+- `(@ norot :step -1)` plays it moved one pitch down the scale: every
+  `i` becomes `a`, every `o` becomes `i`. `:step 1` moves it one pitch
   up. Notes written by number move by that many pots instead.
 
 ## Lengths in a pattern

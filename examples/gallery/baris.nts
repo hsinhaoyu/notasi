@@ -19,7 +19,7 @@
 ;; Definitions for this piece (they replace the template's). The reyong
 ;; (e2 to u4) and the calung come from the template.
 
-;; Tenzer writes the degrees as syllables: the open form when the note
+;; Tenzer writes the pitches as syllables: the open form when the note
 ;; rings, the damped form (with ') when it is cut short.
 (scale selisir
   (ding :alias (i ning) :display "ning" :damped "ni'")

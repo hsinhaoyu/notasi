@@ -2,7 +2,7 @@
 
 (use gong-kebyar)
 
-;; The degrees as syllables: ringing (nang) and cut short (na').
+;; The pitches as syllables: ringing (nang) and cut short (na').
 (scale selisir
   (ding :alias (i ning) :display "ning" :damped "ni'")
   (dong :alias (o nong) :display "nong" :damped "no'")

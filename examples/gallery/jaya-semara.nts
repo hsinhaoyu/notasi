@@ -62,8 +62,8 @@
   -:1/4 i3 i3 o3 | - o3 - o3)
 
 ;; One pass of the melody, 8 pulses. The figures on 6 and 2 are the
-;; figure on 1 moved a degree down and up; the sangsih on 3 is its
-;; figure on 1 moved two degrees up. A moved figure is given the name of
+;; figure on 1 moved a pitch down and up; the sangsih on 3 is its
+;; figure on 1 moved two pitches up. A moved figure is given the name of
 ;; the pokok tone it serves, so that polos and sangsih carry the same
 ;; names: "1", "6", "3", "2".
 (pattern polos :instrument pemade :short "norot" :long "Norot kotekan, polos"

@@ -42,7 +42,7 @@ own instead.
 | `:labels first-long` / `long` / `short` | score or group | Which label to print: the long one on the first line and the short one after (the default), always the long one, or always the short one. |
 | `:note-names yes` | score or group | Write each note's name in its square. The gongs above show `G`, `P` and `K`. |
 | `:palette NAME` | score or group | The colours of the notes: `pastel1` (the default), `set2`, `dark2` and others, or a list of colours such as `("#e41a1c" "#377eb8")`. |
-| `:colors ((ding "#000000"))` | score or group | A colour for one degree, in every octave. |
+| `:colors ((ding "#000000"))` | score or group | A colour for one pitch, in every octave. |
 | `:cell-width "2em"`, `:cell-height "2em"` | score | The size of a square. |
 | `:background grid` / `vertical` / `horizontal` / `empty` | score or group | The lines behind the notes: pulse lines and lines between rows (`grid`, the default), pulse lines only (`vertical`), lines between rows only (`horizontal`), or neither (`empty`). The lines between groups and at each new cycle are always drawn. |
 
@@ -90,7 +90,7 @@ colours:
 Rows of parts or one row, and `:fill none`, show the notes only by
 their names, so the group needs `:note-names yes`.
 
-A note that lasts one column shows its **damped** name, if its degree
+A note that lasts one column shows its **damped** name, if its pitch
 has one (`:damped "na'"`; see [Scales and stroke sets](scales-and-strokes.md));
 a longer note shows its usual name. In the drawing above, `nang` rings
 and `na'` is cut short.

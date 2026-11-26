@@ -104,7 +104,7 @@ misspelt.
 {{#include ../../../examples/manual/mistakes/wrong-note-name.txt}}
 ```
 
-Each note must be a degree (or alias) of the instrument's scale. Here
+Each note must be a pitch (or alias) of the instrument's scale. Here
 `dang1` is misspelt.
 
 ### No octave number
@@ -510,7 +510,7 @@ Put the `part` in the piece.
 - **… is already defined in this file**: two scales, stroke sets,
   instruments or parts have the same name. Rename or remove one.
 - **… ends in a digit, which would be read as an octave**: rename the
-  scale degree or alias so it doesn't end in a number.
+  pitch or alias so it doesn't end in a number.
 - **… is used twice in …**: a scale or stroke set uses the same name or
   alias twice.
 - **… is listed twice**: a drum or gong lists the same stroke twice.

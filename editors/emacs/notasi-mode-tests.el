@@ -333,7 +333,7 @@ turns on `notasi-mode'."
                  "(score full :fill none\n  (group \"Ugal\" :short \"U.\"\n    ugal)\n  (group \"Gong\" gong))")))
 
 (ert-deftest notasi-mode-test-indent-scale ()
-  "A scale's degrees are indented by 2, as in templates/selisir.nts."
+  "A scale's pitches are indented by 2, as in templates/selisir.nts."
   (should (equal (notasi-mode-tests--indent
                   #'notasi-mode
                   "(scale selisir\n(ding :alias i :display \"i\")\n(dong :alias o :display \"o\"))")
@@ -601,7 +601,7 @@ like any unknown function of the same length."
    '("^\"Gilak\"" ":colotomy ^gilak" ":pickup ^1")))
 
 (ert-deftest notasi-mode-test-use-and-scale-not-music ()
-  "A template's name and a scale's degrees are not music."
+  "A template's name and a scale's pitches are not music."
   (notasi-mode-tests--should-not-have-music-face
    "(use gong-kebyar)\n(scale selisir\n  (ding :alias i :display \"i\"))"
    '("^gong-kebyar" "(scale ^selisir" "(^ding" ":alias ^i")))

@@ -12,28 +12,55 @@ parts and the kempli for the whole piece:
 
 - `:colotomy gilak` on the `piece` line uses the gilak cycle for the
   piece. The `gong-kebyar` template defines it: eight pulses, with the
-  gong lanang on pulse 4, the kempur on 5 and 7, and the gong on 8. It
-  also defines `bapang`, sixteen pulses with the kempur on 4 and 12,
-  the klentong on 8 and the gong on 16.
+  gong lanang on pulse 4, the kempur on 5 and 7, and the gong on 8.
 - notasi writes out the `gong` part for every cycle.
 - The **kempli** is added for you, one stroke on every pulse. If the
   piece has no kempli instrument, notasi still keeps the pulse but
   doesn't draw it.
 
+## What a colotomy is
+
+"Colotomic" is a word from Western writing about gamelan, for the
+gongs, kempur and kempli that mark off the cycle. There is no single
+Balinese word for it: each meter has its own name, such as gilak or
+bapang. In notasi, a **colotomy** is one named meter at one length.
+
+- The same meter can be played at more than one length, and each
+  length is its own colotomy: bapang is played over 8, 16 and 32
+  pulses.
+- The gongs alone don't tell meters apart. A 16-pulse bapang and
+  gegaboran have the same gong strokes, and differ in their drumming,
+  mood and kind of piece. A colotomy's name is your label for the
+  meter you mean.
+- A pulse is one kempli stroke, what Lisa Gold calls a beat, so a
+  length from her book is a length in pulses.
+
+The `gong-kebyar` template has these colotomies:
+
+| Name | Pulses | Gong strokes |
+|---|---|---|
+| `gilak` | 8 | gong lanang on 4, kempur on 5 and 7, gong on 8 |
+| `gilak-2` | 8 | gong on 4 and 8, kempur on 5 and 7 |
+| `bapang-8` | 8 | kempur on 2 and 6, klentong on 4, gong on 8 |
+| `bapang-16` | 16 | kempur on 4 and 12, klentong on 8, gong on 16 |
+| `gegaboran` | 16 | the same strokes as `bapang-16` |
+
 ## A cycle of your own
 
 For a cycle the template doesn't have, or a different version of one,
-write a `colotomy`:
+write a `colotomy`. Lisa Gold's "Jagra Parwata" (*Music in Bali*,
+p. 142) plays bapang over 32 pulses:
 
 ```scheme
-{{#include ../../../examples/manual/own-colotomy.nts}}
+{{#include ../../../examples/manual/bapang-32.nts}}
 ```
 
-- `(colotomy gilak-kempur 8 …)` names a cycle of eight pulses.
+- `(colotomy bapang-32 32 …)` names a cycle of 32 pulses.
 - Inside it, `(part :instrument gong …)` is the gong's part over one
   cycle, written like any [part](notes-rests-and-holds.md): rests, the
-  kempur on pulses 4 and 6, and the gong on pulse 8. It is called
-  `gong`, after its instrument; give it another name with `:name`.
+  kempur on pulses 8 and 24, the klentong on 16, and the gong on 32. It
+  is called `gong`, after its instrument; give it another name with
+  `:name`.
 - A colotomy in your piece with the same name as the template's, such
   as `gilak`, replaces the template's.
 

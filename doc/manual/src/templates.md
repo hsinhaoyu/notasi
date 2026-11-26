@@ -36,7 +36,7 @@ notasi comes with a `gong-kebyar` template:
   (kempur) and `T` (klentong);
 - a **kendang** that plays `dag`, `dug` and `du`;
 - the gong cycles `gilak`, `gilak-2` (gilak with the gong on 4 instead
-  of the gong lanang) and `bapang` (see
+  of the gong lanang), `bapang-8`, `bapang-16` and `gegaboran` (see
   [Gong cycles](gong-cycles.md)).
 
 You can read the whole template on

@@ -15,7 +15,7 @@ Each `instrument` line gives:
 
 ## Notes on a pitched instrument
 
-Each note is a degree followed by its octave: `ding2` is ding in octave
+Each note is a pitch followed by its octave: `ding2` is ding in octave
 2. You can use an alias instead, so `i2` is also ding2. Octave numbers
 are your own choice and only need to be consistent within the piece:
 start at 1 (or 0) for the lowest octave you need.

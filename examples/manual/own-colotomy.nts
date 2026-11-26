@@ -1,9 +1,0 @@
-(piece "Gilak, another way" :colotomy gilak-kempur :pickup 1)
-
-(use gong-kebyar)
-
-;; The same eight pulses with the kempur on 4 and 6 and no gong lanang.
-(colotomy gilak-kempur 8
-  (part :instrument gong  -:3 P:1 -  P  -  G))
-
-(part :instrument ugal  a1 || o2 i2 e2 o2 | a1 o2 i2 a1 ||)
