@@ -1,0 +1,12 @@
+(piece "Kotekan, the parts marked")
+
+(use gong-kebyar)
+
+(part :instrument reyong :name polos    i3:1/4 _  i3 o3 | _  i3 o3 _  | o3 i3 _  o3 | i3 o3 _  i3)
+(part :instrument reyong :name sangsih  e3:1/4 u3 e3 _  | u3 e3 _  u3 | _  e3 u3 _  | e3 _  u3 e3)
+
+;; Sangsih's notes get a dot and a red border; polos's are drawn as usual.
+(score marked
+  (group "Reyong" :subtitle "polos + sangsih"
+         :part-marker ((sangsih :symbol dot :border "#d62728"))
+    polos sangsih))
