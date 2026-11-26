@@ -324,22 +324,6 @@ single note. Here sangsih strikes i3 while polos is still holding it, so
 the two notes would be drawn in the same place. Give the parts groups
 of their own, or `:rows parts`.
 
-### Pattern names written over each other
-
-```scheme
-{{#include ../../../examples/manual/mistakes/pattern-names-overlap.nts}}
-```
-
-```text
-{{#include ../../../examples/manual/mistakes/pattern-names-overlap.txt}}
-```
-
-In one group, the names of the patterns must either match exactly (the
-same name over the same pulses, written once) or not overlap. Here
-sangsih's figures start a pulse later than polos's. Give them groups of
-their own, or choose another `:pattern-level` (see
-[Patterns](patterns.md#printing-pattern-names)).
-
 ### A note outside the keys shown
 
 ```scheme
