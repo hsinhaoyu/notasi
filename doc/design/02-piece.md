@@ -16,6 +16,10 @@ default since `feat/drawing-header`, and the score's and group's
 `note-label`'s `#:octave?` and invariant 10 since `feat/drawing-rows`,
 and invariant 9 since `feat/drawing-output`. Tests in `tests/piece.scm`.
 
+**Planned** for iteration 5: the record changes in "Iteration 5" below
+(piece information, pattern annotations, free text, the group's new
+settings, the glossary's names), and saving the piece (ADR 0058).
+
 Everything in this document is **Implemented** unless it says otherwise.
 
 A `piece` record is the single source of truth after reading. Layout
@@ -34,7 +38,7 @@ source text.
   internally; the notation is 1-based, and the reader converts).
 - No pitch or tuning data on notes.
 - Every definition keeps a source location (file and line), for error
-  messages: scales, degrees, instruments, colotomies, patterns, parts,
+  messages: scales, pitches, instruments, colotomies, patterns, parts,
   scores and groups. The file matters because definitions can come from
   templates. `note`, `event` and `pattern-span` have none: they come
   from atoms, which carry no position (see 03-reader.md). `piece` has
@@ -211,19 +215,20 @@ group                                  every setting filled in (ADR 0033)
 ## Derived values (functions, not stored)
 
 - `(note-pitch-index instrument note)` (**Implemented**):
-  `octave × scale-size + degree`, a total order across all pitched
+  `octave × scale-size + pitch index`, a total order across all pitched
   instruments sharing a scale. Used to sort lanes. It takes the
   instrument because a note does not know its scale. For a stroke, which
   has no pitch, raises an `&error` whose irritants are the note name and
   instrument name.
 - `(note-display instrument note #:key damped?)` (**Implemented**): the
-  degree's display
-  form, e.g. `"i"` for `ding2`; with `damped?` true, its damped form,
-  or the display form if it has none. Used for the text in note cells.
-- `(note-label instrument note)` (**Implemented**): the display form plus
-  the octave, e.g. `"i2"`; for a stroke, just its display form. Used for
-  row labels. `#:octave?` (default `#t`); with `#f`, the
-  display form alone (`"i"`), for `:octave-numbers no`. A group's
+  pitch display name, e.g. `"i"` for `ding2`; with `damped?` true, its
+  damped form, or the pitch display name if it has none. Used for the
+  text in note cells.
+- `(note-label instrument note)` (**Implemented**): the pitch display
+  name plus the octave number, e.g. `"i2"`; for a stroke, just its
+  stroke display name. Used for row labels. `#:octave?` (default `#t`);
+  with `#f`, the pitch display name alone (`"i"`), for
+  `:octave-numbers no`. A group's
   `display` is applied by layout, which looks a stroke up there first.
 - `(group-lanes group)` (**Implemented**): the notes actually used by the
   group's member parts, as a list of note records, each once. Determines
@@ -268,7 +273,8 @@ construction, since events are built from the tokens.
    group's parts are either all pitched or all on stroke instruments
    (ADR 0034).
 7. A group with `rows` `parts` or `single`, or `fill` `none`, has
-   `note-names?` true.
+   `note-names?` true. **Planned**: a group with `fill` `none` has a
+   `note-label` other than `none`; `parts` and `compact` rows need none.
 8. Part names are unique in the piece, generated parts included, and
    score names are unique.
 9. Score names contain no `_` (ADR 0040).
@@ -278,6 +284,127 @@ construction, since events are built from the tokens.
     a range is pitched, with `rows` `notes`. Every stroke in a group's
     `display` is a stroke of an instrument in the group. A group with
     `key-numbers?` is pitched, with `rows` `notes`.
+11. **Planned.** A group's `annotation-part` and the parts in its
+    `part-marker` are members of the group.
+
+## Iteration 5
+
+**Planned** (ADRs 0051, 0054–0057). The records above change as
+follows when the milestones are built; the reader fills every new
+field, so layout never sees a missing one.
+
+Renamed to the glossary's terms (ADR 0051), when a milestone next
+touches them:
+
+| Now | Planned |
+|---|---|
+| record `degree` | `pitch` |
+| `scale-degrees` | `scale-pitches` |
+| `note-degree` (index into the scale) | `note-pitch` |
+| `group-lanes` | `group-rows` |
+| `note-label` (the row label) | `note-row-label`, since `note-label` is now an option's name |
+
+New and changed fields:
+
+```
+piece
+  info        : list of (symbol . string)
+                                       the piece information (01), keyed
+                                       by option name without the colon
+                                       (composer, remarks, ...), in the
+                                       order written; '() for none.
+                                       Kept as written, never printed
+
+pattern
+  annotation  : string | #f            `:annotation`
+
+pattern-span
+  annotation  : string | #f            in force at this use: the
+                                       pattern's, unless the use gave one
+
+part
+  texts       : list of free-text      `(text ...)` in the part, sorted
+                                       by start, written or reached
+                                       through patterns and `rep`
+
+free-text                              (new) takes no time
+  start       : rational               pulses
+  length      : rational | #f          `(text STRING LENGTH)`; #f for a
+                                       point, which runs to the next text
+  text        : string
+
+group
+  rows              : symbol           notes | parts | compact
+  note-label        : symbol           none | pitch-name |
+                                       pitch-display-name | key-number;
+                                       replaces note-names?
+  note-label-octave? : boolean
+  row-labels        : symbol           none | pitch-name |
+                                       pitch-display-name; replaces
+                                       row-labels?
+  row-label-octave? : boolean          replaces octave-numbers?
+  part-marker       : list of (part . marker)   '() for none
+  annotation        : annotation-row | #f       #f: no annotation row
+  scheme            : symbol           e.g. by-pitch
+  colors            : list of (symbol . string) pitch name and "#rrggbb"
+  (pattern-names and pattern-level are removed)
+
+marker                                 (new) a part's marks
+  symbol       : symbol                none | dot | ring | cross
+  symbol-size  : number | #f           fraction of the cell's narrower
+                                       side; #f: the default
+  symbol-color : string | #f           "#rrggbb"; #f: the default
+  border       : string | #f           "#rrggbb"; #f: the normal border
+  border-width : string | #f           a Typst length; #f: the default
+
+annotation-row                         (new)
+  part      : part                     a member of the group
+  position  : symbol                   above | below
+  align     : symbol                   left | center | right
+  level     : integer                  0, 1, ...
+  text      : symbol                   short | long | annotation
+  label     : string | #f              #f for ""
+```
+
+- Free text is not an event: it doesn't sound, so it has no notes and
+  isn't checked by invariant 2. Expansion places it like a note, so a
+  `(text ...)` inside a pattern appears at every use.
+- The piece information is data only: nothing downstream of the reader
+  reads `info` except saving the piece.
+
+## Saving the piece
+
+**Planned** (ADR 0058). `notasi render PIECE.nts --save-piece FILE`
+(05) writes the piece record, after reading, to FILE: JSON for
+`.json`, an s-expression for `.scm`, JSON on standard output for `-`.
+It is the piece, not a figure (the figure JSON is layout's output for
+one score, 05):
+
+- **Everything**, field for field as in the records above: the title,
+  length, pickup and information; the colotomy, scales, stroke sets and
+  instruments with their keys; the patterns; every part, written and
+  generated (with `origin`), with its events, pattern spans and free
+  text; and every score with its groups and settings.
+- **Always the whole piece.** `--score` and `--all` choose only what is
+  drawn; the saved file is the same whatever is drawn. Each score
+  records its parts and range, so a tool can work out one score's view.
+- **Source locations** on each definition (part, pattern, score,
+  colotomy, instrument, scale, stroke set): `"source": {"file": "...",
+  "line": 88}` in JSON. Events, notes and spans have none, as above.
+- **Exact times.** In JSON, a time or duration that is a whole number is
+  a number (`"start": 2`); one that isn't is a string in lowest terms,
+  as written in a `.nts` (`"start": "5/4"`, `"dur": "1/4"`). The
+  s-expression keeps exact rationals (`5/4`).
+- **The s-expression** is tagged lists, readable with `read`:
+  `(piece (title "...") (length 16) (pickup 1) (part (name polos) ...)
+  ...)`. It must not look like notation: notasi writes it and never
+  reads it back, and the `.nts` is the only input.
+- **Versioned, not yet promised.** The saved piece has a `version` field
+  from the start, and golden files for the examples, so every change
+  shows in review. The format may change between versions until it
+  settles, as the manual says; until then a change needs no ADR of its
+  own.
+- Terms follow the glossary: `pitch`, not `degree`, in both formats.
 
 ## Decided
 

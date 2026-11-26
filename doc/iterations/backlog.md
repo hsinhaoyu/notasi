@@ -88,11 +88,16 @@ for iteration 4's goal:
   scores of a piece as data, for completion, Eldoc and Imenu, which
   come in a later iteration
   ([help while writing](04-emacs-mode/design_ideas/2026-11-24-editing-help.md)).
+  The data part is planned in iteration 5 as `notasi render FILE --list
+  --save-piece -` (ADR 0058); completion, Eldoc and Imenu stay here.
 - **A faster check** that finds mistakes without drawing (skipping
   Typst), and **a Guile process kept running** between drawings
   (`notasi serve`): not needed while a drawing takes about 0.6 s
   ([how a drawing is made](04-emacs-mode/design_ideas/2026-11-24-drawing.md),
   [live preview](04-emacs-mode/design_ideas/2026-11-24-live-preview.md)).
+  The check is planned in iteration 5 as `notasi render FILE --list`,
+  which reads the piece and draws nothing (05); `notasi serve`
+  stays here.
 - **Several mistakes at once**, collected by the reader instead of
   stopping at the first
   ([mistakes shown in the text](04-emacs-mode/design_ideas/2026-11-24-errors.md)).
