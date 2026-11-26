@@ -88,7 +88,7 @@ See [its README](../iterations/04-emacs-mode/README.md).
 
 See [its README](../iterations/05-collapsed-and-gallery/README.md).
 
-1. `feat/render-all`: `notasi render --all` and its options
+1. **Implemented.** `feat/render-all`: `notasi render --all` and its options
 2. `feat/examples`: `examples/` in four folders, committed images
 3. `feat/collapsed`: compact rows, note labels, part markers and the
    annotation row; five slices, see the iteration's README

@@ -104,7 +104,7 @@ below, with these changes (04 lists the keys in order):
   pulse lines run through the header rows.
 - Each group gets `pulse_lines` and `row_lines` (booleans): whether its
   rows show pulse lines, and lines between its rows.
-- Each group gets `key_numbers`, one string per lane or `null`, and
+- Each group gets `key_numbers`, one string per row or `null`, and
   `sizes` gets `key_width` (ADR 0047). A group whose row labels are left
   out has `""` in `lanes`; an unused column is `"0.0em"` wide.
 - `header.cycles` has a mark `"0"` at the pickup's first column when a
@@ -323,7 +323,8 @@ Lessons from the prototype (`doc/prototypes/score.typ`):
   separated by a 1em gap. No systems: empty content.
 - **Columns:** `label_width` (group label and subtitle), `lane_width`
   (row labels), then `steps` columns of `step_width`. **Rows:** a
-  header row, then one row per lane of each group, all `row_height`.
+  header row, then one row per entry of each group's `lanes`, all
+  `row_height`.
 - **Header:** at each step whose absolute number (`system.start` + i)
   is a multiple of `steps_per_pulse`, the pulse number
   ((`start` + i) / `steps_per_pulse` + 1) in bold; at other steps a
@@ -488,7 +489,7 @@ folder), exactly:
   warns about a missing one. A figure may look a little different from
   machine to machine. 8pt keeps labels small next to the 2em squares.
 
-`(compile-typst typ-path out-path)` runs `typst compile` on TYP-PATH,
+`(compile-typst typ-path out-path #:key ppi)` runs `typst compile` on TYP-PATH,
 writing OUT-PATH, and returns OUT-PATH. The format comes from
 OUT-PATH's extension: `.pdf`, `.png` (at 144 ppi) or `.svg`; any other
 raises an `&error`. **Implemented** (ADR 0061): `#:ppi N` sets a PNG's
@@ -503,7 +504,7 @@ plain `&error`s with a readable message:
   musician sees what went wrong, not only a program reading the
   irritants); the irritants include TYP-PATH.
 
-**Implemented** (`feat/scores-range`): `(render-piece nts-path out-path #:key score keep-in)`
+**Implemented** (`feat/scores-range`): `(render-piece nts-path out-path #:key score keep-in ppi)`
 draws the score named SCORE (a symbol), or the piece's first score
 without it, with `layout-score`; there is no `#:style`, since colours
 come from the score (ADR 0032). A SCORE the piece doesn't have is an

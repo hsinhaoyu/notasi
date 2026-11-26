@@ -18,7 +18,7 @@ another length, write it after a colon:
   `-:3`.
 
 A length is a whole number of pulses (`2`) or a fraction (`1/4`,
-`1/2`, `3/2`). It goes after a note name (`i2:1/4`), a note number
+`1/2`, `3/2`). It goes after a key (`i2:1/4`), a key number
 (`5:1/4`) or a rest (`-:3`). A hold `_` lasts as long as the note
 before it, at the current length.
 

@@ -17,7 +17,7 @@ parts and the kempli for the whole piece:
   the klentong on 8 and the gong on 16.
 - notasi writes out the `gong` part for every cycle.
 - The **kempli** is added for you, one stroke on every pulse. If the
-  piece has no kempli instrument, notasi still keeps the beat but
+  piece has no kempli instrument, notasi still keeps the pulse but
   doesn't draw it.
 
 ## A cycle of your own
