@@ -31,6 +31,29 @@ jobs:
       - name: Run tests
         run: make check
 
+      # The committed images are the ones drawn here, on Linux with the
+      # pinned Typst (07, ADR 0052). Redraw them; if any changed, upload
+      # the new ones for the PR to commit, and fail.
+      - name: Check the committed images
+        id: images
+        run: |
+          make images
+          if [ -n "$(git status --porcelain -- examples/gallery/images examples/manual/images)" ]; then
+            git status --short -- examples/gallery/images examples/manual/images
+            echo "::error::The committed images are out of date. Download the 'images' artifact of this run and commit its files into examples/."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      - name: Upload the images drawn here
+        if: failure() && steps.images.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: images
+          path: |
+            examples/gallery/images/
+            examples/manual/images/
+
   # The Emacs package (editors/emacs/, 08), on the oldest Emacs it
   # supports and the newest release (07, "Emacs users").
   emacs:
