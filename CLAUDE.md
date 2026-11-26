@@ -126,6 +126,6 @@ Write idiomatic Guile 3, not another language translated into Scheme:
 Tests use SRFI-64. Each `tests/*.scm` file is a standalone script that `make check` picks up automatically; CI runs the same command. A test file must exit non-zero on failure: save `(test-runner-current)` before `test-end`, then `(exit (zero? (+ fail-count xpass-count)))`. See `tests/smoke.scm`.
 
 What to test:
-- Unit tests, one file per module: reader token handling and every error case listed in `doc/design/03-reader.md`, piece derived functions, layout decisions (lanes, system splitting, colours), JSON serialiser escaping.
+- Unit tests, one file per module: reader token handling and every error case listed in `doc/design/03-reader.md`, piece derived functions, layout decisions (rows, system splitting, colours), JSON serialiser escaping.
 - Golden tests: for each score of each file in `examples/gallery/` and `examples/demos/`, the generated JSON is compared with `tests/golden/` (`NAME.json` for a file with only the default score, `NAME_SCORE.json` otherwise). When an output change is intended, regenerate them with `make golden` and review the diff in the PR.
 - Typst template test: `tests/template.scm` compiles every golden figure with `typst/notasi.typ` and fails on an error or a warning. Changes to the template are also checked by eye with `make images`, and show in the PR as changed images.
