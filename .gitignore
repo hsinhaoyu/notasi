@@ -10,3 +10,6 @@
 # Emacs: byte-compiled files, and the hidden copies notasi-mode draws from (08).
 *.elc
 .notasi-preview-*
+
+# Emacs undo-tree history files.
+*.~undo-tree~
