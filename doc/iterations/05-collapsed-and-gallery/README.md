@@ -151,7 +151,7 @@ changes the figure, and each later one adds to it.
       milestone decides its annotation rows); the manual's example
       becomes an annotation row with `:annotation` and `(text ...)`,
       and the `pattern-names-overlap` mistake goes.
-4. **`feat/save-piece`** (02, 05, ADR 0058), with no slices:
+4. **`feat/save-piece`** (done) (02, 05, ADR 0058), with no slices:
    `--save-piece` as JSON and as an s-expression, its golden files,
    and its manual section. After `feat/collapsed`, so it saves the
    records in their final form.

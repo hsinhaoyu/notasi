@@ -29,6 +29,20 @@
 ;;;   copies (NAME.json, NAME_*.json) count neither as figures nor as
 ;;;   orphans; --update then keeps them and exits non-zero.
 ;;;
+;;; Milestone feat/save-piece (02, "Saving the piece"; ADR 0058): each
+;;; example also has its saved piece, tests/golden/NAME.piece.json, which
+;;; must match, as text, what save-piece writes to a .json file for the
+;;; example's piece.  It is per example, not per score: the saved piece
+;;; is the whole piece.  A saved piece with no example fails; --update
+;;; writes them with save-piece and deletes the orphans, beside the
+;;; figures.  Choices:
+;;; - A NAME.piece.json is never a figure: the figures are the other
+;;;   .json files, so a saved piece is not a figure's orphan.
+;;; - (notasi save) is looked up at run time, so while it doesn't exist
+;;;   the figures are still compared and only the saved pieces fail.
+;;; - The saved piece of an example that can't be read is neither
+;;;   compared nor an orphan, as for its figures.
+;;;
 ;;; Run from the repo root: guile -L . tests/golden.scm [--update]
 
 (use-modules (srfi srfi-1)
@@ -58,6 +72,16 @@ sorted.  No names if DIR doesn't exist."
                    example-dirs)))
     (string-append dir "/" name ".nts")))
 (define (golden-path name) (string-append golden-dir "/" name ".json"))
+(define piece-suffix ".piece.json")
+(define (piece-golden-path name)
+  (string-append golden-dir "/" name piece-suffix))
+
+;;; save-piece from (notasi save), or #f while it doesn't exist.
+(define save-piece
+  (let ((iface (false-if-exception (resolve-interface '(notasi save)))))
+    (and iface
+         (module-variable iface 'save-piece)
+         (module-ref iface 'save-piece))))
 
 (define (read-text path)
   (call-with-input-file path get-string-all #:encoding "UTF-8"))
@@ -103,6 +127,23 @@ file so that the comparison goes through write-figure."
         (when (file-exists? path) (delete-file path))
         (rmdir dir)))))
 
+(define (piece-text piece)
+  "The text save-piece writes for PIECE to a .json file, read back from a
+temporary file; the exception if it raises."
+  (let* ((dir (mkdtemp (string-append (or (getenv "TMPDIR") "/tmp")
+                                      "/notasi-golden-XXXXXX")))
+         (path (string-append dir "/piece.json")))
+    (dynamic-wind
+      (const #f)
+      (lambda ()
+        (guard (e (#t e))
+          (unless save-piece (error "(notasi save) has no save-piece"))
+          (save-piece piece path)
+          (read-text path)))
+      (lambda ()
+        (when (file-exists? path) (delete-file path))
+        (rmdir dir)))))
+
 (define examples
   (sort (append-map (lambda (dir) (names-in dir ".nts")) example-dirs)
         string<?))
@@ -116,7 +157,17 @@ file so that the comparison goes through write-figure."
                 ((name . p) (if (piece? p) (figures-of name p) '())))
               pieces))
 (define figure-names (map figure-name figures))
-(define goldens (names-in golden-dir ".json"))
+(define goldens
+  ;; The figures' saved copies: every .json except the saved pieces.
+  (remove (lambda (name) (string-suffix? ".piece" name))
+          (names-in golden-dir ".json")))
+(define piece-goldens (names-in golden-dir piece-suffix))
+(define readable
+  (filter-map (match-lambda
+                ((name . p) (and (piece? p) (cons name p))))
+              pieces))
+(define piece-orphans
+  (lset-difference string=? piece-goldens examples))
 
 (define (of-unreadable? golden)
   "Is GOLDEN a saved copy of an example that can't be read?"
@@ -140,6 +191,15 @@ can't be read."
               (delete-file (golden-path name))
               (format #t "deleted ~a (no figure)~%" (golden-path name)))
             orphans)
+  (for-each (match-lambda
+              ((name . piece)
+               (save-piece piece (piece-golden-path name))
+               (format #t "wrote ~a~%" (piece-golden-path name))))
+            readable)
+  (for-each (lambda (name)
+              (delete-file (piece-golden-path name))
+              (format #t "deleted ~a (no example)~%" (piece-golden-path name)))
+            piece-orphans)
   (for-each (lambda (name)
               (format (current-error-port) "can't read ~a: ~a~%"
                       (example-path name) (assoc-ref pieces name)))
@@ -172,6 +232,25 @@ can't be read."
                                  " is no example's figure")
        #f))
    orphans)
+  (for-each
+   (match-lambda
+     ((name . piece)
+      (if (member name piece-goldens)
+          (test-equal (string-append "saved piece matches " (piece-golden-path name))
+            (read-text (piece-golden-path name))
+            (piece-text piece))
+          (test-assert (string-append "example has a saved piece: "
+                                      (piece-golden-path name)
+                                      " is missing (run make golden)")
+            #f))))
+   readable)
+  (for-each
+   (lambda (name)
+     (test-assert (string-append "saved piece has an example: "
+                                 (piece-golden-path name)
+                                 " is no example's piece")
+       #f))
+   piece-orphans)
   (let ((runner (test-runner-current)))
     (test-end "golden")
     (zero? (+ (test-runner-fail-count runner)

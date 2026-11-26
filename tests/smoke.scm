@@ -8,6 +8,7 @@
              (notasi json)
              (notasi style)
              (notasi command)
+             (notasi save)
              (notasi typst))
 
 (test-begin "smoke")

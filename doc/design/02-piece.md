@@ -23,9 +23,8 @@ and the group's `part-marker` since `feat/collapsed-markers`; pattern
 and span annotations, a part's `texts`, the `free-text` and
 `annotation-row` records and the group's `annotation` since
 `feat/collapsed-annotation`, so every record change of "Iteration 5"
-is built. Tests in `tests/piece.scm`.
-
-**Planned** for iteration 5: saving the piece (ADR 0058).
+is built. Saving the piece (ADR 0058) since `feat/save-piece`, in
+`(notasi save)`. Tests in `tests/piece.scm` and `tests/save.scm`.
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -403,7 +402,9 @@ annotation-row
 
 ## Saving the piece
 
-**Planned** (ADR 0058). `notasi render PIECE.nts --save-piece FILE`
+**Implemented** (ADR 0058) since `feat/save-piece`, in `(notasi
+save)`, with golden files `tests/golden/NAME.piece.json`. `notasi
+render PIECE.nts --save-piece FILE`
 (05) writes the piece record, after reading, to FILE: JSON for
 `.json`, an s-expression for `.scm`, JSON on standard output for `-`.
 It is the piece, not a figure (the figure JSON is layout's output for
@@ -434,6 +435,57 @@ one score, 05):
   settles, as the manual says; until then a change needs no ADR of its
   own.
 - Terms follow the glossary: `pitch`, not `degree`, in both formats.
+
+The format, decided for `feat/save-piece`:
+
+- **The module** is `(notasi save)`: `(piece->json piece)` gives the
+  JSON value as `(notasi json)` writes it (alists, vectors, `null`);
+  `(piece->sexp piece)` the tagged list; `(save-piece piece path)`
+  writes it, `.json`, `.scm` or `-` (JSON to standard output) choosing
+  the format, any other extension an `&error`.
+- **References are names.** A part names its instrument, a span its
+  pattern, a group its members, marked parts and annotation part, a
+  colotomy its parts; a note is its key's name (`"ding2"`, `"G"`).
+- **Names of fields.** The record fields above, in their order; in JSON
+  with `_` (`system_length`, `note_label_octave`), in the s-expression
+  with `-`; booleans without the `?`. A missing value (`#f`) is `null`
+  in JSON and `#f` in the s-expression. Symbols are JSON strings.
+- **The fields**, in order (each definition also has `source`, last,
+  `{file, line}` with `file` null for a piece read from a string):
+  - piece: `version` (1), `title`, `length`, `pickup`, `info` (an
+    object, keys in the order written), `colotomies`, `scales`,
+    `instruments`, `patterns`, `parts`, `scores`;
+  - a colotomy entry: `start`, `name`, `length`, `timekeeper`, `parts`
+    (part names), `source`;
+  - scale: `name`, `pitched`, `pitches` (each `name`, `aliases`,
+    `display`, `damped`), `source`;
+  - instrument: `name`, `scale` (its name), `keys` (key names, in
+    order), `source`;
+  - pattern: `name`, `instrument`, `short`, `long`, `annotation`,
+    `source`;
+  - part: `name`, `instrument`, `origin`, `events` (each `start`,
+    `dur`, `notes`), `spans` (each `pattern`, `short`, `long`,
+    `annotation`, `start`, `end`, `depth`), `texts` (each `start`,
+    `length`, `text`), `source`;
+  - score: `name`, `title`, `subtitle`, `caption`, `from`, `to`,
+    `system_length`, `breaks`, `cycle_numbers`, `pulse_numbers`,
+    `numbering`, `background`, `cycle_label`, `pulse_label`,
+    `font_size`, `cell_width`, `cell_height`, `groups`, `source`;
+  - group: `label`, `short`, `subtitle`, `labels`, `rows`, `members`
+    (each `part`, `label`), `note_label`, `note_label_octave`, `fill`,
+    `holds`, `annotation` (null, or `part`, `position`, `align`,
+    `level`, `text`, `label`), `keys` (`"used"`, `"all"`, or `[LOW,
+    HIGH]` key names), `row_label_octave`, `key_numbers`, `row_labels`,
+    `display` (each `stroke`, `text`), `part_marker` (each `part`,
+    `symbol`, `symbol_size`, `symbol_color`, `border`, `border_width`),
+    `scheme`, `palette` (a name, or a list of colours), `colors` (each
+    `pitch`, `color`), `background`, `source`.
+  The s-expression is `(piece (version 1) (title "...") ...)`, each
+  list of records a list of tagged records (`(parts (part (name polos)
+  ...) ...)`), each record `(TAG (FIELD VALUE) ...)`.
+- **Golden files**: `tests/golden/NAME.piece.json`, one per example in
+  `examples/gallery/` and `examples/demos/`, written by `make golden`
+  with the figures and compared by `make check`.
 
 ## Decided
 

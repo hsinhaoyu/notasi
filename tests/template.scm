@@ -65,9 +65,12 @@
     #:encoding "UTF-8"))
 
 (define (golden-names)
-  "The names of the golden figures, without \".json\", sorted."
+  "The names of the golden figures, without \".json\", sorted.  A saved
+piece (NAME.piece.json, feat/save-piece) is not a figure."
   (map (lambda (f) (string-drop-right f 5))
-       (or (scandir golden-dir (lambda (f) (string-suffix? ".json" f)))
+       (or (scandir golden-dir (lambda (f)
+                                 (and (string-suffix? ".json" f)
+                                      (not (string-suffix? ".piece.json" f)))))
            '())))
 
 (define (typst-installed?)

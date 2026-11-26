@@ -1,0 +1,1986 @@
+{
+  "version": 1,
+  "title": "Jaya Semara: pangecet",
+  "length": 17,
+  "pickup": 1,
+  "info": {},
+  "colotomies": [
+    {
+      "start": 0,
+      "name": "bapang-16",
+      "length": 16,
+      "timekeeper": "kempli",
+      "parts": ["gong"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 56
+      }
+    }
+  ],
+  "scales": [
+    {
+      "name": "selisir",
+      "pitched": true,
+      "pitches": [
+        {
+          "name": "ding",
+          "aliases": ["i"],
+          "display": "i",
+          "damped": null
+        },
+        {
+          "name": "dong",
+          "aliases": ["o"],
+          "display": "o",
+          "damped": null
+        },
+        {
+          "name": "deng",
+          "aliases": ["e"],
+          "display": "e",
+          "damped": null
+        },
+        {
+          "name": "dung",
+          "aliases": ["u"],
+          "display": "u",
+          "damped": null
+        },
+        {
+          "name": "dang",
+          "aliases": ["a"],
+          "display": "a",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/selisir.nts",
+        "line": 5
+      }
+    },
+    {
+      "name": "kempli-strokes",
+      "pitched": false,
+      "pitches": [
+        {
+          "name": "K",
+          "aliases": [],
+          "display": "K",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 10
+      }
+    },
+    {
+      "name": "gong-strokes",
+      "pitched": false,
+      "pitches": [
+        {
+          "name": "G",
+          "aliases": [],
+          "display": "G",
+          "damped": null
+        },
+        {
+          "name": "GL",
+          "aliases": [],
+          "display": "GL",
+          "damped": null
+        },
+        {
+          "name": "P",
+          "aliases": [],
+          "display": "P",
+          "damped": null
+        },
+        {
+          "name": "T",
+          "aliases": [],
+          "display": "T",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 11
+      }
+    },
+    {
+      "name": "kendang-strokes",
+      "pitched": false,
+      "pitches": [
+        {
+          "name": "dag",
+          "aliases": [],
+          "display": "dag",
+          "damped": null
+        },
+        {
+          "name": "dug",
+          "aliases": [],
+          "display": "dug",
+          "damped": null
+        },
+        {
+          "name": "du",
+          "aliases": [],
+          "display": "du",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 12
+      }
+    }
+  ],
+  "instruments": [
+    {
+      "name": "jegogan",
+      "scale": "selisir",
+      "keys": ["ding1", "dong1", "deng1", "dung1", "dang1"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 16
+      }
+    },
+    {
+      "name": "jublag",
+      "scale": "selisir",
+      "keys": ["ding2", "dong2", "deng2", "dung2", "dang2"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 17
+      }
+    },
+    {
+      "name": "calung",
+      "scale": "selisir",
+      "keys": ["ding2", "dong2", "deng2", "dung2", "dang2"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 18
+      }
+    },
+    {
+      "name": "panyacah",
+      "scale": "selisir",
+      "keys": ["ding3", "dong3", "deng3", "dung3", "dang3"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 19
+      }
+    },
+    {
+      "name": "ugal",
+      "scale": "selisir",
+      "keys": ["dong1", "deng1", "dung1", "dang1", "ding2", "dong2", "deng2", "dung2", "dang2", "ding3"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 20
+      }
+    },
+    {
+      "name": "pemade",
+      "scale": "selisir",
+      "keys": ["dong2", "deng2", "dung2", "dang2", "ding3", "dong3", "deng3", "dung3", "dang3", "ding4"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 21
+      }
+    },
+    {
+      "name": "kantilan",
+      "scale": "selisir",
+      "keys": ["dong3", "deng3", "dung3", "dang3", "ding4", "dong4", "deng4", "dung4", "dang4", "ding5"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 22
+      }
+    },
+    {
+      "name": "trompong",
+      "scale": "selisir",
+      "keys": ["dang1", "ding2", "dong2", "deng2", "dung2", "dang2", "ding3", "dong3", "deng3", "dung3"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 23
+      }
+    },
+    {
+      "name": "reyong",
+      "scale": "selisir",
+      "keys": ["deng2", "dung2", "dang2", "ding3", "dong3", "deng3", "dung3", "dang3", "ding4", "dong4", "deng4", "dung4"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 24
+      }
+    },
+    {
+      "name": "kempli",
+      "scale": "kempli-strokes",
+      "keys": ["K"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 27
+      }
+    },
+    {
+      "name": "gong",
+      "scale": "gong-strokes",
+      "keys": ["G", "GL", "P", "T"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 28
+      }
+    },
+    {
+      "name": "kendang",
+      "scale": "kendang-strokes",
+      "keys": ["dag", "dug", "du"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 29
+      }
+    }
+  ],
+  "patterns": [
+    {
+      "name": "pokok",
+      "instrument": "jublag",
+      "short": "pokok",
+      "long": "Pokok: 1 6 3 2",
+      "annotation": null,
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 38
+      }
+    },
+    {
+      "name": "pokok-ugal",
+      "instrument": "ugal",
+      "short": "pokok",
+      "long": "Pokok: 1 6 3 2, low 6",
+      "annotation": null,
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 42
+      }
+    },
+    {
+      "name": "panyacah-fill",
+      "instrument": "panyacah",
+      "short": "fill",
+      "long": "Panyacah: 6 1 5 6 2 3 1 2",
+      "annotation": null,
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 46
+      }
+    },
+    {
+      "name": "jegogan-pokok",
+      "instrument": "jegogan",
+      "short": "jegogan",
+      "long": "Jegogan: 6 2",
+      "annotation": null,
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 51
+      }
+    },
+    {
+      "name": "polos-1",
+      "instrument": "pemade",
+      "short": "1",
+      "long": "Norot polos on 1",
+      "annotation": null,
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 57
+      }
+    },
+    {
+      "name": "polos-3",
+      "instrument": "pemade",
+      "short": "3",
+      "long": "Norot polos on 3",
+      "annotation": null,
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 59
+      }
+    },
+    {
+      "name": "sangsih-1",
+      "instrument": "pemade",
+      "short": "1",
+      "long": "Norot sangsih on 1",
+      "annotation": null,
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 61
+      }
+    },
+    {
+      "name": "polos",
+      "instrument": "pemade",
+      "short": "norot",
+      "long": "Norot kotekan, polos",
+      "annotation": null,
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 69
+      }
+    },
+    {
+      "name": "sangsih",
+      "instrument": "pemade",
+      "short": "norot",
+      "long": "Norot kotekan, sangsih",
+      "annotation": null,
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 74
+      }
+    }
+  ],
+  "parts": [
+    {
+      "name": "polos",
+      "instrument": "pemade",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "1/2",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": 1,
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "5/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "3/2",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": 2,
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "5/2",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": 3,
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "13/4",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "7/2",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": 4,
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "9/2",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": 5,
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "21/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "11/2",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": 6,
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "13/2",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": 7,
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "29/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "15/2",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": 8,
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "17/2",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": 9,
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "37/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "19/2",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": 10,
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "21/2",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": 11,
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "45/4",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "23/2",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": 12,
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "25/2",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": 13,
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "53/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "27/2",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": 14,
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "29/2",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": 15,
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "61/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "31/2",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": 16,
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "33/2",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        }
+      ],
+      "spans": [
+        {
+          "pattern": "polos-1",
+          "short": "1",
+          "long": "Norot polos on 1",
+          "annotation": null,
+          "start": 1,
+          "end": 3,
+          "depth": 1
+        },
+        {
+          "pattern": "polos",
+          "short": "norot",
+          "long": "Norot kotekan, polos",
+          "annotation": null,
+          "start": 1,
+          "end": 9,
+          "depth": 0
+        },
+        {
+          "pattern": "polos-1",
+          "short": "6",
+          "long": "Norot polos on 6",
+          "annotation": null,
+          "start": 3,
+          "end": 5,
+          "depth": 1
+        },
+        {
+          "pattern": "polos-3",
+          "short": "3",
+          "long": "Norot polos on 3",
+          "annotation": null,
+          "start": 5,
+          "end": 7,
+          "depth": 1
+        },
+        {
+          "pattern": "polos-1",
+          "short": "2",
+          "long": "Norot polos on 2",
+          "annotation": null,
+          "start": 7,
+          "end": 9,
+          "depth": 1
+        },
+        {
+          "pattern": "polos-1",
+          "short": "1",
+          "long": "Norot polos on 1",
+          "annotation": null,
+          "start": 9,
+          "end": 11,
+          "depth": 1
+        },
+        {
+          "pattern": "polos",
+          "short": "norot",
+          "long": "Norot kotekan, polos",
+          "annotation": null,
+          "start": 9,
+          "end": 17,
+          "depth": 0
+        },
+        {
+          "pattern": "polos-1",
+          "short": "6",
+          "long": "Norot polos on 6",
+          "annotation": null,
+          "start": 11,
+          "end": 13,
+          "depth": 1
+        },
+        {
+          "pattern": "polos-3",
+          "short": "3",
+          "long": "Norot polos on 3",
+          "annotation": null,
+          "start": 13,
+          "end": 15,
+          "depth": 1
+        },
+        {
+          "pattern": "polos-1",
+          "short": "2",
+          "long": "Norot polos on 2",
+          "annotation": null,
+          "start": 15,
+          "end": 17,
+          "depth": 1
+        }
+      ],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 88
+      }
+    },
+    {
+      "name": "sangsih",
+      "instrument": "pemade",
+      "origin": "written",
+      "events": [
+        {
+          "start": "1/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "3/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "5/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "3/2",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "7/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "9/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "11/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "13/4",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "7/2",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "15/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "17/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "19/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "21/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "11/2",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "23/4",
+          "dur": "1/4",
+          "notes": ["dung3"]
+        },
+        {
+          "start": "25/4",
+          "dur": "1/4",
+          "notes": ["dung3"]
+        },
+        {
+          "start": "27/4",
+          "dur": "1/4",
+          "notes": ["dung3"]
+        },
+        {
+          "start": "29/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "15/2",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "31/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "33/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "35/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "37/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "19/2",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "39/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "41/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "43/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "45/4",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "23/2",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "47/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "49/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "51/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "53/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "27/2",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "55/4",
+          "dur": "1/4",
+          "notes": ["dung3"]
+        },
+        {
+          "start": "57/4",
+          "dur": "1/4",
+          "notes": ["dung3"]
+        },
+        {
+          "start": "59/4",
+          "dur": "1/4",
+          "notes": ["dung3"]
+        },
+        {
+          "start": "61/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "31/2",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "63/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "65/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "67/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        }
+      ],
+      "spans": [
+        {
+          "pattern": "sangsih-1",
+          "short": "1",
+          "long": "Norot sangsih on 1",
+          "annotation": null,
+          "start": 1,
+          "end": 3,
+          "depth": 1
+        },
+        {
+          "pattern": "sangsih",
+          "short": "norot",
+          "long": "Norot kotekan, sangsih",
+          "annotation": null,
+          "start": 1,
+          "end": 9,
+          "depth": 0
+        },
+        {
+          "pattern": "sangsih-1",
+          "short": "6",
+          "long": "Norot sangsih on 6",
+          "annotation": null,
+          "start": 3,
+          "end": 5,
+          "depth": 1
+        },
+        {
+          "pattern": "sangsih-1",
+          "short": "3",
+          "long": "Norot sangsih on 3",
+          "annotation": null,
+          "start": 5,
+          "end": 7,
+          "depth": 1
+        },
+        {
+          "pattern": "sangsih-1",
+          "short": "2",
+          "long": "Norot sangsih on 2",
+          "annotation": null,
+          "start": 7,
+          "end": 9,
+          "depth": 1
+        },
+        {
+          "pattern": "sangsih-1",
+          "short": "1",
+          "long": "Norot sangsih on 1",
+          "annotation": null,
+          "start": 9,
+          "end": 11,
+          "depth": 1
+        },
+        {
+          "pattern": "sangsih",
+          "short": "norot",
+          "long": "Norot kotekan, sangsih",
+          "annotation": null,
+          "start": 9,
+          "end": 17,
+          "depth": 0
+        },
+        {
+          "pattern": "sangsih-1",
+          "short": "6",
+          "long": "Norot sangsih on 6",
+          "annotation": null,
+          "start": 11,
+          "end": 13,
+          "depth": 1
+        },
+        {
+          "pattern": "sangsih-1",
+          "short": "3",
+          "long": "Norot sangsih on 3",
+          "annotation": null,
+          "start": 13,
+          "end": 15,
+          "depth": 1
+        },
+        {
+          "pattern": "sangsih-1",
+          "short": "2",
+          "long": "Norot sangsih on 2",
+          "annotation": null,
+          "start": 15,
+          "end": 17,
+          "depth": 1
+        }
+      ],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 89
+      }
+    },
+    {
+      "name": "ugal",
+      "instrument": "ugal",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": 2,
+          "notes": ["dong2"]
+        },
+        {
+          "start": 2,
+          "dur": 2,
+          "notes": ["ding2"]
+        },
+        {
+          "start": 4,
+          "dur": 2,
+          "notes": ["dang1"]
+        },
+        {
+          "start": 6,
+          "dur": 2,
+          "notes": ["deng2"]
+        },
+        {
+          "start": 8,
+          "dur": 2,
+          "notes": ["dong2"]
+        },
+        {
+          "start": 10,
+          "dur": 2,
+          "notes": ["ding2"]
+        },
+        {
+          "start": 12,
+          "dur": 2,
+          "notes": ["dang1"]
+        },
+        {
+          "start": 14,
+          "dur": 2,
+          "notes": ["deng2"]
+        },
+        {
+          "start": 16,
+          "dur": 1,
+          "notes": ["dong2"]
+        }
+      ],
+      "spans": [
+        {
+          "pattern": "pokok-ugal",
+          "short": "pokok",
+          "long": "Pokok: 1 6 3 2, low 6",
+          "annotation": null,
+          "start": 1,
+          "end": 9,
+          "depth": 0
+        },
+        {
+          "pattern": "pokok-ugal",
+          "short": "pokok",
+          "long": "Pokok: 1 6 3 2, low 6",
+          "annotation": null,
+          "start": 9,
+          "end": 17,
+          "depth": 0
+        }
+      ],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 90
+      }
+    },
+    {
+      "name": "panyacah",
+      "instrument": "panyacah",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": 1,
+          "notes": ["dong3"]
+        },
+        {
+          "start": 1,
+          "dur": 1,
+          "notes": ["dang3"]
+        },
+        {
+          "start": 2,
+          "dur": 1,
+          "notes": ["ding3"]
+        },
+        {
+          "start": 3,
+          "dur": 1,
+          "notes": ["dung3"]
+        },
+        {
+          "start": 4,
+          "dur": 1,
+          "notes": ["dang3"]
+        },
+        {
+          "start": 5,
+          "dur": 1,
+          "notes": ["dong3"]
+        },
+        {
+          "start": 6,
+          "dur": 1,
+          "notes": ["deng3"]
+        },
+        {
+          "start": 7,
+          "dur": 1,
+          "notes": ["ding3"]
+        },
+        {
+          "start": 8,
+          "dur": 1,
+          "notes": ["dong3"]
+        },
+        {
+          "start": 9,
+          "dur": 1,
+          "notes": ["dang3"]
+        },
+        {
+          "start": 10,
+          "dur": 1,
+          "notes": ["ding3"]
+        },
+        {
+          "start": 11,
+          "dur": 1,
+          "notes": ["dung3"]
+        },
+        {
+          "start": 12,
+          "dur": 1,
+          "notes": ["dang3"]
+        },
+        {
+          "start": 13,
+          "dur": 1,
+          "notes": ["dong3"]
+        },
+        {
+          "start": 14,
+          "dur": 1,
+          "notes": ["deng3"]
+        },
+        {
+          "start": 15,
+          "dur": 1,
+          "notes": ["ding3"]
+        },
+        {
+          "start": 16,
+          "dur": 1,
+          "notes": ["dong3"]
+        }
+      ],
+      "spans": [
+        {
+          "pattern": "panyacah-fill",
+          "short": "fill",
+          "long": "Panyacah: 6 1 5 6 2 3 1 2",
+          "annotation": null,
+          "start": 1,
+          "end": 9,
+          "depth": 0
+        },
+        {
+          "pattern": "panyacah-fill",
+          "short": "fill",
+          "long": "Panyacah: 6 1 5 6 2 3 1 2",
+          "annotation": null,
+          "start": 9,
+          "end": 17,
+          "depth": 0
+        }
+      ],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 91
+      }
+    },
+    {
+      "name": "jublag",
+      "instrument": "jublag",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": 2,
+          "notes": ["dong2"]
+        },
+        {
+          "start": 2,
+          "dur": 2,
+          "notes": ["ding2"]
+        },
+        {
+          "start": 4,
+          "dur": 2,
+          "notes": ["dang2"]
+        },
+        {
+          "start": 6,
+          "dur": 2,
+          "notes": ["deng2"]
+        },
+        {
+          "start": 8,
+          "dur": 2,
+          "notes": ["dong2"]
+        },
+        {
+          "start": 10,
+          "dur": 2,
+          "notes": ["ding2"]
+        },
+        {
+          "start": 12,
+          "dur": 2,
+          "notes": ["dang2"]
+        },
+        {
+          "start": 14,
+          "dur": 2,
+          "notes": ["deng2"]
+        },
+        {
+          "start": 16,
+          "dur": 1,
+          "notes": ["dong2"]
+        }
+      ],
+      "spans": [
+        {
+          "pattern": "pokok",
+          "short": "pokok",
+          "long": "Pokok: 1 6 3 2",
+          "annotation": null,
+          "start": 1,
+          "end": 9,
+          "depth": 0
+        },
+        {
+          "pattern": "pokok",
+          "short": "pokok",
+          "long": "Pokok: 1 6 3 2",
+          "annotation": null,
+          "start": 9,
+          "end": 17,
+          "depth": 0
+        }
+      ],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 92
+      }
+    },
+    {
+      "name": "jegogan",
+      "instrument": "jegogan",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": 4,
+          "notes": ["dong1"]
+        },
+        {
+          "start": 4,
+          "dur": 4,
+          "notes": ["dang1"]
+        },
+        {
+          "start": 8,
+          "dur": 4,
+          "notes": ["dong1"]
+        },
+        {
+          "start": 12,
+          "dur": 4,
+          "notes": ["dang1"]
+        },
+        {
+          "start": 16,
+          "dur": 1,
+          "notes": ["dong1"]
+        }
+      ],
+      "spans": [
+        {
+          "pattern": "jegogan-pokok",
+          "short": "jegogan",
+          "long": "Jegogan: 6 2",
+          "annotation": null,
+          "start": 1,
+          "end": 9,
+          "depth": 0
+        },
+        {
+          "pattern": "jegogan-pokok",
+          "short": "jegogan",
+          "long": "Jegogan: 6 2",
+          "annotation": null,
+          "start": 9,
+          "end": 17,
+          "depth": 0
+        }
+      ],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 93
+      }
+    },
+    {
+      "name": "gong",
+      "instrument": "gong",
+      "origin": "colotomy",
+      "events": [
+        {
+          "start": 0,
+          "dur": 1,
+          "notes": ["G"]
+        },
+        {
+          "start": 4,
+          "dur": 1,
+          "notes": ["P"]
+        },
+        {
+          "start": 8,
+          "dur": 1,
+          "notes": ["T"]
+        },
+        {
+          "start": 12,
+          "dur": 1,
+          "notes": ["P"]
+        },
+        {
+          "start": 16,
+          "dur": 1,
+          "notes": ["G"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 56
+      }
+    },
+    {
+      "name": "kempli",
+      "instrument": "kempli",
+      "origin": "timekeeper",
+      "events": [
+        {
+          "start": 0,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 1,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 2,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 3,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 4,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 5,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 6,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 7,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 8,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 9,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 10,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 11,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 12,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 13,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 14,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 15,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 16,
+          "dur": 1,
+          "notes": ["K"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 56
+      }
+    }
+  ],
+  "scores": [
+    {
+      "name": "full",
+      "title": "Jaya Semara: pangecet",
+      "subtitle": null,
+      "caption": null,
+      "from": 0,
+      "to": 17,
+      "system_length": null,
+      "breaks": [],
+      "cycle_numbers": true,
+      "pulse_numbers": true,
+      "numbering": "gong-last",
+      "background": "grid",
+      "cycle_label": "Cycle",
+      "pulse_label": "Pulse",
+      "font_size": "8pt",
+      "cell_width": "2em",
+      "cell_height": "2em",
+      "groups": [
+        {
+          "label": "Gangsa pemade",
+          "short": "Pem.",
+          "subtitle": "norot",
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "polos",
+              "label": "polos"
+            },
+            {
+              "part": "sangsih",
+              "label": "sangsih"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/jaya-semara.nts",
+            "line": 104
+          }
+        },
+        {
+          "label": "Ugal",
+          "short": "Ug.",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "ugal",
+              "label": "ugal"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/jaya-semara.nts",
+            "line": 105
+          }
+        },
+        {
+          "label": "Panyacah",
+          "short": "Pny.",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "panyacah",
+              "label": "panyacah"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/jaya-semara.nts",
+            "line": 106
+          }
+        },
+        {
+          "label": "Jublag",
+          "short": "Jub.",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "jublag",
+              "label": "jublag"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/jaya-semara.nts",
+            "line": 107
+          }
+        },
+        {
+          "label": "Jegogan",
+          "short": "Jeg.",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "jegogan",
+              "label": "jegogan"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/jaya-semara.nts",
+            "line": 108
+          }
+        },
+        {
+          "label": "Gong, kempli",
+          "short": "G. K.",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "gong",
+              "label": "gong"
+            },
+            {
+              "part": "kempli",
+              "label": "kempli"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/jaya-semara.nts",
+            "line": 109
+          }
+        }
+      ],
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 102
+      }
+    },
+    {
+      "name": "kotekan",
+      "title": "Norot kotekan against the pokok",
+      "subtitle": null,
+      "caption": null,
+      "from": 1,
+      "to": 9,
+      "system_length": null,
+      "breaks": [],
+      "cycle_numbers": false,
+      "pulse_numbers": true,
+      "numbering": "gong-last",
+      "background": "grid",
+      "cycle_label": "Cycle",
+      "pulse_label": "Pulse",
+      "font_size": null,
+      "cell_width": "2em",
+      "cell_height": "2em",
+      "groups": [
+        {
+          "label": "Gangsa pemade",
+          "short": "Gangsa pemade",
+          "subtitle": null,
+          "labels": "long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "polos",
+              "label": "polos"
+            },
+            {
+              "part": "sangsih",
+              "label": "sangsih"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/jaya-semara.nts",
+            "line": 115
+          }
+        },
+        {
+          "label": "Jublag",
+          "short": "Jublag",
+          "subtitle": null,
+          "labels": "long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "jublag",
+              "label": "jublag"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/jaya-semara.nts",
+            "line": 116
+          }
+        }
+      ],
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 113
+      }
+    },
+    {
+      "name": "collapsed",
+      "title": "Jaya Semara: pangecet",
+      "subtitle": null,
+      "caption": "Source: Lisa Gold, Music in Bali: Experiencing Music, Expressing Culture (Oxford University Press, 2005).",
+      "from": 0,
+      "to": 17,
+      "system_length": null,
+      "breaks": [],
+      "cycle_numbers": true,
+      "pulse_numbers": true,
+      "numbering": "gong-last",
+      "background": "grid",
+      "cycle_label": "Cycle",
+      "pulse_label": "Pulse",
+      "font_size": null,
+      "cell_width": "2em",
+      "cell_height": "2em",
+      "groups": [
+        {
+          "label": "Gangsa - Sangsih",
+          "short": "Gangsa - Sangsih",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "compact",
+          "members": [
+            {
+              "part": "sangsih",
+              "label": "sangsih"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/jaya-semara.nts",
+            "line": 124
+          }
+        },
+        {
+          "label": "Gangsa - Polos",
+          "short": "Gangsa - Polos",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "compact",
+          "members": [
+            {
+              "part": "polos",
+              "label": "polos"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/jaya-semara.nts",
+            "line": 125
+          }
+        },
+        {
+          "label": "Panyacah",
+          "short": "Panyacah",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "compact",
+          "members": [
+            {
+              "part": "panyacah",
+              "label": "panyacah"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/jaya-semara.nts",
+            "line": 126
+          }
+        },
+        {
+          "label": "Jublag",
+          "short": "Jublag",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "compact",
+          "members": [
+            {
+              "part": "jublag",
+              "label": "jublag"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/jaya-semara.nts",
+            "line": 128
+          }
+        },
+        {
+          "label": "Jegogan",
+          "short": "Jegogan",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "compact",
+          "members": [
+            {
+              "part": "jegogan",
+              "label": "jegogan"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/jaya-semara.nts",
+            "line": 129
+          }
+        },
+        {
+          "label": "Gong, kempli",
+          "short": "Gong, kempli",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "gong",
+              "label": "gong"
+            },
+            {
+              "part": "kempli",
+              "label": "kempli"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/jaya-semara.nts",
+            "line": 130
+          }
+        }
+      ],
+      "source": {
+        "file": "examples/gallery/jaya-semara.nts",
+        "line": 122
+      }
+    }
+  ]
+}

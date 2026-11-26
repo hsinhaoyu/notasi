@@ -1,0 +1,2457 @@
+{
+  "version": 1,
+  "title": "Baris",
+  "length": 9,
+  "pickup": 1,
+  "info": {},
+  "colotomies": [
+    {
+      "start": 0,
+      "name": "gilak-2",
+      "length": 8,
+      "timekeeper": "kempli",
+      "parts": ["gong"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 46
+      }
+    }
+  ],
+  "scales": [
+    {
+      "name": "kempli-strokes",
+      "pitched": false,
+      "pitches": [
+        {
+          "name": "K",
+          "aliases": [],
+          "display": "K",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 10
+      }
+    },
+    {
+      "name": "gong-strokes",
+      "pitched": false,
+      "pitches": [
+        {
+          "name": "G",
+          "aliases": [],
+          "display": "G",
+          "damped": null
+        },
+        {
+          "name": "GL",
+          "aliases": [],
+          "display": "GL",
+          "damped": null
+        },
+        {
+          "name": "P",
+          "aliases": [],
+          "display": "P",
+          "damped": null
+        },
+        {
+          "name": "T",
+          "aliases": [],
+          "display": "T",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 11
+      }
+    },
+    {
+      "name": "kendang-strokes",
+      "pitched": false,
+      "pitches": [
+        {
+          "name": "dag",
+          "aliases": [],
+          "display": "dag",
+          "damped": null
+        },
+        {
+          "name": "dug",
+          "aliases": [],
+          "display": "dug",
+          "damped": null
+        },
+        {
+          "name": "du",
+          "aliases": [],
+          "display": "du",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 12
+      }
+    },
+    {
+      "name": "selisir",
+      "pitched": true,
+      "pitches": [
+        {
+          "name": "ding",
+          "aliases": ["i", "ning"],
+          "display": "ning",
+          "damped": "ni'"
+        },
+        {
+          "name": "dong",
+          "aliases": ["o", "nong"],
+          "display": "nong",
+          "damped": "no'"
+        },
+        {
+          "name": "deng",
+          "aliases": ["e", "neng"],
+          "display": "neng",
+          "damped": "ne'"
+        },
+        {
+          "name": "dung",
+          "aliases": ["u", "nung"],
+          "display": "nung",
+          "damped": "nu'"
+        },
+        {
+          "name": "dang",
+          "aliases": ["a", "nang"],
+          "display": "nang",
+          "damped": "na'"
+        }
+      ],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 24
+      }
+    },
+    {
+      "name": "kendang-lanang-strokes",
+      "pitched": false,
+      "pitches": [
+        {
+          "name": "pak",
+          "aliases": [],
+          "display": "pak",
+          "damped": null
+        },
+        {
+          "name": "dug",
+          "aliases": [],
+          "display": "dug",
+          "damped": null
+        },
+        {
+          "name": "du",
+          "aliases": [],
+          "display": "du'",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 38
+      }
+    },
+    {
+      "name": "kendang-wadon-strokes",
+      "pitched": false,
+      "pitches": [
+        {
+          "name": "kap",
+          "aliases": [],
+          "display": "kap",
+          "damped": null
+        },
+        {
+          "name": "dag",
+          "aliases": [],
+          "display": "dag",
+          "damped": null
+        },
+        {
+          "name": "da",
+          "aliases": [],
+          "display": "da'",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 39
+      }
+    }
+  ],
+  "instruments": [
+    {
+      "name": "jegogan",
+      "scale": "selisir",
+      "keys": ["ding1", "dong1", "deng1", "dung1", "dang1"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 16
+      }
+    },
+    {
+      "name": "jublag",
+      "scale": "selisir",
+      "keys": ["ding2", "dong2", "deng2", "dung2", "dang2"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 17
+      }
+    },
+    {
+      "name": "calung",
+      "scale": "selisir",
+      "keys": ["ding2", "dong2", "deng2", "dung2", "dang2"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 18
+      }
+    },
+    {
+      "name": "panyacah",
+      "scale": "selisir",
+      "keys": ["ding3", "dong3", "deng3", "dung3", "dang3"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 19
+      }
+    },
+    {
+      "name": "ugal",
+      "scale": "selisir",
+      "keys": ["dong1", "deng1", "dung1", "dang1", "ding2", "dong2", "deng2", "dung2", "dang2", "ding3"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 20
+      }
+    },
+    {
+      "name": "pemade",
+      "scale": "selisir",
+      "keys": ["dong2", "deng2", "dung2", "dang2", "ding3", "dong3", "deng3", "dung3", "dang3", "ding4"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 21
+      }
+    },
+    {
+      "name": "kantilan",
+      "scale": "selisir",
+      "keys": ["dong3", "deng3", "dung3", "dang3", "ding4", "dong4", "deng4", "dung4", "dang4", "ding5"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 22
+      }
+    },
+    {
+      "name": "trompong",
+      "scale": "selisir",
+      "keys": ["dang1", "ding2", "dong2", "deng2", "dung2", "dang2", "ding3", "dong3", "deng3", "dung3"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 23
+      }
+    },
+    {
+      "name": "reyong",
+      "scale": "selisir",
+      "keys": ["deng2", "dung2", "dang2", "ding3", "dong3", "deng3", "dung3", "dang3", "ding4", "dong4", "deng4", "dung4"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 24
+      }
+    },
+    {
+      "name": "kempli",
+      "scale": "kempli-strokes",
+      "keys": ["K"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 27
+      }
+    },
+    {
+      "name": "gong",
+      "scale": "gong-strokes",
+      "keys": ["G", "GL", "P", "T"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 28
+      }
+    },
+    {
+      "name": "kendang",
+      "scale": "kendang-strokes",
+      "keys": ["dag", "dug", "du"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 29
+      }
+    },
+    {
+      "name": "kendang-lanang",
+      "scale": "kendang-lanang-strokes",
+      "keys": ["pak", "dug", "du"],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 40
+      }
+    },
+    {
+      "name": "kendang-wadon",
+      "scale": "kendang-wadon-strokes",
+      "keys": ["kap", "dag", "da"],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 41
+      }
+    }
+  ],
+  "patterns": [
+    {
+      "name": "nang-ni",
+      "instrument": "reyong",
+      "short": "3",
+      "long": "na' - ni'",
+      "annotation": null,
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 47
+      }
+    },
+    {
+      "name": "ne-nong",
+      "instrument": "reyong",
+      "short": "3",
+      "long": "ne' no' -",
+      "annotation": null,
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 49
+      }
+    }
+  ],
+  "parts": [
+    {
+      "name": "polos",
+      "instrument": "reyong",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "1/2",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "3/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "5/4",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "3/2",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": 2,
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "9/4",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "11/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": 3,
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "7/2",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "15/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "17/4",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "19/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": 5,
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "11/2",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "23/4",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "25/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "13/2",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": 7,
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "29/4",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "31/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": 8,
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "17/2",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "35/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        }
+      ],
+      "spans": [
+        {
+          "pattern": "nang-ni",
+          "short": "3",
+          "long": "na' - ni'",
+          "annotation": null,
+          "start": "17/4",
+          "end": 5,
+          "depth": 0
+        },
+        {
+          "pattern": "nang-ni",
+          "short": "3",
+          "long": "na' - ni'",
+          "annotation": null,
+          "start": 5,
+          "end": "23/4",
+          "depth": 0
+        },
+        {
+          "pattern": "nang-ni",
+          "short": "3",
+          "long": "na' - ni'",
+          "annotation": null,
+          "start": "23/4",
+          "end": "13/2",
+          "depth": 0
+        },
+        {
+          "pattern": "nang-ni",
+          "short": "3",
+          "long": "na' - ni'",
+          "annotation": null,
+          "start": "13/2",
+          "end": "29/4",
+          "depth": 0
+        },
+        {
+          "pattern": "nang-ni",
+          "short": "3",
+          "long": "na' - ni'",
+          "annotation": null,
+          "start": "29/4",
+          "end": 8,
+          "depth": 0
+        }
+      ],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 61
+      }
+    },
+    {
+      "name": "sangsih",
+      "instrument": "reyong",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "1/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "1/2",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": 1,
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "5/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "7/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "9/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "5/2",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": 3,
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "13/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "7/2",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": 4,
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "17/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "9/2",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": 5,
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "21/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "23/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": 6,
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "13/2",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "27/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "29/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "15/2",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": 8,
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "33/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "17/2",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        }
+      ],
+      "spans": [
+        {
+          "pattern": "ne-nong",
+          "short": "3",
+          "long": "ne' no' -",
+          "annotation": null,
+          "start": "17/4",
+          "end": 5,
+          "depth": 0
+        },
+        {
+          "pattern": "ne-nong",
+          "short": "3",
+          "long": "ne' no' -",
+          "annotation": null,
+          "start": 5,
+          "end": "23/4",
+          "depth": 0
+        },
+        {
+          "pattern": "ne-nong",
+          "short": "3",
+          "long": "ne' no' -",
+          "annotation": null,
+          "start": "23/4",
+          "end": "13/2",
+          "depth": 0
+        },
+        {
+          "pattern": "ne-nong",
+          "short": "3",
+          "long": "ne' no' -",
+          "annotation": null,
+          "start": "13/2",
+          "end": "29/4",
+          "depth": 0
+        },
+        {
+          "pattern": "ne-nong",
+          "short": "3",
+          "long": "ne' no' -",
+          "annotation": null,
+          "start": "29/4",
+          "end": 8,
+          "depth": 0
+        }
+      ],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 67
+      }
+    },
+    {
+      "name": "pemade-1",
+      "instrument": "pemade",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": "1/2",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "1/2",
+          "dur": "1/2",
+          "notes": ["deng3"]
+        },
+        {
+          "start": 1,
+          "dur": "1/2",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "3/2",
+          "dur": "1/2",
+          "notes": ["dong3"]
+        },
+        {
+          "start": 2,
+          "dur": "1/2",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "5/2",
+          "dur": "1/2",
+          "notes": ["ding3"]
+        },
+        {
+          "start": 3,
+          "dur": "1/2",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "7/2",
+          "dur": "1/2",
+          "notes": ["deng3"]
+        },
+        {
+          "start": 4,
+          "dur": "1/2",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "9/2",
+          "dur": "1/2",
+          "notes": ["dong3"]
+        },
+        {
+          "start": 5,
+          "dur": "1/2",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "11/2",
+          "dur": "1/2",
+          "notes": ["deng3"]
+        },
+        {
+          "start": 6,
+          "dur": "1/2",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "13/2",
+          "dur": "1/2",
+          "notes": ["dong3"]
+        },
+        {
+          "start": 7,
+          "dur": "1/2",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "15/2",
+          "dur": "1/2",
+          "notes": ["ding3"]
+        },
+        {
+          "start": 8,
+          "dur": "1/2",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "17/2",
+          "dur": "1/2",
+          "notes": ["deng3"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 73
+      }
+    },
+    {
+      "name": "pemade-2",
+      "instrument": "pemade",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": "1/2",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "1/2",
+          "dur": "1/2",
+          "notes": ["dang2"]
+        },
+        {
+          "start": 1,
+          "dur": "1/2",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "3/2",
+          "dur": "1/2",
+          "notes": ["dong3"]
+        },
+        {
+          "start": 2,
+          "dur": "1/2",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "5/2",
+          "dur": "1/2",
+          "notes": ["ding3"]
+        },
+        {
+          "start": 3,
+          "dur": "1/2",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "7/2",
+          "dur": "1/2",
+          "notes": ["deng3"]
+        },
+        {
+          "start": 4,
+          "dur": "1/2",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "9/2",
+          "dur": "1/2",
+          "notes": ["dong3"]
+        },
+        {
+          "start": 5,
+          "dur": "1/2",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "11/2",
+          "dur": "1/2",
+          "notes": ["dang2"]
+        },
+        {
+          "start": 6,
+          "dur": "1/2",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "13/2",
+          "dur": "1/2",
+          "notes": ["dong3"]
+        },
+        {
+          "start": 7,
+          "dur": "1/2",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "15/2",
+          "dur": "1/2",
+          "notes": ["ding3"]
+        },
+        {
+          "start": 8,
+          "dur": "1/2",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "17/2",
+          "dur": "1/2",
+          "notes": ["dang2"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 74
+      }
+    },
+    {
+      "name": "ugal",
+      "instrument": "ugal",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": 1,
+          "notes": ["dang1"]
+        },
+        {
+          "start": 1,
+          "dur": 1,
+          "notes": ["dong2"]
+        },
+        {
+          "start": 2,
+          "dur": 1,
+          "notes": ["ding2"]
+        },
+        {
+          "start": 3,
+          "dur": 1,
+          "notes": ["deng2"]
+        },
+        {
+          "start": 4,
+          "dur": 1,
+          "notes": ["dong2"]
+        },
+        {
+          "start": 5,
+          "dur": 1,
+          "notes": ["dang1"]
+        },
+        {
+          "start": 6,
+          "dur": 1,
+          "notes": ["dong2"]
+        },
+        {
+          "start": 7,
+          "dur": 1,
+          "notes": ["ding2"]
+        },
+        {
+          "start": 8,
+          "dur": 1,
+          "notes": ["dang1"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 77
+      }
+    },
+    {
+      "name": "calung",
+      "instrument": "calung",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": 2,
+          "notes": ["dang2"]
+        },
+        {
+          "start": 2,
+          "dur": 2,
+          "notes": ["ding2"]
+        },
+        {
+          "start": 4,
+          "dur": 2,
+          "notes": ["dong2"]
+        },
+        {
+          "start": 6,
+          "dur": 2,
+          "notes": ["ding2"]
+        },
+        {
+          "start": 8,
+          "dur": 1,
+          "notes": ["dang2"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 78
+      }
+    },
+    {
+      "name": "jegogan",
+      "instrument": "jegogan",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": 1,
+          "notes": ["dang1"]
+        },
+        {
+          "start": 1,
+          "dur": 3,
+          "notes": ["dang1"]
+        },
+        {
+          "start": 4,
+          "dur": 4,
+          "notes": ["dong1"]
+        },
+        {
+          "start": 8,
+          "dur": 1,
+          "notes": ["dang1"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 79
+      }
+    },
+    {
+      "name": "lanang-lh",
+      "instrument": "kendang-lanang",
+      "origin": "written",
+      "events": [
+        {
+          "start": "17/4",
+          "dur": "1/4",
+          "notes": ["pak"]
+        },
+        {
+          "start": "21/4",
+          "dur": "1/4",
+          "notes": ["pak"]
+        },
+        {
+          "start": "23/4",
+          "dur": "1/4",
+          "notes": ["pak"]
+        },
+        {
+          "start": "27/4",
+          "dur": "1/4",
+          "notes": ["pak"]
+        },
+        {
+          "start": "29/4",
+          "dur": "1/4",
+          "notes": ["pak"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 82
+      }
+    },
+    {
+      "name": "lanang-rh",
+      "instrument": "kendang-lanang",
+      "origin": "written",
+      "events": [
+        {
+          "start": "1/4",
+          "dur": "1/4",
+          "notes": ["dug"]
+        },
+        {
+          "start": "3/4",
+          "dur": "1/4",
+          "notes": ["du"]
+        },
+        {
+          "start": 1,
+          "dur": "1/4",
+          "notes": ["dug"]
+        },
+        {
+          "start": "3/2",
+          "dur": "1/4",
+          "notes": ["dug"]
+        },
+        {
+          "start": 2,
+          "dur": "1/4",
+          "notes": ["dug"]
+        },
+        {
+          "start": "5/2",
+          "dur": "1/4",
+          "notes": ["dug"]
+        },
+        {
+          "start": 3,
+          "dur": "1/4",
+          "notes": ["dug"]
+        },
+        {
+          "start": "15/4",
+          "dur": "1/4",
+          "notes": ["dug"]
+        },
+        {
+          "start": "19/4",
+          "dur": "1/4",
+          "notes": ["dug"]
+        },
+        {
+          "start": "25/4",
+          "dur": "1/4",
+          "notes": ["dug"]
+        },
+        {
+          "start": "31/4",
+          "dur": "1/4",
+          "notes": ["dug"]
+        },
+        {
+          "start": "33/4",
+          "dur": "1/4",
+          "notes": ["dug"]
+        },
+        {
+          "start": "35/4",
+          "dur": "1/4",
+          "notes": ["du"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 84
+      }
+    },
+    {
+      "name": "wadon-lh",
+      "instrument": "kendang-wadon",
+      "origin": "written",
+      "events": [
+        {
+          "start": "9/2",
+          "dur": "1/4",
+          "notes": ["kap"]
+        },
+        {
+          "start": "11/2",
+          "dur": "1/4",
+          "notes": ["kap"]
+        },
+        {
+          "start": 6,
+          "dur": "1/4",
+          "notes": ["kap"]
+        },
+        {
+          "start": 7,
+          "dur": "1/4",
+          "notes": ["kap"]
+        },
+        {
+          "start": "15/2",
+          "dur": "1/4",
+          "notes": ["kap"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 87
+      }
+    },
+    {
+      "name": "wadon-rh",
+      "instrument": "kendang-wadon",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": "1/4",
+          "notes": ["dag"]
+        },
+        {
+          "start": "1/2",
+          "dur": "1/4",
+          "notes": ["dag"]
+        },
+        {
+          "start": "5/4",
+          "dur": "1/4",
+          "notes": ["dag"]
+        },
+        {
+          "start": "7/4",
+          "dur": "1/4",
+          "notes": ["dag"]
+        },
+        {
+          "start": "9/4",
+          "dur": "1/4",
+          "notes": ["dag"]
+        },
+        {
+          "start": "11/4",
+          "dur": "1/4",
+          "notes": ["dag"]
+        },
+        {
+          "start": "13/4",
+          "dur": "1/4",
+          "notes": ["da"]
+        },
+        {
+          "start": "7/2",
+          "dur": "1/4",
+          "notes": ["dag"]
+        },
+        {
+          "start": 4,
+          "dur": "1/4",
+          "notes": ["dag"]
+        },
+        {
+          "start": 5,
+          "dur": "1/4",
+          "notes": ["dag"]
+        },
+        {
+          "start": "13/2",
+          "dur": "1/4",
+          "notes": ["dag"]
+        },
+        {
+          "start": 8,
+          "dur": "1/4",
+          "notes": ["dag"]
+        },
+        {
+          "start": "17/2",
+          "dur": "1/4",
+          "notes": ["dag"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 89
+      }
+    },
+    {
+      "name": "gong",
+      "instrument": "gong",
+      "origin": "colotomy",
+      "events": [
+        {
+          "start": 0,
+          "dur": 1,
+          "notes": ["G"]
+        },
+        {
+          "start": 4,
+          "dur": 1,
+          "notes": ["G"]
+        },
+        {
+          "start": 5,
+          "dur": 1,
+          "notes": ["P"]
+        },
+        {
+          "start": 7,
+          "dur": 1,
+          "notes": ["P"]
+        },
+        {
+          "start": 8,
+          "dur": 1,
+          "notes": ["G"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 46
+      }
+    },
+    {
+      "name": "kempli",
+      "instrument": "kempli",
+      "origin": "timekeeper",
+      "events": [
+        {
+          "start": 0,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 1,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 2,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 3,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 4,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 5,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 6,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 7,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 8,
+          "dur": 1,
+          "notes": ["K"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 46
+      }
+    }
+  ],
+  "scores": [
+    {
+      "name": "full",
+      "title": "Baris",
+      "subtitle": null,
+      "caption": "Notation of reyong and kendang parts, with gong, kempur, kempli and calung (core melody).",
+      "from": 0,
+      "to": 9,
+      "system_length": null,
+      "breaks": [2],
+      "cycle_numbers": true,
+      "pulse_numbers": true,
+      "numbering": "gong-first",
+      "background": "grid",
+      "cycle_label": "Cycle",
+      "pulse_label": "Beats",
+      "font_size": null,
+      "cell_width": "3em",
+      "cell_height": "2em",
+      "groups": [
+        {
+          "label": "Reyong",
+          "short": "Reyong",
+          "subtitle": "sangsih, polos",
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "sangsih",
+              "label": "sangsih"
+            },
+            {
+              "part": "polos",
+              "label": "polos"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "none",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 101
+          }
+        },
+        {
+          "label": "Ugal",
+          "short": "Ugal",
+          "subtitle": "main melody",
+          "labels": "first-long",
+          "rows": "parts",
+          "members": [
+            {
+              "part": "ugal",
+              "label": "ugal"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "none",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 102
+          }
+        },
+        {
+          "label": "Calung",
+          "short": "Calung",
+          "subtitle": "core melody",
+          "labels": "first-long",
+          "rows": "parts",
+          "members": [
+            {
+              "part": "calung",
+              "label": "calung"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "none",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 103
+          }
+        },
+        {
+          "label": "",
+          "short": "",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "parts",
+          "members": [
+            {
+              "part": "kempli",
+              "label": "Kempli"
+            },
+            {
+              "part": "gong",
+              "label": "Gong & Kempur"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "none",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [
+            {
+              "stroke": "GL",
+              "text": "G"
+            }
+          ],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 104
+          }
+        },
+        {
+          "label": "Kendang lanang",
+          "short": "Kendang lanang",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "parts",
+          "members": [
+            {
+              "part": "lanang-lh",
+              "label": "LH"
+            },
+            {
+              "part": "lanang-rh",
+              "label": "RH"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "none",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 106
+          }
+        },
+        {
+          "label": "Kendang wadon",
+          "short": "Kendang wadon",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "parts",
+          "members": [
+            {
+              "part": "wadon-lh",
+              "label": "LH"
+            },
+            {
+              "part": "wadon-rh",
+              "label": "RH"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "none",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 108
+          }
+        }
+      ],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 98
+      }
+    },
+    {
+      "name": "polos-alone",
+      "title": "Baris",
+      "subtitle": null,
+      "caption": "Singing the reyong polos part alone",
+      "from": 0,
+      "to": 9,
+      "system_length": null,
+      "breaks": [2],
+      "cycle_numbers": true,
+      "pulse_numbers": true,
+      "numbering": "gong-first",
+      "background": "grid",
+      "cycle_label": "Cycle",
+      "pulse_label": "Beats (Clap)",
+      "font_size": null,
+      "cell_width": "3em",
+      "cell_height": "2em",
+      "groups": [
+        {
+          "label": "Reyong/Polos",
+          "short": "Reyong/Polos",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "parts",
+          "members": [
+            {
+              "part": "polos",
+              "label": "polos"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "none",
+          "holds": "dash",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 115
+          }
+        }
+      ],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 112
+      }
+    },
+    {
+      "name": "sangsih-alone",
+      "title": "Baris",
+      "subtitle": null,
+      "caption": "Singing the reyong sangsih part alone",
+      "from": 0,
+      "to": 9,
+      "system_length": null,
+      "breaks": [2],
+      "cycle_numbers": true,
+      "pulse_numbers": true,
+      "numbering": "gong-first",
+      "background": "grid",
+      "cycle_label": "Cycle",
+      "pulse_label": "Beats (Clap)",
+      "font_size": null,
+      "cell_width": "3em",
+      "cell_height": "2em",
+      "groups": [
+        {
+          "label": "Reyong/Sangsih",
+          "short": "Reyong/Sangsih",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "parts",
+          "members": [
+            {
+              "part": "sangsih",
+              "label": "sangsih"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "none",
+          "holds": "dash",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 120
+          }
+        }
+      ],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 117
+      }
+    },
+    {
+      "name": "kendang-composite",
+      "title": "Baris",
+      "subtitle": null,
+      "caption": "Singing the composite drum part (for one person)",
+      "from": 0,
+      "to": 9,
+      "system_length": null,
+      "breaks": [2],
+      "cycle_numbers": true,
+      "pulse_numbers": true,
+      "numbering": "gong-first",
+      "background": "grid",
+      "cycle_label": "Cycle",
+      "pulse_label": "Beats (Clap)",
+      "font_size": null,
+      "cell_width": "3em",
+      "cell_height": "2em",
+      "groups": [
+        {
+          "label": "Kendang",
+          "short": "Kendang",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "compact",
+          "members": [
+            {
+              "part": "lanang-lh",
+              "label": "lanang-lh"
+            },
+            {
+              "part": "lanang-rh",
+              "label": "lanang-rh"
+            },
+            {
+              "part": "wadon-lh",
+              "label": "wadon-lh"
+            },
+            {
+              "part": "wadon-rh",
+              "label": "wadon-rh"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "none",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 126
+          }
+        }
+      ],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 123
+      }
+    },
+    {
+      "name": "colour",
+      "title": "Baris",
+      "subtitle": null,
+      "caption": null,
+      "from": 0,
+      "to": 9,
+      "system_length": null,
+      "breaks": [],
+      "cycle_numbers": true,
+      "pulse_numbers": true,
+      "numbering": "gong-last",
+      "background": "grid",
+      "cycle_label": "Cycle",
+      "pulse_label": "Pulse",
+      "font_size": null,
+      "cell_width": "2em",
+      "cell_height": "2em",
+      "groups": [
+        {
+          "label": "Reyong",
+          "short": "Reyong",
+          "subtitle": "polos, sangsih",
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "polos",
+              "label": "polos"
+            },
+            {
+              "part": "sangsih",
+              "label": "sangsih"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 131
+          }
+        },
+        {
+          "label": "Gangsa-1",
+          "short": "Gangsa-1",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "pemade-1",
+              "label": "pemade-1"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 132
+          }
+        },
+        {
+          "label": "Gangsa-2",
+          "short": "Gangsa-2",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "pemade-2",
+              "label": "pemade-2"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 133
+          }
+        },
+        {
+          "label": "Ugal",
+          "short": "Ugal",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "ugal",
+              "label": "ugal"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 134
+          }
+        },
+        {
+          "label": "Calung",
+          "short": "Calung",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "calung",
+              "label": "calung"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 135
+          }
+        },
+        {
+          "label": "Jegogan",
+          "short": "Jegogan",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "jegogan",
+              "label": "jegogan"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 136
+          }
+        },
+        {
+          "label": "Gong, kempli",
+          "short": "Gong, kempli",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "gong",
+              "label": "gong"
+            },
+            {
+              "part": "kempli",
+              "label": "kempli"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 137
+          }
+        },
+        {
+          "label": "Kendang lanang",
+          "short": "Kendang lanang",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "lanang-lh",
+              "label": "lanang-lh"
+            },
+            {
+              "part": "lanang-rh",
+              "label": "lanang-rh"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 138
+          }
+        },
+        {
+          "label": "Kendang wadon",
+          "short": "Kendang wadon",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "wadon-lh",
+              "label": "wadon-lh"
+            },
+            {
+              "part": "wadon-rh",
+              "label": "wadon-rh"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 139
+          }
+        }
+      ],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 130
+      }
+    },
+    {
+      "name": "collapsed",
+      "title": "Baris",
+      "subtitle": null,
+      "caption": "Source: Michael Tenzer, Balinese Gamelan Music, 3rd edition (Tuttle Publishing, 2011).",
+      "from": 0,
+      "to": 9,
+      "system_length": null,
+      "breaks": [],
+      "cycle_numbers": true,
+      "pulse_numbers": true,
+      "numbering": "gong-last",
+      "background": "grid",
+      "cycle_label": "Cycle",
+      "pulse_label": "Pulse",
+      "font_size": null,
+      "cell_width": "2em",
+      "cell_height": "2em",
+      "groups": [
+        {
+          "label": "Reyong",
+          "short": "Reyong",
+          "subtitle": "polos, sangsih",
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "polos",
+              "label": "polos"
+            },
+            {
+              "part": "sangsih",
+              "label": "sangsih"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 151
+          }
+        },
+        {
+          "label": "Gangsa-1",
+          "short": "Gangsa-1",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "compact",
+          "members": [
+            {
+              "part": "pemade-1",
+              "label": "pemade-1"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 153
+          }
+        },
+        {
+          "label": "Gangsa-2",
+          "short": "Gangsa-2",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "compact",
+          "members": [
+            {
+              "part": "pemade-2",
+              "label": "pemade-2"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 154
+          }
+        },
+        {
+          "label": "Ugal",
+          "short": "Ugal",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "compact",
+          "members": [
+            {
+              "part": "ugal",
+              "label": "ugal"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 155
+          }
+        },
+        {
+          "label": "Calung",
+          "short": "Calung",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "compact",
+          "members": [
+            {
+              "part": "calung",
+              "label": "calung"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 156
+          }
+        },
+        {
+          "label": "Jegogan",
+          "short": "Jegogan",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "compact",
+          "members": [
+            {
+              "part": "jegogan",
+              "label": "jegogan"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 157
+          }
+        },
+        {
+          "label": "Gong, kempli",
+          "short": "Gong, kempli",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "gong",
+              "label": "gong"
+            },
+            {
+              "part": "kempli",
+              "label": "kempli"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 158
+          }
+        },
+        {
+          "label": "Kendang lanang",
+          "short": "Kendang lanang",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "compact",
+          "members": [
+            {
+              "part": "lanang-lh",
+              "label": "lanang-lh"
+            },
+            {
+              "part": "lanang-rh",
+              "label": "lanang-rh"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 159
+          }
+        },
+        {
+          "label": "Kendang wadon",
+          "short": "Kendang wadon",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "compact",
+          "members": [
+            {
+              "part": "wadon-lh",
+              "label": "wadon-lh"
+            },
+            {
+              "part": "wadon-rh",
+              "label": "wadon-rh"
+            }
+          ],
+          "note_label": "pitch-display-name",
+          "note_label_octave": false,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/baris.nts",
+            "line": 160
+          }
+        }
+      ],
+      "source": {
+        "file": "examples/gallery/baris.nts",
+        "line": 149
+      }
+    }
+  ]
+}
