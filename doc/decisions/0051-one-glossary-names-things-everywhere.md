@@ -1,0 +1,9 @@
+# 0051 One glossary names things in the documents and the code
+
+Status: accepted (2026-11-26)
+
+Context: The same thing was called by different words in different places. There were two glossaries, the design README's "Glossary" and 01-notation's "Concepts", and they disagreed: a member of a scale was a "degree", a "degree name", a "note name" or a "pitch"; a row inside a group was a "row" in the manual and a `lane` in the JSON; what is written in a note was a "note name", "text" or a "label". The manual had no glossary, and nothing tied the code's names (procedures, record fields, JSON keys, error messages) to either list. Iteration 5 adds more terms (collapsed rows, part markers, the annotation row, note labels).
+
+Decision: One file, `doc/design/glossary.md`, defines each term once, with its name in code and the words not to use for it. It replaces the design README's "Glossary" and 01's "Concepts", which point to it. The manual has no glossary: it uses the glossary's terms that a musician meets. The documents, the manual, the code, error messages and commit messages use these terms. A member of a scale is a **pitch** (not a degree); a horizontal line of cells in a group is a **row** (not a lane), including in the JSON from contract version 4. Code is renamed to the glossary's terms when a milestone next touches it, not in one sweep. The glossary is kept honest by a rule, not a test: `/doc-audit` looks for the words in its "Not" column.
+
+Consequences: A reader, and the code, find one word for each thing. Renames reach the code gradually, so for a while the code and the JSON use older names (`degree`, `by-degree`, `lane`), and the glossary says where. Words people use about gamelan in general (beat, meter, gongan) stay in the "Not" column only for notasi's own meanings; quoting a source keeps the source's words. Changing a term is a change to the glossary, which needs a new ADR when it reverses one of these choices.
