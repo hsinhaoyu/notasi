@@ -116,3 +116,13 @@ In the Emacs package (08):
 - **Seeing what changed in a committed image**: how a reviewer compares
   an old and a new PNG in a PR
   ([the collection of examples](05-collapsed-and-gallery/design_ideas/2026-11-25-examples-collection.md)).
+- **Damped forms for `pitch-name` and `key-number` note labels**: only
+  `pitch-display-name` shows a pitch's `:damped` form; revisit if a
+  piece needs it
+  ([what a note shows](05-collapsed-and-gallery/design_ideas/2026-11-25-note-label.md), question 5).
+- **More piece information**: `:arranger`, and a `:performance-year`
+  apart from `:performer`, when a piece needs them
+  ([information about a piece](05-collapsed-and-gallery/design_ideas/2026-11-24-piece-information.md), questions 5 and 10).
+- **`bapang-32` in the template**, when a piece needs it; until then it
+  is written in the piece
+  ([bapang](05-collapsed-and-gallery/design_ideas/2026-11-24-bapang-and-colotomy.md), question 2).

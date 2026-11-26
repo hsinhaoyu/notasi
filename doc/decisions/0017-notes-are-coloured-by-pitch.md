@@ -1,6 +1,6 @@
 # 0017 Notes are coloured by pitch
 
-Status: accepted (2026-11-20)
+Status: superseded by 0056
 
 Context: The planned layout (04) gave each part a colour by its role: contrasting colours for interlocking parts, blues for melody, browns for colotomic instruments, purples for drums. The prototype mockup was coloured this way. But a reader of a gamelan score mostly wants to follow pitches: which degree sounds, across instruments and octaves. Colour by part also leaves the colour of a note unrelated to what it sounds like. Unpitched strokes have no pitch to colour, and gamelan notation traditionally writes them as letters.
 
