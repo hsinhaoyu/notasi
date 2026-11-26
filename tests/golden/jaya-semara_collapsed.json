@@ -7,7 +7,7 @@
     "font_size": null,
     "label_width": "11.1em",
     "key_width": "0.0em",
-    "row_label_width": "1.5em",
+    "row_label_width": "1.0em",
     "cell_width": "2em",
     "cell_height": "2em"
   },
@@ -819,7 +819,68 @@
               ]
             }
           ],
-          "annotation": null,
+          "annotation": {
+            "position": "below",
+            "label": null,
+            "items": [
+              {
+                "start": 4,
+                "dur": 8,
+                "text": "1",
+                "align": "left",
+                "continued": false
+              },
+              {
+                "start": 12,
+                "dur": 8,
+                "text": "6",
+                "align": "left",
+                "continued": false
+              },
+              {
+                "start": 20,
+                "dur": 8,
+                "text": "3",
+                "align": "left",
+                "continued": false
+              },
+              {
+                "start": 28,
+                "dur": 8,
+                "text": "2",
+                "align": "left",
+                "continued": false
+              },
+              {
+                "start": 36,
+                "dur": 8,
+                "text": "1",
+                "align": "left",
+                "continued": false
+              },
+              {
+                "start": 44,
+                "dur": 8,
+                "text": "6",
+                "align": "left",
+                "continued": false
+              },
+              {
+                "start": 52,
+                "dur": 8,
+                "text": "3",
+                "align": "left",
+                "continued": false
+              },
+              {
+                "start": 60,
+                "dur": 8,
+                "text": "2",
+                "align": "left",
+                "continued": false
+              }
+            ]
+          },
           "pulse_lines": true,
           "row_lines": true
         },
@@ -1156,7 +1217,7 @@
         {
           "label": "Gong, kempli",
           "subtitle": null,
-          "rows": ["G", "P", "T", "K"],
+          "rows": ["", ""],
           "key_numbers": null,
           "voices": [
             {
@@ -1175,7 +1236,7 @@
                 {
                   "start": 16,
                   "dur": 1,
-                  "row": 1,
+                  "row": 0,
                   "text": "P",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1184,7 +1245,7 @@
                 {
                   "start": 32,
                   "dur": 1,
-                  "row": 2,
+                  "row": 0,
                   "text": "T",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1193,7 +1254,7 @@
                 {
                   "start": 48,
                   "dur": 1,
-                  "row": 1,
+                  "row": 0,
                   "text": "P",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1217,7 +1278,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1226,7 +1287,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1235,7 +1296,7 @@
                 {
                   "start": 8,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1244,7 +1305,7 @@
                 {
                   "start": 12,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1253,7 +1314,7 @@
                 {
                   "start": 16,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1262,7 +1323,7 @@
                 {
                   "start": 20,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1271,7 +1332,7 @@
                 {
                   "start": 24,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1280,7 +1341,7 @@
                 {
                   "start": 28,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1289,7 +1350,7 @@
                 {
                   "start": 32,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1298,7 +1359,7 @@
                 {
                   "start": 36,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1307,7 +1368,7 @@
                 {
                   "start": 40,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1316,7 +1377,7 @@
                 {
                   "start": 44,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1325,7 +1386,7 @@
                 {
                   "start": 48,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1334,7 +1395,7 @@
                 {
                   "start": 52,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1343,7 +1404,7 @@
                 {
                   "start": 56,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1352,7 +1413,7 @@
                 {
                   "start": 60,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1361,7 +1422,7 @@
                 {
                   "start": 64,
                   "dur": 1,
-                  "row": 3,
+                  "row": 1,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",

@@ -3,7 +3,10 @@
   "title": "Baris",
   "length": 9,
   "pickup": 1,
-  "info": {},
+  "info": {
+    "source": "Michael Tenzer, Balinese Gamelan Music, 3rd edition (Tuttle Publishing, 2011): the figure \"Notation of reyong and kendang parts, with gong, kempur, kempli and calung (core melody)\", and the sung lines below it",
+    "remarks": "Tenzer numbers the beats 1-8 with the gong on 1; the scores print his numbers."
+  },
   "colotomies": [
     {
       "start": 0,
@@ -133,7 +136,7 @@
       ],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 24
+        "line": 26
       }
     },
     {
@@ -161,7 +164,7 @@
       ],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 38
+        "line": 40
       }
     },
     {
@@ -189,7 +192,7 @@
       ],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 39
+        "line": 41
       }
     }
   ],
@@ -308,7 +311,7 @@
       "keys": ["pak", "dug", "du"],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 40
+        "line": 42
       }
     },
     {
@@ -317,7 +320,7 @@
       "keys": ["kap", "dag", "da"],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 41
+        "line": 43
       }
     }
   ],
@@ -330,7 +333,7 @@
       "annotation": null,
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 47
+        "line": 49
       }
     },
     {
@@ -341,7 +344,7 @@
       "annotation": null,
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 49
+        "line": 51
       }
     }
   ],
@@ -522,7 +525,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 61
+        "line": 63
       }
     },
     {
@@ -706,7 +709,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 67
+        "line": 69
       }
     },
     {
@@ -809,7 +812,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 73
+        "line": 75
       }
     },
     {
@@ -912,7 +915,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 74
+        "line": 76
       }
     },
     {
@@ -970,7 +973,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 77
+        "line": 79
       }
     },
     {
@@ -1008,7 +1011,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 78
+        "line": 80
       }
     },
     {
@@ -1041,7 +1044,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 79
+        "line": 81
       }
     },
     {
@@ -1079,7 +1082,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 82
+        "line": 84
       }
     },
     {
@@ -1157,7 +1160,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 84
+        "line": 86
       }
     },
     {
@@ -1195,7 +1198,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 87
+        "line": 89
       }
     },
     {
@@ -1273,7 +1276,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 89
+        "line": 91
       }
     },
     {
@@ -1426,7 +1429,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 101
+            "line": 103
           }
         },
         {
@@ -1458,7 +1461,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 102
+            "line": 104
           }
         },
         {
@@ -1490,7 +1493,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 103
+            "line": 105
           }
         },
         {
@@ -1531,7 +1534,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 104
+            "line": 106
           }
         },
         {
@@ -1567,7 +1570,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 106
+            "line": 108
           }
         },
         {
@@ -1603,13 +1606,13 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 108
+            "line": 110
           }
         }
       ],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 98
+        "line": 100
       }
     },
     {
@@ -1660,13 +1663,13 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 115
+            "line": 117
           }
         }
       ],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 112
+        "line": 114
       }
     },
     {
@@ -1717,13 +1720,13 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 120
+            "line": 122
           }
         }
       ],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 117
+        "line": 119
       }
     },
     {
@@ -1786,13 +1789,13 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 126
+            "line": 128
           }
         }
       ],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 123
+        "line": 125
       }
     },
     {
@@ -1847,7 +1850,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 131
+            "line": 133
           }
         },
         {
@@ -1879,7 +1882,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 132
+            "line": 134
           }
         },
         {
@@ -1911,7 +1914,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 133
+            "line": 135
           }
         },
         {
@@ -1943,7 +1946,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 134
+            "line": 136
           }
         },
         {
@@ -1975,7 +1978,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 135
+            "line": 137
           }
         },
         {
@@ -2007,7 +2010,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 136
+            "line": 138
           }
         },
         {
@@ -2043,7 +2046,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 137
+            "line": 139
           }
         },
         {
@@ -2079,7 +2082,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 138
+            "line": 140
           }
         },
         {
@@ -2115,13 +2118,13 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 139
+            "line": 141
           }
         }
       ],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 130
+        "line": 132
       }
     },
     {
@@ -2163,7 +2166,14 @@
           "note_label_octave": false,
           "fill": "colour",
           "holds": "none",
-          "annotation": null,
+          "annotation": {
+            "part": "polos",
+            "position": "below",
+            "align": "left",
+            "level": 0,
+            "text": "long",
+            "label": null
+          },
           "keys": "used",
           "row_label_octave": true,
           "key_numbers": false,
@@ -2176,7 +2186,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 151
+            "line": 153
           }
         },
         {
@@ -2208,7 +2218,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 153
+            "line": 156
           }
         },
         {
@@ -2240,7 +2250,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 154
+            "line": 157
           }
         },
         {
@@ -2272,7 +2282,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 155
+            "line": 158
           }
         },
         {
@@ -2304,7 +2314,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 156
+            "line": 159
           }
         },
         {
@@ -2336,7 +2346,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 157
+            "line": 160
           }
         },
         {
@@ -2344,7 +2354,7 @@
           "short": "Gong, kempli",
           "subtitle": null,
           "labels": "first-long",
-          "rows": "notes",
+          "rows": "compact",
           "members": [
             {
               "part": "gong",
@@ -2372,7 +2382,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 158
+            "line": 161
           }
         },
         {
@@ -2408,7 +2418,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 159
+            "line": 162
           }
         },
         {
@@ -2444,13 +2454,13 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/baris.nts",
-            "line": 160
+            "line": 163
           }
         }
       ],
       "source": {
         "file": "examples/gallery/baris.nts",
-        "line": 149
+        "line": 151
       }
     }
   ]

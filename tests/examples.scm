@@ -39,6 +39,33 @@
 ;;; - Manual pages are the .md files directly in doc/manual/src/, where
 ;;;   every page lives; a link is any `figures/NAME.EXT' in a page.
 ;;;
+;;; Milestone feat/gallery, iteration 5's acceptance test
+;;; (doc/iterations/05-collapsed-and-gallery/README.md, "Acceptance
+;;; test" and milestone 5's "Decided when it started"), checked on
+;;; examples/gallery/jaya-semara.nts and baris.nts, each laid out with
+;;; layout-score:
+;;; - The score `collapsed' has a group other than the gong and kempli
+;;;   one with `:rows' parts or compact.
+;;; - In `collapsed', the group holding the gong and kempli parts has
+;;;   `:rows compact' and lays out as exactly two rows in every system.
+;;; - Annotation rows, below their group: Jaya Semara's polos group in
+;;;   `collapsed' reads 1 6 3 2 1 6 3 2 (the melody twice), and the
+;;;   group of `kotekan' holding polos reads 1 6 3 2; Baris's reyong
+;;;   group (the group holding polos) in `collapsed' includes "na' - ni'".
+;;; - Piece information: Jaya Semara has composer "I Wayan Beratha",
+;;;   composition-year "1964" and a non-empty source and remarks; Baris
+;;;   has a non-empty source and remarks and no composer.
+;;; - Acceptance 2 (an image NAME_SCORE.png for every score) is already
+;;;   checked for every gallery file by "The set of images" above.
+;;; Choices made where the docs are not explicit:
+;;; - A group of a score is found by its members' part names (polos;
+;;;   gong and kempli), not by its label, which the examples may change.
+;;;   The figure's groups are taken to be the score's groups, in order,
+;;;   in every system.
+;;; - An annotation row's texts are those of its items that are not
+;;;   continued, over all systems in order, so a pattern cut at a system
+;;;   boundary counts once.
+;;;
 ;;; Run from the repo root: guile --fresh-auto-compile -L . tests/examples.scm
 
 (use-modules (srfi srfi-1)
@@ -50,6 +77,7 @@
              (ice-9 textual-ports)
              (rnrs bytevectors)
              (rnrs io ports)
+             (notasi layout)
              (notasi piece)
              (notasi reader))
 
@@ -259,6 +287,148 @@ paths.  None if DIR doesn't exist."
      '()
      (figure-links page "svg")))
  pages)
+
+;;; 7. The acceptance test (iteration 5)
+
+(define (json-ref obj key)
+  "The value of KEY in the JSON object OBJ (an alist), or the symbol
+missing."
+  (match (assq key obj)
+    ((_ . value) value)
+    (#f 'missing)))
+
+(define (member-names group)
+  "The names of the parts in GROUP, in order."
+  (map (lambda (m) (part-name (car m))) (group-members group)))
+
+(define (group-index score pred)
+  "The index of the first group of SCORE whose member names satisfy
+PRED, or #f."
+  (list-index (lambda (g) (pred (member-names g))) (score-groups score)))
+
+(define (holds-part? name) (lambda (names) (memq name names)))
+
+(define (gong-kempli? names) (and (memq 'gong names) (memq 'kempli names)))
+
+(define (figure-groups fig g)
+  "Group G of FIG in each of its systems."
+  (map (lambda (system) (vector-ref (json-ref system 'groups) g))
+       (vector->list (json-ref fig 'systems))))
+
+(define (annotation-texts fig g)
+  "The texts of group G's annotation items in FIG that are not
+continued, over every system in order."
+  (append-map
+   (lambda (group)
+     (let ((a (json-ref group 'annotation)))
+       (if (pair? a)
+           (filter-map (lambda (item)
+                         (and (not (eq? #t (json-ref item 'continued)))
+                              (json-ref item 'text)))
+                       (vector->list (json-ref a 'items)))
+           '())))
+   (figure-groups fig g)))
+
+(define (annotation-positions fig g)
+  "The position of group G's annotation in each system of FIG (missing
+or null when there is none)."
+  (map (lambda (group)
+         (let ((a (json-ref group 'annotation)))
+           (if (pair? a) (json-ref a 'position) a)))
+       (figure-groups fig g)))
+
+(define-syntax-rule (or-false body ...)
+  (guard (e (#t (format (current-error-port) "error: ~a~%"
+                        (if (exception-with-message? e)
+                            (exception-message e)
+                            e))
+                #f))
+    body ...))
+
+(define (score-of piece name)
+  (and piece (piece-score piece name)))
+
+(define (figure-of piece name)
+  (let ((score (score-of piece name)))
+    (and score (or-false (layout-score piece score)))))
+
+(define (annotation-check piece score-name part)
+  "(TEXTS POSITIONS) of the annotation row of the group of SCORE-NAME
+holding PART, or #f."
+  (let* ((score (score-of piece score-name))
+         (g (and score (group-index score (holds-part? part))))
+         (fig (and g (figure-of piece score-name))))
+    (and fig (or-false (list (annotation-texts fig g)
+                             (delete-duplicates (annotation-positions fig g)))))))
+
+(define (info-ref piece key)
+  (and piece (assq-ref (piece-info piece) key)))
+
+(define (non-empty-string? x) (and (string? x) (not (string-null? x))))
+
+(define jaya-semara (read-or-false (string-append gallery "/jaya-semara.nts")))
+(define baris (read-or-false (string-append gallery "/baris.nts")))
+
+(test-group "the acceptance test (iteration 5)"
+  (for-each
+   (match-lambda
+     ((name piece)
+      (let* ((collapsed (score-of piece 'collapsed))
+             (gk (and collapsed (group-index collapsed gong-kempli?)))
+             (fig (figure-of piece 'collapsed)))
+        (test-assert (string-append name ": has a score `collapsed'")
+          collapsed)
+        (test-assert (string-append name ": collapsed has a group other than"
+                                    " the gong and kempli with :rows parts or compact")
+          (and collapsed
+               (any (lambda (g i)
+                      (and (not (eqv? i gk))
+                           (memq (group-rows g) '(parts compact))))
+                    (score-groups collapsed)
+                    (iota (length (score-groups collapsed))))))
+        (test-assert (string-append name ": collapsed has a group with the gong and kempli")
+          gk)
+        (test-eq (string-append name ": the gong and kempli group is :rows compact")
+          'compact
+          (and gk (group-rows (list-ref (score-groups collapsed) gk))))
+        (test-equal (string-append name ": the gong and kempli group lays out as two rows")
+          '(2)
+          (and gk fig
+               (or-false
+                (delete-duplicates
+                 (map (lambda (group) (vector-length (json-ref group 'rows)))
+                      (figure-groups fig gk)))))))))
+   (list (list "jaya-semara" jaya-semara) (list "baris" baris)))
+
+  (test-equal "jaya-semara: collapsed's polos group has an annotation row below: 1 6 3 2, twice"
+    '(("1" "6" "3" "2" "1" "6" "3" "2") ("below"))
+    (annotation-check jaya-semara 'collapsed 'polos))
+
+  (test-equal "jaya-semara: kotekan's pemade group has an annotation row below: 1 6 3 2"
+    '(("1" "6" "3" "2") ("below"))
+    (annotation-check jaya-semara 'kotekan 'polos))
+
+  (let ((check (annotation-check baris 'collapsed 'polos)))
+    (test-assert "baris: collapsed's reyong group has an annotation row naming na' - ni'"
+      (and check (member "na' - ni'" (car check))))
+    (test-equal "baris: the reyong group's annotation row is below"
+      '("below")
+      (and check (cadr check))))
+
+  (test-equal "jaya-semara: composer" "I Wayan Beratha"
+    (info-ref jaya-semara 'composer))
+  (test-equal "jaya-semara: composition-year" "1964"
+    (info-ref jaya-semara 'composition-year))
+  (test-assert "jaya-semara: a source"
+    (non-empty-string? (info-ref jaya-semara 'source)))
+  (test-assert "jaya-semara: remarks"
+    (non-empty-string? (info-ref jaya-semara 'remarks)))
+  (test-assert "baris: a source"
+    (non-empty-string? (info-ref baris 'source)))
+  (test-assert "baris: remarks"
+    (non-empty-string? (info-ref baris 'remarks)))
+  (test-assert "baris: no composer"
+    (and baris (not (assq 'composer (piece-info baris))))))
 
 (define runner (test-runner-current))
 (test-end "examples")

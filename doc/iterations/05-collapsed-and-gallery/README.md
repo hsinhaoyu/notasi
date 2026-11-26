@@ -159,3 +159,21 @@ changes the figure, and each later one adds to it.
    and Baris in `examples/gallery/` with collapsed scores and
    annotation rows, their piece information, their images committed,
    and a gallery picture in the README.
+
+   Decided when it started (2026-11-27):
+   - **Jaya Semara:** in `collapsed`, the gong and kempli group is
+     `:rows compact` (G, P and T on one row, K on the other), and the
+     polos group has an annotation row below it naming the 2-pulse
+     norot figures by their short names, 1, 6, 3, 2
+     (`:annotation-part polos :annotation-level 1 :annotation-text
+     short`). `kotekan` gets the same row below the pemade group.
+   - **Baris:** in `collapsed`, the gong and kempli group is `:rows
+     compact`, and the reyong group has an annotation row below it from
+     polos, with the patterns' long names (`na' - ni'`), since both
+     short names are "3".
+   - **Piece information:** the facts in the files' opening comments
+     move into the `piece` form's keys. Jaya Semara: `:composer`,
+     `:composition-year`, `:source` and `:remarks`. Baris: `:source` and
+     `:remarks` (no composer is named). Comments that explain the
+     notation stay.
+   - **The README's gallery picture:** `jaya-semara_collapsed.png`.
