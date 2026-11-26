@@ -131,6 +131,12 @@ In the Emacs package (08):
 - **`bapang-32` in the template**, when a piece needs it; until then it
   is written in the piece
   ([bapang](05-collapsed-and-gallery/design_ideas/2026-11-24-bapang-and-colotomy.md), question 2).
+- **`notes-collide` on `notes` rows and strokes**: on compact rows a
+  stroke counts as its one drawn column, so two strokes on one key never
+  collide; on `notes` rows a stroke still counts for its written length
+  (a kempli `K _` then `K` a pulse later is an error there). Whether
+  `notes` rows should measure drawn boxes too
+  (`feat/collapsed-compact`; ADRs 0042, 0060).
 - **Drawing every score from Emacs**: the package draws one score
   with `-o`; a command that runs `notasi render --all` could come later
   ([drawing every score](05-collapsed-and-gallery/design_ideas/2026-11-25-render-all-scores.md)).

@@ -1217,7 +1217,7 @@ cut at the piece's end, on the piece's kempli or a built-in one."
     (scheme ,(lambda (v) (eq? v 'by-pitch)) . "a colour scheme: by-pitch")
     (palette ,palette? . "a palette name or a list of \"#rrggbb\" colours")
     (colors ,colors? . "a list of (PITCH \"#rrggbb\")")
-    (rows ,(lambda (v) (memq v '(notes parts single))) . "notes, parts or single")
+    (rows ,(lambda (v) (memq v '(notes parts compact))) . "notes, parts or compact")
     (fill ,(lambda (v) (memq v '(colour none))) . "colour or none")
     (holds ,(lambda (v) (memq v '(none dash))) . "none or dash")
     (pattern-names ,(lambda (v) (memq v '(none short long))) . "none, short or long")
@@ -1328,12 +1328,12 @@ or alias with its octave, as in a part; `bad-option' at LINE if none."
 (define (group-keys-setting own score-opts rows pitched? instrument line
                             score-line)
   "A group's `keys': used, all, or (LOW . HIGH) note records (04, slice
-3).  Written on a stroke, parts or single group, :keys is an error, and
+3).  Written on a stroke, parts or compact group, :keys is an error, and
 a range is an error on strokes; inherited, it is ignored there."
   (let ((written (assq-ref own 'keys))
         (inherited (assq-ref score-opts 'keys)))
     (when written
-      (cond ((memq rows '(parts single))
+      (cond ((memq rows '(parts compact))
              (syntax-error 'bad-option line
                            ":keys chooses the rows of keys; a group with :rows ~a has none"
                            rows))
@@ -1342,7 +1342,7 @@ a range is an error on strokes; inherited, it is ignored there."
                            ":keys (LOW HIGH) names keys, and strokes have no range: write used or all"))))
     (let ((value (or written inherited 'used))
           (value-line (if written line score-line)))
-      (cond ((memq rows '(parts single)) 'used)
+      (cond ((memq rows '(parts compact)) 'used)
             ((pair? value)
              (if pitched?
                  (match value
@@ -1464,30 +1464,36 @@ with :fill none and :note-label none, nothing would be drawn."
 
 (define (part-cells group part)
   "Where PART's notes sit in GROUP: (START END KEY) for each note, KEY
-being #f on a single row (every note shares it) and (INSTRUMENT . INDEX)
-on `notes' rows (the note's own lane)."
-  (append-map
-   (lambda (e)
-     (let ((start (event-start e))
-           (end (+ (event-start e) (event-duration e))))
-       (if (eq? (group-rows group) 'single)
-           (list (list start end #f))
-           (map (lambda (index)
-                  (list start end (cons (part-instrument part) index)))
-                (event-notes e)))))
-   (part-events part)))
+being (INSTRUMENT . INDEX).  On `notes' rows, each note of an event.
+On compact rows (ADRs 0055, 0060), a pitched event is one cell, a chord
+counting as its lowest key; strokes are drawn one column wide, so two on
+one key overlap only when they start together, drawn alike, and are
+left out."
+  (let ((instrument (part-instrument part)))
+    (append-map
+     (lambda (e)
+       (let ((start (event-start e))
+             (end (+ (event-start e) (event-duration e))))
+         (match (group-rows group)
+           ('compact
+            (if (scale-pitched? (instrument-scale instrument))
+                (list (list start end
+                            (cons instrument (apply min (event-notes e)))))
+                '()))
+           (_
+            (map (lambda (index) (list start end (cons instrument index)))
+                 (event-notes e))))))
+     (part-events part))))
 
 (define (same-key? a b)
   (match (list a b)
-    ((#f #f) #t)
-    (((i1 . n1) (i2 . n2)) (and (eq? i1 i2) (= n1 n2)))
-    (_ #f)))
+    (((i1 . n1) (i2 . n2)) (and (eq? i1 i2) (= n1 n2)))))
 
 (define (check-collisions group line)
-  "No two notes of a group's parts may share a cell: on a single row, any
-two notes; on `notes' rows, two notes on one key, unless they are a
-unison (the same key, start and length), which is drawn once.  The
-earliest shared time is reported, against the later of the two parts."
+  "No two notes on one key may share a cell, on `notes' and compact rows,
+unless they are a unison (the same key, start and length), which is
+drawn once (ADR 0060).  The earliest shared time is reported, against
+the later of the two parts."
   (unless (eq? (group-rows group) 'parts)
     (let loop ((parts (group-parts group)) (earlier '()) (found #f))
       (match parts
@@ -1496,9 +1502,7 @@ earliest shared time is reported, against the later of the two parts."
            (#f #t)
            ((time . part)
             (part-error 'notes-collide line (part-name part) time
-                        (if (eq? (group-rows group) 'single)
-                            "on a single row, two notes sound in one column"
-                            "two parts play this key at once without striking it together; give them groups of their own")))))
+                        "two parts play this key at once without striking it together; give them groups of their own"))))
         ((part . rest)
          (let* ((cells (part-cells group part))
                 (times (append-map
@@ -1509,7 +1513,7 @@ earliest shared time is reported, against the later of the two parts."
                               ((s2 e2 k2)
                                (and (same-key? k1 k2)
                                     (< (max s1 s2) (min e1 e2))
-                                    (not (and k1 (= s1 s2) (= e1 e2)))
+                                    (not (and (= s1 s2) (= e1 e2)))
                                     (max s1 s2))))
                             earlier)))
                         cells))

@@ -1,1 +1,1 @@
-notes-collide.nts:6: part `sangsih', pulse 2: on a single row, two notes sound in one column
+notes-collide.nts:6: part `sangsih', pulse 2: two parts play this key at once without striking it together; give them groups of their own

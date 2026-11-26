@@ -27,12 +27,13 @@ Since iteration 5's `feat/collapsed-terms`: the piece information,
 messages that say pitch. Since `feat/collapsed-labels`: `:note-label`
 and the label options, `:note-names` and `:octave-numbers` unknown
 keys and `:row-labels yes`/`no` bad values, and `needs-note-label`
-(ADR 0054).
+(ADR 0054). Since `feat/collapsed-compact`: `:rows compact`, `:rows
+single` a bad value, and `notes-collide` for one key only, on `notes`
+and compact rows (ADRs 0055, 0060).
 
-**Planned** for iteration 5 (ADRs 0055–0057): `:rows compact`,
-`:part-marker`, the annotation row, pattern annotations and `(text
-...)`; the other removed options becoming unknown keys or values;
-`pattern-names-overlap` removed, and `notes-collide` for one key only.
+**Planned** for iteration 5 (ADRs 0056, 0057): `:part-marker`, the
+annotation row, pattern annotations and `(text ...)`; the other removed
+options becoming unknown keys; `pattern-names-overlap` removed.
 See "Iteration 5". Until they are built, the reader takes the old
 options.
 
@@ -202,8 +203,9 @@ Finding templates (**Implemented**):
     `notes-collide`. Since `feat/collapsed-labels`: `note-label`,
     `note-label-octave?`, `row-labels` and `row-label-octave?`, in
     place of `note-names?`, `octave-numbers?` and `row-labels?`.
-    **Planned** (iteration 5): the rest of 02's "Iteration 5", `rows`
-    (`compact`), `part-marker` and `annotation`, in place of
+    `rows` `compact` since `feat/collapsed-compact`. **Planned**
+    (iteration 5): the rest of 02's "Iteration 5", `part-marker` and
+    `annotation`, in place of
     `pattern-names` and `pattern-level`. A `:part-marker` entry's missing keys are `#f`
     (layout's defaults); an annotation row's are its options'
     defaults. Free text is collected with the part's events (step 9).
@@ -511,16 +513,17 @@ All errors at a use carry the part, the time and the chain of uses.
 - [scores] `:fill none` with `:note-label none`: `needs-note-label`
   (`needs-note-names` before `feat/collapsed-labels`, which also
   covered `parts` and `single` rows), its message naming
-  `:note-label`. `parts`, `single` and compact rows may be colour
-  only.
-- [scores] With `:rows single`, two notes in one cell; with `:rows
-  notes`, two notes on one key that share a column without being a
-  unison (the same key, start and length): `notes-collide` (`part` set
-  to the second part, `time` set to the first shared column).
-  [iteration 5] `compact` adds a row where different keys sound
-  together (04), so only one key's notes collide there: two notes on
-  one key whose boxes overlap without being a unison, as on `notes`
-  rows (ADR 0060).
+  `:note-label`. `parts` and compact rows may be colour only.
+- [scores] With `:rows notes` or `compact`, two notes on one key that
+  share a column without being a unison (the same key, start and
+  length): `notes-collide` (`part` set to the second part, `time` set
+  to the first shared column). Before `feat/collapsed-compact`, `:rows
+  single` also refused any two notes in one cell. [iteration 5]
+  `compact` adds a row where different keys sound together (04), so
+  only one key's notes collide there (ADR 0060), measured as drawn: a
+  pitched note for its length, a chord as its lowest key, and a stroke
+  as its one column, so two strokes never collide. On `notes` rows a
+  note counts for its written length, strokes too.
 - [scores] Different pattern names overlapping in one group at the
   chosen level: `pattern-names-overlap` (`part` and `time` set).
   [iteration 5] Removed with `:pattern-names`: an annotation row takes
@@ -532,12 +535,10 @@ All errors at a use carry the part, the time and the chain of uses.
   HIGH that is not a key of the group's instrument, or LOW above HIGH;
   a range on a group of strokes: `bad-option`, at the line where it is
   written (on the score, checked against each group it applies to).
-  `:keys` written on a `:rows parts` or `single` ([iteration 5]
-  `compact`) group: `bad-option`; inherited from the score, it is
-  ignored there.
+  `:keys` written on a `:rows parts` or `compact` group: `bad-option`;
+  inherited from the score, it is ignored there.
 - [score-options] `:key-numbers yes` written on a group of strokes, or
-  on a `:rows parts` or `single` ([iteration 5] `compact`) group:
-  `bad-option`; inherited from the score, it is ignored there (the
+  on a `:rows parts` or `compact` group: `bad-option`; inherited from the score, it is ignored there (the
   group's `key-numbers?` is `#f`).
 - [score-options] A note outside a group's `:keys` range:
   `outside-keys` (the group's line, `part` and `time` set). The message

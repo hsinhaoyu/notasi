@@ -110,7 +110,7 @@ column; a stroke shows its name, or its display name (from the group's
 (define (event-looks group style instrument indices columns)
   "The looks of an event striking INDICES on INSTRUMENT, COLUMNS long:
 one per note on `notes' rows; one for the whole chord on `parts' and
-`single' rows, its names joined and the look of its lowest note."
+compact rows, its names joined and the look of its lowest note."
   (define (look-of index text)
     (let ((look (note-look style instrument
                            (vector-ref (instrument-notes instrument) index))))
@@ -203,7 +203,8 @@ start relative to FROM, or #f if it doesn't sound there."
 ;;; A group prepared once for the whole piece: its JSON label fields,
 ;;; its row labels, and each voice's events in the whole piece, in
 ;;; columns of 1/K pulse.  Rows are the notes used (`notes'), one per
-;;; member (`parts'), or one for all (`single').
+;;; member (`parts'), or the parts merged, with a row added where keys
+;;; sound together (`compact').
 (define (prepare-group group k from to)
   "(GROUP ROW-LABELS VOICES OVERLAYS KEY-NUMBERS), KEY-NUMBERS a string
 per key-row or #f."
@@ -304,8 +305,70 @@ which the reader allows on `notes' rows) left out, so it is drawn once."
                                               (group-members group))))
                          (const row))))
              #f))
-      ('single
-       (list group '("") (voices (lambda (part) (const 0))) #f)))))
+      ('compact
+       (let ((row-of-key (compact-rows group k from to)))
+         (list group
+               (make-list (1+ (fold max 0 (map cdr row-of-key))) "")
+               (without-unisons
+                (voices
+                 (lambda (part)
+                   (lambda (index)
+                     (let ((note (vector-ref (instrument-notes
+                                              (part-instrument part))
+                                             index)))
+                       (or (assq-ref row-of-key note) 0))))))
+               #f))))))
+
+(define (compact-rows group k from to)
+  "The rows of a compact GROUP (ADR 0055; 04, \"Compact rows\"), as an
+alist from each note record played in [FROM, TO) to its row.  Keys are
+taken in row order, each going to the first row where none of its boxes
+overlaps a box of a key already there, or to a new row.  A box, in
+columns of 1/K pulse, is a pitched note from its start to its end, or a
+stroke's one column; a chord counts as its lowest key."
+  (define (boxes-of note)
+    (append-map
+     (lambda (part)
+       (let* ((instrument (part-instrument part))
+              (notes (instrument-notes instrument))
+              (stroke? (stroke-instrument? instrument)))
+         (filter-map
+          (lambda (event)
+            (and (sounds-in? event from to)
+                 (eq? note (vector-ref notes (apply min (event-notes event))))
+                 (let ((start (* k (event-start event))))
+                   (cons start
+                         (if stroke?
+                             (1+ start)
+                             (* k (+ (event-start event)
+                                     (event-duration event))))))))
+          (part-events part))))
+     (group-parts group)))
+  (define (overlap? a b)
+    (and (< (car a) (cdr b)) (< (car b) (cdr a))))
+  (define (fits? boxes row-boxes)
+    (not (any (lambda (a) (any (lambda (b) (overlap? a b)) row-boxes))
+              boxes)))
+  (let loop ((keys (filter-map (match-lambda
+                                 ((_ . note)
+                                  (let ((boxes (boxes-of note)))
+                                    (and (pair? boxes) (cons note boxes)))))
+                               (rows-in-range group from to)))
+             (rows '())                 ; boxes of each row, in order
+             (assigned '()))
+    (match keys
+      (() (reverse assigned))
+      (((note . boxes) . rest)
+       (let ((i (list-index (lambda (row-boxes) (fits? boxes row-boxes))
+                            rows)))
+         (if i
+             (loop rest
+                   (append (list-head rows i)
+                           (list (append boxes (list-ref rows i)))
+                           (list-tail rows (1+ i)))
+                   (acons note i assigned))
+             (loop rest (append rows (list boxes))
+                   (acons note (length rows) assigned))))))))
 
 (define (group-key-rows group from to)
   "The key-rows of a `notes' group, top first, by its `keys' (04): the keys

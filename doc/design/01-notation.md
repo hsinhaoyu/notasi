@@ -18,10 +18,10 @@ the glossary's pitch terms (ADR 0051) since iteration 5's
 `feat/collapsed-terms`. `:note-label`, a widened `:row-labels`, and
 `:row-label-octave` and `:note-label-octave`, in place of
 `:note-names` and `:octave-numbers` (ADR 0054), since
-`feat/collapsed-labels`.
+`feat/collapsed-labels`. `:rows compact` in place of `single` (ADRs
+0055, 0060) since `feat/collapsed-compact`.
 
-**Planned** for iteration 5 (ADRs 0055–0057): `:rows compact` in place of
-`single`; `:part-marker`; the annotation row, pattern annotations and
+**Planned** for iteration 5 (ADRs 0056, 0057): `:part-marker`; the annotation row, pattern annotations and
 `(text ...)`, in place of `:pattern-names` and `:pattern-level`.
 Until they are built, the reader takes the old options and names. The
 removed ones get no migration: once the new ones are built, they are
@@ -605,7 +605,7 @@ In the grid:
 | `:note-label-octave yes/no` | score, group | `yes` | (ADR 0054). With `pitch-name` or `pitch-display-name`, whether a note's label ends in its octave number (`o2`) or not (`o`). |
 | `:fill colour/none` | score, group | `colour` | `none` draws the labels alone, without a coloured box. |
 | `:holds none/dash` | score, group | `none` | `dash` writes "-" in every step a note is held, as in a sung line. |
-| `:rows notes/parts/compact` | score, group | `notes` | What a row stands for. `notes`: one row per key or stroke used. `parts`: one row per part, labelled. `compact` (**Planned**, ADR 0055): the group's parts merged into one line, with a row added where keys sound together. |
+| `:rows notes/parts/compact` | score, group | `notes` | What a row stands for. `notes`: one row per key or stroke used. `parts`: one row per part, labelled. `compact` (ADR 0055): the group's parts merged into one line, with a row added where keys sound together. |
 | `:keys used/all/(LOW HIGH)` | score, group | `used` | With `:rows notes`, which rows a group has: the keys or strokes played in the score's range, every key or stroke of the instrument, or the keys from LOW up to HIGH, both included (`:keys (a1 u2)`). |
 | `:row-labels none/pitch-name/pitch-display-name` | score, group | `pitch-display-name` | (ADR 0054). The pitch column on `notes` rows: each row's pitch name (`dong2`) or pitch display name (`o2`); on `parts` rows the part's label, on `compact` rows nothing. `none` leaves the column out on every kind of row. |
 | `:row-label-octave yes/no` | score, group | `yes` | (ADR 0054). Whether the pitch column's labels end in the octave number (`i2`) or not (`i`). Only rows of pitched keys change. |
@@ -617,8 +617,6 @@ In the grid:
 **Implemented** until the planned options above are built, and then
 removed, with no migration:
 
-- `:rows single`: all the group's parts on one row, an error where two
-  notes fall in one cell. Replaced by `compact`.
 - `:pattern-names none/short/long` (default `none`) and
   `:pattern-level N` (default `0`): pattern names written over the
   notes, across each use of a pattern, at one level of nesting.
@@ -707,8 +705,9 @@ still show `du` or `du'` as written.
 
 #### Compact rows
 
-**Planned** (ADR 0055). `:rows compact` merges the group's parts into
-one line, and adds a row only where different keys sound together:
+ADR 0055, since `feat/collapsed-compact`. `:rows compact` merges the
+group's parts into one line, and adds a row only where different keys
+sound together:
 
 - Two notes sound together when their boxes, as drawn, would overlap:
   from a note's start to its start plus its drawn length. A held note
@@ -716,7 +715,9 @@ one line, and adds a row only where different keys sound together:
 - Each key or stroke keeps one row for the whole score. Rows are filled
   in the order of the group's keys (highest pitch first; strokes in
   instrument order), each key going to the first row where it never
-  sounds with a key already there. So the gong and kempli take two
+  sounds with a key already there. Only the keys played in the
+  score's range count, and a chord counts as its lowest key. So the
+  gong and kempli take two
   rows, G, P and T on one and K on the other, every time; where no two
   keys ever sound together, all share one row.
 - A chord is one note, its labels joined (`i o`), with the look of its
@@ -768,24 +769,25 @@ pitched and stroke groups alike:
   `"#rrggbb"`, a length without a unit) is an error.
 - `:from` must come before `:to`, and both must lie in the piece.
 - `:fill none` needs a label (a `:note-label` other than `none`),
-  since it draws no box (ADR 0054); `parts`, `single` and compact rows
+  since it draws no box (ADR 0054); `parts` and compact rows
   may be colour only.
 - `:keys`: LOW and HIGH are keys of the group's
   instrument, written as in a part, LOW not above HIGH; a range is an
   error on a group of strokes, which has only `used` and `all`; `:keys`
-  on a `:rows parts` or `single` (**Planned**: `compact`) group is an
+  on a `:rows parts` or `compact` group is an
   error, and ignored when it comes from the score. A note outside the keys shown is an error
   naming the part, the note, its position and the range.
 - `:key-numbers yes` written on a group of strokes, or on
-  a `:rows parts` or `single` (**Planned**: `compact`) group, is an error; coming from the score,
+  a `:rows parts` or `compact` group, is an error; coming from the score,
   it is ignored there.
 - `:display`: each STROKE is a stroke of an instrument in
   the group (on a score, of an instrument in one of its groups); it
   changes only how the stroke is shown in that score.
-- With `:rows single`, two notes may not fall in one cell (**Planned**:
-  removed with `single`; `compact` adds a row instead). With `:rows
-  notes` (**Planned**: and `compact`), two parts may share a cell only
-  as a unison: the same key, start and length, which is drawn once.
+- With `:rows notes` and `compact` (ADR 0060), two parts may play one
+  key at once only as a unison: the same key, start and length, which
+  is drawn once. On compact rows a stroke counts as its one drawn
+  column, so two strokes on one key can't collide; on `notes` rows a
+  note counts for its written length, strokes too.
 - Pattern names: identical names from several parts of a group (the
   same start, length and text) are written once; different names that
   overlap in one group are an error, naming the parts and the position.

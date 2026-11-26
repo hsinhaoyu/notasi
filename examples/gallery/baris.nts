@@ -123,7 +123,7 @@
 (score kendang-composite :fill none :note-label pitch-display-name :note-label-octave no :numbering gong-first :cell-width "3em"
     :pulse-label "Beats (Clap)" :breaks ((1 3))
     :caption "Singing the composite drum part (for one person)"
-  (group "Kendang" :rows single  lanang-lh lanang-rh wadon-lh wadon-rh))
+  (group "Kendang" :rows compact  lanang-lh lanang-rh wadon-lh wadon-rh))
 
 ;; The same cycle in colour, as the Jaya Semara score draws it: colours
 ;; for pitch, a row for each key or stroke, the gong last, one system.
@@ -146,7 +146,7 @@
 ;; hands share one row (they never strike together, as the composite
 ;; drum score shows). The gongs and kempli keep one row per stroke, with
 ;; their letters.
-(score collapsed :note-label pitch-display-name :note-label-octave no :rows single
+(score collapsed :note-label pitch-display-name :note-label-octave no :rows compact
     :caption "Source: Michael Tenzer, Balinese Gamelan Music, 3rd edition (Tuttle Publishing, 2011)."
   (group "Reyong" :subtitle "polos, sangsih" :rows notes :note-label none
     polos sangsih)

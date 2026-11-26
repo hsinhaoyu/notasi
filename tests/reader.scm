@@ -5931,19 +5931,19 @@ colotomy, 4 pulses."
     (test-equal "on a score: every group takes them"
       '((parts pitch-display-name none dash) (parts pitch-display-name none dash))
       (and pc (groups-rows-settings pc 's))))
-  (let ((pc (read-scores+ "(score s :rows single :fill none :holds dash :note-label pitch-display-name :note-label-octave no"
+  (let ((pc (read-scores+ "(score s :rows compact :fill none :holds dash :note-label pitch-display-name :note-label-octave no"
                           "  (group \"U\" :rows notes :fill colour :holds none ugal)"
                           "  (group \"R\" :rows parts polos sangsih)"
                           "  (group \"G\" gong))")))
     (test-equal "a group's own values override the score's"
-      '((notes pitch-display-name colour none) (parts pitch-display-name none dash) (single pitch-display-name none dash))
+      '((notes pitch-display-name colour none) (parts pitch-display-name none dash) (compact pitch-display-name none dash))
       (and pc (groups-rows-settings pc 's))))
   (let ((pc (read-scores+ "(score s :note-label pitch-display-name :note-label-octave no"
-                          "  (group \"U\" :rows single ugal)"
+                          "  (group \"U\" :rows compact ugal)"
                           "  (group \"R\" :rows parts :fill none polos sangsih)"
                           "  (group \"G\" :holds dash gong))")))
     (test-equal "on groups only: the others keep the defaults"
-      '((single pitch-display-name colour none) (parts pitch-display-name none none) (notes pitch-display-name colour dash))
+      '((compact pitch-display-name colour none) (parts pitch-display-name none none) (notes pitch-display-name colour dash))
       (and pc (groups-rows-settings pc 's))))
   (let ((pc (read-scores+ "(score s :rows notes :fill colour :holds none"
                           "  (group \"U\" ugal))")))
@@ -5964,9 +5964,9 @@ colotomy, 4 pulses."
                   'by-pitch 'pastel1 '()))
       (and pc (map group-settings (score-groups (score-named pc 's))))))
   (let ((pc (read-scores+ "(score s :note-label pitch-display-name :note-label-octave no"
-                          "  (group \"K\" :rows single gong))")))
-    (test-equal "stroke parts on a single row"
-      '((single pitch-display-name colour none))
+                          "  (group \"K\" :rows compact gong))")))
+    (test-equal "stroke parts on compact rows"
+      '((compact pitch-display-name colour none))
       (and pc (groups-rows-settings pc 's))))
   (test-assert ":holds dash needs no note names"
     (piece? (read-scores+ "(score s :holds dash (group \"U\" ugal))")))
@@ -5999,7 +5999,7 @@ colotomy, 4 pulses."
     (list ":holds a string" ":holds \"dash\"")
     (list ":holds with no value" ":holds :rows parts")))
   (test-equal "duplicate-option: :rows" '(duplicate-option 14)
-    (score-error "(score s :note-label pitch-display-name :note-label-octave no :rows parts :rows single (group \"U\" ugal))"))
+    (score-error "(score s :note-label pitch-display-name :note-label-octave no :rows parts :rows compact (group \"U\" ugal))"))
   (test-equal "duplicate-option on a group: :fill" '(duplicate-option 15)
     (string-error (one-group "(group \"U\" :note-label pitch-display-name :note-label-octave no :fill none :fill none ugal)"))))
 
@@ -6036,7 +6036,7 @@ colotomy, 4 pulses."
     (list "the score's :note-label pitch-display-name :note-label-octave no covers a group's :rows parts"
           "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows parts polos sangsih))")
     (list "a group's own :note-label pitch-display-name :note-label-octave no"
-          "(score s :rows single :fill none" "  (group \"U\" :note-label pitch-display-name :note-label-octave no ugal))")
+          "(score s :rows compact :fill none" "  (group \"U\" :note-label pitch-display-name :note-label-octave no ugal))")
     (list ":rows notes and :fill colour need no names"
           "(score s :rows notes :fill colour" "  (group \"U\" ugal))"))))
 
@@ -6053,40 +6053,44 @@ colotomy, 4 pulses."
      ((name expected . more)
       (test-equal name expected (apply collide-error more))))
    (list
-    (list "two parts striking together: the later part, the first time"
-          '(notes-collide 15 sangsih 0)
-          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single polos sangsih))")
+    (list "two parts striking one key together, held differently: the later part"
+          '(notes-collide 17 b 0)
+          "(part :instrument reyong :name a 1 _ - -)"                         ; 14
+          "(part :instrument reyong :name b 1 - - -)"                         ; 15
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows compact a b))")
     (list "a note struck while another is held"
           '(notes-collide 17 b 1)
           "(part :instrument reyong :name a 1 _ - -)"                         ; 14
-          "(part :instrument reyong :name b - 2 - -)"                         ; 15
-          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a b))") ; 16, 17
+          "(part :instrument reyong :name b - 1 - -)"                         ; 15
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows compact a b))") ; 16, 17
     (list "two held notes overlapping: the first shared column"
           '(notes-collide 17 b 2)
           "(part :instrument reyong :name a 1 _ _ -)"
-          "(part :instrument reyong :name b - - 2 _)"
-          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a b))")
+          "(part :instrument reyong :name b - - 1 _)"
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows compact a b))")
     (list "half pulses: the time of the shared column"
           '(notes-collide 17 b 1/2)
           "(part :instrument reyong :name a 1:1/2 _ - - - - - -)"
-          "(part :instrument reyong :name b -:1/2 2 - - - - - -)"
-          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a b))")
+          "(part :instrument reyong :name b -:1/2 1 - - - - - -)"
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows compact a b))")
     (list "three parts: the earliest collision decides"
           '(notes-collide 18 c 1)
           "(part :instrument reyong :name a - - 1 -)"                         ; 14
-          "(part :instrument reyong :name b - 2 _ -)"                         ; 15
-          "(part :instrument reyong :name c 3 _ _ -)"                         ; 16
-          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a b c))") ; 17, 18
-    (list "the score's :rows single" '(notes-collide 18 b 1)
+          "(part :instrument reyong :name b - 1 _ -)"                         ; 15
+          "(part :instrument reyong :name c 1 _ _ -)"                         ; 16
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows compact a b c))") ; 17, 18
+    (list "the score's :rows compact" '(notes-collide 18 b 1)
           "(part :instrument reyong :name a 1 _ - -)"
-          "(part :instrument reyong :name b - 2 - -)"
-          "(score s :rows single :note-label pitch-display-name :note-label-octave no"                 ; 16
+          "(part :instrument reyong :name b - 1 - -)"
+          "(score s :rows compact :note-label pitch-display-name :note-label-octave no"                 ; 16
           "  (group \"U\" ugal)"                                  ; 17
           "  (group \"R\" a b))")                                 ; 18
-    (list "the second group's line" '(notes-collide 16 sangsih 0)
+    (list "the second group's line" '(notes-collide 18 b 0)
+          "(part :instrument reyong :name a 1 _ - -)"                         ; 14
+          "(part :instrument reyong :name b 1 - - -)"                         ; 15
           "(score s :note-label pitch-display-name :note-label-octave no"
-          "  (group \"U\" :rows single ugal)"
-          "  (group \"R\" :rows single polos sangsih))")))
+          "  (group \"U\" :rows compact ugal)"
+          "  (group \"R\" :rows compact a b))")))
   (for-each
    (match-lambda
      ((name . more)
@@ -6095,27 +6099,27 @@ colotomy, 4 pulses."
     (list "notes one after the other do not collide"
           "(part :instrument reyong :name a 1 - - -)"
           "(part :instrument reyong :name b - 2 - 3)"
-          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a b))")
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows compact a b))")
     (list "a held note ending where the next starts"
           "(part :instrument reyong :name a 1 _ - -)"
           "(part :instrument reyong :name b - - 2 _)"
-          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a b))")
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows compact a b))")
     (list "half pulses that interleave"
           "(part :instrument reyong :name a 1:1/2 - 1 - 1 - 1 -)"
           "(part :instrument reyong :name b -:1/2 2 - 2 - 2 - 2)"
-          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a b))")
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows compact a b))")
     (list "a chord in one part is one event on its row"
           "(part :instrument reyong :name a (1 3) - - -)"
-          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single a))")
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows compact a))")
     (list "the same parts on :rows parts"
           "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows parts polos sangsih))")
     (list "the same parts on :rows notes"
           "(score s" "  (group \"R\" polos sangsih))")
     (list "one part alone on a single row"
-          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"U\" :rows single ugal))")
+          "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"U\" :rows compact ugal))")
     (list "colliding parts in a score where they are on separate rows"
-          "(score a :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows single polos)"
-          "  (group \"S\" :rows single sangsih))")))
+          "(score a :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows compact polos)"
+          "  (group \"S\" :rows compact sangsih))")))
 
 ;;; notes-collide on `notes' rows (milestone 3, decided while drawing
 ;;; Jaya Semara: 03, [scores]): two parts on one key share a cell unless
@@ -6170,8 +6174,10 @@ colotomy, 4 pulses."
     (let ((c (catch-syntax-error
               (lambda ()
                 (read-piece-string
-                 (scores+ "(score s :note-label pitch-display-name :note-label-octave no"
-                          "  (group \"R\" :rows single polos sangsih))"))))))
+                 (scores+ "(part :instrument reyong :name a 1 _ - -)"
+                          "(part :instrument reyong :name b 1 - - -)"
+                          "(score s :note-label pitch-display-name :note-label-octave no"
+                          "  (group \"R\" :rows compact a b))"))))))
       (and (notasi-syntax-error? c)
            (eq? 'notes-collide (notasi-syntax-error-kind c))
            (not (notasi-syntax-error-file c))
@@ -6180,18 +6186,20 @@ colotomy, 4 pulses."
                      (lambda ()
                        (read-piece-string
                         (scores+ "(part :instrument reyong :name a 1:1/2 _ - - - - - -)"
-                                 "(part :instrument reyong :name b -:1/2 2 - - - - - -)"
+                                 "(part :instrument reyong :name b -:1/2 1 - - - - - -)"
                                  "(score s :note-label pitch-display-name :note-label-octave no"
-                                 "  (group \"R\" :rows single a b))"))))))
+                                 "  (group \"R\" :rows compact a b))"))))))
              (and (notasi-syntax-error? c) (notasi-syntax-error-time c)))))
     (test-assert "the time is an exact rational"
       (and (rational? t) (exact? t))))
   (let* ((path (write-temp-file "collide.nts"
-                                (scores+ "(score s :note-label pitch-display-name :note-label-octave no"
-                                         "  (group \"R\" :rows single polos sangsih))")))
+                                (scores+ "(part :instrument reyong :name a 1 _ - -)"
+                                         "(part :instrument reyong :name b 1 - - -)"
+                                         "(score s :note-label pitch-display-name :note-label-octave no"
+                                         "  (group \"R\" :rows compact a b))")))
          (c (catch-syntax-error (lambda () (read-piece-file path)))))
     (test-equal "from a file: kind, file, line, part and time"
-      (list 'notes-collide path 15 'sangsih 0)
+      (list 'notes-collide path 17 'b 0)
       (and (notasi-syntax-error? c)
            (list (notasi-syntax-error-kind c) (notasi-syntax-error-file c)
                  (notasi-syntax-error-line c) (notasi-syntax-error-part c)
@@ -6205,23 +6213,25 @@ colotomy, 4 pulses."
    (list
     (list "needs-note-label before notes-collide, in one group"
           '(needs-note-label 15)
-          "(score s" "  (group \"R\" :rows single :fill none polos sangsih))")
+          "(score s" "  (group \"R\" :rows compact :fill none polos sangsih))")
     (list "a bad :rows value before the members" '(bad-option 15)
           "(score s :note-label pitch-display-name :note-label-octave no" "  (group \"R\" :rows lanes nope))")
     (list "a later group's needs-note-label before an earlier collision"
           '(needs-note-label 16)
           "(score s :note-label pitch-display-name :note-label-octave no"
-          "  (group \"R\" :rows single polos sangsih)"
+          "  (group \"R\" :rows compact polos sangsih)"
           "  (group \"U\" :fill none :note-label none ugal))")
     (list "a later group's member before an earlier collision"
           '(undefined-part 16)
           "(score s :note-label pitch-display-name :note-label-octave no"
-          "  (group \"R\" :rows single polos sangsih)"
+          "  (group \"R\" :rows compact polos sangsih)"
           "  (group \"U\" nope))")
     (list "a score's collision before a later score's errors"
-          '(notes-collide 15)
+          '(notes-collide 17)
+          "(part :instrument reyong :name a 1 _ - -)"
+          "(part :instrument reyong :name b 1 - - -)"
           "(score a :note-label pitch-display-name :note-label-octave no"
-          "  (group \"R\" :rows single polos sangsih))"
+          "  (group \"R\" :rows compact a b))"
           "(score b (group \"U\" nope))"))))
 
 ;;; ==================================================================
@@ -6780,7 +6790,7 @@ colotomy, 4 pulses."
       (and pc (score-backgrounds pc 's))))
   (let ((pc (read-scores+ "(score s :background empty :rows parts :note-label pitch-display-name :note-label-octave no"
                           "  (group \"R\" :background vertical polos sangsih)"
-                          "  (group \"G\" :rows single gong))")))
+                          "  (group \"G\" :rows compact gong))")))
     (test-equal "on parts and single rows" '(vertical empty)
       (and pc (score-backgrounds pc 's))))
   (let ((pc (read-scores+ "(score one :background vertical (group \"U\" ugal))"
@@ -6907,7 +6917,7 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
       (and pc (score-rows3 pc 's))))
   (let ((pc (read-scores+ "(score s :note-label pitch-display-name :note-label-octave no"
                           "  (group \"P\" :rows parts polos)"
-                          "  (group \"S\" :rows single sangsih))")))
+                          "  (group \"S\" :rows compact sangsih))")))
     (test-equal "parts and single rows: the same defaults"
       (list default-rows3 default-rows3)
       (and pc (score-rows3 pc 's))))
@@ -6971,7 +6981,7 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
       '((deng1 ding2) used used)
       (and pc (score-keys pc 's))))
   (let ((pc (read-scores+ "(score s :keys (o1 a1) :note-label pitch-display-name :note-label-octave no (group \"U\" ugal)"
-                          "  (group \"R\" :rows single polos))")))
+                          "  (group \"R\" :rows compact polos))")))
     (test-equal "a single group without LOW among its keys ignores the score's range"
       '((dong1 dang1) used)
       (and pc (score-keys pc 's))))
@@ -7039,7 +7049,7 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
      (one-group "(group \"R\" :rows parts :note-label pitch-display-name :note-label-octave no :keys used polos sangsih)")))
   (test-equal "a range on a single group" '(bad-option 15)
     (string-error
-     (one-group "(group \"R\" :rows single :note-label pitch-display-name :note-label-octave no :keys (e1 i2) polos)")))
+     (one-group "(group \"R\" :rows compact :note-label pitch-display-name :note-label-octave no :keys (e1 i2) polos)")))
   (test-equal ":keys on a group whose :rows parts comes from the score"
     '(bad-option 15)
     (score-error "(score s :rows parts :note-label pitch-display-name :note-label-octave no"
@@ -7064,7 +7074,7 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
       (and pc (score-field pc 's group-row-label-octave?))))
   (let ((pc (read-scores+ "(score s :row-labels none :note-label pitch-display-name :note-label-octave no (group \"U\" ugal)"
                           "  (group \"P\" :rows parts polos)"
-                          "  (group \"S\" :rows single sangsih)"
+                          "  (group \"S\" :rows compact sangsih)"
                           "  (group \"G\" :row-labels pitch-display-name gong))")))
     (test-equal ":row-labels: the score's on every kind of rows, a group's own"
       '(none none none pitch-display-name)
@@ -7075,7 +7085,7 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
       (and pc (score-field pc 's group-key-numbers?))))
   (let ((pc (read-scores+ "(score s :key-numbers yes (group \"U\" ugal)"
                           "  (group \"G\" gong)"
-                          "  (group \"S\" :rows single :note-label pitch-display-name :note-label-octave no polos)"
+                          "  (group \"S\" :rows compact :note-label pitch-display-name :note-label-octave no polos)"
                           "  (group \"P\" :rows parts :note-label pitch-display-name :note-label-octave no sangsih))")))
     (test-equal ":key-numbers yes on a score: ignored by strokes, parts and single"
       '(#t #f #f #f)
@@ -7119,7 +7129,7 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
      (one-group "(group \"P\" :rows parts :note-label pitch-display-name :note-label-octave no :key-numbers yes polos)")))
   (test-equal ":key-numbers yes written on a single group" '(bad-option 15)
     (string-error
-     (one-group "(group \"S\" :rows single :note-label pitch-display-name :note-label-octave no :key-numbers yes polos)")))
+     (one-group "(group \"S\" :rows compact :note-label pitch-display-name :note-label-octave no :key-numbers yes polos)")))
   (test-equal ":key-numbers yes on a group whose :rows parts comes from the score"
     '(bad-option 15)
     (score-error "(score s :rows parts :note-label pitch-display-name :note-label-octave no"
@@ -7148,7 +7158,7 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
     (test-equal "on a score: a stroke of any of its groups" '((K . "k"))
       (and pc (group-display (cadr (score-groups (score-named pc 's)))))))
   (let ((pc (read-scores+ "(score s :note-label pitch-display-name :note-label-octave no"
-                          "  (group \"G\" :rows single :display ((G \"Gong\")) gong))")))
+                          "  (group \"G\" :rows compact :display ((G \"Gong\")) gong))")))
     (test-equal "on a single row" '(((G . "Gong")))
       (and pc (score-field pc 's group-display)))))
 
@@ -7320,8 +7330,8 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
   (test-assert "notes-collide in cycle 1: cycle 1, pulse 3"
     (let ((m (gilak-score-message
               "(part :instrument reyong :name a - || - i3 _ - | - - - - ||)"
-              "(part :instrument reyong :name b - || - - o3 - | - - - - ||)"
-              "(score s :note-label pitch-display-name :note-label-octave no (group \"R\" :rows single a b))")))
+              "(part :instrument reyong :name b - || - - i3 - | - - - - ||)"
+              "(score s :note-label pitch-display-name :note-label-octave no (group \"R\" :rows compact a b))")))
       (and m (string-contains m "cycle 1, pulse 3"))))
   (test-assert "pattern-names-overlap: cycle 1, pulse 2"
     (let ((m (gilak-score-message
@@ -7603,7 +7613,7 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
 ;;; - The group's new accessors are looked up in (notasi piece)'s
 ;;;   interface when a test runs, so the file compiles before they
 ;;;   exist.
-;;; - `:rows single` is still read in this slice (it goes in
+;;; - `:rows compact` is still read in this slice (it goes in
 ;;;   feat/collapsed-compact); like `parts`, it needs no note label.
 ;;; - The values are symbols; a string, `#t` or a number is
 ;;;   `bad-option`, as for the other symbol options.
@@ -7792,8 +7802,8 @@ accessor is missing."
           "(score s" "  (group \"R\" :rows parts polos sangsih))")
     (list "the score's :rows parts with no note label"
           "(score s :rows parts" "  (group \"U\" ugal) (group \"G\" gong))")
-    (list ":rows single with no note label"
-          "(score s" "  (group \"U\" :rows single ugal))")
+    (list ":rows compact with no note label"
+          "(score s" "  (group \"U\" :rows compact ugal))")
     (list ":fill none with :note-label pitch-name"
           "(score s :fill none :note-label pitch-name" "  (group \"U\" ugal))")
     (list ":fill none with a group's :note-label key-number"
@@ -7803,6 +7813,193 @@ accessor is missing."
     (list ":fill none with a label and no octave"
           "(score s :fill none :note-label pitch-name :note-label-octave no"
           "  (group \"U\" ugal))"))))
+
+;;; ==================================================================
+;;; Slice feat/collapsed-compact (iteration 5; 01, `:rows`, "Compact
+;;; rows" and "Rules"; 03, [iteration 5] and [scores]; 04, "Compact
+;;; rows"; ADRs 0055, 0060)
+;;; ==================================================================
+;;;
+;;; `:rows compact` reads on a score and on a group; `:rows single` is a
+;;; removed value (`bad-option`). On a compact group, `:keys` written is
+;;; `bad-option` and inherited is ignored (`used`); `:key-numbers yes`
+;;; written is `bad-option` and inherited is ignored (#f). On compact
+;;; rows only one key's notes collide (ADR 0060): two notes on one key
+;;; whose boxes overlap without being a unison are `notes-collide`
+;;; (`part` the second part, `time` the first shared column, as on
+;;; `notes` rows); different keys sounding together read (layout gives
+;;; them rows).
+;;; Choices made where the docs are not explicit:
+;;; - `:keys used` written on a compact group is an error too, as on a
+;;;   `parts` group: 03 says "`:keys` written".
+;;; - `:key-numbers no` written on a compact group reads, as on a
+;;;   `parts` group: only `yes` is named.
+;;; - A stroke's box is one column (ADR 0042), so a stroke written two
+;;;   pulses long and the same stroke in the next pulse don't collide.
+;;; - A chord on compact rows is drawn in its lowest key's row: only a
+;;;   collision on that key is tested. Whether a chord's upper note
+;;;   collides with a held note on its key is left open (the chord's
+;;;   box is not drawn in that key's row).
+;;; - Whether notes outside the score's range are checked is not tested,
+;;;   nor two strokes on one key, at one start, with different written
+;;;   lengths (drawn alike, one column each, but not a unison as 03
+;;;   words it).
+
+(test-group "[compact] reading :rows compact"
+  (let ((pc (read-scores+ "(score s :rows compact"
+                          "  (group \"U\" ugal)"
+                          "  (group \"R\" polos sangsih)"
+                          "  (group \"G\" gong))")))
+    (test-equal "on a score: every group takes it" '(compact compact compact)
+      (and pc (score-field pc 's group-rows))))
+  (let ((pc (read-scores+ "(score s (group \"U\" :rows compact ugal)"
+                          "  (group \"R\" :rows parts polos sangsih)"
+                          "  (group \"G\" :rows compact gong))")))
+    (test-equal "on groups" '(compact parts compact)
+      (and pc (score-field pc 's group-rows))))
+  (let ((pc (read-scores+ "(score s :rows compact (group \"U\" :rows notes ugal)"
+                          "  (group \"G\" gong))")))
+    (test-equal "a group's own value overrides the score's compact" '(notes compact)
+      (and pc (score-field pc 's group-rows))))
+  (test-assert "compact rows need no note label (colour only)"
+    (piece? (read-scores+ "(score s (group \"R\" :rows compact polos sangsih))")))
+  (test-equal "compact rows with :fill none still need a label"
+    '(needs-note-label 15)
+    (score-error "(score s" "  (group \"R\" :rows compact :fill none polos sangsih))"))
+  (let ((pc (read-scores+ "(score s :rows compact (group \"U\" ugal) (group \"G\" gong))")))
+    (test-equal "compact groups keep the other defaults"
+      (list default-rows3 default-rows3)
+      (and pc (score-rows3 pc 's)))))
+
+(test-group "[compact] :rows single is a removed value"
+  (test-equal "on a score: bad-option" '(bad-option 14)
+    (score-error "(score s :rows single (group \"U\" ugal))"))
+  (test-equal "on a group: bad-option" '(bad-option 15)
+    (string-error (one-group "(group \"U\" :rows single ugal)")))
+  (test-equal "on a group of strokes: bad-option" '(bad-option 15)
+    (string-error (one-group "(group \"G\" :rows single gong)")))
+  (test-equal "an option error: no part, no time" '(bad-option 15 #f #f)
+    (error-fields (one-group "(group \"R\" :rows single polos sangsih)")))
+  (test-equal ":rows compacted is no value either" '(bad-option 15)
+    (string-error (one-group "(group \"U\" :rows compacted ugal)"))))
+
+(test-group "[compact] :keys and :key-numbers on compact groups"
+  (for-each
+   (match-lambda
+     ((name value)
+      (test-equal (string-append ":keys " name " written on a compact group")
+        '(bad-option 15)
+        (string-error
+         (one-group (string-append "(group \"U\" :rows compact :keys " value " ugal)"))))))
+   '(("all" "all") ("used" "used") ("a range" "(o1 a1)")))
+  (test-equal ":keys on a group whose :rows compact comes from the score"
+    '(bad-option 15)
+    (score-error "(score s :rows compact" "  (group \"U\" :keys all ugal))"))
+  (test-equal ":keys all on a compact group of strokes" '(bad-option 15)
+    (string-error (one-group "(group \"G\" :rows compact :keys all gong)")))
+  (let ((pc (read-scores+ "(score s :keys all (group \"U\" ugal)"
+                          "  (group \"R\" :rows compact polos sangsih))")))
+    (test-equal "the score's :keys all: a compact group keeps used" '(all used)
+      (and pc (score-keys pc 's))))
+  (let ((pc (read-scores+ "(score s :keys (o1 a1) (group \"U\" ugal)"
+                          "  (group \"R\" :rows compact polos))")))
+    (test-equal "the score's range: a compact group without LOW ignores it"
+      '((dong1 dang1) used)
+      (and pc (score-keys pc 's))))
+  (test-equal ":key-numbers yes written on a compact group" '(bad-option 15)
+    (string-error (one-group "(group \"U\" :rows compact :key-numbers yes ugal)")))
+  (test-equal ":key-numbers yes on a group whose :rows compact comes from the score"
+    '(bad-option 15)
+    (score-error "(score s :rows compact" "  (group \"U\" :key-numbers yes ugal))"))
+  (let ((pc (read-scores+ "(score s :key-numbers yes (group \"U\" ugal)"
+                          "  (group \"R\" :rows compact polos sangsih))")))
+    (test-equal ":key-numbers yes on a score: ignored by a compact group" '(#t #f)
+      (and pc (score-field pc 's group-key-numbers?))))
+  (test-assert ":key-numbers no written on a compact group reads"
+    (piece? (read-scores+ "(score s (group \"U\" :rows compact :key-numbers no ugal))"))))
+
+(test-group "[compact] notes-collide on compact rows"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (apply collide-error more))))
+   (list
+    (list "a key struck while the other part holds it"
+          '(notes-collide 17 b 1)
+          "(part :instrument reyong :name a 1 _ - -)"                         ; 14
+          "(part :instrument reyong :name b - 1 - -)"                         ; 15
+          "(score s" "  (group \"R\" :rows compact a b))")      ; 16, 17
+    (list "the same key, the same start, different lengths"
+          '(notes-collide 17 b 0)
+          "(part :instrument reyong :name a 1 _ - -)"
+          "(part :instrument reyong :name b 1 - - -)"
+          "(score s" "  (group \"R\" :rows compact a b))")
+    (list "two held notes on one key: the first shared column"
+          '(notes-collide 17 b 2)
+          "(part :instrument reyong :name a 1 _ _ -)"
+          "(part :instrument reyong :name b - - 1 _)"
+          "(score s" "  (group \"R\" :rows compact a b))")
+    (list "half pulses: the time of the shared column"
+          '(notes-collide 17 b 1/2)
+          "(part :instrument reyong :name a 1:1/2 _ - - - - - -)"
+          "(part :instrument reyong :name b -:1/2 1 - - - - - -)"
+          "(score s" "  (group \"R\" :rows compact a b))")
+    (list "a chord's lowest key against a held note on that key"
+          '(notes-collide 17 b 1)
+          "(part :instrument reyong :name a 1 _ - -)"
+          "(part :instrument reyong :name b - (1 3) - -)"
+          "(score s" "  (group \"R\" :rows compact a b))")
+    (list "three parts: the earliest collision decides"
+          '(notes-collide 18 c 1)
+          "(part :instrument reyong :name a - - 1 -)"                         ; 14
+          "(part :instrument reyong :name b - 1 _ -)"                         ; 15
+          "(part :instrument reyong :name c 1 _ _ -)"                         ; 16
+          "(score s" "  (group \"R\" :rows compact a b c))")    ; 17, 18
+    (list "the score's :rows compact: at the group's line"
+          '(notes-collide 18 b 1)
+          "(part :instrument reyong :name a 1 _ - -)"
+          "(part :instrument reyong :name b - 1 - -)"
+          "(score s :rows compact"                              ; 16
+          "  (group \"U\" ugal)"                                ; 17
+          "  (group \"R\" a b))")))                             ; 18
+  (for-each
+   (match-lambda
+     ((name . more)
+      (test-assert name (piece? (apply read-scores+ more)))))
+   (list
+    (list "different keys sounding together: no error"
+          "(part :instrument reyong :name a 1 _ - -)"
+          "(part :instrument reyong :name b - 2 - -)"
+          "(score s" "  (group \"R\" :rows compact a b))")
+    (list "two parts striking different keys at once"
+          "(score s" "  (group \"R\" :rows compact polos sangsih))")
+    (list "the score's :rows compact, different keys at once"
+          "(score s :rows compact" "  (group \"R\" polos sangsih) (group \"U\" ugal))")
+    (list "a unison: the same key, start and length"
+          "(part :instrument reyong :name a 1 2 - -)"
+          "(part :instrument reyong :name b 1 3 - -)"
+          "(score s" "  (group \"R\" :rows compact a b))")
+    (list "a unison of held notes"
+          "(part :instrument reyong :name a 1 _ 2 -)"
+          "(part :instrument reyong :name b 1 _ - 3)"
+          "(score s" "  (group \"R\" :rows compact a b))")
+    (list "one key, one note after the other"
+          "(part :instrument reyong :name a 1 _ - -)"
+          "(part :instrument reyong :name b - - 1 -)"
+          "(score s" "  (group \"R\" :rows compact a b))")
+    (list "a chord in one part"
+          "(part :instrument reyong :name a (1 3) - - -)"
+          "(score s" "  (group \"R\" :rows compact a))")
+    (list "strokes of two instruments at once (gong and kempli)"
+          "(score s" "  (group \"C\" :rows compact gong kempli))")
+    (list "a held stroke and the same stroke a column later: one column each"
+          "(part :instrument kempli :name a K _ - -)"
+          "(part :instrument kempli :name b - K - -)"
+          "(score s" "  (group \"K\" :rows compact a b))")
+    (list "a unison of strokes"
+          "(part :instrument kempli :name a K - K -)"
+          "(part :instrument kempli :name b K - - -)"
+          "(score s" "  (group \"K\" :rows compact a b))"))))
 
 (define runner (test-runner-current))
 (test-end "reader")

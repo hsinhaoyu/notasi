@@ -293,7 +293,7 @@ This cycle has 8 pulses, so there is no pulse 9. A position is
 would be drawn. Give the group or the score a `:note-label`, such as
 `pitch-display-name` (see [Scores](scores.md#rows-of-names)).
 
-### Two notes in one place on a single row
+### One key held while it is struck again, on compact rows
 
 ```scheme
 {{#include ../../../examples/manual/mistakes/notes-collide.nts}}
@@ -303,9 +303,10 @@ would be drawn. Give the group or the score a `:note-label`, such as
 {{#include ../../../examples/manual/mistakes/notes-collide.txt}}
 ```
 
-On a single row, only one note can sound in each column. Here polos is
-still holding its note when sangsih strikes. Give the parts their own
-rows, or change the music.
+On compact rows, each key keeps one row, so the same key can't sound
+twice at once unless both parts strike it together, for the same
+length. Here polos is still holding key 1 when sangsih strikes it.
+Give the parts their own groups, or change the music.
 
 ### Two parts on one key
 
