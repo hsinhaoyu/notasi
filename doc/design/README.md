@@ -123,6 +123,7 @@ Each decision's context and consequences are in its record in
 27. The notasi command line is a contract for editors: [0048](../decisions/0048-the-command-line-is-a-contract-for-editors.md)
 28. An Emacs package ships with notasi and only runs the command: [0050](../decisions/0050-an-emacs-package-ships-with-notasi.md)
 29. One glossary names things in the documents and the code: [0051](../decisions/0051-one-glossary-names-things-everywhere.md)
+30. The piece can be saved, with `notasi render --save-piece`: [0058](../decisions/0058-the-piece-can-be-saved.md)
 
 Proposed, not yet agreed:
 
