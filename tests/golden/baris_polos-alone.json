@@ -41,6 +41,7 @@
           "voices": [
             {
               "name": "polos",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -116,6 +117,7 @@
           "voices": [
             {
               "name": "polos",
+              "marker": null,
               "events": [
                 {
                   "start": 0,

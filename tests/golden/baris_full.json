@@ -41,6 +41,7 @@
           "voices": [
             {
               "name": "sangsih",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -100,6 +101,7 @@
             },
             {
               "name": "polos",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -161,6 +163,7 @@
           "voices": [
             {
               "name": "ugal",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -195,6 +198,7 @@
           "voices": [
             {
               "name": "calung",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -220,6 +224,7 @@
           "voices": [
             {
               "name": "kempli",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -243,6 +248,7 @@
             },
             {
               "name": "gong",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -268,10 +274,12 @@
           "voices": [
             {
               "name": "lanang-lh",
+              "marker": null,
               "events": []
             },
             {
               "name": "lanang-rh",
+              "marker": null,
               "events": [
                 {
                   "start": 1,
@@ -324,10 +332,12 @@
           "voices": [
             {
               "name": "wadon-lh",
+              "marker": null,
               "events": []
             },
             {
               "name": "wadon-rh",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -394,6 +404,7 @@
           "voices": [
             {
               "name": "sangsih",
+              "marker": null,
               "events": [
                 {
                   "start": 1,
@@ -570,6 +581,7 @@
             },
             {
               "name": "polos",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -757,6 +769,7 @@
           "voices": [
             {
               "name": "ugal",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -836,6 +849,7 @@
           "voices": [
             {
               "name": "calung",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -888,6 +902,7 @@
           "voices": [
             {
               "name": "kempli",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -956,6 +971,7 @@
             },
             {
               "name": "gong",
+              "marker": null,
               "events": [
                 {
                   "start": 8,
@@ -1008,6 +1024,7 @@
           "voices": [
             {
               "name": "lanang-lh",
+              "marker": null,
               "events": [
                 {
                   "start": 9,
@@ -1058,6 +1075,7 @@
             },
             {
               "name": "lanang-rh",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -1155,6 +1173,7 @@
           "voices": [
             {
               "name": "wadon-lh",
+              "marker": null,
               "events": [
                 {
                   "start": 10,
@@ -1205,6 +1224,7 @@
             },
             {
               "name": "wadon-rh",
+              "marker": null,
               "events": [
                 {
                   "start": 1,

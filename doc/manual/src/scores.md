@@ -97,6 +97,37 @@ has one (`:damped "na'"`; see [Scales and stroke sets](scales-and-strokes.md));
 a longer note shows its usual name. In the drawing above, `nang` rings
 and `na'` is cut short.
 
+## Telling parts apart
+
+When polos and sangsih share a group, each note takes its pitch's
+colour, whichever part plays it, so the two parts merge into one line.
+To see which part plays which note, mark a part with `:part-marker`:
+
+```scheme
+{{#include ../../../examples/manual/part-markers.nts}}
+```
+
+![The kotekan with sangsih marked](figures/part-markers.png)
+
+`:part-marker` goes on a group, not on a score. Each entry names a part
+of the group and gives it a symbol, a border, or both:
+
+| Key | What it does |
+|---|---|
+| `:symbol dot` / `ring` / `cross` | A small mark in the middle of each of the part's notes. `none` (the default) draws none. |
+| `:symbol-size 0.3` | The mark's size, as a part of the square (more than 0, at most 1). 0.3 unless you say. |
+| `:symbol-color "#222222"` | The mark's colour: near-black unless you say. |
+| `:border "#d62728"` | A border of this colour around each of the part's notes, in place of the thin grey one. |
+| `:border-width "1.5pt"` | How thick the border is: 1.5pt unless you say. |
+
+A part with no entry is drawn as usual. A mark and a note's label are
+both drawn in the middle of the square, even where they overlap, so
+choose a combination that reads well.
+
+When two parts strike the same key together, for the same length (a
+unison), the note is drawn once, with the first part's marks only: it
+looks like the first part's note alone.
+
 ## Excerpts and lines
 
 A score can print part of a piece, and choose where its lines break:

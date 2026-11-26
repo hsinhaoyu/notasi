@@ -1882,6 +1882,92 @@ prints no warning.  Typst's output is shown when either fails."
                                       (rows3-event 3 1 0 "null" "\"#e6e6e6\"")
                                       "] }]")))))))
 
+;;; Slice feat/collapsed-markers (05, "JSON contract (version 4)", its
+;;; `marker` bullet, and the template's "Part marks" bullet; 04, "Part
+;;; markers"; ADRs 0056, 0059): a hand-written version 4 figure whose
+;;; voices have `marker`, between `name` and `events`.  Two systems; a
+;;; notes group of two voices, polos with marker null and sangsih with
+;;; a dot and a border (the other fields null), sangsih's note cut by
+;;; the system break and continued, with a note label; a parts group
+;;; with a cross with every field given, a ring with every field null
+;;; but the symbol, and "none" with a border alone; a voice with a
+;;; marker but no events; a stroke group with a dot; a "-" event of
+;;; `:holds dash` (fill null) in a marked voice.  The groups keep
+;;; `overlays` ([]): `annotation` is a later slice.  Only compiling
+;;; without a warning is tested; the marks are checked by eye (make
+;;; preview).
+
+(define (marker-json symbol size symbol-color border border-width)
+  (string-append
+   "{ \"symbol\": \"" symbol "\", \"symbol_size\": " size
+   ", \"symbol_color\": " symbol-color ", \"border\": " border
+   ", \"border_width\": " border-width " }"))
+
+(define (marked-event start dur lane text fill continued)
+  (string-append
+   "{ \"start\": " (number->string start) ", \"dur\": " (number->string dur)
+   ", \"row\": " (number->string lane) ", \"text\": " text
+   ", \"fill\": " fill ", \"text_color\": \"#222222\", \"continued\": "
+   (if continued "true" "false") " }"))
+
+(define (marked-voice name marker events)
+  (string-append
+   "{ \"name\": \"" name "\", \"marker\": " marker
+   ", \"events\": [" (string-join events ", ") "] }"))
+
+(define (marked-groups first?)
+  "The groups of one system; FIRST? for the first system, where
+sangsih's long note starts (it is continued in the second)."
+  (list
+   (rows3-group "Gangsa" "[\"i3\", \"a2\", \"u1\"]" "null"
+                (string-append
+                 "["
+                 (marked-voice "polos" "null"
+                               (list (marked-event 0 1 2 "\"u\"" "\"#decbe4\"" #f)
+                                     (marked-event 1 1 1 "null" "\"#fed9a6\"" #f)))
+                 ", "
+                 (marked-voice "sangsih"
+                               (marker-json "dot" "null" "null" "\"#d62728\"" "null")
+                               (if first?
+                                   (list (marked-event 0 1 0 "\"i\"" "\"#fbb4ae\"" #f)
+                                         (marked-event 2 2 0 "\"i\"" "\"#fbb4ae\"" #f))
+                                   (list (marked-event 0 1 0 "\"i\"" "\"#fbb4ae\"" #t)
+                                         (marked-event 3 1 1 "\"a\"" "\"#fed9a6\"" #f))))
+                 "]"))
+   (rows3-group "Parts" "[\"a\", \"b\", \"c\", \"d\"]" "null"
+                (string-append
+                 "["
+                 (marked-voice "a"
+                               (marker-json "cross" "0.5" "\"#1f77b4\"" "\"#2ca02c\"" "\"1.5pt\"")
+                               (list (marked-event 0 1 0 "\"o\"" "\"#ccebc5\"" #f)
+                                     (marked-event 1 1 0 "\"-\"" "null" #f)))
+                 ", "
+                 (marked-voice "b"
+                               (marker-json "ring" "null" "null" "null" "null")
+                               (list (marked-event 1 2 1 "null" "\"#fbb4ae\"" #f)))
+                 ", "
+                 (marked-voice "c"
+                               (marker-json "none" "null" "null" "\"#9467bd\"" "null")
+                               (list (marked-event 3 1 2 "\"e\"" "null" #f)))
+                 ", "
+                 (marked-voice "d"
+                               (marker-json "dot" "1" "\"#ffffff\"" "null" "\"0.5pt\"")
+                               '())
+                 "]"))
+   (rows3-group "Gong" "[\"Gong\", \"P\"]" "null"
+                (string-append
+                 "["
+                 (marked-voice "gong"
+                               (marker-json "dot" "0.3" "null" "\"#000000\"" "\"1pt\"")
+                               (list (marked-event 0 1 1 "\"P\"" "\"#e6e6e6\"" #f)
+                                     (marked-event 2 1 0 "\"Gong\"" "\"#e6e6e6\"" #f)))
+                 "]"))))
+
+(define v4-markers
+  (rows3-figure "0.0em" "3.6em"
+                (list (rows3-system 0 (marked-groups #t))
+                      (rows3-system 4 (marked-groups #f)))))
+
 ;;; The tests.
 
 (test-begin "template")
@@ -1923,7 +2009,9 @@ prints no warning.  Typst's output is shown when either fails."
       (check-figure "version 3: key numbers, row labels left out, one-column strokes"
                     "v3-rows.json" v3-rows)
       (check-figure "version 3: key_width and lane_width both 0.0em"
-                    "v3-rows-off.json" v3-rows-off))
+                    "v3-rows-off.json" v3-rows-off)
+      (check-figure "version 4: part markers (dot, ring, cross, none; borders)"
+                    "v4-markers.json" v4-markers))
     (test-assert "typst is installed (CI installs 0.15.1)" #f))
 
 (define runner (test-runner-current))

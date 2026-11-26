@@ -41,10 +41,12 @@
           "voices": [
             {
               "name": "lanang-lh",
+              "marker": null,
               "events": []
             },
             {
               "name": "lanang-rh",
+              "marker": null,
               "events": [
                 {
                   "start": 1,
@@ -86,10 +88,12 @@
             },
             {
               "name": "wadon-lh",
+              "marker": null,
               "events": []
             },
             {
               "name": "wadon-rh",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -156,6 +160,7 @@
           "voices": [
             {
               "name": "lanang-lh",
+              "marker": null,
               "events": [
                 {
                   "start": 9,
@@ -206,6 +211,7 @@
             },
             {
               "name": "lanang-rh",
+              "marker": null,
               "events": [
                 {
                   "start": 0,
@@ -292,6 +298,7 @@
             },
             {
               "name": "wadon-lh",
+              "marker": null,
               "events": [
                 {
                   "start": 10,
@@ -342,6 +349,7 @@
             },
             {
               "name": "wadon-rh",
+              "marker": null,
               "events": [
                 {
                   "start": 1,

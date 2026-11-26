@@ -8001,6 +8001,261 @@ accessor is missing."
           "(part :instrument kempli :name b K - - -)"
           "(score s" "  (group \"K\" :rows compact a b))"))))
 
+;;; ==================================================================
+;;; [markers] Slice feat/collapsed-markers (01, "Telling parts apart"
+;;; and its Rules bullet; 02, "Iteration 5" and invariant 11; 03, the
+;;; [iteration 5] `:part-marker` cases; ADR 0056): a group's
+;;; `:part-marker ((PART :key value ...) ...)`, read into the group's
+;;; `part-marker`, a list of (part . marker).
+;;; ==================================================================
+;;; Choices made where the docs are not explicit:
+;;; - Each entry's car is the part record, the same (eq?) record as the
+;;;   group's member, as in `group-members`; entries keep the order
+;;;   written.
+;;; - A missing `:symbol` is read as the symbol `none` (02: `symbol` is
+;;;   none | dot | ring | cross, the other fields #f for the default);
+;;;   03's "missing keys are #f" is taken to mean the other four.
+;;; - `:symbol-size` keeps the number as read (0.3 stays 0.3); a colour
+;;;   and a length are kept as written. Colours are written in lower
+;;;   case here, so whether upper case is accepted or lowercased is not
+;;;   tested.
+;;; - An entry with no keys, `(sangsih)`, and an empty `:part-marker
+;;;   ()`, are not tested: 01 doesn't say whether they are allowed.
+;;; - Check order: the value's shape, keys and values are checked with
+;;;   the group's options, before its members; whether a PART is a
+;;;   member is checked after the members (03, "Each score").
+;;; - A PART that is no part at all is `bad-option` with `part` set, as
+;;;   one that is a part but not a member.
+;;; - The new accessors are looked up when a test runs
+;;;   (`labels-accessor`), so the file compiles before they exist.
+
+(define (part-marker-of g)
+  "G's part-marker as ((PART-NAME SYMBOL SIZE SYMBOL-COLOR BORDER
+BORDER-WIDTH) ...)."
+  (map (match-lambda
+         ((part . marker)
+          (cons (part-name part)
+                (map (lambda (name) ((labels-accessor name) marker))
+                     '(marker-symbol marker-symbol-size marker-symbol-color
+                       marker-border marker-border-width)))))
+       ((labels-accessor 'group-part-marker) g)))
+
+(define (score-part-markers pc name)
+  "part-marker-of each group of score NAME, or #f if PC is #f or an
+accessor is missing."
+  (and pc
+       (guard (c (#t #f))
+         (map part-marker-of (score-groups (score-named pc name))))))
+
+(define (marker-group . options)
+  "scores+ with a score on line 14 and, on line 15, a group \"R\" of
+polos and sangsih with OPTIONS (strings, joined by spaces)."
+  (one-group (string-append "(group \"R\" " (string-join options " ")
+                            " polos sangsih)")))
+
+(define (marker-reads . options)
+  "score-part-markers of score s read from marker-group with OPTIONS."
+  (score-part-markers (try-read-string (apply marker-group options)) 's))
+
+(test-group "[markers] :part-marker: the default"
+  (let ((pc (read-scores+)))
+    (test-equal "the default score: '() in every group"
+      (and pc (map (const '()) (score-groups (score-named pc 'default))))
+      (score-part-markers pc 'default)))
+  (let ((pc (read-scores+ "(score s (group \"U\" ugal) (group \"R\" polos sangsih))")))
+    (test-equal "groups without the option: '()" '(() ())
+      (score-part-markers pc 's))))
+
+(test-group "[markers] :part-marker: reading"
+  (test-equal "01's example: a dot and a border, the other keys #f"
+    '(((sangsih dot #f #f "#d62728" #f)))
+    (marker-reads ":part-marker ((sangsih :symbol dot :border \"#d62728\"))"))
+  (test-equal "every key"
+    '(((polos cross 0.3 "#222222" "#d62728" "1pt")))
+    (marker-reads ":part-marker ((polos :symbol cross :symbol-size 0.3"
+                  ":symbol-color \"#222222\" :border \"#d62728\""
+                  ":border-width \"1pt\"))"))
+  (test-equal "keys in any order"
+    '(((polos ring 0.5 #f "#00ff00" "0.8pt")))
+    (marker-reads ":part-marker ((polos :border-width \"0.8pt\" :border \"#00ff00\""
+                  ":symbol-size 0.5 :symbol ring))"))
+  (test-equal "no :symbol: none"
+    '(((sangsih none #f #f "#d62728" #f)))
+    (marker-reads ":part-marker ((sangsih :border \"#d62728\"))"))
+  (test-equal ":symbol none written"
+    '(((sangsih none #f #f #f "2pt")))
+    (marker-reads ":part-marker ((sangsih :symbol none :border-width \"2pt\"))"))
+  (for-each
+   (lambda (symbol)
+     (test-equal (string-append ":symbol " symbol ": a symbol")
+       (list (list (list 'polos (string->symbol symbol) #f #f #f #f)))
+       (marker-reads (string-append ":part-marker ((polos :symbol " symbol "))"))))
+   '("none" "dot" "ring" "cross"))
+  (test-equal ":symbol-size 1: the largest"
+    '(((polos dot 1 #f #f #f)))
+    (marker-reads ":part-marker ((polos :symbol dot :symbol-size 1))"))
+  (test-equal ":symbol-size near 0"
+    '(((polos dot 0.01 #f #f #f)))
+    (marker-reads ":part-marker ((polos :symbol dot :symbol-size 0.01))"))
+  (test-equal ":symbol-color alone"
+    '(((polos none #f "#ffffff" #f #f)))
+    (marker-reads ":part-marker ((polos :symbol-color \"#ffffff\"))"))
+  (test-equal "two entries, in the order written"
+    '(((sangsih dot #f #f #f #f) (polos ring #f #f #f #f)))
+    (marker-reads ":part-marker ((sangsih :symbol dot) (polos :symbol ring))"))
+  (test-equal "with other options around it"
+    '(((sangsih dot #f #f #f #f)))
+    (marker-reads ":rows parts :part-marker ((sangsih :symbol dot)) :holds dash"))
+  (let ((pc (try-read-string
+             (marker-group ":part-marker ((sangsih :symbol dot))"))))
+    (test-assert "the entry's part is the group's member record"
+      (and pc
+           (guard (c (#t #f))
+             (let* ((g (car (score-groups (score-named pc 's))))
+                    (entry (car ((labels-accessor 'group-part-marker) g))))
+               (eq? (car entry)
+                    (find (lambda (p) (eq? (part-name p) 'sangsih))
+                          (map car (group-members g))))))))
+    (test-assert "the marker is a marker record"
+      (and pc
+           (guard (c (#t #f))
+             ((labels-accessor 'marker?)
+              (cdar ((labels-accessor 'group-part-marker)
+                     (car (score-groups (score-named pc 's)))))))))
+    (test-equal "the members are unchanged" '((polos "polos") (sangsih "sangsih"))
+      (and pc (member-names (car (score-groups (score-named pc 's)))))))
+  (let ((pc (read-scores+ "(score s"
+                          "  (group \"R\" :rows parts :part-marker ((polos :symbol dot)) polos sangsih)"
+                          "  (group \"C\" :rows compact :part-marker ((gong :symbol cross)) gong kempli)"
+                          "  (group \"U\" :part-marker ((ugal :border \"#000000\")) ugal))")))
+    (test-equal "on parts rows, compact rows, a stroke group and a group of one"
+      '(((polos dot #f #f #f #f))
+        ((gong cross #f #f #f #f))
+        ((ugal none #f #f "#000000" #f)))
+      (score-part-markers pc 's)))
+  (let ((pc (read-scores+ "(score s :rows compact"
+                          "  (group \"R\" :part-marker ((sangsih :symbol dot)) polos sangsih)"
+                          "  (group \"U\" ugal))")))
+    (test-equal "only the group that asks has entries" '(((sangsih dot #f #f #f #f)) ())
+      (score-part-markers pc 's)))
+  (let ((pc (read-scores+ "(score s (group \"R\" :part-marker ((sangsih :symbol dot)) polos sangsih))"
+                          "(score t (group \"R\" polos sangsih))")))
+    (test-equal "a part marked in one score is not marked in another"
+      '((((sangsih dot #f #f #f #f))) (()))
+      (and pc (list (score-part-markers pc 's) (score-part-markers pc 't)))))
+  (let ((pc (try-read-string
+             (marker-group ":part-marker ((sangsih :symbol dot))"))))
+    (test-equal "the other settings keep their defaults"
+      (list (default-group-settings "R"))
+      (and pc (map group-settings (score-groups (score-named pc 's)))))))
+
+(test-group "[markers] :part-marker on a score: option-wrong-level"
+  (test-equal "at the score's line" '(option-wrong-level 14)
+    (score-error "(score s :part-marker ((polos :symbol dot))"
+                 "  (group \"R\" polos sangsih))"))
+  (test-equal "even on a score of one group of that part" '(option-wrong-level 14)
+    (score-error "(score s :part-marker ((ugal :symbol dot)) (group \"U\" ugal))"))
+  (test-equal "even with a bad value" '(option-wrong-level 14)
+    (score-error "(score s :part-marker dot (group \"U\" ugal))")))
+
+(test-group "[markers] :part-marker: bad-option at the group's line"
+  ;; Errors with no PART to name: kind and line.
+  (for-each
+   (match-lambda
+     ((name value)
+      (test-equal name '(bad-option 15)
+        (string-error (marker-group (string-append ":part-marker " value))))))
+   (list
+    (list "a symbol" "dot")
+    (list "a string" "\"sangsih\"")
+    (list "a number" "1")
+    (list "an entry that is a symbol" "(sangsih)")
+    (list "one entry, not in a list" "(sangsih :symbol dot)")
+    (list "an entry whose PART is a string" "((\"sangsih\" :symbol dot))")
+    (list "an entry whose PART is a list" "(((sangsih) :symbol dot))")
+    (list "an entry whose PART is a number" "((1 :symbol dot))")
+    (list "an entry that starts with a key" "((:symbol dot))")
+    (list "a good entry and a symbol" "((sangsih :symbol dot) polos)")))
+  ;; Errors inside an entry: kind, line and the entry's PART.
+  (for-each
+   (match-lambda
+     ((name part value)
+      (test-equal name (list 'bad-option 15 part #f)
+        (error-fields (marker-group (string-append ":part-marker " value))))))
+   (list
+    (list "a part not in the group" 'ugal "((ugal :symbol dot))")
+    (list "a part not in the group, after a good entry" 'gong
+          "((sangsih :symbol dot) (gong :symbol dot))")
+    (list "no part at all" 'nope "((nope :symbol dot))")
+    (list "a part named in two entries" 'sangsih
+          "((sangsih :symbol dot) (sangsih :border \"#000000\"))")
+    (list "an unknown key" 'sangsih "((sangsih :color \"#000000\"))")
+    (list "an unknown key: :size" 'sangsih "((sangsih :symbol dot :size 0.3))")
+    (list "an unknown key: :label" 'sangsih "((sangsih :label \"S\"))")
+    (list "a group option as a key" 'sangsih "((sangsih :fill none))")
+    (list "a key twice" 'sangsih "((sangsih :symbol dot :symbol ring))")
+    (list "a key twice: :border" 'sangsih
+          "((sangsih :border \"#000000\" :border \"#ffffff\"))")
+    (list "a key without a value" 'sangsih "((sangsih :symbol))")
+    (list "a value without a key" 'sangsih "((sangsih dot))")
+    (list ":symbol unknown" 'sangsih "((sangsih :symbol square))")
+    (list ":symbol a string" 'sangsih "((sangsih :symbol \"dot\"))")
+    (list ":symbol yes" 'sangsih "((sangsih :symbol yes))")
+    (list ":symbol #t" 'sangsih "((sangsih :symbol #t))")
+    (list ":symbol a number" 'sangsih "((sangsih :symbol 1))")
+    (list ":symbol-size 0" 'sangsih "((sangsih :symbol dot :symbol-size 0))")
+    (list ":symbol-size below 0" 'sangsih "((sangsih :symbol dot :symbol-size -0.5))")
+    (list ":symbol-size above 1" 'sangsih "((sangsih :symbol dot :symbol-size 1.5))")
+    (list ":symbol-size 2" 'sangsih "((sangsih :symbol dot :symbol-size 2))")
+    (list ":symbol-size a string" 'sangsih "((sangsih :symbol dot :symbol-size \"0.3\"))")
+    (list ":symbol-size a symbol" 'sangsih "((sangsih :symbol dot :symbol-size big))")
+    (list ":symbol-size a length" 'sangsih "((sangsih :symbol dot :symbol-size \"3pt\"))")
+    (list ":symbol-color a colour name" 'sangsih "((sangsih :symbol-color \"black\"))")
+    (list ":symbol-color five digits" 'sangsih "((sangsih :symbol-color \"#12345\"))")
+    (list ":symbol-color without #" 'sangsih "((sangsih :symbol-color \"123456\"))")
+    (list ":symbol-color not hex" 'sangsih "((sangsih :symbol-color \"#gggggg\"))")
+    (list ":symbol-color a symbol" 'sangsih "((sangsih :symbol-color black))")
+    (list ":border a colour name" 'sangsih "((sangsih :border \"red\"))")
+    (list ":border seven digits" 'sangsih "((sangsih :border \"#1234567\"))")
+    (list ":border not hex" 'sangsih "((sangsih :border \"#d6272z\"))")
+    (list ":border yes" 'sangsih "((sangsih :border yes))")
+    (list ":border-width without a unit" 'sangsih "((sangsih :border-width \"1\"))")
+    (list ":border-width a unit only" 'sangsih "((sangsih :border-width \"pt\"))")
+    (list ":border-width words" 'sangsih "((sangsih :border-width \"one pt\"))")
+    (list ":border-width a number" 'sangsih "((sangsih :border-width 1))")
+    (list ":border-width a symbol" 'sangsih "((sangsih :border-width thick))")
+    (list "a bad second entry names its part" 'polos
+          "((sangsih :symbol dot) (polos :symbol square))")))
+  (test-equal "on a group whose rows are compact" '(bad-option 15 sangsih #f)
+    (error-fields (marker-group ":rows compact :part-marker ((sangsih :symbol star))")))
+  (test-equal "a member of another group of the score" '(bad-option 15 ugal #f)
+    (error-fields (scores+ "(score s"
+                           "  (group \"R\" :part-marker ((ugal :symbol dot)) polos sangsih)"
+                           "  (group \"U\" ugal))")))
+  (test-equal "in the second group: its line" '(bad-option 16 polos #f)
+    (error-fields (scores+ "(score s"
+                           "  (group \"U\" ugal)"
+                           "  (group \"G\" :part-marker ((polos :symbol dot)) gong))")))
+  (test-equal "duplicate-option: :part-marker twice" '(duplicate-option 15)
+    (string-error (marker-group ":part-marker ((polos :symbol dot))"
+                                ":part-marker ((sangsih :symbol ring))"))))
+
+(test-group "[markers] :part-marker: check order"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (apply score-error more))))
+   (list
+    (list "a bad value before the members (an option)" '(bad-option 15)
+          "(score s" "  (group \"R\" :part-marker ((polos :symbol square)) polos nope))")
+    (list "the members before whether PART is a member" '(undefined-part 15)
+          "(score s" "  (group \"R\" :part-marker ((ugal :symbol dot)) polos nope))")
+    (list "the members' part-in-two-groups before it too" '(part-in-two-groups 15)
+          "(score s" "  (group \"R\" :part-marker ((ugal :symbol dot)) polos polos))")
+    (list "groups in order: the first group's marker" '(bad-option 15)
+          "(score s" "  (group \"R\" :part-marker ((ugal :symbol dot)) polos)"
+          "  (group \"N\" nope))"))))
+
 (define runner (test-runner-current))
 (test-end "reader")
 

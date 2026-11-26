@@ -429,6 +429,7 @@ part appears."
             (map (match-lambda
                    ((name . events)
                     `((name . ,name)
+                      (marker . ,(voice-marker group name))
                       (events
                        . ,(list->vector
                            (filter-map (lambda (e) (clip-event e from to))
@@ -442,6 +443,25 @@ part appears."
        (pulse_lines . ,(pulse-lines? (group-background group)))
        (row_lines . ,(and (memq (group-background group) '(grid horizontal))
                           #t))))))
+
+(define (voice-marker group name)
+  "The JSON marker of the voice NAME (a string) in GROUP: null when its
+part has no :part-marker entry, else its symbol and the other keys,
+null where the template's default is used (ADR 0056)."
+  (match (find (match-lambda
+                 ((part . _) (string=? (symbol->string (part-name part)) name)))
+               (group-part-marker group))
+    (#f 'null)
+    ((_ . marker)
+     `((symbol . ,(symbol->string (marker-symbol marker)))
+       ;; JSON has no fractions: a size written 1/2 is written 0.5.
+       (symbol_size . ,(match (marker-symbol-size marker)
+                         (#f 'null)
+                         ((? integer? n) n)
+                         (x (exact->inexact x))))
+       (symbol_color . ,(null-if-false (marker-symbol-color marker)))
+       (border . ,(null-if-false (marker-border marker)))
+       (border_width . ,(null-if-false (marker-border-width marker)))))))
 
 (define (pulse-lines? background)
   "Does BACKGROUND draw pulse lines?"

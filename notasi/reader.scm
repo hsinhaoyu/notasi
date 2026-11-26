@@ -1263,9 +1263,88 @@ cut at the piece's end, on the piece's kempli or a built-in one."
     (to ,(const #t) . "a position")
     (breaks ,list? . "a list of positions")))
 
+(define (part-marker-shape? v)
+  "Is V a list of (PART :key value ...) entries, PART a part's name?  The
+keys and values are checked with the group's members (ADR 0056)."
+  (and (list? v)
+       (every (match-lambda
+                (((? symbol? part) . (? list?)) (not (key? part)))
+                (_ #f))
+              v)))
+
 (define group-only-options
   `((subtitle ,string? . "a string")
-    (short ,string? . "a string")))
+    (short ,string? . "a string")
+    (part-marker ,part-marker-shape? . "a list of (PART :key value ...)")))
+
+;;; The keys of a :part-marker entry (ADR 0056; 01, "Telling parts
+;;; apart").
+(define marker-options
+  `((symbol ,(lambda (v) (memq v '(none dot ring cross)))
+            . "none, dot, ring or cross")
+    (symbol-size ,(lambda (v) (and (real? v) (> v 0) (<= v 1)))
+                 . "a number greater than 0 and at most 1")
+    (symbol-color ,colour? . "a colour \"#rrggbb\"")
+    (border ,colour? . "a colour \"#rrggbb\"")
+    (border-width ,length-string? . "a length such as \"1pt\"")))
+
+(define (marker-entry-values name items line)
+  "The keys and values of the :part-marker entry for NAME, ITEMS being
+its `:key value' list, as an alist, checked against `marker-options': a
+mistake is a bad-option at LINE, naming the part (03)."
+  (define (bad fmt . args)
+    (apply part-error 'bad-option line name #f fmt args))
+  (let loop ((items items) (seen '()))
+    (match items
+      (() seen)
+      (((? key? key) value . rest)
+       (let ((option (key-name key)))
+         (match (assq option marker-options)
+           (#f (bad ":part-marker has no key `~a'" key))
+           ((_ valid? . what)
+            (when (assq option seen)
+              (bad ":part-marker: `~a' given twice" key))
+            (when (key? value)
+              (bad ":part-marker: `~a' needs a value" key))
+            (unless (valid? value)
+              (bad ":part-marker: `~a' must be ~a, not ~s" key what value))
+            (loop rest (acons option value seen))))))
+      (((? key? key))
+       (bad ":part-marker: `~a' needs a value" key))
+      ((item . _)
+       (bad ":part-marker: ~s is not a :key" item)))))
+
+(define (check-part-marker-values own line)
+  "Check the keys and values of a group's :part-marker entries, with the
+group's other options, before its members are read (03)."
+  (for-each (match-lambda
+              ((name . items) (marker-entry-values name items line)))
+            (or (assq-ref own 'part-marker) '())))
+
+(define (group-part-marker-setting own members line)
+  "A group's :part-marker as (PART . MARKER) pairs, in the order written:
+each entry names a member of the group, once (invariant 11); its values
+are checked already.  A missing :symbol is none, other missing keys #f."
+  (define (bad name fmt . args)
+    (apply part-error 'bad-option line name #f fmt args))
+  (let loop ((entries (or (assq-ref own 'part-marker) '())) (done '()) (out '()))
+    (match entries
+      (() (reverse out))
+      (((name . items) . rest)
+       (let ((member (find (lambda (m) (eq? (part-name (car m)) name)) members)))
+         (unless member
+           (bad name ":part-marker: `~a' is not a part of this group" name))
+         (when (memq name done)
+           (bad name ":part-marker: `~a' is marked twice" name))
+         (let ((values (marker-entry-values name items line)))
+           (loop rest (cons name done)
+                 (cons (cons (car member)
+                             (make-marker (or (assq-ref values 'symbol) 'none)
+                                          (assq-ref values 'symbol-size)
+                                          (assq-ref values 'symbol-color)
+                                          (assq-ref values 'border)
+                                          (assq-ref values 'border-width)))
+                       out))))))))
 
 (define (score-settings options line)
   (for-each (match-lambda
@@ -1286,8 +1365,10 @@ cut at the piece's end, on the piece's kempli or a built-in one."
                  (syntax-error 'option-wrong-level line
                                "`~a' is set on the score, not on a group" key))))
             options)
-  (check-options options (append group-only-options style-options)
-                 "a group" line))
+  (let ((own (check-options options (append group-only-options style-options)
+                            "a group" line)))
+    (check-part-marker-values own line)
+    own))
 
 (define (setting name own score default)
   "A group's effective setting NAME: its own, else the score's, else
@@ -1417,6 +1498,7 @@ A group's own strokes must be strokes of its instruments."
                 (group-key-numbers-setting own score-opts key-rows? line)
                 (setting 'row-labels own score-opts 'pitch-display-name)
                 (group-display-setting own score-opts instruments line)
+                (group-part-marker-setting own members line)
                 (setting 'scheme own score-opts 'by-pitch)
                 (setting 'palette own score-opts 'pastel1)
                 (map (match-lambda ((pitch colour) (cons pitch colour)))
@@ -1756,7 +1838,7 @@ print."
                        (make-group name name #f 'first-long 'notes
                                    (list (cons part name))
                                    'none #t 'colour 'none 'none 0
-                                   'used #t #f 'pitch-display-name '()
+                                   'used #t #f 'pitch-display-name '() '()
                                    'by-pitch 'pastel1 '() 'grid #f)))
                    parts)
               #f))

@@ -74,7 +74,7 @@ in one sweep.
 | **key-number column** | The column of key numbers (`:key-numbers`) | | |
 | **note label** | What is written in a note, chosen with `:note-label` | `text` (JSON) | note name |
 | **collapsed** | **Planned.** A group drawn with fewer rows than keys: `:rows parts` or `compact` | | |
-| **part marker** | **Planned.** A symbol and border telling a part's notes apart in a group (`:part-marker`) | | |
+| **part marker** | A symbol and border telling a part's notes apart in a group (`:part-marker`) | `marker` (record and JSON) | |
 | **annotation row** | **Planned.** A text-only row above or below a group | | annotation lane |
 | **system** | One horizontal block of the figure, e.g. one gong cycle | `system` | line |
 | **figure** | Layout's output for one score: the JSON Typst draws | `figure` | |
