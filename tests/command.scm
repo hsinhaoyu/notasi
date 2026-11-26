@@ -26,7 +26,7 @@
 ;;; - "typst not on the PATH": PATH is the current PATH minus every
 ;;;   folder holding a `typst', as in tests/typst.scm.
 ;;; - --score (slice feat/scores-range; 05, "The `notasi' command"):
-;;;   tested on a copy of examples/gilak.nts.  That the right score is
+;;;   tested on a copy of examples/demos/gilak.nts.  That the right score is
 ;;;   drawn is checked by drawing SVGs: --score full and no --score give
 ;;;   the same bytes, --score second-cycle different ones.  --score may
 ;;;   come before or after PIECE.nts and -o.  `--score' as the last
@@ -57,7 +57,7 @@
 ;;; Helpers
 
 (define repo-dir (getcwd))
-(define example-path (string-append repo-dir "/examples/tenzer1.nts"))
+(define example-path (string-append repo-dir "/examples/demos/tenzer1.nts"))
 (define script-path (string-append repo-dir "/scripts/notasi"))
 (define usage-text "notasi render PIECE.nts")
 
@@ -222,7 +222,7 @@ each string in ALSO."
 ;;; second-cycle.
 
 (define gilak (tmp-path "gilak.nts"))
-(copy-file (string-append repo-dir "/examples/gilak.nts") gilak)
+(copy-file (string-append repo-dir "/examples/demos/gilak.nts") gilak)
 
 (define (same-bytes? a b)
   (and (file-exists? a) (file-exists? b)
@@ -270,7 +270,7 @@ each string in ALSO."
 (mkdir named-dir)
 (define (named-path name) (string-append named-dir "/" name))
 (define named-gilak (named-path "gilak.nts"))
-(copy-file (string-append repo-dir "/examples/gilak.nts") named-gilak)
+(copy-file (string-append repo-dir "/examples/demos/gilak.nts") named-gilak)
 
 (test-group "render --score, default OUT PIECE_NAME.pdf"
   (for-each

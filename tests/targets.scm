@@ -8,9 +8,9 @@
 ;;; 04-layout.md ("Golden tests") and 05-typst-backend.md (`notasi
 ;;; render --score`), not from the implementation.
 ;;;
-;;; - examples/jaya-semara.nts and examples/baris.nts read, and their
+;;; - examples/gallery/jaya-semara.nts and examples/baris.nts read, and their
 ;;;   scores are exactly the targets' scores, in the targets' order.
-;;; - examples/tenzer1.nts reads, with the colotomy gilak, a one-pulse
+;;; - examples/demos/tenzer1.nts reads, with the colotomy gilak, a one-pulse
 ;;;   pickup, and a generated `gong' part (origin `colotomy').
 ;;; - Each of the three has its golden files in tests/golden/, named per
 ;;;   04: NAME.json for a piece with only the default score, else
@@ -74,10 +74,18 @@
 ;;; ------------------------------------------------------------------
 ;;; Helpers
 
+(define (example-file name)
+  "Example NAME's path: examples/gallery/NAME.nts, or examples/demos/
+when it isn't in the gallery (07, ADR 0052)."
+  (let ((gallery (string-append "examples/gallery/" name ".nts")))
+    (if (file-exists? gallery)
+        gallery
+        (string-append "examples/demos/" name ".nts"))))
+
 (define (read-example name)
-  "examples/NAME.nts as a piece, or #f if reading it raises."
+  "Example NAME as a piece, or #f if reading it raises."
   (guard (e (#t #f))
-    (read-piece-file (string-append "examples/" name ".nts"))))
+    (read-piece-file (example-file name))))
 
 (define (score-names pc)
   (map score-name (piece-scores pc)))
@@ -182,17 +190,17 @@
    ((name scores)
     (let ((pc (read-example name)))
       (test-group name
-        (test-assert (string-append "examples/" name ".nts reads") (piece? pc))
+        (test-assert (string-append (example-file name) " reads") (piece? pc))
         (test-equal "its scores are the target's" scores
           (and pc (score-names pc)))))))
  targets)
 
 ;;; ------------------------------------------------------------------
-;;; examples/tenzer1.nts: the gongs come from the colotomy gilak
+;;; examples/demos/tenzer1.nts: the gongs come from the colotomy gilak
 
 (test-group "tenzer1"
   (let ((pc (read-example "tenzer1")))
-    (test-assert "examples/tenzer1.nts reads" (piece? pc))
+    (test-assert "examples/demos/tenzer1.nts reads" (piece? pc))
     (test-equal "one colotomy, gilak"
       '(gilak)
       (and pc (map (lambda (entry) (colotomy-name (cdr entry)))
@@ -239,7 +247,7 @@
        (lambda (score)
          (let* ((label (string-append name " --score " (symbol->string score)))
                 (out (tmp-path (string-append name "_" (symbol->string score) ".svg")))
-                (r (run "render" (string-append "examples/" name ".nts")
+                (r (run "render" (example-file name)
                         "--score" (symbol->string score) "-o" out)))
            (test-equal (string-append label ": exits with status 0")
              0 (car r))

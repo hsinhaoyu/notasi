@@ -1,16 +1,16 @@
 ;;; Keeps the user manual's examples honest.  See doc/manual/STYLE.md.
-;;; - Every example in doc/manual/src/examples/ reads without errors.
+;;; - Every example in examples/manual/ reads without errors.
 ;;; - Every {{#include ...}} in a manual page points to a file that exists.
 ;;; - Every example is included by at least one page.
-;;; - Every mistake in doc/manual/src/mistakes/ (NAME.nts) fails to read,
+;;; - Every mistake in examples/manual/mistakes/ (NAME.nts) fails to read,
 ;;;   with exactly the message in NAME.txt, and a page includes both.
-;;; - Every figure a page shows (figures/NAME.svg, drawn by `make manual')
+;;; - Every figure a page shows (figures/NAME.png, drawn by `make images', copied by `make manual')
 ;;;   has an example, examples/NAME.nts, to draw it from.  A figure of
-;;;   another score, figures/NAME_SCORE.svg (drawn with --score SCORE),
+;;;   another score, figures/NAME_SCORE.png (drawn with --score SCORE),
 ;;;   needs examples/NAME.nts and a score SCORE in it (slice
 ;;;   feat/scores-range; 05, "The `notasi' command"; named NAME_SCORE
 ;;;   since feat/drawing-output, ADR 0040).  A page showing a figure
-;;;   by the old name, figures/NAME.SCORE.svg, fails: make manual no
+;;;   by the old name, figures/NAME.SCORE.png, fails: make manual no
 ;;;   longer draws it.
 ;;; - Files in a templates/ folder under examples/ or mistakes/ are
 ;;;   templates, not pieces: they are read through the pieces that use
@@ -30,8 +30,8 @@
 ;;; Mistakes are read from inside their folder, so find the repo's
 ;;; templates/ by an absolute path rather than through ".".
 (add-to-load-path (getcwd))
-(define examples-dir (string-append src "/examples"))
-(define mistakes-dir (string-append src "/mistakes"))
+(define examples-dir "examples/manual")
+(define mistakes-dir "examples/manual/mistakes")
 
 (define (slurp file)
   (call-with-input-file file get-string-all))
@@ -84,29 +84,34 @@ the file reads without a notasi error."
 (define (template-file? f)
   (string-contains f "/templates/"))
 
-(define examples (remove template-file? (files-under examples-dir ".nts")))
+(define (mistake-file? f)
+  (string-prefix? (string-append mistakes-dir "/") f))
+
+(define examples
+  (remove (lambda (f) (or (template-file? f) (mistake-file? f)))
+          (files-under examples-dir ".nts")))
 (define mistakes (remove template-file? (files-under mistakes-dir ".nts")))
 (define templates
-  (filter template-file? (append (files-under examples-dir ".nts")
-                                 (files-under mistakes-dir ".nts"))))
+  ;; files-under examples-dir already walks into mistakes/.
+  (filter template-file? (files-under examples-dir ".nts")))
 (define pages (files-under src ".md"))
-(define figure-pattern "figures/([a-z0-9-]+)(_([a-z0-9-]+))?\\.svg")
-(define old-figure-pattern "figures/[a-z0-9-]+\\.[a-z0-9-]+\\.svg")
+(define figure-pattern "figures/([a-z0-9-]+)(_([a-z0-9-]+))?\\.png")
+(define old-figure-pattern "figures/[a-z0-9-]+\\.[a-z0-9-]+\\.png")
 
 (define (old-figures page)
-  "The figures/NAME.SCORE.svg images PAGE shows, by the name used
+  "The figures/NAME.SCORE.png images PAGE shows, by the name used
 before ADR 0040."
   (map match:substring (list-matches old-figure-pattern (slurp page))))
 
 (define (figures page)
-  "The examples/NAME.nts files PAGE's figures/NAME.svg and
-figures/NAME_SCORE.svg images need."
+  "The examples/NAME.nts files PAGE's figures/NAME.png and
+figures/NAME_SCORE.png images need."
   (map (lambda (m)
          (string-append examples-dir "/" (match:substring m 1) ".nts"))
        (list-matches figure-pattern (slurp page))))
 
 (define (score-figures page)
-  "(EXAMPLE . SCORE) for each figures/NAME_SCORE.svg image PAGE shows,
+  "(EXAMPLE . SCORE) for each figures/NAME_SCORE.png image PAGE shows,
 SCORE a symbol."
   (filter-map (lambda (m)
                 (and (match:substring m 3)
@@ -182,7 +187,7 @@ SCORE a symbol."
    (for-each
     (lambda (f)
       (test-assert (string-append page " shows " f
-                                  ", named NAME_SCORE.svg since ADR 0040")
+                                  ", named NAME_SCORE.png since ADR 0040")
         #f))
     (old-figures page)))
  pages)

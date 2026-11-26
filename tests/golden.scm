@@ -1,6 +1,7 @@
 ;;; Golden tests: each example's figures, as saved in tests/golden/.
 ;;; See doc/design/04-layout.md, "Golden tests".
-;;; - Each examples/NAME.nts has one figure per score.  A file with only
+;;; - Each examples/gallery/NAME.nts and examples/demos/NAME.nts (07,
+;;;   ADR 0052; names are unique across them) has one figure per score.  A file with only
 ;;;   the default score (no `score' form) has tests/golden/NAME.json; a
 ;;;   file with scores has tests/golden/NAME_SCORE.json for each of its
 ;;;   scores (ADR 0040; NAME.SCORE.json before feat/drawing-output).  Each figure, laid out with layout-score, must match its
@@ -41,7 +42,7 @@
              (notasi reader)
              (notasi typst))
 
-(define examples-dir "examples")
+(define example-dirs '("examples/gallery" "examples/demos"))
 (define golden-dir "tests/golden")
 
 (define (names-in dir suffix)
@@ -50,7 +51,12 @@ sorted.  No names if DIR doesn't exist."
   (map (lambda (f) (string-drop-right f (string-length suffix)))
        (or (scandir dir (lambda (f) (string-suffix? suffix f))) '())))
 
-(define (example-path name) (string-append examples-dir "/" name ".nts"))
+(define (example-path name)
+  "The path of example NAME, in whichever of `example-dirs' holds it."
+  (let ((dir (find (lambda (dir)
+                     (file-exists? (string-append dir "/" name ".nts")))
+                   example-dirs)))
+    (string-append dir "/" name ".nts")))
 (define (golden-path name) (string-append golden-dir "/" name ".json"))
 
 (define (read-text path)
@@ -97,7 +103,9 @@ file so that the comparison goes through write-figure."
         (when (file-exists? path) (delete-file path))
         (rmdir dir)))))
 
-(define examples (names-in examples-dir ".nts"))
+(define examples
+  (sort (append-map (lambda (dir) (names-in dir ".nts")) example-dirs)
+        string<?))
 (define pieces (map (lambda (name) (cons name (read-example name))) examples))
 (define unreadable
   (filter-map (match-lambda

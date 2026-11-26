@@ -70,7 +70,7 @@
 ;;; Slice feat/scores-range (04, slice 5; 05, "The entry file and
 ;;; running Typst"): render-piece takes #:score, the name of the score
 ;;; to draw (a symbol); without it, the first score.  Tested on
-;;; examples/gilak.nts (scores full and second-cycle) with #:keep-in,
+;;; examples/demos/gilak.nts (scores full and second-cycle) with #:keep-in,
 ;;; comparing piece.json with that score's figure.  A score the piece
 ;;; doesn't have is an &error (not a notation mistake) whose message
 ;;; names the score and the file; like other failures, it writes no
@@ -231,9 +231,9 @@ these tests from passing by accident."
 ;;; ------------------------------------------------------------------
 ;;; A real figure
 
-(let ((figure (guard (c (#t #f)) (first-score-figure "examples/tenzer1.nts")))
+(let ((figure (guard (c (#t #f)) (first-score-figure "examples/demos/tenzer1.nts")))
       (path (tmp-path "tenzer1.json")))
-  (test-equal "writes a real figure (examples/tenzer1.nts)"
+  (test-equal "writes a real figure (examples/demos/tenzer1.nts)"
     (string->utf8 (expected-text figure))
     (begin (write-figure figure path)
            (read-bytes path))))
@@ -246,7 +246,7 @@ these tests from passing by accident."
 
 (define repo-dir (getcwd))
 (define template-path (string-append repo-dir "/typst/notasi.typ"))
-(define example-path (string-append repo-dir "/examples/tenzer1.nts"))
+(define example-path (string-append repo-dir "/examples/demos/tenzer1.nts"))
 (define releases-url "https://github.com/typst/typst/releases")
 
 (define (spec-entry-text json-name)
@@ -377,7 +377,7 @@ path at the front of %load-path, then restore both."
            (and (file-exists? file) (access? file X_OK))))
        (string-split path #\:)))
 
-(define gilak-path (string-append repo-dir "/examples/gilak.nts"))
+(define gilak-path (string-append repo-dir "/examples/demos/gilak.nts"))
 
 (define (score-figure-text nts-path name)
   "What write-figure writes for NTS-PATH's score NAME, or #f if reading
@@ -437,7 +437,7 @@ or laying it out raises."
   (set-field figure 'sizes (set-field (assq-ref figure 'sizes) key value)))
 
 (define base-figure
-  (guard (c (#t #f)) (first-score-figure "examples/tenzer1.nts")))
+  (guard (c (#t #f)) (first-score-figure "examples/demos/tenzer1.nts")))
 
 (define (drawn-size name figure)
   "Write FIGURE as NAME.json and an entry file NAME.typ from
@@ -505,7 +505,7 @@ write-entry-file, compile it to NAME.png and return the PNG's
 (define (compile-path name) (string-append compile-dir "/" name))
 (copy-file template-path (compile-path "notasi.typ"))
 (write-text (compile-path "figure.json")
-            (expected-figure-text "examples/tenzer1.nts"))
+            (expected-figure-text "examples/demos/tenzer1.nts"))
 (write-text (compile-path "entry.typ") (spec-entry-text "figure.json"))
 (write-text (compile-path "broken.typ") "#nonexistent()\n")
 (write-text (compile-path "inch.typ")
@@ -659,7 +659,7 @@ write-entry-file, compile it to NAME.png and return the PNG's
           (and (file-exists? json) (read-text json))))))
 
   ;; #:score (slice feat/scores-range): the score named SCORE is drawn;
-  ;; examples/gilak.nts has two, full and second-cycle.
+  ;; examples/demos/gilak.nts has two, full and second-cycle.
   (for-each
    (lambda (name)
      (let ((keep (make-subdir (string-append "keep-" (symbol->string name))))

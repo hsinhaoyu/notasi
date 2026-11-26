@@ -59,7 +59,7 @@
 ;;; `piece-pickup` and `piece-colotomies`. Existing tests now expect the
 ;;; generated `kempli` at the end of `piece-parts`, and, when the piece
 ;;; has a `kempli` instrument, a default group for it; tests of part
-;;; lines and files look at the written parts only. examples/tenzer1.nts
+;;; lines and files look at the written parts only. examples/demos/tenzer1.nts
 ;;; loses its written kempli part (the generated one has the same
 ;;; strokes).
 ;;; Choices made where the docs are not explicit:
@@ -4392,9 +4392,9 @@ line 12."
                  (string-in dir "(piece \"P\")" "(use \"bf.nts\")"))))))
 
 ;;; ------------------------------------------------------------------
-;;; examples/tenzer1.nts reads end to end
+;;; examples/demos/tenzer1.nts reads end to end
 
-(define tenzer-file "examples/tenzer1.nts")
+(define tenzer-file "examples/demos/tenzer1.nts")
 
 (test-group "tenzer1"
   (let ((pc (read-file tenzer-file)))
@@ -5553,8 +5553,8 @@ colotomy, 4 pulses."
   (test-equal ":numbering after the positions still applies to them" '(9 17 ())
     (gilak-range ":from (2 2) :to (2 1) :numbering gong-first")))
 
-(test-group "[scores] :from, :to and :breaks in examples/gilak.nts"
-  (let ((pc (try-read (lambda () (read-piece-file "examples/gilak.nts")))))
+(test-group "[scores] :from, :to and :breaks in examples/demos/gilak.nts"
+  (let ((pc (try-read (lambda () (read-piece-file "examples/demos/gilak.nts")))))
     (test-equal "two scores" '(full second-cycle)
       (and pc (map score-name (piece-scores pc))))
     (test-equal "full: the whole piece, breaks at each cycle" '(0 25 (1 9 17))

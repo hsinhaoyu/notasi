@@ -43,7 +43,7 @@
 ;;;   (steps_per_pulse 4), so a pulse number spans 4 columns and a
 ;;;   cycle number the first pulse of its cycle.  Only compiling without
 ;;;   a warning is tested; the centring and the missing `·` are checked
-;;;   by eye (make preview).  Their groups keep version 2's keys: the
+;;;   by eye (make images).  Their groups keep version 2's keys: the
 ;;;   other version 3 fields are later slices.
 
 ;;; Run from the repo root: guile -L . tests/template.scm

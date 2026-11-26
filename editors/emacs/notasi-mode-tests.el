@@ -643,9 +643,9 @@ like any unknown function of the same length."
 ;; - `notasi-write-score' takes the file to write as an argument, so it
 ;;   can be called from Lisp; interactively it asks for it.
 ;; - A buffer in `notasi-mode' that visits no file draws nothing.
-;; - The real test draws a copy of examples/jaya-semara.nts in a
+;; - The real test draws a copy of examples/gallery/jaya-semara.nts in a
 ;;   temporary folder (its template is found by notasi), so nothing is
-;;   written in examples/.
+;;   written in examples/gallery/.
 ;; - Windows: batch Emacs has one frame, 80 columns by 25 lines, where
 ;;   windows can be split and buffers displayed, so opening, showing
 ;;   and hiding the preview are tested; that it goes to the right or
@@ -1531,7 +1531,7 @@ Skipped when Guile or Typst is missing."
          buffer)
     (unwind-protect
         (progn
-          (copy-file (expand-file-name "examples/jaya-semara.nts"
+          (copy-file (expand-file-name "examples/gallery/jaya-semara.nts"
                                        notasi-mode-tests--repo)
                      file)
           ;; Opening the file draws it.

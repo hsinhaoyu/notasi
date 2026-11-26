@@ -100,7 +100,7 @@ examples/
 |---|---|---|---|
 | `gallery/` | Showcase pieces; the README and the manual may show them | golden JSON; images up to date | every score of every file, in `gallery/images/` |
 | `demos/` | Examples that show a feature; not necessarily whole pieces | golden JSON | no |
-| `contrib/` | Other people's examples; no README in the folder | no, not even read | no |
+| `contrib/` | Other people's examples; no README in the folder (an empty `.gitkeep` keeps it in git) | no, not even read | no |
 | `manual/` | The manual's examples, shown with `{{#include}}` from here | `tests/manual.scm`; images up to date | those a page shows, in `manual/images/` |
 
 - **The pieces:** `gallery/` holds `jaya-semara`, `baris` and
@@ -123,12 +123,15 @@ examples/
 
 - **PNG**, named as ADR 0040 says: `NAME.png`, or `NAME_SCORE.png` for
   a file with scores.
-- **`make images`** redraws every committed drawing, with
-  `notasi render --all` (05), passing one fixed `--ppi` value set in
-  one place in the Makefile. It draws every score of every gallery
-  file into `gallery/images/`, and, for the manual, only the images
-  its pages link to (`![…](figures/NAME.png)` or
-  `figures/NAME_SCORE.png`) into `manual/images/`. The resolution is
+- **`make images`** redraws every committed drawing with `notasi
+  render` (05), passing one fixed `--ppi` value set in one place in the
+  Makefile. It draws every score of every gallery file into
+  `gallery/images/` with `--all`, and, for the manual, only the images
+  its pages link to, one by one, as each link names them
+  (`![…](figures/NAME.png)` for the example's first score, or
+  `figures/NAME_SCORE.png` with `--score SCORE`), into
+  `manual/images/`. It empties each `images/` folder first, so an image
+  no longer needed is deleted. The resolution is
   chosen by eye when the target is built: sharp enough for the README
   and the manual, small enough for the repository.
 - **The committed images are Linux's.** They are drawn on Linux with
@@ -138,6 +141,11 @@ examples/
   uploads the images it drew as a workflow artifact, and the PR commits
   those. `make images` on another system (macOS) is for looking: its
   images may differ in their bytes and are not committed.
+- **`make check` checks the set of images**, on any system: one in
+  `gallery/images/` for each score of each gallery file, one in
+  `manual/images/` for each image a manual page links to, and nothing
+  else in either folder. A manual page links PNGs only. Only CI
+  compares the images' bytes.
 - **The manual** builds with mdBook alone: `make manual` copies the
   images its pages show from `examples/manual/images/` into
   `doc/manual/src/figures/` (which stays generated, not committed) and

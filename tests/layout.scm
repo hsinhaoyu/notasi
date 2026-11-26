@@ -47,7 +47,7 @@
 ;;; called `kempli`. Fixtures that wrote a kempli part either use the
 ;;; generated one (groups-piece: the same strokes) or play an instrument
 ;;; called `kajar` instead (ten-steps, the one-letter sizes test).
-;;; examples/tenzer1.nts has no written kempli part, so its generated
+;;; examples/demos/tenzer1.nts has no written kempli part, so its generated
 ;;; kempli group comes last.
 ;;;
 ;;; Slice feat/scores-form (04, "Slices (iteration 2)", slice 1 and its
@@ -564,7 +564,7 @@ at its default: font_size null, cells \"2em\"."
            "  (group \"\" melody))"))))
 
 (define tenzer
-  (guard (c (#t #f)) (read-piece-file "examples/tenzer1.nts")))
+  (guard (c (#t #f)) (read-piece-file "examples/demos/tenzer1.nts")))
 
 (define (sizes-of . lines)
   (field (layout (apply piece-of lines)) 'sizes))
@@ -2649,9 +2649,9 @@ give."
                                     "  (group \"U\" :short \"Ugal-ugal\" melody))")))))
 
 (define gilak
-  (guard (c (#t #f)) (read-piece-file "examples/gilak.nts")))
+  (guard (c (#t #f)) (read-piece-file "examples/demos/gilak.nts")))
 
-(test-group "examples/gilak.nts"
+(test-group "examples/demos/gilak.nts"
   (let ((fig (layout-or-false (layout-named gilak 'full))))
     (test-equal "full: the pickup, then a system per cycle"
       '((0 1) (1 8) (9 8) (17 8))
@@ -3047,7 +3047,7 @@ its row is."
     (test-equal "an excerpt inside the cycles: no \"0\"" (marks '(2 "2"))
       (and fig (cycles-of fig 0)))))
 
-(test-group "examples/gilak.nts: version 3 header"
+(test-group "examples/demos/gilak.nts: version 3 header"
   (let ((fig (layout-or-false (layout-named gilak 'full))))
     (test-equal "full: version 3" 3 (and fig (field fig 'version)))
     (test-equal "full: the pickup alone, pulse 8, with the mark \"0\""
