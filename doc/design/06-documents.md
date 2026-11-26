@@ -60,7 +60,7 @@ The reyong interlocks like this:
 
 As @fig:kotekan shows, …
 
-#notasi.file("examples/jaya-semara.nts", score: "kotekan")
+#notasi.file("examples/gallery/jaya-semara.nts", score: "kotekan")
 ```
 
 - `setup` takes the loaded manifest as its first argument. A Typst
@@ -113,7 +113,7 @@ numbers in error messages are shifted back by one.
     "(part :instrument ugal a1 o9 ...)":                     { "error": "book.typ, nts block 2, line 1: part `ugal', pulse 2: note `o9' is not on instrument `ugal'" }
   },
   "files": {
-    "examples/jaya-semara.nts": { "scores": { "kotekan": { "figure": { ... } } } }
+    "examples/gallery/jaya-semara.nts": { "scores": { "kotekan": { "figure": { ... } } } }
   }
 }
 ```
