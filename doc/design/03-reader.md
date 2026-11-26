@@ -21,6 +21,15 @@ steps 10 and 11; the condition's `time` and `uses`; and every
 **[syntax]**, **[durations]**, **[rep]**, **[colotomy]** and
 **[patterns]** case.
 
+**Planned** for iteration 5 (ADRs 0051, 0053–0057): reading the
+piece information, `:note-label` and the label options, `:rows
+compact`, `:part-marker`, the annotation row, pattern annotations and
+`(text ...)`, and `by-pitch`; the removed options becoming unknown
+keys or values; `pattern-names-overlap` removed, and `notes-collide`
+kept for `notes` rows only; error kinds renamed to the glossary's
+terms. See "Iteration 5". Until they are built, the reader takes the
+old options.
+
 ## Responsibility
 
 Turn a `.nts` file into a valid `piece` record, with its scores, or fail
@@ -120,20 +129,20 @@ Finding templates (**Implemented**):
    symbol of `:` followed by a letter. Each form has its own keys; an
    unknown key, a key twice, a key with no value, or a key after the
    body has started is an error.
-5. **Build scales and stroke sets.** Each degree or stroke is a bare
+5. **Build scales and stroke sets.** Each pitch or stroke is a bare
    name or `(NAME :key value ...)` with `:alias`, `:display` and
    `:damped`. Fill in defaults (no aliases; `display` is the name as a
    string; `damped` `#f`) and build a table from every name and alias to
-   its degree.
+   its pitch.
 6. **Resolve names** in order: scales and stroke sets → instruments →
    colotomies → patterns → parts → scores. All files are merged by now,
    so a template's instrument uses the piece's scale if the piece
    replaced it.
-7. **Resolve note names** (**Implemented** rule), in instruments,
+7. **Resolve keys and strokes** (**Implemented** rule), in instruments,
    colotomies, patterns and parts:
-   - Pitched scale: split the symbol into a degree and trailing octave
-     digits (`i2` → `i`, `2`), look the degree up by name or alias, and
-     check the instrument has that note.
+   - Pitched scale: split the symbol into a pitch and trailing octave
+     digits (`i2` → `i`, `2`), look the pitch up by name or alias, and
+     check the instrument has that key.
    - Stroke set: match the whole symbol against stroke names and
      aliases, since stroke names may end in a digit.
    - A duration suffix is split off first: `e2:1/4` is `e2` and `1/4`,
@@ -157,7 +166,7 @@ Finding templates (**Implemented**):
      duration in force before the `rep`, and placed N times; after the
      `rep`, the current duration is the body's last.
    - **A pattern use**: the pattern's body is expanded into a fragment,
-     starting at 1 pulse; `:step N` moves each event's notes N degrees
+     starting at 1 pulse; `:step N` moves each event's notes N pitches
      (or N keys) and checks them against the instrument again. After the
      use, the part's current duration is what it was before.
    - **Placing** a fragment shifts its items by the current time,
@@ -183,7 +192,14 @@ Finding templates (**Implemented**):
     `background`, `cycle-label` and the
     `"Pulse"` default (02), checked as they are filled in; then, with
     the music, every note against a group's `keys` range, like
-    `notes-collide`.
+    `notes-collide`. **Planned** (iteration 5): the settings of 02's
+    "Iteration 5", `rows` (`compact`), `note-label`,
+    `note-label-octave?`, `row-labels`, `row-label-octave?`,
+    `part-marker` and `annotation`, in place of `note-names?`,
+    `octave-numbers?`, `row-labels?`, `pattern-names` and
+    `pattern-level`. A `:part-marker` entry's missing keys are `#f`
+    (layout's defaults); an annotation row's are its options'
+    defaults. Free text is collected with the part's events (step 9).
 13. **Check the piece invariants** (02-piece.md).
 
 ## Error reporting
@@ -197,7 +213,7 @@ jaya.nts:72: part `polos`, cycle 1, pulse 3 1/2, in pattern `polos-1`
 ```
 
 - Guile attaches source lines to list forms read from a port, so each
-  top-level form has a line, and so does each list inside it (a degree,
+  top-level form has a line, and so does each list inside it (a pitch,
   a group, a group member, a `rep`, a pattern use). Atoms (notes,
   numbers, `:key`s) carry none: a token error is reported at its part's
   line with its time, and an option error at the line of the list that
@@ -245,7 +261,7 @@ jaya.nts:72: part `polos`, cycle 1, pulse 3 1/2, in pattern `polos-1`
      colotomies, patterns, parts and scores each have their own. Two
      parts on one instrument where either has no `:name` are not a
      duplicate here: check 13 reports them as `parts-need-names`.
-  8. Each scale and stroke set, and each degree or stroke in order
+  8. Each scale and stroke set, and each pitch or stroke in order
      (`bad-degree`, `degree-ends-in-digit`, `duplicate-degree`,
      `reserved-name`).
   9. Each instrument: its scale (`undefined-scale`), then each note
@@ -265,9 +281,12 @@ jaya.nts:72: part `polos`, cycle 1, pulse 3 1/2, in pattern `polos-1`
   16. Each score, in file order: its options, then each group in order
       (its options, its members, its instruments), then the checks that
       need the music (`notes-collide`, `pattern-names-overlap`).
+      **Planned** (iteration 5): after its members, whether the parts
+      that `:part-marker` and `:annotation-part` name are among them;
+      `pattern-names-overlap` is gone.
 - Which line an error reports:
   - The line of the list to blame: the form, or the list inside it
-    (a degree, a group, a member, a `rep`, a pattern use).
+    (a pitch, a group, a member, a `rep`, a pattern use).
   - `piece-not-first`: the first form in the file.
   - An atom on its own at the top level (e.g. `foo`), which has no
     position: the line where reading it stopped, i.e. where it ends.
@@ -279,10 +298,12 @@ jaya.nts:72: part `polos`, cycle 1, pulse 3 1/2, in pattern `polos-1`
 Each case is tagged with the feature it belongs to, which iteration 2's
 build order maps to a slice: **[v1]** for cases that are implemented and
 keep their meaning, **[syntax]** (the `:key value` forms, `part`,
-degrees), **[durations]**, **[rep]**, **[colotomy]**, **[patterns]** and
+pitches), **[durations]**, **[rep]**, **[colotomy]**, **[patterns]** and
 **[scores]**; iteration 3 adds **[parts]** (the forms of ADR 0038,
 **Implemented**) and **[score-options]** (the score options of ADRs
-0039–0041, `:keys` and `:display`, **Implemented**). Each case is followed by its `kind`.
+0039–0041, `:keys` and `:display`, **Implemented**); iteration 5 adds
+**[iteration 5]** (ADRs 0053–0057, **Planned**). Each case is
+followed by its `kind`.
 
 ### Files and forms
 
@@ -303,14 +324,23 @@ degrees), **[durations]**, **[rep]**, **[colotomy]**, **[patterns]** and
 
 - [syntax] A key with no value (at the end, or followed by another key),
   or a value of the wrong kind (`:pickup 1.5`, `:name "polos"`):
-  `bad-option`. A wrong value for a degree's `:alias`, `:display` or
+  `bad-option`. A wrong value for a pitch's `:alias`, `:display` or
   `:damped` is `bad-degree` (see "Definitions").
+- [iteration 5] A piece information key (`:composer` … `:remarks`)
+  whose value is not a string: `bad-option`. Nothing else about it is
+  checked.
+- [iteration 5] A removed key (`:note-names`, `:octave-numbers`,
+  `:pattern-names`, `:pattern-level`): `unknown-option`, as for any
+  key the form doesn't take. A removed value (`:rows single`,
+  `:row-labels yes` or `no`, `:scheme by-degree`): `bad-option`.
+  Neither message mentions the old option.
 - [syntax] A key the form doesn't take: `unknown-option`; a key given
   twice: `duplicate-option`.
 - [syntax] A key after the body has started (e.g. after a part's first
   token): `option-after-body`.
-- [syntax] A required key left out (a pattern's `:instrument`):
-  `missing-option`.
+- [syntax] A required key left out (a pattern's `:instrument`;
+  [iteration 5] a group's `:annotation-part` when it has another
+  `:annotation-…` option): `missing-option`.
 
 All at the line of the list that holds the option.
 
@@ -337,17 +367,17 @@ All at the line of the list that holds the option.
 - [v1] An instrument naming a scale or stroke set that isn't defined:
   `undefined-scale`.
 - [v1] A `scale`, `strokes` or `instrument` form of the wrong shape (no
-  name, a name that is not a symbol, no degrees or notes, a scale or
-  note that is not a name): `bad-form`.
-- [syntax] A degree or stroke that is not `NAME` or `(NAME :key value
+  name, a name that is not a symbol, no pitches or keys, a scale or
+  key that is not a name): `bad-form`.
+- [syntax] A pitch or stroke that is not `NAME` or `(NAME :key value
   ...)`, `:display` or `:damped` that is not a string, an `:alias` that
-  is not a name or a list of names: `bad-degree`, at the degree's line
+  is not a name or a list of names: `bad-degree`, at the pitch's line
   when it is a list, else its scale's.
-- [v1] Duplicate degree or stroke name or alias within a set:
-  `duplicate-degree`. Degree name or alias ending in a digit (scales
+- [v1] Duplicate pitch or stroke name or alias within a set:
+  `duplicate-degree`. Pitch name or alias ending in a digit (scales
   only): `degree-ends-in-digit`.
-- [syntax] A degree or stroke called `rep` or `@`, by name or alias:
-  `reserved-name`.
+- [syntax] A pitch or stroke called `rep` or `@`, by name or alias:
+  `reserved-name`. [iteration 5] `text` too.
 - [v1] Instrument notes: `unknown-note`, `notes-not-ascending`,
   `duplicate-note`, at the instrument's line, as in v1. An instrument
   with an option (v1's `show-names`) is `bad-form`: instruments take
@@ -366,8 +396,8 @@ All at the part's line, with `part` and `time` set.
 - [syntax] Two parts on one instrument where either has no `:name`:
   `parts-need-names`, at the second part's line.
 - [v1] A key number outside 1 to the number of keys:
-  `note-out-of-range`; a note name that isn't on the instrument (`·`
-  included): `unknown-note`.
+  `note-out-of-range`; a key or stroke that isn't on the instrument
+  (`·` included): `unknown-note`.
 - [durations] A duration that is not an exact positive number of pulses
   (`e2:0`, `e2:-1`, `e2:x`, `e2:0.5`), or a suffix on anything but a
   note, key number or `-` (`_:2`): `bad-duration`.
@@ -375,13 +405,18 @@ All at the part's line, with `part` and `time` set.
   starting with `_` used where no note comes before it:
   `hold-without-note`.
 - [v1] A chord with fewer than two notes, the same note twice, or a
-  member that is not a number or note name: `bad-chord`.
+  member that is not a key number or a key or stroke name: `bad-chord`.
 - [v1] Anything else, e.g. a string, `#t` or `1.5`: `unknown-token`.
 - [rep] A `rep` that is not `(rep N TOKEN ...)` with N an exact positive
   integer and at least one token: `bad-rep`, at the `rep`'s line.
 - [durations] `|` not on a pulse boundary: `misplaced-pulse-check`.
 - [colotomy] `||` not at the end of a cycle: `misplaced-cycle-check`.
 - [colotomy] `||` in a piece without a colotomy: `no-colotomy`.
+- [iteration 5] A `(text ...)` that is not `(text STRING)` or `(text
+  STRING LENGTH)`, with LENGTH a duration greater than 0 (as a duration
+  suffix is, `1/2` or `2`): `bad-text`, at the `text` list's line. In
+  a pattern's body it is checked where the pattern is defined, like
+  the other tokens.
 
 ### Lengths
 
@@ -419,6 +454,7 @@ All at the part's line, with `part` and `time` set.
 - [patterns] A `pattern` form with no name, a name that is not a symbol
   or starts with `:` or `@`, or no tokens: `bad-form`.
 - [patterns] An `:instrument` that isn't defined: `undefined-instrument`.
+- [iteration 5] An `:annotation` that is not a string: `bad-option`.
 - [patterns] In a pattern's body, checked where it is defined: the token
   kinds above (`part` `#f`, `time` within the pattern), and a pattern
   for another instrument used inside it: `wrong-instrument`.
@@ -428,7 +464,8 @@ All at the part's line, with `part` and `time` set.
   another instrument: `wrong-instrument`.
 - [patterns] A pattern use that is not `(@ NAME :key value ...)`:
   `bad-pattern-use`, at its line. Its operators give the option kinds:
-  `:step` takes an exact integer, `:short` and `:long` strings; the
+  `:step` takes an exact integer, `:short` and `:long` strings
+  ([iteration 5] and `:annotation`); the
   later operators (`:octave`, `:drop-first`, `:drop-last`) are
   `unknown-option` until they are built.
 - [patterns] A note moved by `:step` off the instrument's keys:
@@ -465,13 +502,20 @@ All errors at a use carry the part, the time and the chain of uses.
   `pitched-with-strokes` (`part` set to the first part of the other
   kind).
 - [scores] `:rows parts`, `:rows single` or `:fill none` without
-  `:note-names yes` on the group: `needs-note-names`.
+  `:note-names yes` on the group: `needs-note-names`. [iteration 5]
+  Only `:fill none` with `:note-label none`: `needs-note-label`, its
+  message naming `:note-label`. `parts` and `compact` rows may be
+  colour only.
 - [scores] With `:rows single`, two notes in one cell; with `:rows
   notes`, two notes on one key that share a column without being a
   unison (the same key, start and length): `notes-collide` (`part` set
   to the second part, `time` set to the first shared column).
+  [iteration 5] The `notes` case only: `compact` adds a row instead
+  (04).
 - [scores] Different pattern names overlapping in one group at the
   chosen level: `pattern-names-overlap` (`part` and `time` set).
+  [iteration 5] Removed with `:pattern-names`: an annotation row takes
+  one part, so its names can't clash.
 - [score-options] `:cycle-label`, `:pulse-label` not a string;
   `:octave-numbers`, `:key-numbers` or `:row-labels` not `yes` or `no`; `:background` not one of `grid`,
   `vertical`, `horizontal`, `empty`: `bad-option`.
@@ -479,11 +523,13 @@ All errors at a use carry the part, the time and the chain of uses.
   HIGH that is not a key of the group's instrument, or LOW above HIGH;
   a range on a group of strokes: `bad-option`, at the line where it is
   written (on the score, checked against each group it applies to).
-  `:keys` written on a `:rows parts` or `single` group: `bad-option`;
-  inherited from the score, it is ignored there.
+  `:keys` written on a `:rows parts` or `single` ([iteration 5]
+  `compact`) group: `bad-option`; inherited from the score, it is
+  ignored there.
 - [score-options] `:key-numbers yes` written on a group of strokes, or
-  on a `:rows parts` or `single` group: `bad-option`; inherited from the
-  score, it is ignored there (the group's `key-numbers?` is `#f`).
+  on a `:rows parts` or `single` ([iteration 5] `compact`) group:
+  `bad-option`; inherited from the score, it is ignored there (the
+  group's `key-numbers?` is `#f`).
 - [score-options] A note outside a group's `:keys` range:
   `outside-keys` (the group's line, `part` and `time` set). The message
   names the note and the range: "part `ugal`, cycle 2, pulse 3: `a2` is
@@ -491,6 +537,85 @@ All errors at a use carry the part, the time and the chain of uses.
 - [score-options] `:display` that is not a list of `(STROKE STRING)`,
   or a STROKE that is no stroke of an instrument in the group (on a
   score, in any of its groups): `bad-option`.
+- [iteration 5] `:note-label` not `none`, `pitch-name`,
+  `pitch-display-name` or `key-number`; `:row-labels` not `none`,
+  `pitch-name` or `pitch-display-name`; `:note-label-octave` or
+  `:row-label-octave` not `yes` or `no`; `:rows` not `notes`, `parts`
+  or `compact`: `bad-option`.
+- [iteration 5] `:part-marker` or any `:annotation-…` option on a
+  score: `option-wrong-level`, at the score's line. Both are group
+  options.
+- [iteration 5] `:part-marker` that is not a list of `(PART :key value
+  ...)`; a PART that is not a member of the group, or named in two
+  entries; a key other than `:symbol`, `:symbol-size`,
+  `:symbol-color`, `:border` and `:border-width`, or a key twice; a
+  `:symbol` not `none`, `dot`, `ring` or `cross`; a `:symbol-size`
+  that is not a number from 0 to 1; a `:symbol-color` or `:border`
+  that is not `"#rrggbb"`; a `:border-width` that is not a length:
+  `bad-option`, at the group's line (`part` set to PART where there is
+  one). Everything inside the value is `bad-option`, as for
+  `:display`.
+- [iteration 5] An `:annotation-part` that is not a member of the
+  group (defined or not): `bad-option` (`part` set to the name). An
+  `:annotation-position` not `above` or `below`; an
+  `:annotation-align` not `left`, `center` or `right`; an
+  `:annotation-level` that is not an exact integer from 0; an
+  `:annotation-text` not `short`, `long` or `annotation`; an
+  `:annotation-label` that is not a string: `bad-option`. Another
+  `:annotation-…` option on a group without `:annotation-part`:
+  `missing-option`, its message naming `:annotation-part`.
+
+## Iteration 5
+
+**Planned** (ADRs 0051, 0053–0057). What the reader adds and removes
+when the milestones are built; the records it fills are in 02,
+"Iteration 5". The error cases are tagged **[iteration 5]** above.
+
+- **Piece information**: the `piece` form takes the nine keys of 01,
+  each a string, kept in `piece-info` in the order written (step 4).
+- **Pattern annotations**: `pattern` takes `:annotation STRING`, and
+  `(@ ...)` takes it as an operator. Each span records the annotation
+  in force at its use: the use's, else the pattern's, else `#f`.
+- **Free text** (step 9): `(text STRING)` and `(text STRING LENGTH)`
+  are tokens that take no time and don't change the current duration.
+  Each adds a free-text item to the fragment at the current time;
+  `rep` and pattern uses place it like the other items, so every
+  repetition and every use carries it. It makes no event, holds
+  nothing, and is not a note for `_` (`_` after a text holds the note
+  before it). `(notasi expand)`:
+  - `expand-part` returns `(values EVENTS LENGTH SPANS TEXTS)`, TEXTS
+    the part's free text sorted by start; `expand-tokens` is
+    unchanged.
+  - `check-pattern` checks `(text ...)` in a pattern's body.
+  - A bad `(text ...)` is `bad-text`, with `expansion-error-line` set
+    to the `text` list's line.
+- **Scores**: the new options and values of 01 (`:note-label`,
+  `:note-label-octave`, `:row-labels`, `:row-label-octave`, `:rows
+  compact`, `:part-marker`, the `:annotation-…` options, `:scheme
+  by-pitch`) are read and checked as in "Scores" above, and filled in
+  with the score's and the defaults (step 12). `:part-marker` and the
+  `:annotation-…` options are group options only.
+- **Removed**, with no migration: `:note-names`, `:octave-numbers`,
+  `:pattern-names` and `:pattern-level` become keys no form takes;
+  `:rows single`, `:row-labels yes`/`no` and `:scheme by-degree`
+  become values no option takes. `pattern-names-overlap` is removed,
+  and `notes-collide` keeps only its `notes`-rows case.
+- **`text` is reserved**, as `rep` and `@` are: no pitch or stroke
+  may be called `text`.
+- **Colotomies**: the template's `bapang` becomes `bapang-8` and
+  `bapang-16`, with `gegaboran` (ADR 0053). The reader doesn't change:
+  `:colotomy bapang` is `undefined-colotomy`.
+- **Error kinds renamed** to the glossary's terms (ADR 0051), with the
+  reader's other changes. Tests check kinds, so they change with them:
+
+  | Now | Planned |
+  |---|---|
+  | `bad-degree` | `bad-pitch` |
+  | `duplicate-degree` | `duplicate-pitch` |
+  | `degree-ends-in-digit` | `pitch-ends-in-digit` |
+  | `needs-note-names` | `needs-note-label` |
+
+  Messages say "pitch" and "key", never "degree" or "note name".
 
 ## Slices (iteration 2)
 
@@ -504,7 +629,7 @@ error cases tagged with its feature, and the steps above that they need.
 
 1. **Implemented.** `feat/music-syntax` **[syntax]**: reading with `r7rs-symbols` and
    `keywords` off; step 4 (`:key value` options) for every form;
-   `(part INSTRUMENT :name NAME ...)`; degrees and strokes with
+   `(part INSTRUMENT :name NAME ...)`; pitches and strokes with
    `:alias`, `:display` and `:damped`; instruments without options;
    `·` and the top-level `group` gone. Until milestone 2, every part is
    drawn in its own group, and no note shows its name. Decided for this
@@ -531,7 +656,7 @@ error cases tagged with its feature, and the steps above that they need.
      `length` an exact rational in pulses; `steps-per-pulse` and
      `steps-per-system` go. Later slices add their own fields, and
      milestone 2 replaces `groups` with `scores`.
-   - `(notasi expand)` resolves note names (step 7 for tokens moves
+   - `(notasi expand)` resolves keys and strokes (step 7 for tokens moves
      into it) and exports `(expand-tokens tokens instrument)` →
      `(EVENTS . LENGTH)`: event records with exact rational starts and
      durations, and the written length in pulses (trailing rests
@@ -606,7 +731,7 @@ error cases tagged with its feature, and the steps above that they need.
      first, LINE the line of that pattern's `pattern` form; the error's
      own line stays the part's (or the `(@ ...)` list's, for
      `bad-pattern-use`).
-   - `:step N` moves a note written by name N degrees along the scale,
+   - `:step N` moves a note written by name N pitches along the scale,
      which must land on a key of the instrument; a key number or a
      stroke moves N keys.
 
