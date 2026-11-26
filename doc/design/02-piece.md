@@ -23,9 +23,8 @@ and the group's `part-marker` since `feat/collapsed-markers`; pattern
 and span annotations, a part's `texts`, the `free-text` and
 `annotation-row` records and the group's `annotation` since
 `feat/collapsed-annotation`, so every record change of "Iteration 5"
-is built. Tests in `tests/piece.scm`.
-
-**Planned** for iteration 5: saving the piece (ADR 0058).
+is built. Saving the piece (ADR 0058) since `feat/save-piece`, in
+`(notasi save)`. Tests in `tests/piece.scm` and `tests/save.scm`.
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -403,7 +402,9 @@ annotation-row
 
 ## Saving the piece
 
-**Planned** (ADR 0058). `notasi render PIECE.nts --save-piece FILE`
+**Implemented** (ADR 0058) since `feat/save-piece`, in `(notasi
+save)`, with golden files `tests/golden/NAME.piece.json`. `notasi
+render PIECE.nts --save-piece FILE`
 (05) writes the piece record, after reading, to FILE: JSON for
 `.json`, an s-expression for `.scm`, JSON on standard output for `-`.
 It is the piece, not a figure (the figure JSON is layout's output for

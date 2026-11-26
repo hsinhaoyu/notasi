@@ -29,10 +29,8 @@ preview` removed (ADR 0052), since `feat/examples`. Contract version
 each voice's `marker` and the template's part marks (ADR 0056) since
 `feat/collapsed-markers`; the rest of contract version 4 and the
 template's annotation row (ADRs 0057, 0059), without overlays, since
-`feat/collapsed-annotation`.
-
-**Planned** for iteration 5 (ADR 0058): `--save-piece`. Each section
-says what is planned.
+`feat/collapsed-annotation`. `--save-piece` (ADR 0058) since
+`feat/save-piece`: iteration 5's backend is built.
 
 ## Responsibility
 
@@ -540,9 +538,10 @@ the piece once:
   page sized to its score, with its title, subtitle and caption as a
   standalone figure has them. The entry file reads one figure file per
   score and puts a page break between them.
-- **Planned** (ADR 0058): writing the piece (`--save-piece`) is a module of its own beside
-  `(notasi json)`, as ADR 0058 says; 02 ("Saving the piece") gives its
-  format.
+- Writing the piece (`--save-piece`, ADR 0058) is `(notasi save)`,
+  beside `(notasi json)`; 02 ("Saving the piece") gives its format.
+  Drawing one score reads the piece once and then uses `render-score`,
+  so the piece read is the one saved.
 
 None of these procedures changes the current directory. A relative
 `%load-path` entry such as the `.` from `-L .` only works while the
@@ -595,8 +594,7 @@ and the message, and exits with status 1. OUT defaults to
 (ADR 0040), so drawing several scores of
 one file doesn't overwrite one picture with another.
 
-**Implemented** (ADR 0061), except `--save-piece` (**Planned**, ADR
-0058):
+**Implemented** (ADRs 0058, 0061):
 
 ```
 notasi render PIECE.nts [--score NAME | --all [--one-file]]
@@ -629,7 +627,7 @@ notasi render PIECE.nts --list [--save-piece FILE]
   Typst. A file with no `score` form prints nothing. It reads the
   piece, so a notation mistake is reported as when drawing (status
   1); otherwise the status is 0.
-- **Planned** (ADR 0058): **`--save-piece FILE`** saves the piece (02, "Saving the piece"):
+- **`--save-piece FILE`** (ADR 0058) saves the piece (02, "Saving the piece"):
   JSON for `.json`, an s-expression for `.scm`, JSON to standard
   output for `-`. The piece is saved once, after it is read and before
   anything is drawn, so it is saved even when a drawing fails. Saving
@@ -644,7 +642,7 @@ notasi render PIECE.nts --list [--save-piece FILE]
   `.pdf`; `--format` disagreeing with `-o`'s extension (`-o out.png
   --format svg`); `--ppi` when the format isn't PNG, or not a whole
   number greater than 0; `--list` with `--all`, `--score`, `-o`,
-  `--format`, `--ppi` or `--one-file`; (**Planned**) `--save-piece`
+  `--format`, `--ppi` or `--one-file`; `--save-piece`
   without a value, or with an extension other than `.json` or `.scm`.
   An unknown `--format` value is one too. Each prints
   `notasi: `, what is wrong and the usage, as now.
@@ -660,8 +658,8 @@ changes the editor package in the same PR:
 
 - **Invocation:** `notasi render PIECE.nts [--score NAME] -o OUT`, with
   OUT's extension `.svg`, `.png` or `.pdf`, and the options in any
-  order. The new options above (ADR 0061; **Planned**: `--save-piece`,
-  ADR 0058) are part of the contract; editors use none of them, so the
+  order. The new options above (ADRs 0058, 0061) are part of the
+  contract; editors use none of them, so the
   Emacs package doesn't change.
 - **Exit status:** 0 when the picture was written; 1 for a problem
   with the piece or the drawing; 2 when the command was used wrongly.
