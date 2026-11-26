@@ -123,7 +123,7 @@
 ;; note's name written in its coloured cell. The pemade polos and sangsih
 ;; are printed as two groups, so each gets its own label. The gongs and
 ;; kempli keep one row per stroke (G, P, T, K), with their letters.
-(score collapsed :note-label pitch-display-name :note-label-octave no :rows single
+(score collapsed :note-label pitch-display-name :note-label-octave no :rows compact
     :caption "Source: Lisa Gold, Music in Bali: Experiencing Music, Expressing Culture (Oxford University Press, 2005)."
   (group "Gangsa - Sangsih" sangsih)
   (group "Gangsa - Polos"   polos)

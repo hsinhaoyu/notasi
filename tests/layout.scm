@@ -2023,9 +2023,9 @@ give."
       (list #("d") (list (ev 0 1 0 "d" grey dark #f) (ev 1 1 0 "dug" grey dark #f)))
       (and fig (list (lanes-of fig 0 1) (events-of fig 0 1 0))))))
 
-(test-group ":rows single"
+(test-group ":rows compact"
   (let ((fig (rows-fig "(score s :note-label pitch-display-name :note-label-octave no"
-                       "  (group \"U\" :rows single p s))")))
+                       "  (group \"U\" :rows compact p s))")))
     (test-equal "lanes: one row labelled \"\"" #("")
       (and fig (lanes-of fig 0 0)))
     (test-equal "voices: one per member" '("p" "s")
@@ -2037,8 +2037,8 @@ give."
             (list (ev 4 1 0 "u" dung-fill dark #f)))
       (and fig (list (events-of fig 0 0 0) (events-of fig 0 0 1))))
     (test-assert "well-formed" (and fig (well-formed? fig))))
-  (let ((fig (rows-fig "(score s :rows single :note-label pitch-display-name :note-label-octave no (group \"Q\" q))")))
-    (test-equal "the score's :rows single; a chord is one event"
+  (let ((fig (rows-fig "(score s :rows compact :note-label pitch-display-name :note-label-octave no (group \"Q\" q))")))
+    (test-equal "the score's :rows compact; a chord is one event"
       (list #("") (list (ev 1 2 0 "nang" dang-fill dark #f)
                         (ev 3 1 0 "i' o'" ding-fill dark #f)))
       (and fig (list (lanes-of fig 0 0) (events-of fig 0 0 0))))))
@@ -2105,8 +2105,8 @@ give."
       (and fig (list (map (lambda (e) (field e 'fill)) (events-of fig 0 0 0))
                      (map (lambda (e) (field e 'fill)) (events-of fig 0 1 0))))))
   (let ((fig (rows-fig "(score s :note-label pitch-display-name :note-label-octave no :fill none"
-                       "  (group \"U\" :rows single q))")))
-    (test-equal "with :rows single: a chord with fill null"
+                       "  (group \"U\" :rows compact q))")))
+    (test-equal "with :rows compact: a chord with fill null"
       (list (ev 1 2 0 "nang" 'null dark #f) (ev 3 1 0 "i' o'" 'null dark #f))
       (and fig (events-of fig 0 0 0)))))
 
@@ -2130,13 +2130,13 @@ give."
             (list 2 1 1 "o'" dong-fill #f) (list 3 1 0 "e" deng-fill #f))
       (and fig (shapes fig 0 0 0))))
   (let ((fig (rows-fig "(score s :note-label pitch-display-name :note-label-octave no :holds dash"
-                       "  (group \"K\" :rows single d))")))
+                       "  (group \"K\" :rows compact d))")))
     (test-equal "strokes on a single row"
       ;; Strokes are not held: no dash (ADR 0042).
       (list (list 0 1 0 "d" grey #f) (list 1 1 0 "dug" grey #f))
       (and fig (shapes fig 0 0 0))))
   (let ((fig (rows-fig "(score s :note-label pitch-display-name :note-label-octave no :holds dash :fill none"
-                       "  (group \"U\" :rows single q))")))
+                       "  (group \"U\" :rows compact q))")))
     (test-equal "with :fill none: the note and its dashes all fill null"
       (list (list 1 1 0 "nang" 'null #f) (dash 2 0) (list 3 1 0 "i' o'" 'null #f))
       (and fig (shapes fig 0 0 0))))
@@ -2170,7 +2170,7 @@ give."
       (and fig (field (field fig 'sizes) 'row_label_width))))
   (test-equal "a single row only: its label \"\" counts 0"
     "1.0em"
-    (let ((fig (rows-fig "(score s :note-label pitch-display-name :note-label-octave no (group \"U\" :rows single q))")))
+    (let ((fig (rows-fig "(score s :note-label pitch-display-name :note-label-octave no (group \"U\" :rows compact q))")))
       (and fig (field (field fig 'sizes) 'row_label_width))))
   (test-equal "parts rows and notes rows: the longest of all"
     "3.6em"                         ; "nang1" in the notes group
@@ -2196,7 +2196,7 @@ give."
       (and fig (system-ref fig 0))))
   (test-assert "json-string accepts a figure with dashes and fill null"
     (let ((fig (rows-fig "(score s :note-label pitch-display-name :note-label-octave no :fill none :holds dash"
-                         "  (group \"U\" :rows single q) (group \"P\" :rows parts p s))")))
+                         "  (group \"U\" :rows compact q) (group \"P\" :rows parts p s))")))
       (and fig (string? (json-string fig))))))
 
 ;;; ------------------------------------------------------------------
@@ -2324,7 +2324,7 @@ give."
   (test-equal "a single row: one row"
     (vector (ov 0 4 0 1 "P" #f) (ov 4 2 0 1 "U" #f) (ov 6 2 0 1 "D" #f))
     (let ((fig (overlay-fig "(score s :pattern-names short :note-label pitch-display-name :note-label-octave no"
-                            "  (group \"U\" :rows single p r))")))
+                            "  (group \"U\" :rows compact p r))")))
       (and fig (overlays-of fig 0 0)))))
 
 (test-group "overlays across systems"
@@ -3159,7 +3159,7 @@ its row is."
   (test-assert "parts and single rows, with overlays"
     (let ((fig (rows-fig "(score s :note-label pitch-display-name :note-label-octave no :background empty"
                          "  (group \"P\" :rows parts p q)"
-                         "  (group \"S\" :rows single r s)"
+                         "  (group \"S\" :rows compact r s)"
                          "  (group \"D\" d))")))
       (and fig (lines-keys-ok? fig))))
   (test-assert "with both header rows off"
@@ -3251,7 +3251,7 @@ its row is."
             (fig (rows-fig (string-append "(score s :note-label pitch-display-name :note-label-octave no :background " name)
                            "  (group \"N\" p)"
                            "  (group \"P\" :rows parts q r)"
-                           "  (group \"S\" :rows single s)"
+                           "  (group \"S\" :rows compact s)"
                            "  (group \"D\" d))")))
        (test-equal (string-append name ": notes, parts, single and stroke rows")
          (make-list 4 (background-flags value))
@@ -3260,7 +3260,7 @@ its row is."
   (let ((fig (rows-fig "(score s :note-label pitch-display-name :note-label-octave no"
                        "  (group \"N\" :background empty p)"
                        "  (group \"P\" :rows parts :background horizontal q r)"
-                       "  (group \"S\" :rows single :background vertical s)"
+                       "  (group \"S\" :rows compact :background vertical s)"
                        "  (group \"D\" d))")))
     (test-equal "each kind of rows with its own background"
       '((#f #f) (#f #t) (#t #f) (#t #t))
@@ -3268,7 +3268,7 @@ its row is."
 
 (test-group "lines: a group of one row keeps row_lines"
   (let ((fig (rows-fig "(score s :note-label pitch-display-name :note-label-octave no"
-                       "  (group \"S\" :rows single r)"
+                       "  (group \"S\" :rows compact r)"
                        "  (group \"R\" s))")))
     (test-equal "one row, grid: both true" '((#t #t) (#t #t))
       (and fig (all-group-lines fig 0)))))
@@ -3343,7 +3343,7 @@ its row is."
     (test-equal "kendang: dag and dug in #e6e6e6"
       (list stroke-grey stroke-grey)
       (and fig (map (lambda (e) (field e 'fill)) (events-of fig 0 0 0)))))
-  (let ((fig (rows-fig "(score s :note-label pitch-display-name :note-label-octave no (group \"D\" :rows single d))")))
+  (let ((fig (rows-fig "(score s :note-label pitch-display-name :note-label-octave no (group \"D\" :rows compact d))")))
     (test-equal "on a single row too" (list stroke-grey stroke-grey)
       (and fig (map (lambda (e) (field e 'fill)) (events-of fig 0 0 0)))))
   (test-equal "the stroke grey takes near-black text" dark
@@ -3457,7 +3457,7 @@ null or one string per lane, and `sizes` this slice's keys?"
     (let ((fig (keys-fig "(score s :note-label pitch-display-name :note-label-octave no :system-length 2"
                          "  (group \"U\" :keys all :key-numbers yes m)"
                          "  (group \"P\" :rows parts n)"
-                         "  (group \"S\" :rows single :row-labels none d)"
+                         "  (group \"S\" :rows compact :row-labels none d)"
                          "  (group \"G\" gong))")))
       (and fig (rows3-well-formed? fig))))
   (test-assert "the default score"
@@ -3571,7 +3571,7 @@ null or one string per lane, and `sizes` this slice's keys?"
       (list #("gong") '("Kempur" "G"))
       (and fig (list (lanes-of fig 0 0) (texts fig 0 0 0)))))
   (let ((fig (keys-fig "(score s :note-label pitch-display-name :note-label-octave no"
-                       "  (group \"G\" :rows single :display ((G \"Gong\")) gong))")))
+                       "  (group \"G\" :rows compact :display ((G \"Gong\")) gong))")))
     (test-equal "a single row: the text changes" '("P" "Gong")
       (and fig (texts fig 0 0 0)))))
 
@@ -3591,7 +3591,7 @@ null or one string per lane, and `sizes` this slice's keys?"
       (and fig (size-of fig 'row_label_width))))
   (let ((fig (keys-fig "(score s :row-labels none :note-label pitch-display-name :note-label-octave no"
                        "  (group \"P\" :rows parts m n)"
-                       "  (group \"S\" :rows single d))")))
+                       "  (group \"S\" :rows compact d))")))
     (test-equal "parts and single rows" (list #("" "") #(""))
       (and fig (list (lanes-of fig 0 0) (lanes-of fig 0 1))))
     (test-equal "parts and single rows: row_label_width 0.0em" "0.0em"
@@ -3629,7 +3629,7 @@ null or one string per lane, and `sizes` this slice's keys?"
   (let ((fig (keys-fig "(score s :key-numbers yes :note-label pitch-display-name :note-label-octave no"
                        "  (group \"U\" m)"
                        "  (group \"P\" :rows parts n)"
-                       "  (group \"S\" :rows single d)"
+                       "  (group \"S\" :rows compact d)"
                        "  (group \"G\" gong))")))
     (test-equal "on a score: only the pitched notes group" '(#("5" "4" "3") null null null)
       (and fig (map (lambda (g) (key-numbers-of fig 0 g)) '(0 1 2 3)))))
@@ -3664,7 +3664,7 @@ null or one string per lane, and `sizes` this slice's keys?"
       (and fig (shapes fig 0 2 0))))
   (let ((fig (keys-fig "(score s :note-label pitch-display-name :note-label-octave no"
                        "  (group \"P\" :rows parts d)"
-                       "  (group \"S\" :rows single gong))")))
+                       "  (group \"S\" :rows compact gong))")))
     (test-equal "on a parts row" '((0 1 0 "D" ) (2 1 0 "dug") (3 1 0 "d"))
       (and fig (map (lambda (e) (list (field e 'start) (field e 'dur)
                                       (field e 'row) (field e 'text)))
@@ -3700,7 +3700,7 @@ null or one string per lane, and `sizes` this slice's keys?"
             (list 3 1 0 "d" grey #f))
       (and fig (shapes fig 0 2 0))))
   (let ((fig (keys-fig "(score s :note-label pitch-display-name :note-label-octave no :holds dash"
-                       "  (group \"S\" :rows single gong))")))
+                       "  (group \"S\" :rows compact gong))")))
     (test-equal "on a single row: no dashes"
       (list (list 0 1 0 "P" grey #f) (list 2 1 0 "G" grey #f))
       (and fig (shapes fig 0 0 0)))))
@@ -4032,6 +4032,292 @@ null or one string per lane, and `sizes` this slice's keys?"
     (width "(score s (group \"U\" :rows parts (p :label \"sangsih kantilan\") q))"))
   (test-equal "note labels don't count" "2.0em"
     (width "(score s :note-label pitch-name (group \"U\" p))")))
+
+;;; ------------------------------------------------------------------
+;;; Compact rows (slice feat/collapsed-compact; 04, "Compact rows",
+;;; "The pitch column" and "What a note shows" under "Iteration 5"; 01,
+;;; "Compact rows"; ADRs 0042, 0055, 0060)
+;;;
+;;; `:rows compact` merges a group's parts into one line, with a row
+;;; added where different keys sound together. Rows are assigned by
+;;; key, once for the whole score: the keys played in the score's range,
+;;; in row order (highest pitch first; strokes as `group-row-keys`
+;;; gives them), each to the first row where it never sounds with a key
+;;; already there. A pitched note's box runs from its start to its end,
+;;; a stroke's is one column. A chord is one event in its lowest key's
+;;; row and counts as that key alone; a unison is drawn once, under the
+;;; first part. Every entry of `rows` is ""; `key_numbers` is null.
+;;; Choices made where the docs are not explicit:
+;;; - Two boxes that only touch (one ends where the next starts) don't
+;;;   sound together, as for `notes-collide`.
+;;; - A chord's upper keys are not tested as keys of their own: the
+;;;   fixture's chord keys could go to row 0 either way, so only the
+;;;   row count and the chord's row are pinned.
+;;; - The row labels "" count 0 in `row_label_width`, as `single`'s did:
+;;;   a figure whose only group is compact has "1.0em".
+;;; - Two stroke instruments' strokes: the kempli is the generated
+;;;   timekeeper, K on every pulse.
+
+(define compact-head
+  ;; rows-lines' scale (display names i, o, e, u, nang; damped i', o',
+  ;; na'), the instrument u (a1 i2 o2 e2 u2) and the kendang (dag dug).
+  (list-head rows-lines 7))
+
+(define (compact-fig . lines)
+  "The figure of compact-head plus LINES (parts, then a score), or #f."
+  (layout-or-false (layout (apply piece-of (append compact-head lines)))))
+
+(define (compact-fig-named name . lines)
+  "The figure of compact-head plus LINES, laid out with its score NAME."
+  (layout-or-false (layout-named (apply piece-of (append compact-head lines))
+                                 name)))
+
+(define (rows-by-voice fig s g)
+  "Each voice's events' rows in system S of group G."
+  (map (lambda (v) (map (lambda (e) (field e 'row)) (events-of fig s g v)))
+       (iota (vector-length (field (group-ref fig s g) 'voices)))))
+
+(define colotomic-lines
+  '("(piece \"C\")"
+    "(strokes gong-strokes G P T)"
+    "(strokes kempli-strokes K)"
+    "(instrument gong gong-strokes G P T)"
+    "(instrument kempli kempli-strokes K)"
+    ;; kempli: the generated timekeeper, K on every pulse
+    "(part :instrument gong G - T - P - T -)"))
+
+(define (colotomic-fig . score-lines)
+  (layout-or-false (layout (apply piece-of (append colotomic-lines score-lines)))))
+
+(test-group "[compact] gong and kempli"
+  (let ((fig (colotomic-fig "(score s (group \"C\" :rows compact gong kempli))")))
+    (test-equal "two rows, both \"\"" #("" "") (and fig (rows-of* fig 0 0)))
+    (test-equal "voices: one per member" '("gong" "kempli")
+      (and fig (voice-names fig 0 0)))
+    (test-equal "G, P and T on the first row, every time"
+      '((0 1 0 #f) (2 1 0 #f) (4 1 0 #f) (6 1 0 #f))
+      (and fig (timing (events-of fig 0 0 0))))
+    (test-equal "K on the second row, every time"
+      (map (lambda (i) (list i 1 1 #f)) (iota 8))
+      (and fig (timing (events-of fig 0 0 1))))
+    (test-equal "key_numbers null" 'null
+      (and fig (get (group-ref fig 0 0) 'key_numbers)))
+    (test-assert "well-formed" (and fig (well-formed? fig))))
+  (let ((fig (colotomic-fig "(score s (group \"C\" :rows compact kempli gong))")))
+    (test-equal "kempli first: K's block first, so K on row 0, G P T on row 1"
+      '((0 0 0 0 0 0 0 0) (1 1 1 1))
+      (and fig (rows-by-voice fig 0 0))))
+  (let ((fig (colotomic-fig "(score s :rows compact :system-length 2"
+                            "  (group \"C\" gong kempli))")))
+    (test-equal "the score's :rows compact; in every system: two rows"
+      '(#("" "") #("" "") #("" "") #("" ""))
+      (and fig (map (lambda (s) (rows-of* fig s 0)) '(0 1 2 3))))
+    (test-equal "every system: the gong on row 0, the kempli on row 1"
+      '(((0) (1 1)) ((0) (1 1)) ((0) (1 1)) ((0) (1 1)))
+      (and fig (map (lambda (s) (rows-by-voice fig s 0)) '(0 1 2 3)))))
+  (let ((fig (colotomic-fig "(score s (group \"G\" :rows compact gong))")))
+    (test-equal "the gong alone: G, P and T never together, one row"
+      (list #("") '((0 0 0 0)))
+      (and fig (list (rows-of* fig 0 0) (rows-by-voice fig 0 0))))))
+
+(test-group "[compact] row assignment"
+  (let ((fig (rows-fig "(score s (group \"U\" :rows compact p))")))
+    (test-equal "one note at a time (a jublag): one row" #("")
+      (and fig (rows-of* fig 0 0)))
+    (test-equal "every event on row 0, as drawn on notes rows otherwise"
+      (list (ev4 0 2 0 'null ding-fill dark #f)
+            (ev4 2 1 0 'null dong-fill dark #f)
+            (ev4 3 1 0 'null deng-fill dark #f))
+      (and fig (events-of fig 0 0 0))))
+  (let ((fig (compact-fig "(part :instrument u :name a i2 - e2 -)"
+                          "(part :instrument u :name b o2 - - -)"
+                          "(score s (group \"U\" :rows compact a b))")))
+    ;; Row order e2 o2 i2: e2 → 0; o2 never with e2 → 0; i2 with o2 → 1.
+    (test-equal "different keys at once: two rows" #("" "")
+      (and fig (rows-of* fig 0 0)))
+    (test-equal "the first key in row order on row 0; i2 below, with o2"
+      '((1 0) (0))
+      (and fig (rows-by-voice fig 0 0))))
+  (let ((fig (compact-fig "(part :instrument u :name a i2 - - -)"
+                          "(part :instrument u :name b o2 - - -)"
+                          "(score s (group \"U\" :rows compact b a))")))
+    (test-equal "rows by key, not by part: o2 (higher) on row 0 whatever the order"
+      '((0) (1))
+      (and fig (rows-by-voice fig 0 0))))
+  (let ((fig (compact-fig "(part :instrument u :name a e2 o2 e2 -)"
+                          "(part :instrument u :name b o2 i2 i2 -)"
+                          "(score s (group \"U\" :rows compact a b))")))
+    ;; e2+o2, then o2+i2, then e2+i2: never three at once, three rows.
+    (test-equal "three keys pairwise together: three rows" #("" "" "")
+      (and fig (rows-of* fig 0 0)))
+    (test-equal "e2 on 0, o2 on 1, i2 on 2"
+      '((0 1 0) (1 2 2))
+      (and fig (rows-by-voice fig 0 0))))
+  (let ((fig (compact-fig "(part :instrument u :name a i2 _ - -)"
+                          "(part :instrument u :name b - o2 - -)"
+                          "(score s (group \"U\" :rows compact a b))")))
+    (test-equal "a held note sounds with a later key: two rows"
+      (list #("" "") '((1) (0)))
+      (and fig (list (rows-of* fig 0 0) (rows-by-voice fig 0 0)))))
+  (let ((fig (compact-fig "(part :instrument u :name a i2 - - -)"
+                          "(part :instrument u :name b - o2 - -)"
+                          "(score s (group \"U\" :rows compact a b))")))
+    (test-equal "notes one after the other: one row"
+      (list #("") '((0) (0)))
+      (and fig (list (rows-of* fig 0 0) (rows-by-voice fig 0 0)))))
+  (let ((fig (compact-fig "(part :instrument u :name a i2 _ - -)"
+                          "(part :instrument u :name b - - o2 -)"
+                          "(score s (group \"U\" :rows compact a b))")))
+    (test-equal "a held note ending where the next starts: one row"
+      (list #("") '((0) (0)))
+      (and fig (list (rows-of* fig 0 0) (rows-by-voice fig 0 0)))))
+  (let ((fig (compact-fig "(part :instrument u :name a i2:1/2 - - - - - - -)"
+                          "(part :instrument u :name b -:1/2 o2 - - - - - -)"
+                          "(score s (group \"U\" :rows compact a b))")))
+    (test-equal "half pulses side by side: one row"
+      (list #("") '((0) (0)))
+      (and fig (list (rows-of* fig 0 0) (rows-by-voice fig 0 0)))))
+  (let ((fig (compact-fig "(part :instrument u :name a i2 - e2 i2)"
+                          "(part :instrument u :name b o2 - - -)"
+                          "(score s :system-length 2"
+                          "  (group \"U\" :rows compact a b))")))
+    (test-equal "rows are the same in every system"
+      '(#("" "") #("" ""))
+      (and fig (list (rows-of* fig 0 0) (rows-of* fig 1 0))))
+    (test-equal "a key keeps its row in a system where it sounds alone"
+      '(((1) (0)) ((0 1) ()))
+      (and fig (list (rows-by-voice fig 0 0) (rows-by-voice fig 1 0))))))
+
+(test-group "[compact] strokes"
+  (let ((fig (compact-fig "(part :instrument kendang :name x dag _ - -)"
+                          "(part :instrument kendang :name y - dug - -)"
+                          "(score s (group \"K\" :rows compact x y))")))
+    (test-equal "a stroke written long is one column: no overlap, one row"
+      (list #("") '((0) (0)))
+      (and fig (list (rows-of* fig 0 0) (rows-by-voice fig 0 0))))
+    (test-equal "each stroke drawn one column wide"
+      '(((0 1 0 #f)) ((1 1 0 #f)))
+      (and fig (list (timing (events-of fig 0 0 0))
+                     (timing (events-of fig 0 0 1))))))
+  (let ((fig (compact-fig "(part :instrument kendang :name x dag _ - -)"
+                          "(part :instrument kendang :name y dug - - -)"
+                          "(score s (group \"K\" :rows compact x y))")))
+    (test-equal "strokes in the same column: two rows, in instrument order"
+      (list #("" "") '((0) (1)))
+      (and fig (list (rows-of* fig 0 0) (rows-by-voice fig 0 0))))))
+
+(test-group "[compact] chords and unisons"
+  (let ((fig (rows-fig "(score s :note-label pitch-display-name :note-label-octave no"
+                       "  (group \"Q\" :rows compact q))")))
+    (test-equal "a chord is one event: labels joined, the lowest note's look"
+      (list #("") (list (ev4 1 2 0 "nang" dang-fill dark #f)
+                        (ev4 3 1 0 "i' o'" ding-fill dark #f)))
+      (and fig (list (rows-of* fig 0 0) (events-of fig 0 0 0)))))
+  (let ((fig (rows-fig "(score s :fill none :note-label pitch-name"
+                       "  (group \"Q\" :rows compact q))")))
+    (test-equal "a chord with :fill none and pitch names"
+      (list (ev4 1 2 0 "dang1" 'null dark #f)
+            (ev4 3 1 0 "ding2 dong2" 'null dark #f))
+      (and fig (events-of fig 0 0 0))))
+  (let ((fig (compact-fig "(part :instrument u :name a (a1 e2) -)"
+                          "(part :instrument u :name b o2 -)"
+                          "(score s (group \"U\" :rows compact a b))")))
+    ;; As a1 alone: o2 → 0, a1 (with o2) → 1. Counting e2 would give 3.
+    (test-equal "a chord counts as its lowest key: two rows, not three"
+      #("" "")
+      (and fig (rows-of* fig 0 0)))
+    (test-equal "the chord in its lowest key's row; one event"
+      '((1) (0))
+      (and fig (rows-by-voice fig 0 0))))
+  (let ((fig (compact-fig "(part :instrument u :name a i2 o2 - -)"
+                          "(part :instrument u :name b i2 e2 - -)"
+                          "(score s (group \"U\" :rows compact a b))")))
+    ;; e2 → 0; o2 (with e2) → 1; i2 never with e2 → 0.
+    (test-equal "a unison is drawn once, under the first part"
+      '(((0 1 0 #f) (1 1 1 #f)) ((1 1 0 #f)))
+      (and fig (list (timing (events-of fig 0 0 0))
+                     (timing (events-of fig 0 0 1)))))
+    (test-equal "a unison adds no row of its own" #("" "")
+      (and fig (rows-of* fig 0 0))))
+  (let ((fig (compact-fig "(part :instrument u :name a i2 - - -)"
+                          "(part :instrument u :name b i2 - - -)"
+                          "(score s (group \"U\" :rows compact b a))")))
+    (test-equal "the first part in member order draws the unison"
+      (list '("b" "a") '((0 1 0 #f)) '())
+      (and fig (list (voice-names fig 0 0)
+                     (timing (events-of fig 0 0 0))
+                     (timing (events-of fig 0 0 1)))))))
+
+(test-group "[compact] holds"
+  (let ((fig (compact-fig "(part :instrument u :name a i2 _ - -)"
+                          "(part :instrument u :name b - o2 - -)"
+                          "(score s :note-label pitch-display-name :note-label-octave no :holds dash"
+                          "  (group \"U\" :rows compact a b))")))
+    (test-equal "a held note's dash in its own row"
+      (list (list (list 0 1 1 "i" ding-fill #f) (dash 1 1))
+            (list (list 1 1 0 "o'" dong-fill #f)))
+      (and fig (list (shapes fig 0 0 0) (shapes fig 0 0 1)))))
+  (let ((fig (compact-fig "(part :instrument u :name a i2 _ - -)"
+                          "(part :instrument u :name b - o2 - -)"
+                          "(score s (group \"U\" :rows compact a b))")))
+    (test-equal "without dashes the held note is one event two columns wide"
+      '(((0 2 1 #f)) ((1 1 0 #f)))
+      (and fig (list (timing (events-of fig 0 0 0))
+                     (timing (events-of fig 0 0 1)))))))
+
+(test-group "[compact] the score's range"
+  (define range-parts
+    '("(part :instrument u :name a i2 - e2 -)"
+      "(part :instrument u :name b o2 - - o2)"))
+  (let ((fig (apply compact-fig
+                    (append range-parts
+                            '("(score s :from 3 :to 4 (group \"U\" :rows compact a b))")))))
+    (test-equal "an overlap before :from doesn't count: one row" #("")
+      (and fig (rows-of* fig 0 0)))
+    (test-equal "the notes in the range on row 0" '((0) (0))
+      (and fig (rows-by-voice fig 0 0))))
+  (let ((fig (apply compact-fig
+                    (append range-parts
+                            '("(score s (group \"U\" :rows compact a b))")))))
+    (test-equal "the whole piece: two rows" #("" "")
+      (and fig (rows-of* fig 0 0))))
+  (let ((fig (apply compact-fig-named 'late
+                    (append range-parts
+                            '("(score whole (group \"U\" :rows compact a b))"
+                              "(score late :from 3 :to 4 (group \"U\" :rows compact a b))")))))
+    (test-equal "each score its own rows" #("")
+      (and fig (rows-of* fig 0 0)))))
+
+(test-group "[compact] the pitch column and sizes"
+  (define (compact-rows options)
+    (let ((fig (compact-fig "(part :instrument u :name a i2 - - -)"
+                            "(part :instrument u :name b o2 - - -)"
+                            (string-append "(score s " options
+                                           " (group \"U\" :rows compact a b))"))))
+      (and fig (rows-of* fig 0 0))))
+  (test-equal "pitch-display-name (the default): \"\"" #("" "") (compact-rows ""))
+  (test-equal "pitch-name: \"\"" #("" "") (compact-rows ":row-labels pitch-name"))
+  (test-equal "none: \"\"" #("" "") (compact-rows ":row-labels none"))
+  (test-equal "strokes: \"\""
+    #("" "")
+    (let ((fig (colotomic-fig "(score s :row-labels pitch-name"
+                              "  (group \"C\" :rows compact gong kempli))")))
+      (and fig (rows-of* fig 0 0))))
+  (let ((fig (rows-fig "(score s :key-numbers yes (group \"U\" :rows compact p q))")))
+    (test-equal "key_numbers null, even with the score's :key-numbers yes" 'null
+      (and fig (get (group-ref fig 0 0) 'key_numbers))))
+  (test-equal "a compact group alone: its labels \"\" count 0" "1.0em"
+    (let ((fig (rows-fig "(score s (group \"U\" :rows compact q))")))
+      (and fig (get (field fig 'sizes) 'row_label_width))))
+  (test-equal "a compact group with :row-labels none alone: 0.0em" "0.0em"
+    (let ((fig (rows-fig "(score s :row-labels none (group \"U\" :rows compact q))")))
+      (and fig (get (field fig 'sizes) 'row_label_width))))
+  (test-equal "compact and notes rows: the notes rows' labels count" "3.6em"
+    (let ((fig (rows-fig "(score s (group \"U\" :rows compact p) (group \"Q\" q))")))
+      (and fig (get (field fig 'sizes) 'row_label_width))))
+  (test-assert "json-string accepts a figure with compact rows"
+    (let ((fig (colotomic-fig "(score s :holds dash (group \"C\" :rows compact gong kempli))")))
+      (and fig (string? (json-string fig))))))
 
 (test-end "layout")
 
