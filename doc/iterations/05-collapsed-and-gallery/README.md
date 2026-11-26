@@ -124,7 +124,9 @@ changes the figure, and each later one adds to it.
 3. **`feat/collapsed`** (01–05, ADRs 0051, 0053–0057, 0059, 0060), in
    five slices:
    1. `feat/collapsed-terms`: the glossary's names in code (`pitch`,
-      `scale-pitches`, `note-pitch`, the error kinds), `by-pitch` and
+      `scale-pitches`, `note-pitch`, the error kinds), in the reader's
+      messages, and in the manual with the messages it quotes
+      ("degree" becomes "pitch"), `by-pitch` and
       `pitch-colors`; the piece information keys; `bapang-8`,
       `bapang-16` and `gegaboran`.
    2. `feat/collapsed-labels`: `:note-label`, `:row-labels`,
