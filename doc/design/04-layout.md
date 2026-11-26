@@ -16,11 +16,12 @@ Iteration 3's layout is implemented. `by-pitch` and `pitch-colors`
 since iteration 5's `feat/collapsed-terms`. Contract version 4 opened,
 with `rows`, `row` and `row_label_width` (ADR 0059), and the note label
 and the pitch column's forms (ADR 0054), since `feat/collapsed-labels`.
+Compact rows in place of `single` (ADRs 0055, 0060) since
+`feat/collapsed-compact`.
 
-**Planned** for iteration 5 (ADRs 0055–0057, 0059, 0060): the rest of
+**Planned** for iteration 5 (ADRs 0056, 0057, 0059): the rest of
 contract version 4 (the annotation row in place of `overlays`; each
-voice's `marker`); compact rows in place of `single`; part markers;
-the annotation row. See "Iteration 5".
+voice's `marker`); part markers; the annotation row. See "Iteration 5".
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -188,17 +189,16 @@ Layout works out every header number and every line, for every column:
 - **`rows` `parts`**: one row per member, labelled with its row label;
   an event's `row` is its part's row. Notes are told apart by their
   colour, and by their note labels when the group has them.
-- **`rows` `single`**: one row for all the members, labelled `""`; every
-  event's `row` is 0. The reader has checked that no two notes share a
-  cell. **Planned**: replaced by `compact` (see "Iteration 5").
-- On `notes` rows, a unison (two parts striking one key at the same
+- **`rows` `compact`** (ADR 0055, since `feat/collapsed-compact`, in
+  place of `single`): the members merged, with rows assigned by key;
+  see "Compact rows" under "Iteration 5".
+- On `notes` and compact rows, a unison (two parts striking one key at the same
   start, for the same length) is written once, under the first member
   that plays it; the reader has refused any other sharing of a cell
   (`notes-collide`). Decided in iteration 2's `feat/targets`: the norot
   kotekan of Jaya Semara opens each figure in unison.
 - A chord gives one event per note, with the same start and duration,
-  in `notes` rows. In `parts` and `single` (**Planned**: `compact`)
-  rows it is one event: its notes' labels joined by a space, with the
+  in `notes` rows. In `parts` and compact rows it is one event: its notes' labels joined by a space, with the
   look of its lowest note. A voice's events are sorted by start, then
   by row.
 
@@ -448,8 +448,8 @@ Each event's `text` comes from the group's `note-label` (ADR 0054):
 
 ### The pitch column
 
-**Implemented** since `feat/collapsed-labels`, for `notes` and `parts`
-rows (and `single` rows, whose label is `""`, until compact rows).
+**Implemented** since `feat/collapsed-labels`, and for compact rows
+since `feat/collapsed-compact`.
 
 Each entry of a group's `rows` comes from its `row-labels` and
 `row-label-octave?`:
@@ -466,19 +466,23 @@ rows.
 
 ### Compact rows
 
+**Implemented** since `feat/collapsed-compact`.
+
 `rows` `compact` (ADR 0055) replaces `single`: the group's parts merged
 into one line, with a row added where different keys sound together.
 
 - Two notes **sound together** when their boxes, as drawn, overlap: a
   pitched note from its start to its end, a stroke for its one column
   (ADR 0042). Only notes in the score's range count.
-- **Rows are assigned by key**, once for the whole score: the group's
-  keys are taken in row order (highest pitch first; strokes in
-  instrument order), and each goes to the first row where it never
-  sounds with a key already there, or to a new row below. So every key
-  has one row in every system, and with no two keys ever sounding
-  together the group has one row.
-- A chord is one event, placed in the row of its lowest key.
+- **Rows are assigned by key**, once for the whole score: the keys the
+  group plays in the score's range are taken in row order (highest
+  pitch first; strokes in instrument order, as `group-row-keys` gives
+  them), and each goes to the first row where it never sounds with a
+  key already there, or to a new row below. So every key has one row
+  in every system, and with no two keys ever sounding together the
+  group has one row.
+- A chord is one event, placed in the row of its lowest key, and
+  counts as that key alone when rows are assigned.
 - A unison (two parts on one key, with the same start and length) is
   one event, under the first part that plays it, as on `notes` rows.
   Any other overlap of one key's notes has been refused by the reader

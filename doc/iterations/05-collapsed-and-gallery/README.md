@@ -138,8 +138,10 @@ changes the figure, and each later one adds to it.
       `group-row-keys` and `note-row-label`. The examples that showed
       names add `:note-label-octave no`, so their drawings keep their
       look.
-   3. `feat/collapsed-compact`: `:rows compact` in place of `single`,
-      rows by key, and `notes-collide` on compact rows.
+   3. `feat/collapsed-compact` (done): `:rows compact` in place of `single`,
+      rows by key, and `notes-collide` on compact rows; the manual's
+      `notes-collide` mistake shows the compact case (one key, two
+      parts, overlapping).
    4. `feat/collapsed-markers`: `:part-marker`, each voice's `marker`,
       and the template's marks.
    5. `feat/collapsed-annotation`: the annotation row, pattern
