@@ -1,0 +1,47 @@
+;; Gambangan (excerpt): a short passage of the reyong kotekan, not the
+;; whole piece, after Colin McPhee (1940): his staff transcription, one
+;; line of two voices over 8 beats, and his chart of the Balinese tuning
+;; against the Western.
+;;
+;; McPhee writes the reyong in treble clef with six sharps, so that each
+;; kettle has its own staff position:
+;;   E#4 dung   F#4 dang   A#4 ding   B4 dong   C#5 deng
+;; (his chart puts dong a little above B, but it is written B). Lowest to
+;; highest these are five adjacent reyong kettles, here u2 a2 i3 o3 e3,
+;; the same register as the reyong of examples/baris.nts.
+;;
+;; Time: one pulse is McPhee's quarter-note beat, and every stroke is a
+;; damped sixteenth (1/4). Where McPhee writes an eighth, the stroke is
+;; followed by a rest (-), as in examples/baris.nts.
+;;
+;; There is no colotomy (the source gives none), so there is no gong
+;; part and no cycle; positions are pulses 1-8. McPhee's two bars of
+;; four beats are separated below with "/", which takes no time.
+;;
+;; The upper voice is the sangsih, the lower the polos.
+
+(piece "Gambangan (excerpt): reyong kotekan")
+
+(use gong-kebyar)
+
+;; Sangsih: dong and deng, then deng and ding.
+(part :instrument reyong :name sangsih
+  o3:1/4 - e3 o3 | - e3 o3 - | e3 o3 - e3 | o3 e3 - e3 |
+  /
+  e3 e3 e3 i3 | - e3 i3 - | i3 e3 - i3 | e3 - i3 e3 |)
+
+;; Polos: dang and ding, then dung and dang.
+(part :instrument reyong :name polos
+  -:1/4 a2 i3 - | a2 i3 - a2 | i3 - a2 i3 | - i3 a2 i3 |
+  /
+  i3 u2 a2 - | u2 a2 - u2 | a2 - u2 a2 | - u2 a2 - |)
+
+;; The kotekan in grid format: one row per kettle, colour only, the two
+;; parts together.
+(score full :caption "Source: Colin McPhee (1940)."
+  (group "Reyong" :subtitle "sangsih, polos" :rows notes  sangsih polos))
+
+;; Names in the cells, a row per part, as McPhee's two voices.
+(score voices :note-names yes :rows parts :fill none
+  (group "Reyong" :subtitle "sangsih, polos"
+    (sangsih :label "Sangsih") (polos :label "Polos")))
