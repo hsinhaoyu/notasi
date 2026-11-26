@@ -803,7 +803,7 @@ cursor is in again."
       (unless preview (notasi-preview-redraw))))))
 
 (defun notasi-write-score (file)
-  "Write the score the preview shows to FILE, a .pdf, .png or .svg file.
+  "Write the score in the preview to FILE, a .pdf, .png or .svg file.
 That is the score chosen with \\[notasi-choose-score], or else the one the
 cursor is in.  It is drawn from the text as it is now, saved or not."
   (interactive
