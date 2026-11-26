@@ -1449,7 +1449,7 @@ at its default: font_size null, cells \"2em\"."
 
 (test-group "colours: one style per group"
   (test-equal "score :palette set1, hard-coded"
-    (list (list 'null "#e41a1c" white) (list 'null "#377eb8" white))
+    (list (list 'null "#e41a1c" white) (list 'null "#377eb8" dark))
     (looks-of (layout (colour-piece "(score s :palette set1 (group \"a\" a))"))
               0))
   (test-equal "score :colors, hard-coded: dong black, white text"
@@ -1488,7 +1488,7 @@ at its default: font_size null, cells \"2em\"."
       (style-looks pc #:palette 'set1 #:pitch-colors '((ding . "#ffffff")))
       (looks-of fig 2))
     (test-equal "a group's :colors, hard-coded: ding white with dark text, dong set1"
-      (list (list 'null "#ffffff" dark) (list 'null "#377eb8" white))
+      (list (list 'null "#ffffff" dark) (list 'null "#377eb8" dark))
       (looks-of fig 2))
     (test-equal "a group's list palette"
       (style-looks pc #:palette '("#111111" "#eeeeee")
@@ -1505,7 +1505,7 @@ at its default: font_size null, cells \"2em\"."
                        "  (group \"K\" d))"))
               0))
   (test-equal "colours and names together: a group's own palette, the score's names"
-    (list (list "i" "#e41a1c" white) (list "o" "#377eb8" white))
+    (list (list "i" "#e41a1c" white) (list "o" "#377eb8" dark))
     (looks-of (layout (colour-piece "(score s :note-label pitch-display-name :note-label-octave no"
                                     "  (group \"a\" :palette set1 a))"))
               0))

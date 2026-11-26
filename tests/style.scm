@@ -9,13 +9,16 @@
 ;;; formula given in the doc (contrast of the fill with white):
 ;;;   dark2: #1b9e77 3.39  #d95f02 3.76  #7570b3 4.44  #e7298a 4.13
 ;;;          #66a61e 2.98  #e6ab02 2.06  #a6761d 4.01  #666666 5.74
-;;;   threshold neighbours: #949494 3.03 (white), #959595 2.995 (dark).
+;;;   set1:  #e41a1c 4.71  #377eb8 4.34
+;;;   threshold neighbours: #767676 4.54 (white), #777777 4.48 (dark).
+;;; The threshold was 3:1 (WCAG's minimum for bold text) until note text
+;;; stopped being bold in feat/gallery; it is 4.5:1 since.
 ;;;
 ;;; Choices made where the doc is not explicit:
 ;;; - text-color-for is only given lowercase input: the doc does not say
 ;;;   whether it accepts uppercase hex.
 ;;; - The contrast threshold is tested with the nearest grey on each side
-;;;   of 3:1; no #rrggbb colour gives exactly 3:1, so "at least" (>=) is
+;;;   of 4.5:1; no #rrggbb colour gives exactly 4.5:1, so "at least" (>=) is
 ;;;   not tested at equality.
 ;;; - A pitch-colors entry naming a stroke still gives fill #f: the doc
 ;;;   says strokes have no box, unconditionally.
@@ -186,17 +189,17 @@
 ;;; text-color-for
 
 (test-group "text-color-for"
-  ;; dark2: all take white except green #66a61e and yellow #e6ab02.
-  (test-equal "dark2 teal #1b9e77"   white (text-color-for "#1b9e77"))
-  (test-equal "dark2 orange #d95f02" white (text-color-for "#d95f02"))
-  (test-equal "dark2 purple #7570b3" white (text-color-for "#7570b3"))
-  (test-equal "dark2 pink #e7298a"   white (text-color-for "#e7298a"))
+  ;; dark2: all take dark except grey #666666.
+  (test-equal "dark2 teal #1b9e77"   dark  (text-color-for "#1b9e77"))
+  (test-equal "dark2 orange #d95f02" dark  (text-color-for "#d95f02"))
+  (test-equal "dark2 purple #7570b3" dark  (text-color-for "#7570b3"))
+  (test-equal "dark2 pink #e7298a"   dark  (text-color-for "#e7298a"))
   (test-equal "dark2 green #66a61e"  dark  (text-color-for "#66a61e"))
   (test-equal "dark2 yellow #e6ab02" dark  (text-color-for "#e6ab02"))
-  (test-equal "dark2 brown #a6761d"  white (text-color-for "#a6761d"))
+  (test-equal "dark2 brown #a6761d"  dark  (text-color-for "#a6761d"))
   (test-equal "dark2 grey #666666"   white (text-color-for "#666666"))
-  (test-equal "dark2: white except green and yellow"
-    (list white white white white dark dark white white)
+  (test-equal "dark2: dark except grey"
+    (list dark dark dark dark dark dark dark white)
     (map text-color-for dark2))
 
   (test-equal "white fill" dark  (text-color-for "#ffffff"))
@@ -209,13 +212,13 @@
   (test-equal "set3 #8dd3c7"    dark (text-color-for "#8dd3c7"))
 
   (test-equal "set1 red #e41a1c"    white (text-color-for "#e41a1c"))
-  (test-equal "set1 blue #377eb8"   white (text-color-for "#377eb8"))
+  (test-equal "set1 blue #377eb8 (4.34:1)" dark (text-color-for "#377eb8"))
   (test-equal "set1 green #4daf4a (2.78:1)" dark (text-color-for "#4daf4a"))
   (test-equal "set1 orange #ff7f00 (2.53:1)" dark (text-color-for "#ff7f00"))
 
-  ;; Threshold: #949494 is 3.03:1 with white, #959595 is 2.995:1.
-  (test-equal "just above 3:1 takes white" white (text-color-for "#949494"))
-  (test-equal "just below 3:1 takes dark"  dark  (text-color-for "#959595")))
+  ;; Threshold: #767676 is 4.54:1 with white, #777777 is 4.48:1.
+  (test-equal "just above 4.5:1 takes white" white (text-color-for "#767676"))
+  (test-equal "just below 4.5:1 takes dark"  dark  (text-color-for "#777777")))
 
 ;;; ------------------------------------------------------------------
 ;;; The look record
@@ -357,7 +360,7 @@
 
   (test-equal "custom palette by name: set1"
     (list (list "#e41a1c" "i"    white)
-          (list "#377eb8" "dong" white)
+          (list "#377eb8" "dong" dark)
           (list "#4daf4a" "e"    dark)
           (list "#984ea3" "dung" white)
           (list "#ff7f00" "a"    dark)
@@ -373,10 +376,10 @@
   (test-equal "palette repeats with more degrees than colours"
     (list (list "#111111" "a" white)
           (list "#eeeeee" "b" dark)
-          (list "#ff0000" "c" white)
+          (list "#ff0000" "c" dark)
           (list "#111111" "d" white)
           (list "#eeeeee" "e" dark)
-          (list "#ff0000" "f" white)
+          (list "#ff0000" "f" dark)
           (list "#111111" "g" white)
           (list "#111111" "a" white))
     (looks (make-style #:palette '("#111111" "#eeeeee" "#ff0000")) sevens))
@@ -386,8 +389,8 @@
     (append (map (lambda (colour name)
                    (list colour name (text-color-for colour)))
                  dark2 '("p" "q" "r" "s" "t" "u" "v" "w"))
-            (list (list "#1b9e77" "x" white)
-                  (list "#1b9e77" "p" white)))
+            (list (list "#1b9e77" "x" dark)
+                  (list "#1b9e77" "p" dark)))
     (looks (make-style #:palette 'dark2) nines))
   (test-equal "pastel1 has nine colours: nine degrees, no wrap"
     (map (lambda (colour name) (list colour name dark))
@@ -418,7 +421,7 @@
   (test-equal "override on top of a custom palette"
     (list (list "#111111" "a" white)
           (list "#e6ab02" "b" dark)
-          (list "#ff0000" "c" white))
+          (list "#ff0000" "c" dark))
     (take (looks (make-style #:palette '("#111111" "#eeeeee" "#ff0000")
                              #:pitch-colors '((b . "#e6ab02")))
                  sevens)

@@ -284,8 +284,10 @@ picks colours (ADR 0005).
   text with the note label (ADR 0054, since `feat/collapsed-labels`),
   so a scheme chooses only the fill and the text colour.
 - The text colour is `(text-color-for fill)`: white (`#ffffff`) if its
-  WCAG contrast ratio with the fill is at least 3:1 (the minimum for
-  bold text, which note text is), otherwise near-black (`#222222`).
+  WCAG contrast ratio with the fill is at least 4.5:1 (the minimum for
+  normal text, which note text is: it isn't bold since `feat/gallery`;
+  the threshold was 3:1, bold text's minimum, before), otherwise
+  near-black (`#222222`).
   Contrast uses WCAG relative luminance of sRGB:
   each channel c/255 is linearised as c/12.92 if ≤ 0.04045, else
   ((c + 0.055)/1.055)^2.4; L = 0.2126 R + 0.7152 G + 0.0722 B; and the

@@ -302,10 +302,10 @@ Lessons from the prototype (`doc/prototypes/score.typ`):
 3. **Positioned cells.** Notes use `grid.cell(x:, y:, colspan:)`; empty
    cells are filled automatically, so rests need no handling.
 4. **Notes as square blocks** filled with the event's `fill`, with
-   bold text in its `text_color` when `text` isn't `null` (ADR 0019);
+   text in its `text_color` when `text` isn't `null` (ADR 0019);
    an event whose `fill` is `null` is just its text, centred in the
    cell.
-5. **Header row** with bold pulse numbers and `·` for other steps, numbered
+5. **Header row** with pulse numbers and `·` for other steps, numbered
    from `system.start`.
 6. **`score` returns plain content**, systems stacked. It does not make
    a `figure`: in a document, the caption, numbering and label are the
@@ -329,14 +329,14 @@ Lessons from the prototype (`doc/prototypes/score.typ`):
   `row_height`.
 - **Header:** at each step whose absolute number (`system.start` + i)
   is a multiple of `steps_per_pulse`, the pulse number
-  ((`start` + i) / `steps_per_pulse` + 1) in bold; at other steps a
+  ((`start` + i) / `steps_per_pulse` + 1); at other steps a
   grey `·`. A system that doesn't start on a pulse starts with `·`.
 - **Background:** always white, with no shading (ADR 0020). Pulse
   lines (background layer) follow the same absolute steps: a thin
   vertical line (`0.5pt`, `luma(170)`) runs down the left of every step
   that starts a pulse.
 - **Groups:** a horizontal rule (`0.8pt`, `luma(120)`) above each group
-  and below the last. The group label in bold, slightly larger
+  and below the last. The group label slightly larger
   (`1.1em`), with its subtitle under it in grey italics when not
   `null` (after it, on the same line, for a group of one row, which
   has no room for two lines; `feat/targets`), spanning the group's
@@ -346,10 +346,13 @@ Lessons from the prototype (`doc/prototypes/score.typ`):
   no margin, in `fill`, with a thin white border (`0.5pt`) so that
   neighbouring notes stay apart (repeated strokes don't merge into what
   looks like one held note). The `text`, when not `null`, is centred in
-  bold in `text_color`. When `continued` is true the block has no text:
+  `text_color`. When `continued` is true the block has no text:
   it is the same note carrying on from the previous system. When `fill`
-  is `null`, no block: just the text, centred and bold, in
+  is `null`, no block: just the text, centred, in
   `text_color`.
+- No bold in the score (since `feat/gallery`): notes, numbers and
+  labels are in the text's normal weight. Only the standalone title,
+  which the entry file draws, is bold.
 - Sizes relative to the text (`em`, `luma` greys), never absolute font
   sizes or fonts: the surrounding document or entry file sets those.
 
@@ -360,14 +363,16 @@ third layer over the notes, since a grid can't overlap its cells:
 - **Columns and rows** use `cell_width` and `cell_height` for the grid
   cells, and the label columns as before.
 - **Header rows**, from `header`, top to bottom: a cycle row when
-  `cycles` isn't `null`, with each cycle's number in bold at its column;
-  then a pulse row when `pulses` isn't `null`, with each number in bold
+  `cycles` isn't `null`, with each cycle's number at its column;
+  then a pulse row when `pulses` isn't `null`, with each number
   and a grey `·` in columns whose entry is `null`. `header.label`, when
   not `null`, is printed at the left of the pulse row, in the label
   column. The template does no counting.
 - **Lines**, from `lines`, in the background layer: `pulse` as now
   (`0.5pt`, `luma(170)`), `cycle` heavier (`1pt`, `luma(90)`), down the
-  left of the column, through the header and the groups.
+  left of the column, through the header and the groups. The last
+  column is closed on its right by a pulse line, in every row that has
+  pulse lines (since `feat/gallery`).
 - **Overlays**, in the foreground layer, drawn after the notes so they
   sit on top: one cell spanning the overlay's columns and rows, with
   its text centred, near-black (`#222222`), on a small white box at 80%
@@ -385,7 +390,8 @@ version 3's drawing, which follows:
 - **The annotation row**: one row of `cell_height`, above or below the
   group's rows as `position` says, inside the group's frame and rules.
   No fill, no notes, and no row lines or pulse lines through it; cycle
-  lines run through it. Its `label`, when not `null`, is in the
+  lines run through it. A light line (`0.5pt`, `luma(170)`) across the
+  grid columns parts it from the group's rows (since `feat/gallery`). Its `label`, when not `null`, is in the
   row-label column, as a row label is. Each item spans its columns,
   with its text near-black (`#222222`) on one line: aligned as `align`
   says when it fits, otherwise left-aligned and cut at the item's last
