@@ -79,7 +79,7 @@ every example, but only for the repository's examples, into
 
 ## Open
 
-1. **The resolution option.** PNG needs a resolution, and today it is
+1. *(Settled 2026-11-26: `--ppi`.)* The resolution option. PNG needs a resolution, and today it is
    fixed. A new option on `render` sets it. Options for its name:
    `--ppi N` (Typst's own word, pixels per inch), `--dpi N` (the more
    familiar word), `--resolution N`. Leaning: `--ppi`, default Typst's

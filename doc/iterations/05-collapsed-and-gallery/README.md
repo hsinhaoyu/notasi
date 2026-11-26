@@ -1,4 +1,4 @@
-# Iteration 5: not named yet
+# Iteration 5: collapsed scores and the gallery
 
 Status: deciding
 
@@ -10,7 +10,7 @@ rows, and the gallery working: their drawings made and kept in
 
 ## Acceptance test
 
-Proposed (2026-11-25), to be confirmed:
+Agreed (2026-11-26):
 
 1. `examples/gallery/jaya-semara.nts` and `examples/gallery/baris.nts`
    each have a score in collapsed form (`:rows parts` or `compact`),
@@ -74,3 +74,31 @@ Thinking, not the design (ADRs 0023, 0024), in
   `:note-names`.
 - [One glossary, used everywhere](design_ideas/2026-11-25-glossary.md):
   one list of terms, the words not to use, and their names in code.
+
+## Promotion
+
+Agreed (2026-11-26). In dependency order (ADR 0023), with two docs
+first: the glossary, whose terms every later doc uses, and the
+examples move, so the later docs cite the new paths under `examples/`.
+No change to 06 or 08:
+
+1. `glossary.md`, a new design document: one list of terms, replacing
+   the design README's "Glossary" and 01's "Concepts".
+2. `07-environment.md`: `examples/` as `gallery/`, `manual/`, `demos/`
+   and `contrib/`; `make images`; CI failing on an out-of-date image.
+3. `01-notation.md`: `:rows`, `:part-marker`, the annotation row,
+   `:note-label`, the piece information keys, `bapang-8`, `bapang-16`
+   and `gegaboran`.
+4. `02-piece.md` and `03-reader.md`: the piece information fields;
+   the removed options and their errors.
+5. `04-layout.md` and `05-typst-backend.md`: collapsed rows, part
+   markers, the annotation row, contract version 4 (`rows`/`row`);
+   `render --all`, `--one-file`, `--list`, `--format`, `--ppi` and
+   `--save-piece`.
+6. The build order in `doc/design/README.md`.
+
+Settled before promotion (2026-11-26): the piece's free-text key is
+`:remarks`; PNG resolution is `--ppi N`; the glossary is promoted as
+drafted.
+
+Promoted so far: none.

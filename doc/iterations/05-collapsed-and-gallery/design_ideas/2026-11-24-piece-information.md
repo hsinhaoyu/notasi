@@ -76,9 +76,8 @@ where notasi can't use it. For `examples/jaya-semara.nts`:
 10. *(Settled 2026-11-25: in the string.)* Performer and year:
     `:performer "Sanggar Çudamani, 2005"`; a `:performance-year` key
     only if a piece needs it apart.
-11. **The key's name.** *(2026-11-25: to be chosen with the
-    [glossary](2026-11-25-glossary.md); `:annotation` is now a
-    pattern's text, so it is not available here.)* In notasi a note is a musical note; ADR 0024
+11. *(Settled 2026-11-26: `:remarks`.)* The key's name. `:annotation` is now a
+    pattern's text, so it is not available here. In notasi a note is a musical note; ADR 0024
     renamed iterations' `notes/` folder for that reason. `:notes "..."`
     on a piece could be read as music. Options: `:notes`, `:remarks`,
     `:comment`, `:about`. Leaning: `:remarks`, keeping "notes" as the
