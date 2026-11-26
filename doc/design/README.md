@@ -84,6 +84,18 @@ See [its README](../iterations/04-emacs-mode/README.md).
    chapter, and the install on a fresh Emacs (the acceptance test's run by
    hand is deferred, see the backlog)
 
+### Iteration 5: collapsed scores and the gallery (building)
+
+See [its README](../iterations/05-collapsed-and-gallery/README.md).
+
+1. `feat/render-all`: `notasi render --all` and its options
+2. `feat/examples`: `examples/` in four folders, committed images
+3. `feat/collapsed`: compact rows, note labels, part markers and the
+   annotation row; five slices, see the iteration's README
+4. `feat/save-piece`: saving the piece
+5. `feat/gallery`: the acceptance test: Jaya Semara and Baris in the
+   gallery
+
 ### Deferred
 
 Scores in Typst documents (06) and the old "v2 features" are in the
@@ -124,6 +136,7 @@ Each decision's context and consequences are in its record in
 28. An Emacs package ships with notasi and only runs the command: [0050](../decisions/0050-an-emacs-package-ships-with-notasi.md)
 29. One glossary names things in the documents and the code: [0051](../decisions/0051-one-glossary-names-things-everywhere.md)
 30. The piece can be saved, with `notasi render --save-piece`: [0058](../decisions/0058-the-piece-can-be-saved.md)
+31. `notasi render --all` draws every score of a file: [0061](../decisions/0061-render-draws-every-score-with-all.md)
 
 Proposed, not yet agreed:
 

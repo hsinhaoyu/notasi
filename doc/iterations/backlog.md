@@ -131,3 +131,6 @@ In the Emacs package (08):
 - **`bapang-32` in the template**, when a piece needs it; until then it
   is written in the piece
   ([bapang](05-collapsed-and-gallery/design_ideas/2026-11-24-bapang-and-colotomy.md), question 2).
+- **Drawing every score from Emacs**: the package draws one score
+  with `-o`; a command that runs `notasi render --all` could come later
+  ([drawing every score](05-collapsed-and-gallery/design_ideas/2026-11-25-render-all-scores.md)).

@@ -1,6 +1,6 @@
 # Iteration 5: collapsed scores and the gallery
 
-Status: deciding
+Status: building
 
 ## Goal
 
@@ -101,4 +101,48 @@ Settled before promotion (2026-11-26): the piece's free-text key is
 `:remarks`; PNG resolution is `--ppi N`; the glossary is promoted as
 drafted.
 
-Promoted so far: `glossary.md` (ADR 0051; its rule in CLAUDE.md and `/doc-audit` in #112), `07-environment.md` (ADR 0052), `01-notation.md` (ADRs 0053–0057), `02-piece.md` (ADR 0058), `03-reader.md`, `04-layout.md` (ADRs 0059, 0060).
+Promoted so far: `glossary.md` (ADR 0051; its rule in CLAUDE.md and `/doc-audit` in #112), `07-environment.md` (ADR 0052), `01-notation.md` (ADRs 0053–0057), `02-piece.md` (ADR 0058), `03-reader.md`, `04-layout.md` (ADRs 0059, 0060), `05-typst-backend.md` (ADR 0061), and the build order. Promotion is complete.
+
+## Milestones
+
+Each milestone, or each slice of one, is its own branch and PR into
+`dev`, started with `/start-milestone <branch>`. After each one,
+`make check` passes and the manual describes what the code does.
+Contract version 4 (ADR 0059) is opened by the first slice that
+changes the figure, and each later one adds to it.
+
+1. **`feat/render-all`** (05, ADR 0061), with no slices: `notasi
+   render --all`, `--one-file`, `--list`, `--format` and `--ppi`; one
+   line per file drawn; `--help`; the manual's page on drawing. First,
+   since `make images` uses it.
+2. **`feat/examples`** (07, ADR 0052), with no slices: `examples/`
+   in four folders, the manual's examples, templates and mistakes moved
+   to `examples/manual/`; the tests reading the new folders, and names
+   unique across `examples/`; `make images`, the committed PNGs, and
+   CI failing on an out-of-date image; `make manual` copying the
+   images; `make preview` removed; README and CLAUDE.md.
+3. **`feat/collapsed`** (01–05, ADRs 0051, 0053–0057, 0059, 0060), in
+   five slices:
+   1. `feat/collapsed-terms`: the glossary's names in code (`pitch`,
+      `scale-pitches`, `note-pitch`, the error kinds), `by-pitch` and
+      `pitch-colors`; the piece information keys; `bapang-8`,
+      `bapang-16` and `gegaboran`.
+   2. `feat/collapsed-labels`: `:note-label`, `:row-labels`,
+      `:row-label-octave` and `:note-label-octave` in place of
+      `:note-names` and `:octave-numbers`; `needs-note-label`; contract
+      version 4 opened, with `rows`, `row` and `row_label_width`.
+   3. `feat/collapsed-compact`: `:rows compact` in place of `single`,
+      rows by key, and `notes-collide` on compact rows.
+   4. `feat/collapsed-markers`: `:part-marker`, each voice's `marker`,
+      and the template's marks.
+   5. `feat/collapsed-annotation`: the annotation row, pattern
+      annotations and `(text ...)`, in place of `:pattern-names`,
+      `:pattern-level` and the overlays.
+4. **`feat/save-piece`** (02, 05, ADR 0058), with no slices:
+   `--save-piece` as JSON and as an s-expression, its golden files,
+   and its manual section. After `feat/collapsed`, so it saves the
+   records in their final form.
+5. **`feat/gallery`**, the acceptance test, with no slices: Jaya Semara
+   and Baris in `examples/gallery/` with collapsed scores and
+   annotation rows, their piece information, their images committed,
+   and a gallery picture in the README.
