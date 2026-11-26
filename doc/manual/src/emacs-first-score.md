@@ -4,14 +4,14 @@ Save this piece as `pokok.nts`, in a folder of your own, and open it in
 Emacs:
 
 ```scheme
-{{#include examples/drawing.nts}}
+{{#include ../../../examples/manual/drawing.nts}}
 ```
 
 Emacs knows a `.nts` file: the forms are coloured, and the notes, rests
 and holds of each part each have a colour of their own. A moment later,
 a window opens beside the text with the score drawn in it:
 
-![The score shown beside the text](figures/drawing.svg)
+![The score shown beside the text](figures/drawing.png)
 
 Above the picture, the window's header line shows the piece's title,
 and the score's name when the file has `score` forms. While a drawing

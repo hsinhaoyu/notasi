@@ -6,7 +6,7 @@ two players share the reyong, one playing polos and the other sangsih.
 Give each part its own name with `:name`:
 
 ```scheme
-{{#include examples/two-parts.nts}}
+{{#include ../../../examples/manual/two-parts.nts}}
 ```
 
 The reyong has two parts here, `polos` and `sangsih`. The gong has

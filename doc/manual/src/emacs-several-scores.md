@@ -4,19 +4,19 @@ A file can print its music in several ways, with a `score` form for
 each (see [scores](scores.md)). This one has two:
 
 ```scheme
-{{#include examples/scores-excerpt.nts}}
+{{#include ../../../examples/manual/scores-excerpt.nts}}
 ```
 
 ## The score the cursor is in
 
 When you open the file, the preview shows the first score, `whole`:
 
-![The first score, whole](figures/scores-excerpt_whole.svg)
+![The first score, whole](figures/scores-excerpt_whole.png)
 
 Move the cursor into `(score second …)`, and the picture switches to
 that score:
 
-![The second score](figures/scores-excerpt_second.svg)
+![The second score](figures/scores-excerpt_second.png)
 
 Move the cursor out again, into the parts, and the picture stays on the
 score you were last in, so you can change the music and watch that

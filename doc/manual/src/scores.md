@@ -6,10 +6,10 @@ score, notasi draws every part in a block of its own. With one, you
 choose:
 
 ```scheme
-{{#include examples/scores.nts}}
+{{#include ../../../examples/manual/scores.nts}}
 ```
 
-![The kotekan above, drawn from its score](figures/scores.svg)
+![The kotekan above, drawn from its score](figures/scores.png)
 
 - `(score full …)` names the score. A file can have more than one;
   notasi draws the first, or the one you choose (see
@@ -53,10 +53,10 @@ every key of the instrument instead, number the keys, and choose how
 the rows are labelled:
 
 ```scheme
-{{#include examples/scores-keys.nts}}
+{{#include ../../../examples/manual/scores-keys.nts}}
 ```
 
-![Every key of the ugal, numbered](figures/scores-keys.svg)
+![Every key of the ugal, numbered](figures/scores-keys.png)
 
 | Setting | Where | What it does |
 |---|---|---|
@@ -75,10 +75,10 @@ A score can also print music the way it is sung, with names instead of
 colours:
 
 ```scheme
-{{#include examples/scores-rows.nts}}
+{{#include ../../../examples/manual/scores-rows.nts}}
 ```
 
-![The sung lines above](figures/scores-rows.svg)
+![The sung lines above](figures/scores-rows.png)
 
 | Setting | Where | What it does |
 |---|---|---|
@@ -100,16 +100,16 @@ and `na'` is cut short.
 A score can print part of a piece, and choose where its lines break:
 
 ```scheme
-{{#include examples/scores-excerpt.nts}}
+{{#include ../../../examples/manual/scores-excerpt.nts}}
 ```
 
 The first score, `whole`, starts a new line at each cycle:
 
-![The whole piece, a cycle on each line](figures/scores-excerpt_whole.svg)
+![The whole piece, a cycle on each line](figures/scores-excerpt_whole.png)
 
 The second, `second`, prints one cycle, counted with the gong on 1:
 
-![The second cycle alone](figures/scores-excerpt_second.svg)
+![The second cycle alone](figures/scores-excerpt_second.png)
 
 | Setting | Where | What it does |
 |---|---|---|

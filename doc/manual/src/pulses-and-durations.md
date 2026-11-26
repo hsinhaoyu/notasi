@@ -7,7 +7,7 @@ Each note lasts one pulse unless you say otherwise. To give a note
 another length, write it after a colon:
 
 ```scheme
-{{#include examples/durations.nts}}
+{{#include ../../../examples/manual/durations.nts}}
 ```
 
 - The ugal plays one note to each pulse, so it needs no lengths.

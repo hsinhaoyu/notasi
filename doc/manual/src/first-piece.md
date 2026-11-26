@@ -6,7 +6,7 @@ A notasi piece is a plain text file whose name ends in `.nts`, such as
 Every piece starts with a title. Here is a whole file:
 
 ```scheme
-{{#include examples/first-piece.nts}}
+{{#include ../../../examples/manual/first-piece.nts}}
 ```
 
 - `(piece "Gilak for practice")` names the piece. The title goes in

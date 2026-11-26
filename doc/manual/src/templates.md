@@ -9,7 +9,7 @@ instruments that any piece can load with one line: `use`.
 notasi comes with a `gong-kebyar` template:
 
 ```scheme
-{{#include examples/use-gong-kebyar.nts}}
+{{#include ../../../examples/manual/use-gong-kebyar.nts}}
 ```
 
 `(use gong-kebyar)` gives the piece:
@@ -51,13 +51,13 @@ only `scale`, `strokes`, `instrument`, `colotomy`, `pattern` and `use`
 lines, with no `piece` line:
 
 ```scheme
-{{#include examples/templates/my-gamelan.nts}}
+{{#include ../../../examples/manual/templates/my-gamelan.nts}}
 ```
 
 Then load it by its file name, in double quotes:
 
 ```scheme
-{{#include examples/use-my-gamelan.nts}}
+{{#include ../../../examples/manual/use-my-gamelan.nts}}
 ```
 
 The file name is looked up from the folder of the piece, so this
@@ -71,7 +71,7 @@ that one in your piece. Your own definition replaces the template's,
 and everything else still comes from the template:
 
 ```scheme
-{{#include examples/replace-an-instrument.nts}}
+{{#include ../../../examples/manual/replace-an-instrument.nts}}
 ```
 
 The same works for a scale: if you redefine `selisir`, the template's
