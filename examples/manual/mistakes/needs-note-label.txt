@@ -1,0 +1,1 @@
+needs-note-label.nts:6: group `Reyong' draws no boxes (:fill none), so its notes need a label: give it a :note-label, such as pitch-display-name

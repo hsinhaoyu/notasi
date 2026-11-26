@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "title": "Norot kotekan against the pokok",
   "subtitle": null,
   "steps_per_pulse": 4,
@@ -7,7 +7,7 @@
     "font_size": null,
     "label_width": "9.3em",
     "key_width": "0.0em",
-    "lane_width": "2.0em",
+    "row_label_width": "2.0em",
     "cell_width": "2em",
     "cell_height": "2em"
   },
@@ -27,7 +27,7 @@
         {
           "label": "Gangsa pemade",
           "subtitle": null,
-          "lanes": ["u3", "e3", "o3", "i3", "a2"],
+          "rows": ["u3", "e3", "o3", "i3", "a2"],
           "key_numbers": null,
           "voices": [
             {
@@ -36,7 +36,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -45,7 +45,7 @@
                 {
                   "start": 1,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -54,7 +54,7 @@
                 {
                   "start": 2,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -63,7 +63,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -72,7 +72,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -81,7 +81,7 @@
                 {
                   "start": 8,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -90,7 +90,7 @@
                 {
                   "start": 9,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -99,7 +99,7 @@
                 {
                   "start": 10,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -108,7 +108,7 @@
                 {
                   "start": 12,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -117,7 +117,7 @@
                 {
                   "start": 14,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -126,7 +126,7 @@
                 {
                   "start": 16,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -135,7 +135,7 @@
                 {
                   "start": 17,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -144,7 +144,7 @@
                 {
                   "start": 18,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -153,7 +153,7 @@
                 {
                   "start": 20,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -162,7 +162,7 @@
                 {
                   "start": 22,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -171,7 +171,7 @@
                 {
                   "start": 24,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -180,7 +180,7 @@
                 {
                   "start": 25,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -189,7 +189,7 @@
                 {
                   "start": 26,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -198,7 +198,7 @@
                 {
                   "start": 28,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -207,7 +207,7 @@
                 {
                   "start": 30,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -221,7 +221,7 @@
                 {
                   "start": 3,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -230,7 +230,7 @@
                 {
                   "start": 5,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -239,7 +239,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -248,7 +248,7 @@
                 {
                   "start": 11,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -257,7 +257,7 @@
                 {
                   "start": 13,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -266,7 +266,7 @@
                 {
                   "start": 15,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -275,7 +275,7 @@
                 {
                   "start": 19,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#decbe4",
                   "text_color": "#222222",
@@ -284,7 +284,7 @@
                 {
                   "start": 21,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#decbe4",
                   "text_color": "#222222",
@@ -293,7 +293,7 @@
                 {
                   "start": 23,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#decbe4",
                   "text_color": "#222222",
@@ -302,7 +302,7 @@
                 {
                   "start": 27,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -311,7 +311,7 @@
                 {
                   "start": 29,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -320,7 +320,7 @@
                 {
                   "start": 31,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -369,7 +369,7 @@
         {
           "label": "Jublag",
           "subtitle": null,
-          "lanes": ["a2", "e2", "o2", "i2"],
+          "rows": ["a2", "e2", "o2", "i2"],
           "key_numbers": null,
           "voices": [
             {
@@ -378,7 +378,7 @@
                 {
                   "start": 0,
                   "dur": 4,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -387,7 +387,7 @@
                 {
                   "start": 4,
                   "dur": 8,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -396,7 +396,7 @@
                 {
                   "start": 12,
                   "dur": 8,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -405,7 +405,7 @@
                 {
                   "start": 20,
                   "dur": 8,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -414,7 +414,7 @@
                 {
                   "start": 28,
                   "dur": 4,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",

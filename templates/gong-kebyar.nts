@@ -23,7 +23,7 @@
 (instrument trompong  selisir  a1 i2 o2 e2 u2 a2 i3 o3 e3 u3)
 (instrument reyong    selisir  e2 u2 a2 i3 o3 e3 u3 a3 i4 o4 e4 u4)
 
-;; Stroke instruments.  A score shows their names with :note-names.
+;; Stroke instruments.  A score shows their names with :note-label.
 (instrument kempli  kempli-strokes   K)
 (instrument gong    gong-strokes     G GL P T)
 (instrument kendang kendang-strokes  dag dug du)

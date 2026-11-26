@@ -14,6 +14,6 @@
 (part :instrument reyong :name sangsih  e3:1/4 o3 e3 _  | o3 e3 _  o3 | _  e3 o3 _  | e3 o3 e3 _)
 
 ;; Each part on a row of its own, names only, "-" while a note is held.
-(score sung :fill none :note-names yes :rows parts :holds dash
+(score sung :fill none :note-label pitch-display-name :note-label-octave no :rows parts :holds dash
     :cell-width "3em"
   (group "Reyong" (polos :label "Polos") (sangsih :label "Sangsih")))

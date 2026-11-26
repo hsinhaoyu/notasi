@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "title": "Gilak",
   "subtitle": null,
   "steps_per_pulse": 1,
@@ -7,7 +7,7 @@
     "font_size": null,
     "label_width": "4.5em",
     "key_width": "0.0em",
-    "lane_width": "2.0em",
+    "row_label_width": "2.0em",
     "cell_width": "2em",
     "cell_height": "2em"
   },
@@ -32,7 +32,7 @@
         {
           "label": "Ugal",
           "subtitle": null,
-          "lanes": ["u2", "e2", "o2", "i2", "a1"],
+          "rows": ["u2", "e2", "o2", "i2", "a1"],
           "key_numbers": null,
           "voices": [
             {
@@ -41,7 +41,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -57,7 +57,7 @@
         {
           "label": "Gong",
           "subtitle": null,
-          "lanes": ["G", "GL", "P"],
+          "rows": ["G", "GL", "P"],
           "key_numbers": null,
           "voices": [
             {
@@ -66,7 +66,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -101,7 +101,7 @@
         {
           "label": "U.",
           "subtitle": null,
-          "lanes": ["u2", "e2", "o2", "i2", "a1"],
+          "rows": ["u2", "e2", "o2", "i2", "a1"],
           "key_numbers": null,
           "voices": [
             {
@@ -110,7 +110,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -119,7 +119,7 @@
                 {
                   "start": 1,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -128,7 +128,7 @@
                 {
                   "start": 2,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -137,7 +137,7 @@
                 {
                   "start": 3,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -146,7 +146,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -155,7 +155,7 @@
                 {
                   "start": 5,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -164,7 +164,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -173,7 +173,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -189,7 +189,7 @@
         {
           "label": "G.",
           "subtitle": null,
-          "lanes": ["G", "GL", "P"],
+          "rows": ["G", "GL", "P"],
           "key_numbers": null,
           "voices": [
             {
@@ -198,7 +198,7 @@
                 {
                   "start": 3,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -207,7 +207,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -216,7 +216,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -225,7 +225,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -260,7 +260,7 @@
         {
           "label": "U.",
           "subtitle": null,
-          "lanes": ["u2", "e2", "o2", "i2", "a1"],
+          "rows": ["u2", "e2", "o2", "i2", "a1"],
           "key_numbers": null,
           "voices": [
             {
@@ -269,7 +269,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -278,7 +278,7 @@
                 {
                   "start": 1,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#decbe4",
                   "text_color": "#222222",
@@ -287,7 +287,7 @@
                 {
                   "start": 2,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -296,7 +296,7 @@
                 {
                   "start": 3,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -305,7 +305,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -314,7 +314,7 @@
                 {
                   "start": 5,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -323,7 +323,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -332,7 +332,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -348,7 +348,7 @@
         {
           "label": "G.",
           "subtitle": null,
-          "lanes": ["G", "GL", "P"],
+          "rows": ["G", "GL", "P"],
           "key_numbers": null,
           "voices": [
             {
@@ -357,7 +357,7 @@
                 {
                   "start": 3,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -366,7 +366,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -375,7 +375,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -384,7 +384,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -419,7 +419,7 @@
         {
           "label": "U.",
           "subtitle": null,
-          "lanes": ["u2", "e2", "o2", "i2", "a1"],
+          "rows": ["u2", "e2", "o2", "i2", "a1"],
           "key_numbers": null,
           "voices": [
             {
@@ -428,7 +428,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -437,7 +437,7 @@
                 {
                   "start": 1,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -446,7 +446,7 @@
                 {
                   "start": 2,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -455,7 +455,7 @@
                 {
                   "start": 3,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -464,7 +464,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -473,7 +473,7 @@
                 {
                   "start": 5,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -482,7 +482,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -491,7 +491,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -507,7 +507,7 @@
         {
           "label": "G.",
           "subtitle": null,
-          "lanes": ["G", "GL", "P"],
+          "rows": ["G", "GL", "P"],
           "key_numbers": null,
           "voices": [
             {
@@ -516,7 +516,7 @@
                 {
                   "start": 3,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -525,7 +525,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -534,7 +534,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -543,7 +543,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#e6e6e6",
                   "text_color": "#222222",

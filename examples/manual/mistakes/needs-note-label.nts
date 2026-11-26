@@ -3,4 +3,4 @@
 (part :instrument reyong :name polos 1 2 3 4)
 (part :instrument reyong :name sangsih 4 3 2 1)
 (score full
-  (group "Reyong" :rows parts polos sangsih))
+  (group "Reyong" :fill none polos sangsih))

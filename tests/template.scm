@@ -145,14 +145,14 @@ prints no warning.  Typst's output is shown when either fails."
 
 (define no-systems
   "{
-  \"version\": 3,
+  \"version\": 4,
   \"title\": \"Nothing\",
   \"subtitle\": null,
   \"steps_per_pulse\": 4,
   \"sizes\": {
     \"font_size\": null,
     \"label_width\": \"5em\",
-    \"lane_width\": \"2.0em\",
+    \"row_label_width\": \"2.0em\",
     \"cell_width\": \"2em\",
     \"cell_height\": \"2em\"
   },
@@ -166,14 +166,14 @@ prints no warning.  Typst's output is shown when either fails."
 ;; group with no events.  No colotomy: no cycle row, pulse lines only.
 (define off-pulse
   "{
-  \"version\": 3,
+  \"version\": 4,
   \"title\": \"Off pulse\",
   \"subtitle\": null,
   \"steps_per_pulse\": 4,
   \"sizes\": {
     \"font_size\": null,
     \"label_width\": \"6em\",
-    \"lane_width\": \"2.5em\",
+    \"row_label_width\": \"2.5em\",
     \"cell_width\": \"2em\",
     \"cell_height\": \"2em\"
   },
@@ -192,7 +192,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Reyong\",
           \"subtitle\": null,
-          \"lanes\": [\"nong1\", \"nang1\"],
+          \"rows\": [\"nong1\", \"nang1\"],
           \"voices\": [
             {
               \"name\": \"polos\",
@@ -200,7 +200,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 2,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": \"nang\",
                   \"fill\": \"#1b9e77\",
                   \"text_color\": \"#ffffff\",
@@ -209,7 +209,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 3,
                   \"dur\": 1,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": \"x\",
                   \"fill\": null,
                   \"text_color\": \"#222222\",
@@ -223,7 +223,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Kendang\",
           \"subtitle\": \"wadon\",
-          \"lanes\": [\"dag\"],
+          \"rows\": [\"dag\"],
           \"voices\": [
             {
               \"name\": \"wadon\",
@@ -245,14 +245,14 @@ prints no warning.  Typst's output is shown when either fails."
 ;; cycle mark at column 2, numbered gong-first.
 (define header-rows
   "{
-  \"version\": 3,
+  \"version\": 4,
   \"title\": \"Header rows\",
   \"subtitle\": \"pangecet\",
   \"steps_per_pulse\": 2,
   \"sizes\": {
     \"font_size\": \"10pt\",
     \"label_width\": \"5em\",
-    \"lane_width\": \"2.0em\",
+    \"row_label_width\": \"2.0em\",
     \"cell_width\": \"1.5em\",
     \"cell_height\": \"2.5em\"
   },
@@ -271,7 +271,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Ugal\",
           \"subtitle\": null,
-          \"lanes\": [\"i2\", \"a1\"],
+          \"rows\": [\"i2\", \"a1\"],
           \"voices\": [
             {
               \"name\": \"ugal\",
@@ -279,7 +279,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 2,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": null,
                   \"fill\": \"#fed9a6\",
                   \"text_color\": \"#222222\",
@@ -288,7 +288,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 2,
                   \"dur\": 4,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": \"i\",
                   \"fill\": \"#fbb4ae\",
                   \"text_color\": \"#222222\",
@@ -315,7 +315,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Ugal\",
           \"subtitle\": null,
-          \"lanes\": [\"i2\", \"a1\"],
+          \"rows\": [\"i2\", \"a1\"],
           \"voices\": [
             {
               \"name\": \"ugal\",
@@ -323,7 +323,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 2,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": null,
                   \"fill\": \"#fbb4ae\",
                   \"text_color\": \"#222222\",
@@ -350,7 +350,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Ugal\",
           \"subtitle\": null,
-          \"lanes\": [\"i2\", \"a1\"],
+          \"rows\": [\"i2\", \"a1\"],
           \"voices\": [
             {
               \"name\": \"ugal\",
@@ -370,14 +370,14 @@ prints no warning.  Typst's output is shown when either fails."
 ;; pulse label and a cycle line.
 (define no-header-rows
   "{
-  \"version\": 3,
+  \"version\": 4,
   \"title\": \"\",
   \"subtitle\": null,
   \"steps_per_pulse\": 1,
   \"sizes\": {
     \"font_size\": null,
     \"label_width\": \"3em\",
-    \"lane_width\": \"1.5em\",
+    \"row_label_width\": \"1.5em\",
     \"cell_width\": \"2em\",
     \"cell_height\": \"2em\"
   },
@@ -396,7 +396,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Gong\",
           \"subtitle\": null,
-          \"lanes\": [\"G\"],
+          \"rows\": [\"G\"],
           \"voices\": [
             {
               \"name\": \"gong\",
@@ -404,7 +404,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 1,
                   \"dur\": 1,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": \"G\",
                   \"fill\": \"#cccccc\",
                   \"text_color\": \"#222222\",
@@ -428,14 +428,14 @@ prints no warning.  Typst's output is shown when either fails."
 ;; of them starting the second system; a held note cut into it.
 (define rows
   "{
-  \"version\": 3,
+  \"version\": 4,
   \"title\": \"Rows\",
   \"subtitle\": null,
   \"steps_per_pulse\": 1,
   \"sizes\": {
     \"font_size\": null,
     \"label_width\": \"6.3em\",
-    \"lane_width\": \"4.6em\",
+    \"row_label_width\": \"4.6em\",
     \"cell_width\": \"2em\",
     \"cell_height\": \"2em\"
   },
@@ -454,25 +454,25 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Kotekan\",
           \"subtitle\": null,
-          \"lanes\": [\"polos\", \"sangsih\"],
+          \"rows\": [\"polos\", \"sangsih\"],
           \"voices\": [
             {
               \"name\": \"polos\",
               \"events\": [
-                { \"start\": 0, \"dur\": 1, \"lane\": 0, \"text\": \"i\",
+                { \"start\": 0, \"dur\": 1, \"row\": 0, \"text\": \"i\",
                   \"fill\": \"#fbb4ae\", \"text_color\": \"#222222\", \"continued\": false },
-                { \"start\": 1, \"dur\": 1, \"lane\": 0, \"text\": \"-\",
+                { \"start\": 1, \"dur\": 1, \"row\": 0, \"text\": \"-\",
                   \"fill\": null, \"text_color\": \"#222222\", \"continued\": false },
-                { \"start\": 2, \"dur\": 1, \"lane\": 0, \"text\": \"o'\",
+                { \"start\": 2, \"dur\": 1, \"row\": 0, \"text\": \"o'\",
                   \"fill\": \"#b3cde3\", \"text_color\": \"#222222\", \"continued\": false }
               ]
             },
             {
               \"name\": \"sangsih\",
               \"events\": [
-                { \"start\": 1, \"dur\": 1, \"lane\": 1, \"text\": \"i' o'\",
+                { \"start\": 1, \"dur\": 1, \"row\": 1, \"text\": \"i' o'\",
                   \"fill\": \"#fbb4ae\", \"text_color\": \"#222222\", \"continued\": false },
-                { \"start\": 3, \"dur\": 1, \"lane\": 1, \"text\": \"nang\",
+                { \"start\": 3, \"dur\": 1, \"row\": 1, \"text\": \"nang\",
                   \"fill\": \"#fed9a6\", \"text_color\": \"#222222\", \"continued\": false }
               ]
             }
@@ -482,18 +482,18 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Sung\",
           \"subtitle\": null,
-          \"lanes\": [\"\"],
+          \"rows\": [\"\"],
           \"voices\": [
             {
               \"name\": \"vocal\",
               \"events\": [
-                { \"start\": 0, \"dur\": 1, \"lane\": 0, \"text\": \"nang\",
+                { \"start\": 0, \"dur\": 1, \"row\": 0, \"text\": \"nang\",
                   \"fill\": null, \"text_color\": \"#222222\", \"continued\": false },
-                { \"start\": 1, \"dur\": 1, \"lane\": 0, \"text\": \"-\",
+                { \"start\": 1, \"dur\": 1, \"row\": 0, \"text\": \"-\",
                   \"fill\": null, \"text_color\": \"#222222\", \"continued\": false },
-                { \"start\": 2, \"dur\": 1, \"lane\": 0, \"text\": \"-\",
+                { \"start\": 2, \"dur\": 1, \"row\": 0, \"text\": \"-\",
                   \"fill\": null, \"text_color\": \"#222222\", \"continued\": false },
-                { \"start\": 3, \"dur\": 1, \"lane\": 0, \"text\": \"ni'\",
+                { \"start\": 3, \"dur\": 1, \"row\": 0, \"text\": \"ni'\",
                   \"fill\": null, \"text_color\": \"#222222\", \"continued\": false }
               ]
             }
@@ -516,7 +516,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Kotekan\",
           \"subtitle\": null,
-          \"lanes\": [\"polos\", \"sangsih\"],
+          \"rows\": [\"polos\", \"sangsih\"],
           \"voices\": [
             {
               \"name\": \"polos\",
@@ -525,7 +525,7 @@ prints no warning.  Typst's output is shown when either fails."
             {
               \"name\": \"sangsih\",
               \"events\": [
-                { \"start\": 0, \"dur\": 1, \"lane\": 1, \"text\": \"nang\",
+                { \"start\": 0, \"dur\": 1, \"row\": 1, \"text\": \"nang\",
                   \"fill\": \"#fed9a6\", \"text_color\": \"#222222\", \"continued\": true }
               ]
             }
@@ -535,12 +535,12 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Sung\",
           \"subtitle\": null,
-          \"lanes\": [\"\"],
+          \"rows\": [\"\"],
           \"voices\": [
             {
               \"name\": \"vocal\",
               \"events\": [
-                { \"start\": 0, \"dur\": 1, \"lane\": 0, \"text\": \"-\",
+                { \"start\": 0, \"dur\": 1, \"row\": 0, \"text\": \"-\",
                   \"fill\": null, \"text_color\": \"#222222\", \"continued\": false }
               ]
             }
@@ -562,14 +562,14 @@ prints no warning.  Typst's output is shown when either fails."
 ;; has none.
 (define overlays
   "{
-  \"version\": 3,
+  \"version\": 4,
   \"title\": \"Overlays\",
   \"subtitle\": null,
   \"steps_per_pulse\": 1,
   \"sizes\": {
     \"font_size\": null,
     \"label_width\": \"6.3em\",
-    \"lane_width\": \"4.6em\",
+    \"row_label_width\": \"4.6em\",
     \"cell_width\": \"2em\",
     \"cell_height\": \"2em\"
   },
@@ -588,16 +588,16 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Gangsa\",
           \"subtitle\": null,
-          \"lanes\": [\"e2\", \"o2\", \"i2\"],
+          \"rows\": [\"e2\", \"o2\", \"i2\"],
           \"voices\": [
             {
               \"name\": \"polos\",
               \"events\": [
-                { \"start\": 0, \"dur\": 1, \"lane\": 2, \"text\": null,
+                { \"start\": 0, \"dur\": 1, \"row\": 2, \"text\": null,
                   \"fill\": \"#fbb4ae\", \"text_color\": \"#222222\", \"continued\": false },
-                { \"start\": 1, \"dur\": 1, \"lane\": 1, \"text\": null,
+                { \"start\": 1, \"dur\": 1, \"row\": 1, \"text\": null,
                   \"fill\": \"#b3cde3\", \"text_color\": \"#222222\", \"continued\": false },
-                { \"start\": 2, \"dur\": 2, \"lane\": 0, \"text\": null,
+                { \"start\": 2, \"dur\": 2, \"row\": 0, \"text\": null,
                   \"fill\": \"#ccebc5\", \"text_color\": \"#222222\", \"continued\": false }
               ]
             }
@@ -612,19 +612,19 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Kotekan\",
           \"subtitle\": null,
-          \"lanes\": [\"polos\", \"sangsih\"],
+          \"rows\": [\"polos\", \"sangsih\"],
           \"voices\": [
             {
               \"name\": \"polos\",
               \"events\": [
-                { \"start\": 1, \"dur\": 1, \"lane\": 0, \"text\": \"i\",
+                { \"start\": 1, \"dur\": 1, \"row\": 0, \"text\": \"i\",
                   \"fill\": \"#fbb4ae\", \"text_color\": \"#222222\", \"continued\": false }
               ]
             },
             {
               \"name\": \"sangsih\",
               \"events\": [
-                { \"start\": 2, \"dur\": 1, \"lane\": 1, \"text\": \"o'\",
+                { \"start\": 2, \"dur\": 1, \"row\": 1, \"text\": \"o'\",
                   \"fill\": \"#b3cde3\", \"text_color\": \"#222222\", \"continued\": false }
               ]
             }
@@ -637,12 +637,12 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Sung\",
           \"subtitle\": null,
-          \"lanes\": [\"\"],
+          \"rows\": [\"\"],
           \"voices\": [
             {
               \"name\": \"vocal\",
               \"events\": [
-                { \"start\": 0, \"dur\": 1, \"lane\": 0, \"text\": \"nang\",
+                { \"start\": 0, \"dur\": 1, \"row\": 0, \"text\": \"nang\",
                   \"fill\": null, \"text_color\": \"#222222\", \"continued\": false }
               ]
             }
@@ -655,12 +655,12 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Gong\",
           \"subtitle\": null,
-          \"lanes\": [\"G\"],
+          \"rows\": [\"G\"],
           \"voices\": [
             {
               \"name\": \"gong\",
               \"events\": [
-                { \"start\": 3, \"dur\": 1, \"lane\": 0, \"text\": null,
+                { \"start\": 3, \"dur\": 1, \"row\": 0, \"text\": null,
                   \"fill\": \"#cccccc\", \"text_color\": \"#222222\", \"continued\": false }
               ]
             }
@@ -683,12 +683,12 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Gangsa\",
           \"subtitle\": null,
-          \"lanes\": [\"e2\", \"o2\", \"i2\"],
+          \"rows\": [\"e2\", \"o2\", \"i2\"],
           \"voices\": [
             {
               \"name\": \"polos\",
               \"events\": [
-                { \"start\": 0, \"dur\": 1, \"lane\": 0, \"text\": null,
+                { \"start\": 0, \"dur\": 1, \"row\": 0, \"text\": null,
                   \"fill\": \"#ccebc5\", \"text_color\": \"#222222\", \"continued\": true }
               ]
             }
@@ -701,7 +701,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Kotekan\",
           \"subtitle\": null,
-          \"lanes\": [\"polos\", \"sangsih\"],
+          \"rows\": [\"polos\", \"sangsih\"],
           \"voices\": [
             { \"name\": \"polos\", \"events\": [] },
             { \"name\": \"sangsih\", \"events\": [] }
@@ -711,7 +711,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Sung\",
           \"subtitle\": null,
-          \"lanes\": [\"\"],
+          \"rows\": [\"\"],
           \"voices\": [ { \"name\": \"vocal\", \"events\": [] } ],
           \"overlays\": [
             { \"start\": 1, \"dur\": 1, \"row\": 0, \"rows\": 1,
@@ -721,7 +721,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Gong\",
           \"subtitle\": null,
-          \"lanes\": [\"G\"],
+          \"rows\": [\"G\"],
           \"voices\": [ { \"name\": \"gong\", \"events\": [] } ],
           \"overlays\": []
         }
@@ -739,14 +739,14 @@ prints no warning.  Typst's output is shown when either fails."
 ;; null.
 (define v3-header
   "{
-  \"version\": 3,
+  \"version\": 4,
   \"title\": \"Version 3 header\",
   \"subtitle\": null,
   \"steps_per_pulse\": 4,
   \"sizes\": {
     \"font_size\": null,
     \"label_width\": \"4.5em\",
-    \"lane_width\": \"2.0em\",
+    \"row_label_width\": \"2.0em\",
     \"cell_width\": \"1em\",
     \"cell_height\": \"2em\"
   },
@@ -808,7 +808,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Ugal\",
           \"subtitle\": null,
-          \"lanes\": [
+          \"rows\": [
             \"i2\",
             \"a1\"
           ],
@@ -819,7 +819,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 4,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": null,
                   \"fill\": \"#fed9a6\",
                   \"text_color\": \"#222222\",
@@ -828,7 +828,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 4,
                   \"dur\": 2,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": \"i\",
                   \"fill\": \"#fbb4ae\",
                   \"text_color\": \"#222222\",
@@ -837,7 +837,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 6,
                   \"dur\": 10,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": null,
                   \"fill\": \"#fed9a6\",
                   \"text_color\": \"#222222\",
@@ -887,7 +887,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Ugal\",
           \"subtitle\": null,
-          \"lanes\": [
+          \"rows\": [
             \"i2\",
             \"a1\"
           ],
@@ -898,7 +898,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 8,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": null,
                   \"fill\": \"#fed9a6\",
                   \"text_color\": \"#222222\",
@@ -943,7 +943,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Ugal\",
           \"subtitle\": null,
-          \"lanes\": [
+          \"rows\": [
             \"i2\",
             \"a1\"
           ],
@@ -966,14 +966,14 @@ prints no warning.  Typst's output is shown when either fails."
 ;; 4 columns), its cycle mark "0" at column 0, centred over the pulse.
 (define v3-pickup-alone
   "{
-  \"version\": 3,
+  \"version\": 4,
   \"title\": \"Pickup alone\",
   \"subtitle\": null,
   \"steps_per_pulse\": 4,
   \"sizes\": {
     \"font_size\": \"8pt\",
     \"label_width\": \"4.5em\",
-    \"lane_width\": \"2.0em\",
+    \"row_label_width\": \"2.0em\",
     \"cell_width\": \"1em\",
     \"cell_height\": \"2em\"
   },
@@ -1007,7 +1007,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Ugal\",
           \"subtitle\": null,
-          \"lanes\": [
+          \"rows\": [
             \"i2\",
             \"a1\"
           ],
@@ -1018,7 +1018,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 4,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": null,
                   \"fill\": \"#fed9a6\",
                   \"text_color\": \"#222222\",
@@ -1040,14 +1040,14 @@ prints no warning.  Typst's output is shown when either fails."
 ;; and cycle 1), then the pulse row only, then both rows off.
 (define v3-labels-off
   "{
-  \"version\": 3,
+  \"version\": 4,
   \"title\": \"\",
   \"subtitle\": null,
   \"steps_per_pulse\": 4,
   \"sizes\": {
     \"font_size\": null,
     \"label_width\": \"3.9em\",
-    \"lane_width\": \"2.0em\",
+    \"row_label_width\": \"2.0em\",
     \"cell_width\": \"2em\",
     \"cell_height\": \"2em\"
   },
@@ -1084,7 +1084,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Ugal\",
           \"subtitle\": null,
-          \"lanes\": [
+          \"rows\": [
             \"i2\",
             \"a1\"
           ],
@@ -1095,7 +1095,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 8,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": null,
                   \"fill\": \"#fbb4ae\",
                   \"text_color\": \"#222222\",
@@ -1140,7 +1140,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Ugal\",
           \"subtitle\": null,
-          \"lanes\": [
+          \"rows\": [
             \"i2\",
             \"a1\"
           ],
@@ -1177,7 +1177,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Ugal\",
           \"subtitle\": null,
-          \"lanes\": [
+          \"rows\": [
             \"i2\",
             \"a1\"
           ],
@@ -1215,14 +1215,14 @@ prints no warning.  Typst's output is shown when either fails."
 
 (define v3-lines
   "{
-  \"version\": 3,
+  \"version\": 4,
   \"title\": \"Lines\",
   \"subtitle\": \"pulse and row lines by group\",
   \"steps_per_pulse\": 2,
   \"sizes\": {
     \"font_size\": null,
     \"label_width\": \"7.0em\",
-    \"lane_width\": \"4.6em\",
+    \"row_label_width\": \"4.6em\",
     \"cell_width\": \"2em\",
     \"cell_height\": \"2em\"
   },
@@ -1269,7 +1269,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Ugal\",
           \"subtitle\": \"grid\",
-          \"lanes\": [
+          \"rows\": [
             \"e2\",
             \"o2\",
             \"i2\"
@@ -1281,7 +1281,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 2,
-                  \"lane\": 2,
+                  \"row\": 2,
                   \"text\": null,
                   \"fill\": \"#fbb4ae\",
                   \"text_color\": \"#222222\",
@@ -1290,7 +1290,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 2,
                   \"dur\": 2,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": \"o\",
                   \"fill\": \"#b3cde3\",
                   \"text_color\": \"#222222\",
@@ -1299,7 +1299,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 4,
                   \"dur\": 1,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": \"e\",
                   \"fill\": null,
                   \"text_color\": \"#222222\",
@@ -1308,7 +1308,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 6,
                   \"dur\": 2,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": null,
                   \"fill\": \"#b3cde3\",
                   \"text_color\": \"#222222\",
@@ -1324,7 +1324,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Reyong\",
           \"subtitle\": \"horizontal\",
-          \"lanes\": [
+          \"rows\": [
             \"polos\",
             \"sangsih\"
           ],
@@ -1335,7 +1335,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 4,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": \"i\",
                   \"fill\": \"#fbb4ae\",
                   \"text_color\": \"#222222\",
@@ -1344,7 +1344,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 4,
                   \"dur\": 4,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": \"o\",
                   \"fill\": \"#b3cde3\",
                   \"text_color\": \"#222222\",
@@ -1358,7 +1358,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 2,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": \"e\",
                   \"fill\": null,
                   \"text_color\": \"#222222\",
@@ -1367,7 +1367,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 2,
                   \"dur\": 2,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": \"-\",
                   \"fill\": null,
                   \"text_color\": \"#222222\",
@@ -1400,7 +1400,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Kendang\",
           \"subtitle\": \"vertical\",
-          \"lanes\": [
+          \"rows\": [
             \"\"
           ],
           \"voices\": [
@@ -1410,7 +1410,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 1,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": \"D\",
                   \"fill\": \"#e6e6e6\",
                   \"text_color\": \"#222222\",
@@ -1419,7 +1419,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 2,
                   \"dur\": 1,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": \"d\",
                   \"fill\": \"#e6e6e6\",
                   \"text_color\": \"#222222\",
@@ -1428,7 +1428,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 4,
                   \"dur\": 2,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": \"dug\",
                   \"fill\": \"#e6e6e6\",
                   \"text_color\": \"#222222\",
@@ -1444,7 +1444,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Gong\",
           \"subtitle\": \"empty\",
-          \"lanes\": [
+          \"rows\": [
             \"G\",
             \"K\"
           ],
@@ -1455,7 +1455,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 6,
                   \"dur\": 2,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": \"G\",
                   \"fill\": \"#e6e6e6\",
                   \"text_color\": \"#222222\",
@@ -1469,7 +1469,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 1,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": null,
                   \"fill\": \"#e6e6e6\",
                   \"text_color\": \"#222222\",
@@ -1478,7 +1478,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 2,
                   \"dur\": 1,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": null,
                   \"fill\": \"#e6e6e6\",
                   \"text_color\": \"#222222\",
@@ -1487,7 +1487,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 4,
                   \"dur\": 1,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": null,
                   \"fill\": \"#e6e6e6\",
                   \"text_color\": \"#222222\",
@@ -1496,7 +1496,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 6,
                   \"dur\": 1,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": null,
                   \"fill\": \"#e6e6e6\",
                   \"text_color\": \"#222222\",
@@ -1544,7 +1544,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Ugal\",
           \"subtitle\": \"grid\",
-          \"lanes\": [
+          \"rows\": [
             \"e2\",
             \"o2\",
             \"i2\"
@@ -1556,7 +1556,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 2,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": null,
                   \"fill\": \"#b3cde3\",
                   \"text_color\": \"#222222\",
@@ -1565,7 +1565,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 2,
                   \"dur\": 6,
-                  \"lane\": 2,
+                  \"row\": 2,
                   \"text\": null,
                   \"fill\": \"#fbb4ae\",
                   \"text_color\": \"#222222\",
@@ -1581,7 +1581,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Reyong\",
           \"subtitle\": \"horizontal\",
-          \"lanes\": [
+          \"rows\": [
             \"polos\",
             \"sangsih\"
           ],
@@ -1592,7 +1592,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 2,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": null,
                   \"fill\": \"#b3cde3\",
                   \"text_color\": \"#222222\",
@@ -1601,7 +1601,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 2,
                   \"dur\": 2,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": \"i\",
                   \"fill\": null,
                   \"text_color\": \"#222222\",
@@ -1630,7 +1630,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Kendang\",
           \"subtitle\": \"vertical\",
-          \"lanes\": [
+          \"rows\": [
             \"\"
           ],
           \"voices\": [
@@ -1640,7 +1640,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 2,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": null,
                   \"fill\": \"#e6e6e6\",
                   \"text_color\": \"#222222\",
@@ -1656,7 +1656,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"Gong\",
           \"subtitle\": \"empty\",
-          \"lanes\": [
+          \"rows\": [
             \"G\",
             \"K\"
           ],
@@ -1671,7 +1671,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 1,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": null,
                   \"fill\": \"#e6e6e6\",
                   \"text_color\": \"#222222\",
@@ -1680,7 +1680,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 4,
                   \"dur\": 1,
-                  \"lane\": 1,
+                  \"row\": 1,
                   \"text\": null,
                   \"fill\": \"#e6e6e6\",
                   \"text_color\": \"#222222\",
@@ -1702,14 +1702,14 @@ prints no warning.  Typst's output is shown when either fails."
 
 (define v3-lines-off
   "{
-  \"version\": 3,
+  \"version\": 4,
   \"title\": \"\",
   \"subtitle\": null,
   \"steps_per_pulse\": 1,
   \"sizes\": {
     \"font_size\": null,
     \"label_width\": \"3.0em\",
-    \"lane_width\": \"2.0em\",
+    \"row_label_width\": \"2.0em\",
     \"cell_width\": \"2em\",
     \"cell_height\": \"2em\"
   },
@@ -1738,7 +1738,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"A\",
           \"subtitle\": null,
-          \"lanes\": [
+          \"rows\": [
             \"i2\",
             \"a1\"
           ],
@@ -1749,7 +1749,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 0,
                   \"dur\": 8,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": null,
                   \"fill\": \"#fbb4ae\",
                   \"text_color\": \"#222222\",
@@ -1765,7 +1765,7 @@ prints no warning.  Typst's output is shown when either fails."
         {
           \"label\": \"B\",
           \"subtitle\": null,
-          \"lanes\": [
+          \"rows\": [
             \"i2\"
           ],
           \"voices\": [
@@ -1775,7 +1775,7 @@ prints no warning.  Typst's output is shown when either fails."
                 {
                   \"start\": 1,
                   \"dur\": 1,
-                  \"lane\": 0,
+                  \"row\": 0,
                   \"text\": \"i\",
                   \"fill\": null,
                   \"text_color\": \"#222222\",
@@ -1812,12 +1812,12 @@ prints no warning.  Typst's output is shown when either fails."
 (define (rows3-event start dur lane text fill)
   (string-append
    "{ \"start\": " (number->string start) ", \"dur\": " (number->string dur)
-   ", \"lane\": " (number->string lane) ", \"text\": " text
+   ", \"row\": " (number->string lane) ", \"text\": " text
    ", \"fill\": " fill ", \"text_color\": \"#222222\", \"continued\": false }"))
 
 (define (rows3-group label lanes key-numbers voices)
   (string-append
-   "{ \"label\": \"" label "\", \"subtitle\": null, \"lanes\": " lanes
+   "{ \"label\": \"" label "\", \"subtitle\": null, \"rows\": " lanes
    ", \"key_numbers\": " key-numbers ", \"voices\": " voices
    ", \"overlays\": [], \"pulse_lines\": true, \"row_lines\": true }"))
 
@@ -1832,10 +1832,10 @@ prints no warning.  Typst's output is shown when either fails."
 
 (define (rows3-figure key-width lane-width systems)
   (string-append
-   "{ \"version\": 3, \"title\": \"Rows\", \"subtitle\": null,"
+   "{ \"version\": 4, \"title\": \"Rows\", \"subtitle\": null,"
    " \"steps_per_pulse\": 1,"
    " \"sizes\": { \"font_size\": null, \"label_width\": \"4.5em\","
-   " \"key_width\": \"" key-width "\", \"lane_width\": \"" lane-width "\","
+   " \"key_width\": \"" key-width "\", \"row_label_width\": \"" lane-width "\","
    " \"cell_width\": \"2em\", \"cell_height\": \"2em\" },"
    " \"systems\": [" (string-join systems ", ") "], \"caption\": null }\n"))
 

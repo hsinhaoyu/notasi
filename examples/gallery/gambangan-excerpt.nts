@@ -42,6 +42,6 @@
   (group "Reyong" :subtitle "sangsih, polos" :rows notes  sangsih polos))
 
 ;; Names in the cells, a row per part, as McPhee's two voices.
-(score voices :note-names yes :rows parts :fill none
+(score voices :note-label pitch-display-name :note-label-octave no :rows parts :fill none
   (group "Reyong" :subtitle "sangsih, polos"
     (sangsih :label "Sangsih") (polos :label "Polos")))

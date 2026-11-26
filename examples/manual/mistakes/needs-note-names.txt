@@ -1,1 +1,0 @@
-needs-note-names.nts:6: group `Reyong' shows its notes by name (:rows parts, :fill colour), so it needs :note-names yes

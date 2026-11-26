@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "title": "Jaya Semara: pangecet",
   "subtitle": null,
   "steps_per_pulse": 4,
@@ -7,7 +7,7 @@
     "font_size": "8pt",
     "label_width": "9.3em",
     "key_width": "0.0em",
-    "lane_width": "2.0em",
+    "row_label_width": "2.0em",
     "cell_width": "2em",
     "cell_height": "2em"
   },
@@ -36,7 +36,7 @@
         {
           "label": "Gangsa pemade",
           "subtitle": "norot",
-          "lanes": ["u3", "e3", "o3", "i3", "a2"],
+          "rows": ["u3", "e3", "o3", "i3", "a2"],
           "key_numbers": null,
           "voices": [
             {
@@ -45,7 +45,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -54,7 +54,7 @@
                 {
                   "start": 2,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -63,7 +63,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -72,7 +72,7 @@
                 {
                   "start": 5,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -81,7 +81,7 @@
                 {
                   "start": 6,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -90,7 +90,7 @@
                 {
                   "start": 8,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -99,7 +99,7 @@
                 {
                   "start": 10,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -108,7 +108,7 @@
                 {
                   "start": 12,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -117,7 +117,7 @@
                 {
                   "start": 13,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -126,7 +126,7 @@
                 {
                   "start": 14,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -135,7 +135,7 @@
                 {
                   "start": 16,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -144,7 +144,7 @@
                 {
                   "start": 18,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -153,7 +153,7 @@
                 {
                   "start": 20,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -162,7 +162,7 @@
                 {
                   "start": 21,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -171,7 +171,7 @@
                 {
                   "start": 22,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -180,7 +180,7 @@
                 {
                   "start": 24,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -189,7 +189,7 @@
                 {
                   "start": 26,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -198,7 +198,7 @@
                 {
                   "start": 28,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -207,7 +207,7 @@
                 {
                   "start": 29,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -216,7 +216,7 @@
                 {
                   "start": 30,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -225,7 +225,7 @@
                 {
                   "start": 32,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -234,7 +234,7 @@
                 {
                   "start": 34,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -243,7 +243,7 @@
                 {
                   "start": 36,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -252,7 +252,7 @@
                 {
                   "start": 37,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -261,7 +261,7 @@
                 {
                   "start": 38,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -270,7 +270,7 @@
                 {
                   "start": 40,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -279,7 +279,7 @@
                 {
                   "start": 42,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -288,7 +288,7 @@
                 {
                   "start": 44,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -297,7 +297,7 @@
                 {
                   "start": 45,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -306,7 +306,7 @@
                 {
                   "start": 46,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -315,7 +315,7 @@
                 {
                   "start": 48,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -324,7 +324,7 @@
                 {
                   "start": 50,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -333,7 +333,7 @@
                 {
                   "start": 52,
                   "dur": 1,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -342,7 +342,7 @@
                 {
                   "start": 53,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -351,7 +351,7 @@
                 {
                   "start": 54,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -360,7 +360,7 @@
                 {
                   "start": 56,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -369,7 +369,7 @@
                 {
                   "start": 58,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -378,7 +378,7 @@
                 {
                   "start": 60,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -387,7 +387,7 @@
                 {
                   "start": 61,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -396,7 +396,7 @@
                 {
                   "start": 62,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -405,7 +405,7 @@
                 {
                   "start": 64,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -414,7 +414,7 @@
                 {
                   "start": 66,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -428,7 +428,7 @@
                 {
                   "start": 1,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -437,7 +437,7 @@
                 {
                   "start": 3,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -446,7 +446,7 @@
                 {
                   "start": 7,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -455,7 +455,7 @@
                 {
                   "start": 9,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -464,7 +464,7 @@
                 {
                   "start": 11,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -473,7 +473,7 @@
                 {
                   "start": 15,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -482,7 +482,7 @@
                 {
                   "start": 17,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -491,7 +491,7 @@
                 {
                   "start": 19,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -500,7 +500,7 @@
                 {
                   "start": 23,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#decbe4",
                   "text_color": "#222222",
@@ -509,7 +509,7 @@
                 {
                   "start": 25,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#decbe4",
                   "text_color": "#222222",
@@ -518,7 +518,7 @@
                 {
                   "start": 27,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#decbe4",
                   "text_color": "#222222",
@@ -527,7 +527,7 @@
                 {
                   "start": 31,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -536,7 +536,7 @@
                 {
                   "start": 33,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -545,7 +545,7 @@
                 {
                   "start": 35,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -554,7 +554,7 @@
                 {
                   "start": 39,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -563,7 +563,7 @@
                 {
                   "start": 41,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -572,7 +572,7 @@
                 {
                   "start": 43,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -581,7 +581,7 @@
                 {
                   "start": 47,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -590,7 +590,7 @@
                 {
                   "start": 49,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -599,7 +599,7 @@
                 {
                   "start": 51,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -608,7 +608,7 @@
                 {
                   "start": 55,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#decbe4",
                   "text_color": "#222222",
@@ -617,7 +617,7 @@
                 {
                   "start": 57,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#decbe4",
                   "text_color": "#222222",
@@ -626,7 +626,7 @@
                 {
                   "start": 59,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#decbe4",
                   "text_color": "#222222",
@@ -635,7 +635,7 @@
                 {
                   "start": 63,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -644,7 +644,7 @@
                 {
                   "start": 65,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -653,7 +653,7 @@
                 {
                   "start": 67,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -686,7 +686,7 @@
         {
           "label": "Ugal",
           "subtitle": null,
-          "lanes": ["e2", "o2", "i2", "a1"],
+          "rows": ["e2", "o2", "i2", "a1"],
           "key_numbers": null,
           "voices": [
             {
@@ -695,7 +695,7 @@
                 {
                   "start": 0,
                   "dur": 8,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -704,7 +704,7 @@
                 {
                   "start": 8,
                   "dur": 8,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -713,7 +713,7 @@
                 {
                   "start": 16,
                   "dur": 8,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -722,7 +722,7 @@
                 {
                   "start": 24,
                   "dur": 8,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -731,7 +731,7 @@
                 {
                   "start": 32,
                   "dur": 8,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -740,7 +740,7 @@
                 {
                   "start": 40,
                   "dur": 8,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -749,7 +749,7 @@
                 {
                   "start": 48,
                   "dur": 8,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -758,7 +758,7 @@
                 {
                   "start": 56,
                   "dur": 8,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -767,7 +767,7 @@
                 {
                   "start": 64,
                   "dur": 4,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -800,7 +800,7 @@
         {
           "label": "Panyacah",
           "subtitle": null,
-          "lanes": ["a3", "u3", "e3", "o3", "i3"],
+          "rows": ["a3", "u3", "e3", "o3", "i3"],
           "key_numbers": null,
           "voices": [
             {
@@ -809,7 +809,7 @@
                 {
                   "start": 0,
                   "dur": 4,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -818,7 +818,7 @@
                 {
                   "start": 4,
                   "dur": 4,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -827,7 +827,7 @@
                 {
                   "start": 8,
                   "dur": 4,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -836,7 +836,7 @@
                 {
                   "start": 12,
                   "dur": 4,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#decbe4",
                   "text_color": "#222222",
@@ -845,7 +845,7 @@
                 {
                   "start": 16,
                   "dur": 4,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -854,7 +854,7 @@
                 {
                   "start": 20,
                   "dur": 4,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -863,7 +863,7 @@
                 {
                   "start": 24,
                   "dur": 4,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -872,7 +872,7 @@
                 {
                   "start": 28,
                   "dur": 4,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -881,7 +881,7 @@
                 {
                   "start": 32,
                   "dur": 4,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -890,7 +890,7 @@
                 {
                   "start": 36,
                   "dur": 4,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -899,7 +899,7 @@
                 {
                   "start": 40,
                   "dur": 4,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -908,7 +908,7 @@
                 {
                   "start": 44,
                   "dur": 4,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#decbe4",
                   "text_color": "#222222",
@@ -917,7 +917,7 @@
                 {
                   "start": 48,
                   "dur": 4,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -926,7 +926,7 @@
                 {
                   "start": 52,
                   "dur": 4,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -935,7 +935,7 @@
                 {
                   "start": 56,
                   "dur": 4,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -944,7 +944,7 @@
                 {
                   "start": 60,
                   "dur": 4,
-                  "lane": 4,
+                  "row": 4,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -953,7 +953,7 @@
                 {
                   "start": 64,
                   "dur": 4,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -986,7 +986,7 @@
         {
           "label": "Jublag",
           "subtitle": null,
-          "lanes": ["a2", "e2", "o2", "i2"],
+          "rows": ["a2", "e2", "o2", "i2"],
           "key_numbers": null,
           "voices": [
             {
@@ -995,7 +995,7 @@
                 {
                   "start": 0,
                   "dur": 8,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -1004,7 +1004,7 @@
                 {
                   "start": 8,
                   "dur": 8,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -1013,7 +1013,7 @@
                 {
                   "start": 16,
                   "dur": 8,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -1022,7 +1022,7 @@
                 {
                   "start": 24,
                   "dur": 8,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -1031,7 +1031,7 @@
                 {
                   "start": 32,
                   "dur": 8,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -1040,7 +1040,7 @@
                 {
                   "start": 40,
                   "dur": 8,
-                  "lane": 3,
+                  "row": 3,
                   "text": null,
                   "fill": "#fbb4ae",
                   "text_color": "#222222",
@@ -1049,7 +1049,7 @@
                 {
                   "start": 48,
                   "dur": 8,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -1058,7 +1058,7 @@
                 {
                   "start": 56,
                   "dur": 8,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#ccebc5",
                   "text_color": "#222222",
@@ -1067,7 +1067,7 @@
                 {
                   "start": 64,
                   "dur": 4,
-                  "lane": 2,
+                  "row": 2,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -1100,7 +1100,7 @@
         {
           "label": "Jegogan",
           "subtitle": null,
-          "lanes": ["a1", "o1"],
+          "rows": ["a1", "o1"],
           "key_numbers": null,
           "voices": [
             {
@@ -1109,7 +1109,7 @@
                 {
                   "start": 0,
                   "dur": 16,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -1118,7 +1118,7 @@
                 {
                   "start": 16,
                   "dur": 16,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -1127,7 +1127,7 @@
                 {
                   "start": 32,
                   "dur": 16,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -1136,7 +1136,7 @@
                 {
                   "start": 48,
                   "dur": 16,
-                  "lane": 0,
+                  "row": 0,
                   "text": null,
                   "fill": "#fed9a6",
                   "text_color": "#222222",
@@ -1145,7 +1145,7 @@
                 {
                   "start": 64,
                   "dur": 4,
-                  "lane": 1,
+                  "row": 1,
                   "text": null,
                   "fill": "#b3cde3",
                   "text_color": "#222222",
@@ -1178,7 +1178,7 @@
         {
           "label": "Gong, kempli",
           "subtitle": null,
-          "lanes": ["G", "P", "T", "K"],
+          "rows": ["G", "P", "T", "K"],
           "key_numbers": null,
           "voices": [
             {
@@ -1187,7 +1187,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "G",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1196,7 +1196,7 @@
                 {
                   "start": 16,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "P",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1205,7 +1205,7 @@
                 {
                   "start": 32,
                   "dur": 1,
-                  "lane": 2,
+                  "row": 2,
                   "text": "T",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1214,7 +1214,7 @@
                 {
                   "start": 48,
                   "dur": 1,
-                  "lane": 1,
+                  "row": 1,
                   "text": "P",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1223,7 +1223,7 @@
                 {
                   "start": 64,
                   "dur": 1,
-                  "lane": 0,
+                  "row": 0,
                   "text": "G",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1237,7 +1237,7 @@
                 {
                   "start": 0,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1246,7 +1246,7 @@
                 {
                   "start": 4,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1255,7 +1255,7 @@
                 {
                   "start": 8,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1264,7 +1264,7 @@
                 {
                   "start": 12,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1273,7 +1273,7 @@
                 {
                   "start": 16,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1282,7 +1282,7 @@
                 {
                   "start": 20,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1291,7 +1291,7 @@
                 {
                   "start": 24,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1300,7 +1300,7 @@
                 {
                   "start": 28,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1309,7 +1309,7 @@
                 {
                   "start": 32,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1318,7 +1318,7 @@
                 {
                   "start": 36,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1327,7 +1327,7 @@
                 {
                   "start": 40,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1336,7 +1336,7 @@
                 {
                   "start": 44,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1345,7 +1345,7 @@
                 {
                   "start": 48,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1354,7 +1354,7 @@
                 {
                   "start": 52,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1363,7 +1363,7 @@
                 {
                   "start": 56,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1372,7 +1372,7 @@
                 {
                   "start": 60,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",
@@ -1381,7 +1381,7 @@
                 {
                   "start": 64,
                   "dur": 1,
-                  "lane": 3,
+                  "row": 3,
                   "text": "K",
                   "fill": "#e6e6e6",
                   "text_color": "#222222",

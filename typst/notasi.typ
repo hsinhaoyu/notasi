@@ -92,20 +92,20 @@
   let first-group-row = row
 
   for g in sys.groups {
-    let lanes = g.lanes
+    let rows = g.rows
     cells.push(grid.hline(y: row, stroke: 0.8pt + luma(120)))
-    if lanes.len() > 0 {
-      cells.push(grid.cell(x: 0, y: row, rowspan: lanes.len(),
+    if rows.len() > 0 {
+      cells.push(grid.cell(x: 0, y: row, rowspan: rows.len(),
         align: horizon + left, inset: (right: 10pt), {
           text(weight: "bold", size: 1.1em, g.label)
           if g.subtitle != none {
             // A one-row group has no room for a second line: the
             // subtitle follows the label on the same line.
-            if lanes.len() > 1 { linebreak() } else { h(0.5em) }
+            if rows.len() > 1 { linebreak() } else { h(0.5em) }
             text(fill: luma(110), style: "italic", g.subtitle)
           }
         }))
-      for (i, l) in lanes.enumerate() {
+      for (i, l) in rows.enumerate() {
         cells.push(grid.cell(x: 2, y: row + i, align: horizon + right,
           inset: (right: 5pt), text(fill: luma(140), size: 0.85em, l)))
       }
@@ -119,7 +119,7 @@
       }
       for v in g.voices {
         for e in v.events {
-          cells.push(grid.cell(x: first + e.start, y: row + e.lane,
+          cells.push(grid.cell(x: first + e.start, y: row + e.row,
             colspan: e.dur, inset: 0pt, _note(e)))
         }
       }
@@ -134,13 +134,13 @@
     }
     let pulses = g.at("pulse_lines", default: true)
     let rules = g.at("row_lines", default: false)
-    for i in range(lanes.len()) {
-      row-lines.push((pulse: pulses, under: rules and i < lanes.len() - 1))
+    for i in range(rows.len()) {
+      row-lines.push((pulse: pulses, under: rules and i < rows.len() - 1))
     }
-    row += lanes.len()
+    row += rows.len()
   }
   cells.push(grid.hline(y: row, stroke: 0.8pt + luma(120)))
-  // The frame between the lane labels and the grid, beside the groups
+  // The frame between the row labels and the grid, beside the groups
   // (ADR 0044).
   if row > first-group-row {
     cells.push(grid.vline(x: first, start: first-group-row, end: row,
@@ -150,7 +150,7 @@
 
   let cols = ((_len(sizes.label_width),
                _len(sizes.at("key_width", default: "0em")),
-               _len(sizes.lane_width))
+               _len(sizes.row_label_width))
     + (_len(sizes.cell_width),) * sys.steps)
   let rows = (_len(sizes.cell_height),) * rows-count
 
