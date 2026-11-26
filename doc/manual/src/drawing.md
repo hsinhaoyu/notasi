@@ -144,6 +144,35 @@ still draws the others.
 
 If Typst isn't installed, notasi says so and tells you where to get it.
 
+## Saving what notasi read
+
+To see exactly what notasi made of your file (every part's notes with
+their times, the gong and kempli parts it wrote out, your patterns and
+scores), save the piece with `--save-piece`:
+
+```text
+scripts/notasi render gilak.nts --save-piece gilak.json
+```
+
+This draws the piece as usual and also writes `gilak.json`. The ending
+chooses the kind of file: `.json`, which other programs can read, or
+`.scm`, the same in Scheme's own lists. `-` prints the JSON instead of
+saving it, and prints nothing else.
+
+To save it without drawing, use it with `--list`:
+
+```text
+scripts/notasi render gilak.nts --list --save-piece -
+```
+
+This is also a quick way to check a file for mistakes: it reads the
+piece and draws nothing, so it doesn't need Typst.
+
+The saved piece is always the whole piece, whatever score you draw.
+Each part, pattern, score and instrument says which file and line it
+comes from. The format has a version number, but it may still change
+between versions of notasi.
+
 ## Which notasi you have
 
 ```text
