@@ -118,7 +118,7 @@ Each decision's context and consequences are in its record in
 22. The palette is chosen in the score: [0032](../decisions/0032-the-palette-is-chosen-in-the-score.md)
 23. Pitched and stroke instruments are grouped apart: [0034](../decisions/0034-pitched-and-stroke-instruments-are-grouped-apart.md)
 24. Expansion is its own module: [0035](../decisions/0035-expansion-is-its-own-module.md)
-25. The JSON contract is version 3: [0043](../decisions/0043-json-contract-version-3.md) (replaces [0036](../decisions/0036-json-contract-version-2.md))
+25. The JSON contract is version 3: [0043](../decisions/0043-json-contract-version-3.md) (replaces [0036](../decisions/0036-json-contract-version-2.md)); **Planned**: version 4, [0059](../decisions/0059-json-contract-version-4.md) (replaces 0043 and 0047)
 26. Cycle lines are heavier than pulse lines: [0037](../decisions/0037-cycle-lines-are-heavier.md)
 27. The notasi command line is a contract for editors: [0048](../decisions/0048-the-command-line-is-a-contract-for-editors.md)
 28. An Emacs package ships with notasi and only runs the command: [0050](../decisions/0050-an-emacs-package-ships-with-notasi.md)
