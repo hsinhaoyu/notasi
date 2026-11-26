@@ -294,21 +294,23 @@ follows when the milestones are built; the reader fills every new
 field, so layout never sees a missing one.
 
 Renamed to the glossary's terms (ADR 0051), when a milestone next
-touches them:
+touches them, in the slice named:
 
-| Now | Planned |
-|---|---|
-| record `degree` | `pitch` |
-| `scale-degrees` | `scale-pitches` |
-| `note-degree` (index into the scale) | `note-pitch` |
-| `group-lanes` | `group-rows` |
-| `note-label` (the row label) | `note-row-label`, since `note-label` is now an option's name |
+| Now | Planned | Slice |
+|---|---|---|
+| record `degree` (`make-degree`, `degree?`, `degree-…`) | `pitch` (`make-pitch`, `pitch?`, `pitch-…`) | `feat/collapsed-terms` |
+| `scale-degrees` | `scale-pitches` | `feat/collapsed-terms` |
+| `note-degree` (index into the scale) | `note-pitch` | `feat/collapsed-terms` |
+| `group-lanes` | `group-rows` | `feat/collapsed-labels`, with the JSON's `rows` |
+| `note-label` (the row label) | `note-row-label`, since `note-label` is now an option's name | `feat/collapsed-labels` |
 
 New and changed fields:
 
 ```
 piece
   info        : list of (symbol . string)
+                                       the last argument of make-piece;
+                                       accessor piece-info
                                        the piece information (01), keyed
                                        by option name without the colon
                                        (composer, remarks, ...), in the

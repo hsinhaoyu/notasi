@@ -127,8 +127,10 @@ changes the figure, and each later one adds to it.
       `scale-pitches`, `note-pitch`, the error kinds), in the reader's
       messages, and in the manual with the messages it quotes
       ("degree" becomes "pitch"), `by-pitch` and
-      `pitch-colors`; the piece information keys; `bapang-8`,
-      `bapang-16` and `gegaboran`.
+      `pitch-colors`; the piece information keys (`piece-info`, the
+      last field of the piece); `bapang-8`, `bapang-16` and `gegaboran`,
+      with the manual's pages on colotomies (what a colotomy is, the
+      32-pulse bapang in place of `own-colotomy.nts`).
    2. `feat/collapsed-labels`: `:note-label`, `:row-labels`,
       `:row-label-octave` and `:note-label-octave` in place of
       `:note-names` and `:octave-numbers`; `needs-note-label`; contract

@@ -266,11 +266,11 @@ when it isn't in the gallery (07, ADR 0052)."
     (test-assert "(baris reads)" (piece? pc))
     (when pc
       (let* ((gong (instrument-named pc 'gong))
-             (gl (and gong (find (lambda (d) (eq? 'GL (degree-name d)))
-                                 (scale-degrees (instrument-scale gong))))))
+             (gl (and gong (find (lambda (d) (eq? 'GL (pitch-name d)))
+                                 (scale-pitches (instrument-scale gong))))))
         (test-assert "the instrument gong has the stroke GL" gl)
         (test-equal "GL's own display form is \"GL\"" "GL"
-          (and gl (degree-display gl))))
+          (and gl (pitch-display gl))))
       (for-each
        (lambda (name)
          (let* ((score (piece-score pc name))

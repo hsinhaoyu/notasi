@@ -302,8 +302,11 @@ about how it is played or printed. It has no options.
   Plain `bapang` then is an unknown colotomy. `gegaboran` is in the
   template though no example uses it, an exception to ADR 0046's rule,
   so a writer can name the meter they mean. Other lengths (Gold's
-  32-pulse bapang, p. 142) are written in the piece as a `colotomy`;
-  notasi has no operation that stretches one.
+  32-pulse bapang in "Jagra Parwata", p. 142: kempur on 8 and 24,
+  klentong on 16, gong on 32, the 16-pulse strokes spread over twice
+  the pulses) are written in the piece as a `colotomy`; notasi has no
+  operation that stretches one. The manual's example of a colotomy of
+  your own is that 32-pulse bapang.
 
 - With a stroke set, each NOTE is a stroke from that set (`G`, `dag`),
   in any order. The order sets the note indices and the order of the

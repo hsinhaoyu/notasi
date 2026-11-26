@@ -34,6 +34,13 @@
 ;;;   since 01 gives its exact tokens, `-:3 GL:1 P - P G`.
 ;;; - The `part` and `time` fields of the [parts] errors are not tested:
 ;;;   03 does not fix them for these cases.
+;;;
+;;; Slice feat/collapsed-terms (iteration 5; 01, "Bapang (ADR 0053)";
+;;; 03, "Iteration 5"): the template's `bapang` becomes `bapang-8` and
+;;; `bapang-16`, with `gegaboran`; plain `:colotomy bapang` is
+;;; `undefined-colotomy`. Each is checked by its strokes' starts and
+;;; notes over one cycle, as `bapang` was; `gegaboran`'s strokes are
+;;; `bapang-16`'s.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -344,8 +351,6 @@ raised object (or no-error) unchanged."
 (define (shift-triples triples by)
   (map (match-lambda ((s d n) (list (+ s by) d n))) triples))
 
-;;; bapang's gong over one cycle (01): P on 4 and 12, T on 8, G on 16.
-(define bapang-onsets '((3 (2)) (7 (3)) (11 (2)) (15 (0))))
 
 (test-group "[template] gilak"
   (let ((pc (try-read-string "(piece \"G\" :colotomy gilak)"   ; 1
@@ -383,23 +388,9 @@ raised object (or no-error) unchanged."
     (test-equal "and has no colotomy" '()
       (and pc (piece-colotomies pc)))))
 
-(test-group "[template] bapang"
-  (let ((pc (try-read-string "(piece \"B\" :colotomy bapang)"
-                             "(use gong-kebyar)"
-                             "(part :instrument ugal 1:16)")))
-    (test-assert "a piece with :colotomy bapang and no colotomy form reads"
-      (piece? pc))
-    (test-equal "length: one cycle of 16" 16 (and pc (piece-length pc)))
-    (test-equal "the colotomy is bapang, 16 pulses" '(bapang 16)
-      (and pc (safe (lambda ()
-                      (let ((c (cdar (piece-colotomies pc))))
-                        (list (colotomy-name c) (colotomy-length c)))))))
-    (test-equal "the gong's strokes over one cycle" bapang-onsets
-      (and pc (safe (lambda () (part-onsets pc 'gong)))))
-    (test-equal "parts: ugal, the generated gong, kempli"
-      '((ugal written) (gong colotomy) (kempli timekeeper))
-      (and pc (map (lambda (p) (list (part-name p) (part-origin p)))
-                   (piece-parts pc))))))
+;; The template's `bapang` was replaced by bapang-8, bapang-16 and
+;; gegaboran in feat/collapsed-terms: see "[template] bapang-8" and the
+;; groups after it, below.
 
 (test-group "[template] a piece's own colotomy replaces the template's"
   (let ((pc (try-read-string "(piece \"G\" :colotomy gilak)"              ; 1
@@ -415,6 +406,69 @@ raised object (or no-error) unchanged."
       (and pc (safe (lambda ()
                       (source-location-line
                        (colotomy-location (cdar (piece-colotomies pc))))))))))
+
+;;; ------------------------------------------------------------------
+;;; Slice feat/collapsed-terms: bapang-8, bapang-16 and gegaboran
+
+;;; bapang-8 (01): kempur P on 2 and 6, klentong T on 4, gong G on 8.
+(define bapang-8-onsets '((1 (2)) (3 (3)) (5 (2)) (7 (0))))
+
+;;; bapang-16 and gegaboran (01): P on 4 and 12, T on 8, G on 16.
+(define bapang-16-onsets '((3 (2)) (7 (3)) (11 (2)) (15 (0))))
+
+(define (template-colotomy-tests name length onsets)
+  "Tests of the template's colotomy NAME: LENGTH pulses, the gong's
+ONSETS over one cycle, and the same strokes again in the second."
+  (let ((pc (try-read-string
+             (format #f "(piece \"B\" :colotomy ~a)" name)
+             "(use gong-kebyar)"
+             (format #f "(part :instrument ugal 1:~a)" length))))
+    (test-assert (format #f "~a: a piece with :colotomy ~a reads" name name)
+      (piece? pc))
+    (test-equal (format #f "~a: length, one cycle" name) length
+      (and pc (piece-length pc)))
+    (test-equal (format #f "~a: the colotomy's name and length" name)
+      (list name length)
+      (and pc (safe (lambda ()
+                      (let ((c (cdar (piece-colotomies pc))))
+                        (list (colotomy-name c) (colotomy-length c)))))))
+    (test-equal (format #f "~a: the gong's strokes over one cycle" name) onsets
+      (and pc (safe (lambda () (part-onsets pc 'gong)))))
+    (test-equal (format #f "~a: parts: ugal, the generated gong, kempli" name)
+      '((ugal written) (gong colotomy) (kempli timekeeper))
+      (and pc (map (lambda (p) (list (part-name p) (part-origin p)))
+                   (piece-parts pc)))))
+  (let ((pc (try-read-string
+             (format #f "(piece \"B\" :colotomy ~a)" name)
+             "(use gong-kebyar)"
+             (format #f "(part :instrument ugal 1:~a)" (* 2 length)))))
+    (test-equal (format #f "~a: two cycles, laid end to end" name)
+      (append onsets
+              (map (match-lambda ((start notes) (list (+ start length) notes)))
+                   onsets))
+      (and pc (safe (lambda () (part-onsets pc 'gong)))))))
+
+(test-group "[template] bapang-8"
+  (template-colotomy-tests 'bapang-8 8 bapang-8-onsets))
+
+(test-group "[template] bapang-16"
+  (template-colotomy-tests 'bapang-16 16 bapang-16-onsets))
+
+(test-group "[template] gegaboran"
+  (template-colotomy-tests 'gegaboran 16 bapang-16-onsets))
+
+(test-group "[template] plain bapang is gone"
+  (test-equal ":colotomy bapang: undefined-colotomy at the piece form"
+    '(undefined-colotomy 1)
+    (string-error (lines "(piece \"B\" :colotomy bapang)"
+                         "(use gong-kebyar)"
+                         "(part :instrument ugal 1:16)")))
+  (let ((pc (try-read-string "(piece \"B\" :colotomy bapang)"
+                             "(use gong-kebyar)"
+                             "(colotomy bapang 4 (part :instrument gong G:4))"
+                             "(part :instrument ugal 1:4)")))
+    (test-assert "a piece may still define a colotomy called bapang"
+      (piece? pc))))
 
 (define runner (test-runner-current))
 (test-end "syntax")

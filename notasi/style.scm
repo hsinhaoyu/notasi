@@ -19,9 +19,9 @@
             look-fill look-text look-text-color
 
             make-style default-style style?
-            style-scheme style-palette style-degree-colors
+            style-scheme style-palette style-pitch-colors
 
-            by-degree
+            by-pitch
             note-look))
 
 (define (style-error what value)
@@ -115,15 +115,15 @@ contrast with FILL (WCAG's minimum for bold text), else near-black."
   (text-color look-text-color))
 
 (define-record-type <style>
-  (%make-style scheme palette degree-colors)
+  (%make-style scheme palette pitch-colors)
   style?
   (scheme        style-scheme)          ; procedure (style instrument note)
   (palette       style-palette)         ; list of hex strings
-  (degree-colors style-degree-colors))  ; alist: degree name -> hex
+  (pitch-colors style-pitch-colors))  ; alist: pitch name -> hex
 
 (define (resolve-scheme scheme)
   (match scheme
-    ('by-degree by-degree)
+    ('by-pitch by-pitch)
     ((? procedure?) scheme)
     (_ (style-error "unknown colour scheme" scheme))))
 
@@ -134,43 +134,43 @@ contrast with FILL (WCAG's minimum for bold text), else near-black."
     ((? list?) (map normalize-color palette))
     (_ (style-error "a palette is a name or a list of colours" palette))))
 
-(define (resolve-degree-colors entries)
+(define (resolve-pitch-colors entries)
   (unless (list? entries)
-    (style-error "degree-colors must be a list of (DEGREE . COLOUR)" entries))
+    (style-error "pitch-colors must be a list of (PITCH . COLOUR)" entries))
   (map (match-lambda
-         (((? symbol? degree) . (? string? color))
-          (cons degree (normalize-color color)))
+         (((? symbol? pitch) . (? string? color))
+          (cons pitch (normalize-color color)))
          (entry
-          (style-error "a degree colour must be (DEGREE . \"#rrggbb\")" entry)))
+          (style-error "a pitch colour must be (PITCH . \"#rrggbb\")" entry)))
        entries))
 
-(define* (make-style #:key (scheme 'by-degree) (palette 'pastel1)
-                     (degree-colors '()))
-  "Return a style.  SCHEME is `by-degree' or a procedure (style
+(define* (make-style #:key (scheme 'by-pitch) (palette 'pastel1)
+                     (pitch-colors '()))
+  "Return a style.  SCHEME is `by-pitch' or a procedure (style
 instrument note) → look; PALETTE a palette name or a list of colours;
-DEGREE-COLORS an alist from degree name to colour.  Raise an &error
+PITCH-COLORS an alist from pitch name to colour.  Raise an &error
 naming any bad value."
   (%make-style (resolve-scheme scheme)
                (resolve-palette palette)
-               (resolve-degree-colors degree-colors)))
+               (resolve-pitch-colors pitch-colors)))
 
 (define (default-style)
-  "Return the default style: `by-degree' with the pastel1 palette."
+  "Return the default style: `by-pitch' with the pastel1 palette."
   (make-style))
 
 ;;; ------------------------------------------------------------------
 ;;; Schemes
 
-(define (by-degree style instrument note)
-  "Colour a pitched NOTE by its scale degree, the same in every octave
+(define (by-pitch style instrument note)
+  "Colour a pitched NOTE by its pitch, the same in every octave
 and on every instrument; draw a stroke light grey (ADRs 0019, 0021)."
   (let* ((scale (instrument-scale instrument))
          (text (note-display instrument note)))
     (if (scale-pitched? scale)
-        (let* ((index (note-degree note))
-               (name (degree-name (list-ref (scale-degrees scale) index)))
+        (let* ((index (note-pitch note))
+               (name (pitch-name (list-ref (scale-pitches scale) index)))
                (palette (style-palette style))
-               (fill (or (assq-ref (style-degree-colors style) name)
+               (fill (or (assq-ref (style-pitch-colors style) name)
                          (list-ref palette (modulo index (length palette))))))
           (make-look fill text (text-color-for fill)))
         (make-look stroke-grey text (text-color-for stroke-grey)))))

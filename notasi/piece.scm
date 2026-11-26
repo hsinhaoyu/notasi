@@ -16,7 +16,7 @@
 make-source-location source-location?
             source-location-file source-location-line
 
-            make-piece piece?
+            make-piece piece? piece-info
             piece-title
             piece-length piece-pickup piece-colotomies
             piece-scales piece-instruments piece-patterns piece-parts
@@ -35,18 +35,18 @@ make-source-location source-location?
             colotomy-parts colotomy-location
 
             make-scale scale?
-            scale-name scale-degrees scale-pitched? scale-location
+            scale-name scale-pitches scale-pitched? scale-location
 
-            make-degree degree?
-            degree-name degree-aliases degree-display degree-damped
-            degree-location
+            make-pitch pitch?
+            pitch-name pitch-aliases pitch-display pitch-damped
+            pitch-location
 
             make-instrument instrument?
             instrument-name instrument-scale instrument-notes
             instrument-location
 
             make-note note?
-            note-name note-degree note-octave
+            note-name note-pitch note-octave
 
             make-part part?
             part-name part-instrument part-events part-origin
@@ -83,7 +83,7 @@ make-source-location source-location?
 ;;; A whole piece after reading, with templates merged.
 (define-record-type <piece>
   (make-piece title length pickup colotomies scales instruments patterns
-              parts scores)
+              parts scores info)
   piece?
   (title            piece-title)
   (length           piece-length)           ; pulses, an exact rational
@@ -93,29 +93,30 @@ make-source-location source-location?
   (instruments      piece-instruments)
   (patterns         piece-patterns)
   (parts            piece-parts)
-  (scores           piece-scores))      ; at least one (the default score)
+  (scores           piece-scores)       ; at least one (the default score)
+  (info             piece-info))        ; ((KEY . STRING) ...), as written
 
-;;; A scale (pitched? #t, degrees ascending within one octave) or a
+;;; A scale (pitched? #t, pitches ascending within one octave) or a
 ;;; stroke set (pitched? #f, strokes unordered).
 (define-record-type <scale>
-  (make-scale name degrees pitched? location)
+  (make-scale name pitches pitched? location)
   scale?
   (name     scale-name)
-  (degrees  scale-degrees)
+  (pitches  scale-pitches)
   (pitched? scale-pitched?)
   (location scale-location))
 
-;;; A scale degree or a stroke.  DISPLAY is always a string; the reader
+;;; A pitch or a stroke.  DISPLAY is always a string; the reader
 ;;; fills in the name when the source gives none.  DAMPED is the form
 ;;; for a note cut short, or #f to use DISPLAY.
-(define-record-type <degree>
-  (make-degree name aliases display damped location)
-  degree?
-  (name     degree-name)
-  (aliases  degree-aliases)
-  (display  degree-display)
-  (damped   degree-damped)
-  (location degree-location))
+(define-record-type <pitch>
+  (make-pitch name aliases display damped location)
+  pitch?
+  (name     pitch-name)
+  (aliases  pitch-aliases)
+  (display  pitch-display)
+  (damped   pitch-damped)
+  (location pitch-location))
 
 ;;; NOTES is a vector: ascending pitch for a pitched instrument, the
 ;;; listed order for a stroke instrument.
@@ -127,12 +128,12 @@ make-source-location source-location?
   (notes    instrument-notes)
   (location instrument-location))
 
-;;; DEGREE indexes the scale's degrees; OCTAVE is #f for a stroke.
+;;; PITCH indexes the scale's pitches; OCTAVE is #f for a stroke.
 (define-record-type <note>
-  (make-note name degree octave)
+  (make-note name pitch octave)
   note?
   (name   note-name)
-  (degree note-degree)
+  (pitch note-pitch)
   (octave note-octave))
 
 ;;; EVENTS are sorted by start.
@@ -262,13 +263,13 @@ make-source-location source-location?
 ;;; ------------------------------------------------------------------
 ;;; Derived values
 
-(define (note-degree-record instrument note)
-  "Return the degree (or stroke) record of NOTE on INSTRUMENT."
-  (list-ref (scale-degrees (instrument-scale instrument))
-            (note-degree note)))
+(define (note-pitch-record instrument note)
+  "Return the pitch (or stroke) record of NOTE on INSTRUMENT."
+  (list-ref (scale-pitches (instrument-scale instrument))
+            (note-pitch note)))
 
 (define (note-pitch-index instrument note)
-  "Return NOTE's pitch on INSTRUMENT as octave × scale size + degree: a
+  "Return NOTE's pitch on INSTRUMENT as octave × scale size + pitch index: a
 total order across pitched instruments sharing a scale.  Raise an error
 for a stroke, which has no pitch."
   (let ((scale (instrument-scale instrument)))
@@ -280,16 +281,16 @@ for a stroke, which has no pitch."
         (make-exception-with-message "a stroke has no pitch")
         (make-exception-with-irritants
          (list (note-name note) (instrument-name instrument))))))
-    (+ (* (note-octave note) (length (scale-degrees scale)))
-       (note-degree note))))
+    (+ (* (note-octave note) (length (scale-pitches scale)))
+       (note-pitch note))))
 
 (define* (note-display instrument note #:key damped?)
   "Return the short form of NOTE drawn in grid cells, e.g. \"i\" for ding2;
 with DAMPED?, its damped form (\"na'\"), or the display form when it has
 none."
-  (let ((degree (note-degree-record instrument note)))
-    (or (and damped? (degree-damped degree))
-        (degree-display degree))))
+  (let ((pitch (note-pitch-record instrument note)))
+    (or (and damped? (pitch-damped pitch))
+        (pitch-display pitch))))
 
 (define* (note-label instrument note #:key (octave? #t))
   "Return NOTE's lane label: the display form plus the octave (\"i2\"),

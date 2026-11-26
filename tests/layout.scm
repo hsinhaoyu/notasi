@@ -66,7 +66,7 @@
 ;;;   Degrees with a `:damped` form are not used here, so the two rules
 ;;;   agree on every test.
 ;;; - v1's custom-scheme test (a procedure given through `#:style`) is
-;;;   gone: a group's `scheme` is a symbol (02), and `by-degree` is the
+;;;   gone: a group's `scheme` is a symbol (02), and `by-pitch` is the
 ;;;   only one, so there is no way left to give layout a procedure.
 ;;; - A member's `:label` (a row label, for `:rows parts`) does not
 ;;;   change its voice's name, which stays the part's name.
@@ -280,7 +280,7 @@ NAMES? (the group's note-names?), else null."
   (list (field e 'text) (field e 'fill) (field e 'text_color)))
 
 (define* (hand-group label parts
-                     #:key (subtitle #f) (note-names? #f) (scheme 'by-degree)
+                     #:key (subtitle #f) (note-names? #f) (scheme 'by-pitch)
                      (palette 'pastel1) (colors '()) (short label)
                      (labels 'first-long) (background 'grid))
   "A group record built by hand, as the reader fills it in (ADR 0033):
@@ -614,9 +614,9 @@ at its default: font_size null, cells \"2em\"."
                       "(part :instrument u :name p 1 2 _ 1)"))
     (layout (piece-of "(piece \"P\")" "(scale s a b)" "(instrument u s a1 b1)"
                       "(part :instrument u :name p 1 2 _ 1)"
-                      "(score s :note-names no :scheme by-degree :palette pastel1"
+                      "(score s :note-names no :scheme by-pitch :palette pastel1"
                       "  :cell-width \"2em\" :cell-height \"2em\""
-                      "  (group \"p\" :note-names no :scheme by-degree :palette pastel1 p))"))))
+                      "  (group \"p\" :note-names no :scheme by-pitch :palette pastel1 p))"))))
 
 ;;; ------------------------------------------------------------------
 ;;; The score: which one, its title (04, "Public interface")
@@ -1457,10 +1457,10 @@ at its default: font_size null, cells \"2em\"."
     (looks-of (layout (colour-piece
                        "(score s :palette (\"#111111\" \"#eeeeee\") (group \"a\" a))"))
               0))
-  (test-equal ":scheme by-degree is the default"
+  (test-equal ":scheme by-pitch is the default"
     (looks-of (layout (colour-piece "(score s (group \"a\" a))")) 0)
-    (looks-of (layout (colour-piece "(score s :scheme by-degree"
-                                    "  (group \"a\" :scheme by-degree a))"))
+    (looks-of (layout (colour-piece "(score s :scheme by-pitch"
+                                    "  (group \"a\" :scheme by-pitch a))"))
               0))
   (test-equal "the default: pastel1"
     (list (list 'null ding-fill dark) (list 'null dong-fill dark))
@@ -1474,20 +1474,20 @@ at its default: font_size null, cells \"2em\"."
               "  (group \"d\" :palette (\"#111111\" \"#eeeeee\") d))"))
          (fig (layout pc)))
     (test-equal "a group without colour options: the score's palette and colors"
-      (style-looks pc #:palette 'set1 #:degree-colors '((dong . "#000000")))
+      (style-looks pc #:palette 'set1 #:pitch-colors '((dong . "#000000")))
       (looks-of fig 0))
     (test-equal "a group's :palette overrides the score's; the score's :colors stay"
-      (style-looks pc #:palette 'dark2 #:degree-colors '((dong . "#000000")))
+      (style-looks pc #:palette 'dark2 #:pitch-colors '((dong . "#000000")))
       (looks-of fig 1))
     (test-equal "a group's :colors replace the score's; the score's palette stays"
-      (style-looks pc #:palette 'set1 #:degree-colors '((ding . "#ffffff")))
+      (style-looks pc #:palette 'set1 #:pitch-colors '((ding . "#ffffff")))
       (looks-of fig 2))
     (test-equal "a group's :colors, hard-coded: ding white with dark text, dong set1"
       (list (list 'null "#ffffff" dark) (list 'null "#377eb8" white))
       (looks-of fig 2))
     (test-equal "a group's list palette"
       (style-looks pc #:palette '("#111111" "#eeeeee")
-                   #:degree-colors '((dong . "#000000")))
+                   #:pitch-colors '((dong . "#000000")))
       (looks-of fig 3))
     (test-assert "the four groups are coloured differently"
       (let ((all (map (lambda (g) (looks-of fig g)) '(0 1 2 3))))
@@ -1520,7 +1520,7 @@ at its default: font_size null, cells \"2em\"."
     (list (let ((style (make-style #:palette 'set3)))
             (map (lambda (name) (expected-look style tenzer 'ugal name))
                  '(dang1 dong2 ding2)))
-          (let ((style (make-style #:degree-colors '((dang . "#123456")))))
+          (let ((style (make-style #:pitch-colors '((dang . "#123456")))))
             (map (lambda (name) (expected-look style tenzer 'ugal name))
                  '(dang1 dong2 ding2))))
     (let* ((ugal (part-named tenzer 'ugal))
@@ -2406,7 +2406,7 @@ give."
                                              '(p q))
                                         #f 'colour 'none 'short 0
                                         'used #t #f #t '()
-                                        'by-degree 'pastel1 '() 'grid #f))))))))
+                                        'by-pitch 'pastel1 '() 'grid #f))))))))
     (test-equal "the overlays" pqd-short
       (and fig (overlays-of fig 0 0)))))
 
@@ -3701,6 +3701,29 @@ null or one string per lane, and `sizes` this slice's keys?"
     (test-equal "on a single row: no dashes"
       (list (list 0 1 0 "P" grey #f) (list 2 1 0 "G" grey #f))
       (and fig (shapes fig 0 0 0)))))
+
+;;; ------------------------------------------------------------------
+;;; Slice feat/collapsed-terms (01, "piece": the piece information is
+;;; never printed, and the figure doesn't change)
+
+(test-group "[collapsed-terms] piece information is not in the figure"
+  (let* ((body '("(scale s a b)"
+                 "(instrument i s a1 b1)"
+                 "(part :instrument i 1 2)"))
+         (plain (apply piece-of "(piece \"P\")" body))
+         (with-info
+          (apply piece-of
+                 (string-append
+                  "(piece \"P\" :composer \"I Wayan Beratha\""
+                  " :composition-year \"1964\" :source \"Gold\""
+                  " :remarks \"two\nlines\")")
+                 body)))
+    (test-assert "the piece with information reads" (piece? with-info))
+    (test-assert "the piece without it reads" (piece? plain))
+    (test-assert "the same figure with or without it"
+      (and plain with-info
+           (equal? (json-string (layout plain))
+                   (json-string (layout with-info)))))))
 
 (test-end "layout")
 

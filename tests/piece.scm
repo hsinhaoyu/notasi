@@ -48,6 +48,17 @@
 ;;;   syntax and options as a scale degree"), so `#:damped?` works on
 ;;;   them too.
 ;;; - `note-label` is unchanged by a damped form.
+;;;
+;;; Slice feat/collapsed-terms (iteration 5; 02, "Iteration 5"): the
+;;; glossary's names (ADR 0051): the record `pitch` (`make-pitch`,
+;;; `pitch?`, `pitch-name`, `pitch-aliases`, `pitch-display`,
+;;; `pitch-damped`, `pitch-location`) in place of `degree`,
+;;; `scale-pitches` and `note-pitch`; and the piece's `info`, the last
+;;; argument of `make-piece`, read with `piece-info`.
+;;; Choices made where the docs are not explicit:
+;;; - The old names are no longer exported: "renamed", not aliased.
+;;; - `make-piece` with the nine arguments of before raises: `info` is
+;;;   a field like the others, not optional.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -62,7 +73,7 @@
 
 (define (deg name alias display)
   "A degree with at most one alias."
-  (make-degree name (if alias (list alias) '()) display #f loc))
+  (make-pitch name (if alias (list alias) '()) display #f loc))
 
 ;; selisir: ding dong deng dung dang, aliases i o e u a.
 (define selisir
@@ -101,7 +112,7 @@
               loc))
 
 (define (degree-index scale name)
-  (list-index (lambda (d) (eq? (degree-name d) name)) (scale-degrees scale)))
+  (list-index (lambda (d) (eq? (pitch-name d) name)) (scale-pitches scale)))
 
 (define (pitched-note scale name octave)
   "Note NAME+OCTAVE of SCALE, e.g. (pitched-note selisir 'ding 2) is ding2."
@@ -163,7 +174,7 @@
                     (holds 'none) (pattern-names 'none) (pattern-level 0)
                     (keys 'used) (octave-numbers? #t) (key-numbers? #f)
                     (row-labels? #t) (display '())
-                    (scheme 'by-degree) (palette 'pastel1) (colors '())
+                    (scheme 'by-pitch) (palette 'pastel1) (colors '())
                     (background 'grid) (location #f))
   "A group of PARTS, each with its name as row label; every other
 setting at its default unless given."
@@ -185,7 +196,8 @@ setting at its default unless given."
   "A piece without a colotomy or patterns: pickup 0, no colotomies, and
 one score holding GROUPS."
   (make-piece title length 0 '() scales instruments '() parts
-              (list (mk-score 'default groups #:title title #:to length))))
+              (list (mk-score 'default groups #:title title #:to length))
+              '()))
 
 (define (lane-names group)
   (map note-name (group-lanes group)))
@@ -207,23 +219,23 @@ one score holding GROUPS."
     (test-equal "file #f: line" 3 (source-location-line l))))
 
 (test-group "degree record"
-  (let ((d (make-degree 'dang '(a nang) "nang" "na'" loc)))
-    (test-assert "predicate" (degree? d))
-    (test-eq "name" 'dang (degree-name d))
-    (test-equal "aliases" '(a nang) (degree-aliases d))
-    (test-equal "display" "nang" (degree-display d))
-    (test-equal "damped" "na'" (degree-damped d))
-    (test-eq "location" loc (degree-location d)))
+  (let ((d (make-pitch 'dang '(a nang) "nang" "na'" loc)))
+    (test-assert "predicate" (pitch? d))
+    (test-eq "name" 'dang (pitch-name d))
+    (test-equal "aliases" '(a nang) (pitch-aliases d))
+    (test-equal "display" "nang" (pitch-display d))
+    (test-equal "damped" "na'" (pitch-damped d))
+    (test-eq "location" loc (pitch-location d)))
   (test-equal "aliases may be empty" '()
-    (degree-aliases (make-degree 'du '() "du" #f loc)))
+    (pitch-aliases (make-pitch 'du '() "du" #f loc)))
   (test-eq "damped may be #f" #f
-    (degree-damped (make-degree 'du '() "du" #f loc))))
+    (pitch-damped (make-pitch 'du '() "du" #f loc))))
 
 (test-group "scale record"
   (test-assert "predicate" (scale? selisir))
   (test-eq "name" 'selisir (scale-name selisir))
   (test-equal "degrees" '(ding dong deng dung dang)
-    (map degree-name (scale-degrees selisir)))
+    (map pitch-name (scale-pitches selisir)))
   (test-eq "pitched? #t" #t (scale-pitched? selisir))
   (test-eq "pitched? #f for a stroke set" #f (scale-pitched? gong-strokes))
   (test-eq "location" loc (scale-location selisir)))
@@ -233,7 +245,7 @@ one score holding GROUPS."
         (s (make-note 'dag 0 #f)))
     (test-assert "predicate" (note? n))
     (test-eq "name" 'ding2 (note-name n))
-    (test-equal "degree" 0 (note-degree n))
+    (test-equal "degree" 0 (note-pitch n))
     (test-equal "octave" 2 (note-octave n))
     (test-eq "stroke octave is #f" #f (note-octave s))))
 
@@ -287,7 +299,7 @@ one score holding GROUPS."
          (g (make-group "Reyong" "Rey." "polos + sangsih" 'short 'parts
                         members #t 'none 'dash 'long 1
                         'used #t #f #t '()
-                        'by-degree '("#111111" "#eeeeee")
+                        'by-pitch '("#111111" "#eeeeee")
                         '((ding . "#000000")) 'vertical loc))
          (d (mk-group "polos" p)))
     (test-assert "predicate" (group? g))
@@ -307,14 +319,14 @@ one score holding GROUPS."
     (test-eq "holds" 'dash (group-holds g))
     (test-eq "pattern-names" 'long (group-pattern-names g))
     (test-equal "pattern-level" 1 (group-pattern-level g))
-    (test-eq "scheme" 'by-degree (group-scheme g))
+    (test-eq "scheme" 'by-pitch (group-scheme g))
     (test-equal "palette: a list of colours" '("#111111" "#eeeeee")
       (group-palette g))
     (test-equal "colors" '((ding . "#000000")) (group-colors g))
     (test-eq "location" loc (group-location g))
     (test-equal "a default group: its settings"
       (list "polos" "polos" #f 'first-long 'notes (list (cons p "polos"))
-            #f 'colour 'none 'none 0 'by-degree 'pastel1 '() #f)
+            #f 'colour 'none 'none 0 'by-pitch 'pastel1 '() #f)
       (list (group-label d) (group-short d) (group-subtitle d)
             (group-labels d) (group-rows d) (group-members d)
             (group-note-names? d) (group-fill d) (group-holds d)
@@ -381,7 +393,8 @@ one score holding GROUPS."
                          (list reyong gong)
                          (list pat)
                          (list p)
-                         (list full other))))
+                         (list full other)
+                         '())))
     (test-assert "predicate" (piece? pc))
     (test-equal "title" "Test" (piece-title pc))
     (test-equal "length" 8 (piece-length pc))
@@ -400,17 +413,17 @@ one score holding GROUPS."
       (score-groups (piece-score pc 'full))))
   (let* ((a (mk-score 'same '() #:title "first"))
          (b (mk-score 'same '() #:title "second"))
-         (pc (make-piece "T" 0 0 '() '() '() '() '() (list a b))))
+         (pc (make-piece "T" 0 0 '() '() '() '() '() (list a b) '())))
     (test-eq "piece-score looks the name up: the first with it" a
       (piece-score pc 'same)))
   (test-eq "piece-score: a piece with no scores" #f
-    (piece-score (make-piece "T" 0 0 '() '() '() '() '() '()) 'default))
+    (piece-score (make-piece "T" 0 0 '() '() '() '() '() '() '()) 'default))
   (test-equal "length may be a fraction of a pulse" 9/2
     (piece-length (mk-piece "T" 9/2 '() '() '() '())))
   (test-equal "length stays exact" #t
     (exact? (piece-length (mk-piece "T" 1/3 '() '() '() '()))))
   (let* ((c (make-colotomy 'gilak 8 'kempli '() loc))
-         (pc (make-piece "Gilak" 17 1 (list (cons 0 c)) '() '() '() '() '())))
+         (pc (make-piece "Gilak" 17 1 (list (cons 0 c)) '() '() '() '() '() '())))
     (test-equal "with a colotomy: pickup" 1 (piece-pickup pc))
     (test-equal "with a colotomy: colotomies are (start . colotomy)"
       (list (cons 0 c)) (piece-colotomies pc))
@@ -518,9 +531,9 @@ one score holding GROUPS."
 ;;   ding "neng"/"ne'", dong "nong" (no damped form), dang "nang"/"na'".
 (define baris
   (make-scale 'baris
-              (list (make-degree 'ding '(i) "neng" "ne'" loc)
-                    (make-degree 'dong '(o) "nong" #f loc)
-                    (make-degree 'dang '(a nang) "nang" "na'" loc))
+              (list (make-pitch 'ding '(i) "neng" "ne'" loc)
+                    (make-pitch 'dong '(o) "nong" #f loc)
+                    (make-pitch 'dang '(a nang) "nang" "na'" loc))
               #t
               loc))
 
@@ -536,8 +549,8 @@ one score holding GROUPS."
 ;; kajar strokes: tak (display "T", damped "t"), tuk (no damped form).
 (define kajar-strokes
   (make-scale 'kajar-strokes
-              (list (make-degree 'tak '() "T" "t" loc)
-                    (make-degree 'tuk '() "tuk" #f loc))
+              (list (make-pitch 'tak '() "T" "t" loc)
+                    (make-pitch 'tuk '() "tuk" #f loc))
               #f
               loc))
 
@@ -619,13 +632,13 @@ constructor of another arity fails the tests instead of the file."
          (g (rows3-group "Reyong" "Rey." #f 'first-long 'notes members
                          #f 'colour 'none 'none 0
                          (cons low high) #f #t #f '()
-                         'by-degree 'pastel1 '() 'grid loc))
+                         'by-pitch 'pastel1 '() 'grid loc))
          (k (mk-part 'gong gong))
          (s (rows3-group "Gong" "Gong" #f 'first-long 'notes
                          (list (cons k "gong"))
                          #f 'colour 'none 'none 0
                          'all #t #f #t '((G . "Gong") (P . "Kempur"))
-                         'by-degree 'pastel1 '() 'vertical loc)))
+                         'by-pitch 'pastel1 '() 'vertical loc)))
     (test-assert "predicate" (group? g))
     (test-assert "keys: a range, the note records themselves"
       (and (group? g)
@@ -640,7 +653,7 @@ constructor of another arity fails the tests instead of the file."
       '((G . "Gong") (P . "Kempur"))
       (and (group? s) (group-display s)))
     (test-equal "the other fields keep their places"
-      (list "Gong" 'notes #f 0 'by-degree 'pastel1 '() 'vertical loc)
+      (list "Gong" 'notes #f 0 'by-pitch 'pastel1 '() 'vertical loc)
       (and (group? s)
            (list (group-label s) (group-rows s) (group-note-names? s)
                  (group-pattern-level s) (group-scheme s) (group-palette s)
@@ -650,7 +663,7 @@ constructor of another arity fails the tests instead of the file."
       (let ((u (rows3-group "U" "U" #f 'first-long 'notes members
                             #f 'colour 'none 'none 0
                             'used #t #f #t '()
-                            'by-degree 'pastel1 '() 'grid #f)))
+                            'by-pitch 'pastel1 '() 'grid #f)))
         (and (group? u) (group-keys u))))))
 
 ;;; note-label #:octave? (slice feat/drawing-rows)
@@ -863,7 +876,7 @@ constructor of another arity fails the tests instead of the file."
 
 (define (colotomy-piece length pickup)
   (make-piece "Gilak" length pickup (list (cons 0 gilak))
-              (list gong-strokes) (list gong) '() '() '()))
+              (list gong-strokes) (list gong) '() '() '() '()))
 
 (define no-pickup (colotomy-piece 16 0))
 (define pickup-1 (colotomy-piece 17 1))
@@ -946,6 +959,111 @@ constructor of another arity fails the tests instead of the file."
      (test-equal (format #f "no colotomy, time ~a" time) time
        (position->time plain (time->position plain time))))
    '(0 1/3 1 9)))
+
+;;; ------------------------------------------------------------------
+;;; Slice feat/collapsed-terms: the glossary's names, the piece's info
+
+(define (exported-by-piece? name)
+  "Does (notasi piece) export NAME?"
+  (and (module-variable (resolve-interface '(notasi piece)) name) #t))
+
+(define (a-pitch)
+  (make-pitch 'dang '(a nang) "nang" "na'" loc))
+
+(define (a-plain-pitch)
+  (make-pitch 'du '() "du" #f loc))
+
+(define (pitch-scale)
+  "selisir built from pitch records: ding dong deng, aliases i o e."
+  (make-scale 'selisir
+              (list (make-pitch 'ding '(i) "i" #f loc)
+                    (make-pitch 'dong '(o) "o" #f loc)
+                    (make-pitch 'deng '(e) "e" "e'" loc))
+              #t
+              loc))
+
+(define (raises? thunk)
+  "Does THUNK raise anything?"
+  (guard (c (#t #t))
+    (thunk)
+    #f))
+
+(test-group "[collapsed-terms] pitch record"
+  (test-assert "predicate" (pitch? (a-pitch)))
+  (test-eq "name" 'dang (pitch-name (a-pitch)))
+  (test-equal "aliases" '(a nang) (pitch-aliases (a-pitch)))
+  (test-equal "display" "nang" (pitch-display (a-pitch)))
+  (test-equal "damped" "na'" (pitch-damped (a-pitch)))
+  (test-eq "location" loc (pitch-location (a-pitch)))
+  (test-equal "aliases may be empty" '() (pitch-aliases (a-plain-pitch)))
+  (test-eq "damped may be #f" #f (pitch-damped (a-plain-pitch)))
+  (test-assert "a pitch is not a scale, a scale not a pitch"
+    (not (or (scale? (a-pitch)) (pitch? (pitch-scale))))))
+
+(test-group "[collapsed-terms] scale-pitches and note-pitch"
+  (test-equal "scale-pitches: the pitches in order" '(ding dong deng)
+    (map pitch-name (scale-pitches (pitch-scale))))
+  (test-assert "scale-pitches: pitch records"
+    (every pitch? (scale-pitches (pitch-scale))))
+  (test-equal "note-pitch: the index into the scale" 2
+    (note-pitch (make-note 'deng1 2 1)))
+  (test-equal "note-pitch of a stroke: the index into the stroke set" 0
+    (note-pitch (make-note 'dag 0 #f)))
+  (test-equal "note-display uses the pitch's display form" "e"
+    (let* ((s (pitch-scale))
+           (n (make-note 'deng1 2 1))
+           (i (make-instrument 'x s (vector n) loc)))
+      (note-display i n)))
+  (test-equal "note-display #:damped? uses the pitch's damped form" "e'"
+    (let* ((s (pitch-scale))
+           (n (make-note 'deng1 2 1))
+           (i (make-instrument 'x s (vector n) loc)))
+      (note-display i n #:damped? #t))))
+
+(test-group "[collapsed-terms] the old names are gone"
+  (for-each
+   (lambda (name)
+     (test-assert (format #f "~a is not exported" name)
+       (not (exported-by-piece? name))))
+   '(make-degree degree? degree-name degree-aliases degree-display
+     degree-damped degree-location scale-degrees note-degree))
+  (for-each
+   (lambda (name)
+     (test-assert (format #f "~a is exported" name)
+       (exported-by-piece? name)))
+   '(make-pitch pitch? pitch-name pitch-aliases pitch-display
+     pitch-damped pitch-location scale-pitches note-pitch piece-info)))
+
+(define (make-piece* . args)
+  "make-piece called through apply: Guile checks a record constructor's
+argument count when the call is compiled, so a direct call with the
+wrong count would stop the whole file instead of failing one test."
+  (apply make-piece args))
+
+(define (piece-with-info info)
+  "A piece with nothing in it but INFO, its last argument."
+  (make-piece* "T" 0 0 '() '() '() '() '() '() info))
+
+(test-group "[collapsed-terms] piece info"
+  (test-equal "piece-info: the last argument of make-piece"
+    '((composer . "I Wayan Beratha") (composition-year . "1964"))
+    (piece-info (piece-with-info
+                 '((composer . "I Wayan Beratha") (composition-year . "1964")))))
+  (test-equal "piece-info: '() for none" '()
+    (piece-info (piece-with-info '())))
+  (test-equal "piece-info keeps its order and line breaks"
+    '((remarks . "line one\nline two") (source . "Gold"))
+    (piece-info (piece-with-info
+                 '((remarks . "line one\nline two") (source . "Gold")))))
+  (test-equal "the other fields are where they were"
+    (list "Full" 8 1 '() '() '() '() '() '())
+    (let ((pc (make-piece* "Full" 8 1 '() '() '() '() '() '()
+                          '((composer . "X")))))
+      (list (piece-title pc) (piece-length pc) (piece-pickup pc)
+            (piece-colotomies pc) (piece-scales pc) (piece-instruments pc)
+            (piece-patterns pc) (piece-parts pc) (piece-scores pc))))
+  (test-assert "make-piece without info raises"
+    (raises? (lambda () (make-piece* "T" 0 0 '() '() '() '() '() '())))))
 
 (define runner (test-runner-current))
 (test-end "piece")

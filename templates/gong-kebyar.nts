@@ -29,6 +29,15 @@
 (instrument kendang kendang-strokes  dag dug du)
 
 ;; Colotomies used in many pieces.  A piece names one with :colotomy.
+;;
+;; "Colotomic" is a word from Western writing about gamelan; there is
+;; no single Balinese term, and each meter has its own name, such as
+;; gilak or bapang (Gold, p. 42).  A `colotomy' is notasi's word for one
+;; named meter at one length: a meter played at several lengths is
+;; several colotomies.  The gongs alone don't tell meters apart, so a
+;; colotomy's name is the writer's label for the meter.  Lengths are in
+;; pulses, kempli strokes: Gold's beats.
+;;
 ;; Gilak, 8 pulses: gong lanang on 4, kempur on 5 and 7, gong on 8.
 (colotomy gilak 8
   (part :instrument gong  -:3 GL:1 P - P G))
@@ -37,6 +46,18 @@
 (colotomy gilak-2 8
   (part :instrument gong  -:3 G:1 P - P G))
 
-;; Bapang, 16 pulses: kempur on 4 and 12, klentong on 8, gong on 16.
-(colotomy bapang 16
+;; Bapang, 8 pulses: kempur on 2 and 6, klentong on 4, gong on 8
+;; (Gold, figure 5.11, p. 110).
+(colotomy bapang-8 8
+  (part :instrument gong  - P - T - P - G))
+
+;; Bapang, 16 pulses: kempur on 4 and 12, klentong on 8, gong on 16
+;; (Gold, p. 58, Jaya Semara's pangecet; p. 142).
+(colotomy bapang-16 16
+  (part :instrument gong  -:3 P:1 -:3 T:1 -:3 P:1 -:3 G:1))
+
+;; Gegaboran, 16 pulses: the strokes of bapang-16 (Gold, figure 5.11,
+;; p. 110).  The two meters differ in drumming, mood and genre, which a
+;; colotomy doesn't record; name the one you mean.
+(colotomy gegaboran 16
   (part :instrument gong  -:3 P:1 -:3 T:1 -:3 P:1 -:3 G:1))

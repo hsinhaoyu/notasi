@@ -29,11 +29,11 @@
 ;;;   `:key value` pair (a number, a bare symbol, a v1 list option) is
 ;;;   `bad-option`, as in v1: the piece form has no body.
 ;;; - `:alias`, `:display` and `:damped` with a value of the wrong kind
-;;;   are `bad-degree` (03, "Definitions"), although 03's "Options" names
+;;;   are `bad-pitch` (03, "Definitions"), although 03's "Options" names
 ;;;   `:alias 3` as a `bad-option` example. A key with no value is
 ;;;   `bad-option`, an unknown key `unknown-option`, a key twice
 ;;;   `duplicate-option`, all at the degree's line. `:alias ()` is
-;;;   `bad-degree`: an empty list is not a list of names.
+;;;   `bad-pitch`: an empty list is not a list of names.
 ;;; - Two parts on one instrument, neither with `:name`, are
 ;;;   `parts-need-names` (03 and 01's example message), although both
 ;;;   then default to the same name, which check 7 would report as a
@@ -840,7 +840,7 @@ so a test using it fails rather than passing on #f."
 
 (define (note-fields n)
   "A note as (NAME DEGREE OCTAVE)."
-  (list (note-name n) (note-degree n) (note-octave n)))
+  (list (note-name n) (note-pitch n) (note-octave n)))
 
 (define (instrument-note-fields inst)
   (map note-fields (vector->list (instrument-notes inst))))
@@ -848,21 +848,21 @@ so a test using it fails rather than passing on #f."
 (define (location-line x)
   (source-location-line
    (cond ((scale? x) (scale-location x))
-         ((degree? x) (degree-location x))
+         ((pitch? x) (pitch-location x))
          ((instrument? x) (instrument-location x))
          (else (error "no location:" x)))))
 
 (define (location-file x)
   (source-location-file
    (cond ((scale? x) (scale-location x))
-         ((degree? x) (degree-location x))
+         ((pitch? x) (pitch-location x))
          ((instrument? x) (instrument-location x))
          (else (error "no location:" x)))))
 
 (define (degree-fields d)
   "A degree as (NAME ALIASES DISPLAY DAMPED)."
-  (list (degree-name d) (degree-aliases d) (degree-display d)
-        (degree-damped d)))
+  (list (pitch-name d) (pitch-aliases d) (pitch-display d)
+        (pitch-damped d)))
 
 ;;; The main fixture. Line numbers matter: the comments give them.
 (define defs-text
@@ -894,54 +894,54 @@ so a test using it fails rather than passing on #f."
       (map scale-pitched? (piece-scales pc)))
     (test-equal "degree names in order"
       '(ding dong deng dung dang)
-      (map degree-name (scale-degrees (scale-named pc 'selisir))))
+      (map pitch-name (scale-pitches (scale-named pc 'selisir))))
     (test-equal "aliases: a single name, a list of names, empty by default"
       '((i) () (e ee) () ())
-      (map degree-aliases (scale-degrees (scale-named pc 'selisir))))
+      (map pitch-aliases (scale-pitches (scale-named pc 'selisir))))
     (test-equal "display: given, or the name as a string; Unicode works"
       '("i" "dong" "deng" "dung" "•")
-      (map degree-display (scale-degrees (scale-named pc 'selisir))))
+      (map pitch-display (scale-pitches (scale-named pc 'selisir))))
     (test-equal "damped: given, or #f by default"
       '(#f #f #f #f "•.")
-      (map degree-damped (scale-degrees (scale-named pc 'selisir))))
+      (map pitch-damped (scale-pitches (scale-named pc 'selisir))))
     (test-equal "stroke names in order"
       '(G P)
-      (map degree-name (scale-degrees (scale-named pc 'gong-strokes))))
+      (map pitch-name (scale-pitches (scale-named pc 'gong-strokes))))
     (test-equal "stroke defaults: no aliases, display is the name, damped #f"
       '((G () "G" #f) (P () "P" #f))
-      (map degree-fields (scale-degrees (scale-named pc 'gong-strokes))))
+      (map degree-fields (scale-pitches (scale-named pc 'gong-strokes))))
     (test-equal "strokes with :alias, :display and :damped"
       '((dag (D) "D" #f) (dug () "dug" "d"))
-      (map degree-fields (scale-degrees (scale-named pc 'kendang-strokes))))
+      (map degree-fields (scale-pitches (scale-named pc 'kendang-strokes))))
     (test-equal "scale lines" '(2 3 8)
       (map location-line (piece-scales pc)))
     (test-equal "degree lines: own line for a list, scale's line for a bare name"
       '(4 3 6 3 7)
-      (map location-line (scale-degrees (scale-named pc 'selisir))))
+      (map location-line (scale-pitches (scale-named pc 'selisir))))
     (test-equal "stroke lines: bare strokes use the stroke set's line" '(2 2)
-      (map location-line (scale-degrees (scale-named pc 'gong-strokes))))
+      (map location-line (scale-pitches (scale-named pc 'gong-strokes))))
     (test-equal "files are #f when read from a string"
       '(#f #f #f #f #f #f #f #f)
       (append (map location-file (piece-scales pc))
-              (map location-file (scale-degrees (scale-named pc 'selisir)))))
+              (map location-file (scale-pitches (scale-named pc 'selisir)))))
     (test-assert "locations are source-location records"
-      (every (lambda (d) (source-location? (degree-location d)))
-             (scale-degrees (scale-named pc 'selisir)))))
+      (every (lambda (d) (source-location? (pitch-location d)))
+             (scale-pitches (scale-named pc 'selisir)))))
 
   (let ((pc (try-read-string "(piece \"P\")" "(scale s (ding))")))
     (test-equal "(NAME) with no options: defaults" '(ding () "ding" #f)
-      (degree-fields (car (scale-degrees (scale-named pc 's))))))
+      (degree-fields (car (scale-pitches (scale-named pc 's))))))
 
   (let ((pc (try-read-string "(piece \"P\")" "(strokes s (k1 :alias (k2 kk)) k3)")))
     (test-equal "stroke names and aliases may end in a digit"
       '((k1 (k2 kk)) (k3 ()))
-      (map (lambda (d) (list (degree-name d) (degree-aliases d)))
-           (scale-degrees (scale-named pc 's))))))
+      (map (lambda (d) (list (pitch-name d) (pitch-aliases d)))
+           (scale-pitches (scale-named pc 's))))))
 
 (test-group "degree options"
   (define (degrees . strs)
     (let ((pc (apply try-read-string "(piece \"P\")" strs)))
-      (map degree-fields (scale-degrees (car (piece-scales pc))))))
+      (map degree-fields (scale-pitches (car (piece-scales pc))))))
   (test-equal "01's Baris example: :alias list, :display and :damped"
     '((dang (a nang) "nang" "na'"))
     (degrees "(scale s (dang :alias (a nang) :display \"nang\" :damped \"na'\"))"))
@@ -1077,9 +1077,9 @@ so a test using it fails rather than passing on #f."
       (map location-file (piece-scales pc)))
     (test-equal "degree files are the path given"
       (list path path path path path)
-      (map location-file (scale-degrees (scale-named pc 'selisir))))
+      (map location-file (scale-pitches (scale-named pc 'selisir))))
     (test-equal "degree lines from a file" '(4 3 6 3 7)
-      (map location-line (scale-degrees (scale-named pc 'selisir))))
+      (map location-line (scale-pitches (scale-named pc 'selisir))))
     (test-equal "instrument files are the path given" (list path path path)
       (map location-file (piece-instruments pc)))
     (test-equal "instrument lines from a file" '(9 10 11)
@@ -1130,10 +1130,10 @@ so a test using it fails rather than passing on #f."
     (test-equal "scale lines" '(5 12 13 16)
       (map location-line (piece-scales pc)))
     (test-equal "selisir degree lines" '(6 7 8 9 10)
-      (map location-line (scale-degrees (scale-named pc 'selisir))))
+      (map location-line (scale-pitches (scale-named pc 'selisir))))
     (test-equal "selisir displays default to names"
       '("ding" "dong" "deng" "dung" "dang")
-      (map degree-display (scale-degrees (scale-named pc 'selisir))))
+      (map pitch-display (scale-pitches (scale-named pc 'selisir))))
     (test-equal "instruments" '(ugal reyong kempli gong kendang)
       (map instrument-name (piece-instruments pc)))
     (test-equal "instrument lines" '(19 22 24 25 26)
@@ -1277,10 +1277,10 @@ so a test using it fails rather than passing on #f."
     (test-equal "an instrument may share a name with a scale" '(ugal)
       (map instrument-name (piece-instruments pc)))))
 
-(test-group "bad-degree"
+(test-group "bad-pitch"
   ;; Each case is (NAME LINE STRING). A degree written as a list
   ;; reports its own line; a bare degree reports its scale's line.
-  (table-tests 'bad-degree
+  (table-tests 'bad-pitch
    (list (list "bare degree is a number: scale's line" 2
                (lines "(piece \"P\")" "(scale s ding" "  42)"))
          (list "bare degree is a string: scale's line" 2
@@ -1375,8 +1375,8 @@ so a test using it fails rather than passing on #f."
          (list "stroke: :damped twice" 2
                (lines "(piece \"P\")" "(strokes k (G :damped \"g\" :damped \"G\"))")))))
 
-(test-group "degree-ends-in-digit"
-  (table-tests 'degree-ends-in-digit
+(test-group "pitch-ends-in-digit"
+  (table-tests 'pitch-ends-in-digit
    (list (list "bare name ending in a digit: scale's line" 2
                (lines "(piece \"P\")" "(scale s ding" "  dong2)"))
          (list "listed name ending in a digit: own line" 3
@@ -1388,8 +1388,8 @@ so a test using it fails rather than passing on #f."
          (list "bare name ending in two digits" 2
                (lines "(piece \"P\")" "(scale s ding a10)")))))
 
-(test-group "duplicate-degree"
-  (table-tests 'duplicate-degree
+(test-group "duplicate-pitch"
+  (table-tests 'duplicate-pitch
    (list (list "same name twice, bare: scale's line" 2
                (lines "(piece \"P\")" "(scale s ding dong" "  ding)"))
          (list "same name twice, second listed: its line" 3
@@ -1533,7 +1533,7 @@ so a test using it fails rather than passing on #f."
         (test-equal (string-append name ": time #f") #f
           (and (notasi-syntax-error? c) (notasi-syntax-error-time c))))))
    (list (list "bad-form" 'bad-form (lines "(piece \"P\")" "(scale s)"))
-         (list "bad-degree" 'bad-degree
+         (list "bad-pitch" 'bad-pitch
                (lines "(piece \"P\")" "(scale s (ding :display 5))"))
          (list "reserved-name" 'reserved-name
                (lines "(piece \"P\")" "(scale s ding rep)"))
@@ -1561,15 +1561,15 @@ so a test using it fails rather than passing on #f."
    (list (list "bad-form" 'bad-form 2 (lines "(piece \"P\")" "(strokes g)"))
          (list "duplicate-definition" 'duplicate-definition 3
                (lines "(piece \"P\")" "(scale s ding)" "(strokes s G)"))
-         (list "bad-degree" 'bad-degree 3
+         (list "bad-pitch" 'bad-pitch 3
                (lines "(piece \"P\")" "(scale s ding" "  (dong :display 5))"))
          (list "bad-option" 'bad-option 3
                (lines "(piece \"P\")" "(scale s ding" "  (dong :alias))"))
          (list "reserved-name" 'reserved-name 3
                (lines "(piece \"P\")" "(strokes k G" "  (@ :alias at))"))
-         (list "degree-ends-in-digit" 'degree-ends-in-digit 2
+         (list "pitch-ends-in-digit" 'pitch-ends-in-digit 2
                (lines "(piece \"P\")" "(scale s ding1)"))
-         (list "duplicate-degree" 'duplicate-degree 2
+         (list "duplicate-pitch" 'duplicate-pitch 2
                (lines "(piece \"P\")" "(scale s ding ding)"))
          (list "undefined-scale" 'undefined-scale 2
                (lines "(piece \"P\")" "(instrument x s ding1)"))
@@ -1621,9 +1621,9 @@ so a test using it fails rather than passing on #f."
           (lines "(piece \"P\")" "(scale s ding)" "(scale s dong)"
                  "(scale t :colour red ding)"))
     ;; Item 7 before 8 and 9.
-    (list "duplicate-definition comes before bad-degree" '(duplicate-definition 3)
+    (list "duplicate-definition comes before bad-pitch" '(duplicate-definition 3)
           (lines "(piece \"P\")" "(scale s (ding :display x))" "(scale s dong)"))
-    (list "duplicate-definition comes before duplicate-degree"
+    (list "duplicate-definition comes before duplicate-pitch"
           '(duplicate-definition 3)
           (lines "(piece \"P\")" "(scale s ding ding)" "(strokes s G)"))
     (list "duplicate-definition comes before reserved-name"
@@ -1635,14 +1635,14 @@ so a test using it fails rather than passing on #f."
                  "(instrument x nowhere ding1)"))
     ;; Item 8 before 9.
     (list "scale errors before instrument errors, instrument first"
-          '(bad-degree 3)
+          '(bad-pitch 3)
           (lines "(piece \"P\")" "(instrument x nowhere ding1)"
                  "(scale s (ding :display x))"))
-    (list "degree-ends-in-digit before unknown-note in an earlier instrument"
-          '(degree-ends-in-digit 3)
+    (list "pitch-ends-in-digit before unknown-note in an earlier instrument"
+          '(pitch-ends-in-digit 3)
           (lines "(piece \"P\")" "(instrument x s foo1)" "(scale s ding1)"))
-    (list "duplicate-degree before undefined-scale in an earlier instrument"
-          '(duplicate-degree 3)
+    (list "duplicate-pitch before undefined-scale in an earlier instrument"
+          '(duplicate-pitch 3)
           (lines "(piece \"P\")" "(instrument x nowhere ding1)"
                  "(strokes k G G)"))
     (list "reserved-name before undefined-scale in an earlier instrument"
@@ -1650,25 +1650,25 @@ so a test using it fails rather than passing on #f."
           (lines "(piece \"P\")" "(instrument x nowhere ding1)"
                  "(strokes k G @)"))
     ;; Item 8: within a scale, degree by degree.
-    (list "within a degree: bad-degree before degree-ends-in-digit"
-          '(bad-degree 2)
+    (list "within a degree: bad-pitch before pitch-ends-in-digit"
+          '(bad-pitch 2)
           (lines "(piece \"P\")" "(scale s (ding1 :display x))"))
-    (list "within a degree: degree-ends-in-digit before duplicate-degree"
-          '(degree-ends-in-digit 2)
+    (list "within a degree: pitch-ends-in-digit before duplicate-pitch"
+          '(pitch-ends-in-digit 2)
           (lines "(piece \"P\")" "(scale s (ding :alias (ding i1)))"))
-    (list "within a degree: bad-degree before duplicate-degree"
-          '(bad-degree 3)
+    (list "within a degree: bad-pitch before duplicate-pitch"
+          '(bad-pitch 3)
           (lines "(piece \"P\")" "(scale s ding" "  (ding :display 5))"))
     (list "an earlier degree's duplicate before a later bad degree"
-          '(duplicate-degree 2)
+          '(duplicate-pitch 2)
           (lines "(piece \"P\")" "(scale s ding ding" "  (dong :display x))"))
     (list "an earlier degree's digit before a later bad degree"
-          '(degree-ends-in-digit 2)
+          '(pitch-ends-in-digit 2)
           (lines "(piece \"P\")" "(scale s ding1" "  (dong :display x))"))
     (list "an earlier reserved name before a later bad degree"
           '(reserved-name 2)
           (lines "(piece \"P\")" "(scale s rep" "  (dong :display x))"))
-    (list "an earlier scale's error before a later scale's" '(duplicate-degree 2)
+    (list "an earlier scale's error before a later scale's" '(duplicate-pitch 2)
           (lines "(piece \"P\")" "(scale a ding ding)" "(scale b (ding :display x))"))
     ;; Item 9: within an instrument, note by note.
     (list "undefined-scale before a later instrument's unknown-note"
@@ -1702,7 +1702,7 @@ so a test using it fails rather than passing on #f."
   (test-equal "instrument note is a number: bad-form" '(bad-form 3)
     (string-error (lines "(piece \"P\")" "(strokes g G)"
                          "(instrument gong g 1)")))
-  (test-equal "alias is a string: bad-degree" '(bad-degree 2)
+  (test-equal "alias is a string: bad-pitch" '(bad-pitch 2)
     (string-error (lines "(piece \"P\")" "(scale s (ding :alias \"i\"))")))
   (test-equal "leading-zero octave: unknown-note" '(unknown-note 3)
     (string-error (lines "(piece \"P\")" "(scale s ding)"
@@ -2608,7 +2608,7 @@ EXPECTED-KIND at line 10, part p, time TIME (in pulses)."
     (list "a group comes before a part's bad-form" '(group-outside-score 3)
           (lines "(piece \"P\")" "(part)" "(group \"G\" a)"))
     ;; Item 6: shape and options, in file order, before everything after.
-    (list "a part's bad-form comes before a scale's bad-degree" '(bad-form 3)
+    (list "a part's bad-form comes before a scale's bad-pitch" '(bad-form 3)
           (lines "(piece \"P\")" "(scale s (ding :display x))" "(part :instrument reyong)"))
     (list "bad-form in file order: scale before part" '(bad-form 2)
           (lines "(piece \"P\")" "(scale)" "(part :instrument reyong)"))
@@ -2804,7 +2804,7 @@ canonicalized, or the raised object (or no-error) unchanged."
 
 (define (loc-of x)
   (cond ((scale? x) (scale-location x))
-        ((degree? x) (degree-location x))
+        ((pitch? x) (pitch-location x))
         ((instrument? x) (instrument-location x))
         ((part? x) (part-location x))
         ((group? x) (group-location x))
@@ -2817,7 +2817,7 @@ canonicalized, or the raised object (or no-error) unchanged."
 
 (define (scale-names pc) (map scale-name (piece-scales pc)))
 (define (instrument-names pc) (map instrument-name (piece-instruments pc)))
-(define (degree-names sc) (map degree-name (scale-degrees sc)))
+(define (degree-names sc) (map pitch-name (scale-pitches sc)))
 (define (note-names inst) (map note-name (vector->list (instrument-notes inst))))
 
 (define (error-tests cases)
@@ -2852,7 +2852,7 @@ canonicalized, or the raised object (or no-error) unchanged."
       (file+line (car (piece-scales pc))))
     (test-equal "use NAME: bare degrees have their scale's file and line"
       (list (list (canon tpl) 2) (list (canon tpl) 2))
-      (map file+line (scale-degrees (car (piece-scales pc)))))
+      (map file+line (scale-pitches (car (piece-scales pc)))))
     (test-equal "use NAME: the instrument's file and line"
       (list (canon tpl) 3)
       (file+line (car (piece-instruments pc)))))
@@ -2897,16 +2897,16 @@ canonicalized, or the raised object (or no-error) unchanged."
     (test-equal "use selisir: degree lines"
       (map (lambda (d) (line-in selisir-file (string-append "(" d)))
            '("ding" "dong" "deng" "dung" "dang"))
-      (map (lambda (d) (source-location-line (degree-location d)))
-           (scale-degrees (car (piece-scales pc)))))
+      (map (lambda (d) (source-location-line (pitch-location d)))
+           (scale-pitches (car (piece-scales pc)))))
     (test-equal "use selisir: degree files are the template's"
       '("selisir.nts" "selisir.nts" "selisir.nts" "selisir.nts" "selisir.nts")
-      (map (lambda (d) (basename (source-location-file (degree-location d))))
-           (scale-degrees (car (piece-scales pc)))))
+      (map (lambda (d) (basename (source-location-file (pitch-location d))))
+           (scale-pitches (car (piece-scales pc)))))
     (test-equal "use selisir: aliases and displays, no damped forms"
       '((ding (i) "i" #f) (dong (o) "o" #f) (deng (e) "e" #f)
         (dung (u) "u" #f) (dang (a) "a" #f))
-      (map degree-fields (scale-degrees (car (piece-scales pc)))))
+      (map degree-fields (scale-pitches (car (piece-scales pc)))))
     (test-equal "use selisir: aliases work in the piece's instrument"
       '(ding2 dong2)
       (note-names (car (piece-instruments
@@ -3168,8 +3168,8 @@ canonicalized, or the raised object (or no-error) unchanged."
                              "  (dong :alias o) (deng :alias e) (dung :alias u) (dang :alias a))")))
     (test-equal "a replacement selisir with :damped: the template's ugal uses it"
       "i'"
-      (degree-damped
-       (car (scale-degrees (instrument-scale (instrument-named pc 'ugal)))))))
+      (pitch-damped
+       (car (scale-pitches (instrument-scale (instrument-named pc 'ugal)))))))
 
   ;; A template replaces its own template's definitions.
   (let ((dir (fresh-dir)))
@@ -3219,9 +3219,9 @@ canonicalized, or the raised object (or no-error) unchanged."
     (let ((pc (read-in dir "(piece \"P\")" "(use \"baris.nts\")")))
       (test-equal "a template's degrees keep their options"
         '((dang (a nang) "nang" "na'") (ding () "ding" #f))
-        (map degree-fields (scale-degrees (scale-named pc 'baris))))
+        (map degree-fields (scale-pitches (scale-named pc 'baris))))
       (test-equal "a template's degree lines" (list (list (canon tpl) 2) (list (canon tpl) 1))
-        (map file+line (scale-degrees (scale-named pc 'baris))))
+        (map file+line (scale-pitches (scale-named pc 'baris))))
       (test-equal "a template instrument resolves an alias from a list"
         '(dang1 dang2) (note-names (instrument-named pc 'x))))))
 
@@ -3458,8 +3458,8 @@ canonicalized, or the raised object (or no-error) unchanged."
       (list "duplicate-definition"
             (at 'duplicate-definition (t "dup" "(scale s a)" "(strokes s K)") 2)
             (use "dup"))
-      (list "bad-degree at the degree's own line"
-            (at 'bad-degree (t "bd" "(scale s" "  a" "  (b :display 1))") 3)
+      (list "bad-pitch at the degree's own line"
+            (at 'bad-pitch (t "bd" "(scale s" "  a" "  (b :display 1))") 3)
             (use "bd"))
       (list "a degree's unknown-option at the degree's own line"
             (at 'unknown-option (t "uo" "(scale s" "  a" "  (b :colour red))") 3)
@@ -3467,11 +3467,11 @@ canonicalized, or the raised object (or no-error) unchanged."
       (list "reserved-name"
             (at 'reserved-name (t "rn" ";; x" "(strokes k K rep)") 2)
             (use "rn"))
-      (list "degree-ends-in-digit"
-            (at 'degree-ends-in-digit (t "dig" ";; x" "(scale s a1)") 2)
+      (list "pitch-ends-in-digit"
+            (at 'pitch-ends-in-digit (t "dig" ";; x" "(scale s a1)") 2)
             (use "dig"))
-      (list "duplicate-degree"
-            (at 'duplicate-degree (t "dd" "(scale s a (b :alias a))") 1)
+      (list "duplicate-pitch"
+            (at 'duplicate-pitch (t "dd" "(scale s a (b :alias a))") 1)
             (use "dd"))
       (list "undefined-scale"
             (at 'undefined-scale (t "us" "(scale s a)" "(instrument x nosuch a1)") 2)
@@ -3601,17 +3601,17 @@ canonicalized, or the raised object (or no-error) unchanged."
             (string-in dir "(piece \"P\")" "(use \"b.nts\")" "(use \"c.nts\")" "(part)"))
       ;; Items 8 and 9 run over the merged definitions, after item 6 of
       ;; the piece.
-      (list "the piece's bad-form before a template's bad-degree"
+      (list "the piece's bad-form before a template's bad-pitch"
             (at 'bad-form #f 3)
             (string-in dir "(piece \"P\")" "(use \"tdeg.nts\")" "(scale)"))
-      (list "the piece's bad-degree before a template's unknown-note"
-            (at 'bad-degree #f 3)
+      (list "the piece's bad-pitch before a template's unknown-note"
+            (at 'bad-pitch #f 3)
             (string-in dir "(piece \"P\")" "(use \"tnote.nts\")" "(scale s (a :display 1))"))
-      (list "the piece's degree-ends-in-digit before a template's undefined-scale"
-            (at 'degree-ends-in-digit #f 3)
+      (list "the piece's pitch-ends-in-digit before a template's undefined-scale"
+            (at 'pitch-ends-in-digit #f 3)
             (string-in dir "(piece \"P\")" "(use \"tus.nts\")" "(scale s a1)"))
-      (list "a template's bad-degree before the piece's (merged order)"
-            (at 'bad-degree tdeg 1)
+      (list "a template's bad-pitch before the piece's (merged order)"
+            (at 'bad-pitch tdeg 1)
             (string-in dir "(piece \"P\")" "(use \"tdeg.nts\")" "(scale s2 (b :display 1))"))
       (list "a template's unknown-note before the piece's (merged order)"
             (at 'unknown-note tnote 2)
@@ -3624,7 +3624,7 @@ canonicalized, or the raised object (or no-error) unchanged."
       (list "a duplicate in a template is an error even if the piece replaces the name"
             (at 'duplicate-definition dup 2)
             (string-in dir "(piece \"P\")" "(use \"dup.nts\")" "(scale s c)"))
-      (list "a replaced template scale's bad-degree is not checked"
+      (list "a replaced template scale's bad-pitch is not checked"
             'no-error
             (string-in dir "(piece \"P\")" "(use \"tdeg.nts\")" "(scale s a)"))
       (list "a replaced template instrument's unknown-note is not checked"
@@ -4433,7 +4433,7 @@ line 12."
       (part-triples pc 'gong))
     (test-equal "selisir shows its degrees by vowel"
       '("i" "o" "e" "u" "a")
-      (map degree-display (scale-degrees (scale-named pc 'selisir))))
+      (map pitch-display (scale-pitches (scale-named pc 'selisir))))
     (test-equal "ugal lane labels are vowel and octave"
       '("o1" "i3")
       (let* ((inst (instrument-named pc 'ugal))
@@ -5031,7 +5031,7 @@ STR, or the raised object (or no-error) unchanged."
 (define (default-group-settings label)
   "group-settings of a group LABEL with every option at its default."
   (list label label #f 'first-long 'notes #f 'colour 'none 'none 0
-        'by-degree 'pastel1 '()))
+        'by-pitch 'pastel1 '()))
 
 (define (member-names g)
   "G's members as (PART-NAME ROW-LABEL)."
@@ -5075,7 +5075,7 @@ STR, or the raised object (or no-error) unchanged."
              "  :cell-width \"3em\" :cell-height \"1.5em\""                    ; 16
              "  (group \"Gangsa\" :subtitle \"norot\"  polos sangsih)"         ; 17
              "  (group \"Ugal\" :note-names no :palette dark2  ugal)"          ; 18
-             "  (group \"\" :colors ((dong \"#ffffff\")) :scheme by-degree  gong kempli))" ; 19
+             "  (group \"\" :colors ((dong \"#ffffff\")) :scheme by-pitch  gong kempli))" ; 19
              "(score parts"                                                    ; 20
              "  (group \"P\"  (polos :label \"Pol.\") sangsih))")))             ; 21
     (test-assert "reads" (piece? pc))
@@ -5116,15 +5116,15 @@ STR, or the raised object (or no-error) unchanged."
            (score-groups (score-named pc 'full))))
     (test-equal "a group without options: the score's settings, else the defaults"
       (list "Gangsa" "Gangsa" "norot" 'first-long 'notes #t 'colour 'none 'none 0
-            'by-degree 'set1 '((ding . "#000000")))
+            'by-pitch 'set1 '((ding . "#000000")))
       (group-settings (car (score-groups (score-named pc 'full)))))
     (test-equal "a group's own :note-names and :palette override the score's"
       (list "Ugal" "Ugal" #f 'first-long 'notes #f 'colour 'none 'none 0
-            'by-degree 'dark2 '((ding . "#000000")))
+            'by-pitch 'dark2 '((ding . "#000000")))
       (group-settings (cadr (score-groups (score-named pc 'full)))))
     (test-equal "a group's own :colors replace the score's; an empty label"
       (list "" "" #f 'first-long 'notes #t 'colour 'none 'none 0
-            'by-degree 'set1 '((dong . "#ffffff")))
+            'by-pitch 'set1 '((dong . "#ffffff")))
       (group-settings (caddr (score-groups (score-named pc 'full)))))
     (test-equal "members: (part . row-label), the label the part's name"
       '(((polos "polos") (sangsih "sangsih"))
@@ -5373,7 +5373,7 @@ STR, or the raised object (or no-error) unchanged."
     (list ":palette one bad colour among good ones" '(bad-option 14)
           ":palette (\"#111111\" \"#2222\")")
     (list ":scheme an unknown name" '(bad-option 14) ":scheme rainbow")
-    (list ":scheme a string" '(bad-option 14) ":scheme \"by-degree\"")
+    (list ":scheme a string" '(bad-option 14) ":scheme \"by-pitch\"")
     (list ":colors a colour name" '(bad-option 14) ":colors ((ding \"black\"))")
     (list ":colors a short colour" '(bad-option 14) ":colors ((ding \"#00000\"))")
     (list ":colors a symbol" '(bad-option 14) ":colors ding")
@@ -5473,12 +5473,12 @@ colotomy, 4 pulses."
              "  :from (1 1) :to (2 8) :system-length 4 :breaks ((2 1))"
              "  :cycle-numbers yes :pulse-numbers yes :numbering gong-last"
              "  :pulse-label \"Beats\" :font-size \"10pt\""
-             "  :note-names yes :scheme by-degree :palette set1"
+             "  :note-names yes :scheme by-pitch :palette set1"
              "  :colors ((ding \"#000000\")) :cell-width \"2em\" :cell-height \"2em\""
              "  :rows notes :fill colour :holds none :pattern-names none"
              "  :pattern-level 0 :labels short"
              "  (group \"Ugal\" :short \"U.\" :subtitle \"s\" :labels long"
-             "    :note-names yes :scheme by-degree :palette set2"
+             "    :note-names yes :scheme by-pitch :palette set2"
              "    :colors ((dong \"#ffffff\")) :rows notes :fill colour"
              "    :holds none :pattern-names short :pattern-level 1 ugal)"
              "  (group \"Gong\" gong))")))
@@ -5961,7 +5961,7 @@ colotomy, 4 pulses."
       (and pc (map member-names (score-groups (score-named pc 's)))))
     (test-equal "every other setting as before"
       (list (list "R" "R" #f 'first-long 'parts #t 'colour 'none 'none 0
-                  'by-degree 'pastel1 '()))
+                  'by-pitch 'pastel1 '()))
       (and pc (map group-settings (score-groups (score-named pc 's))))))
   (let ((pc (read-scores+ "(score s :note-names yes"
                           "  (group \"K\" :rows single gong))")))
@@ -6270,7 +6270,7 @@ colotomy, 4 pulses."
                           "  (group \"R\" polos sangsih))")))
     (test-equal "every other setting as before"
       (list (list "R" "R" #f 'first-long 'notes #f 'colour 'none 'long 2
-                  'by-degree 'pastel1 '()))
+                  'by-pitch 'pastel1 '()))
       (and pc (map group-settings (score-groups (score-named pc 's))))))
   (let ((pc (read-scores+ "(score s :pattern-names short"
                           "  (group \"G\" gong kempli))")))
@@ -6586,8 +6586,8 @@ colotomy, 4 pulses."
       (and pc (note-names (instrument-named pc 'gong))))
     (test-equal "gong: each stroke displayed by its name"
       '("G" "GL" "P" "T")
-      (and pc (map degree-display
-                   (scale-degrees (instrument-scale (instrument-named pc 'gong))))))
+      (and pc (map pitch-display
+                   (scale-pitches (instrument-scale (instrument-named pc 'gong))))))
     (test-equal "gong: each stroke's label is its name"
       '("G" "GL" "P" "T")
       (and pc (let ((inst (instrument-named pc 'gong)))
@@ -7345,6 +7345,255 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
                   "\n"))))))
       (and (exception-with-message? c)
            (string-contains (exception-message c) "part `ugal', pulse 1:")))))
+
+;;; ==================================================================
+;;; Slice feat/collapsed-terms (iteration 5; 01, "piece" and "In the
+;;; grid"; 02 and 03, "Iteration 5"; ADRs 0051, 0056)
+;;; ==================================================================
+;;;
+;;; The glossary's names (ADR 0051): the error kinds `bad-pitch`,
+;;; `duplicate-pitch` and `pitch-ends-in-digit`, whose messages say
+;;; "pitch", never "degree" or "note name"; the records read as `pitch`,
+;;; `scale-pitches` and `note-pitch`; `:scheme by-pitch`, with
+;;; `by-degree` a value no option takes. The piece information keys
+;;; (01, "piece"), kept in `piece-info`.
+;;; Choices made where the docs are not explicit:
+;;; - Messages are checked for "degree" and "note name" in any case,
+;;;   for the three renamed kinds only; nothing else about their text.
+;;; - A group with no `:scheme` (and a score with none) has the scheme
+;;;   `by-pitch`: 01 gives it as the option's default.
+;;; - A piece information key given twice is `duplicate-option`, and
+;;;   one with no value `bad-option`, as for any key (01, "Options").
+;;; - A key that is not one of the nine (`:arranger`, `:Composer`) is
+;;;   `unknown-option`; so is one of the nine on a form other than
+;;;   `piece` (a score).
+;;; - `piece-info` holds only the nine keys: `:colotomy` and `:pickup`
+;;;   are not in it, even written between them.
+
+(define (error-message str)
+  "The message of the &notasi-syntax-error raised reading STR, or #f."
+  (let ((c (catch-syntax-error (lambda () (read-piece-string str)))))
+    (and (notasi-syntax-error? c)
+         (exception-with-message? c)
+         (exception-message c))))
+
+(define (says-pitch-only? str)
+  "Does the error reading STR have a message without \"degree\" or
+\"note name\"?"
+  (let ((m (error-message str)))
+    (and (string? m)
+         (not (string-contains-ci m "degree"))
+         (not (string-contains-ci m "note name")))))
+
+(define bad-pitch-cases
+  (list (list "bare pitch is a number: scale's line" 2
+              (lines "(piece \"P\")" "(scale s ding" "  42)"))
+        (list "pitch list with a string head: its own line" 3
+              (lines "(piece \"P\")" "(scale s ding" "  (\"dong\" :alias o))"))
+        (list "empty list as a pitch" 2
+              (lines "(piece \"P\")" "(scale s ding ())"))
+        (list ":display is a symbol" 3
+              (lines "(piece \"P\")" "(scale s ding" "  (dong :display o))"))
+        (list ":damped is a number" 3
+              (lines "(piece \"P\")" "(scale s ding" "  (dong :damped 5))"))
+        (list ":alias is a string" 3
+              (lines "(piece \"P\")" "(scale s ding" "  (dong :alias \"o\"))"))
+        (list "stroke: :display not a string" 2
+              (lines "(piece \"P\")" "(strokes k G (dag :display D))"))))
+
+(define pitch-ends-in-digit-cases
+  (list (list "bare name ending in a digit: scale's line" 2
+              (lines "(piece \"P\")" "(scale s ding" "  dong2)"))
+        (list "listed name ending in a digit: own line" 3
+              (lines "(piece \"P\")" "(scale s ding" "  (dong2 :alias o))"))
+        (list "alias ending in a digit" 3
+              (lines "(piece \"P\")" "(scale s ding" "  (dong :alias o2))"))))
+
+(define duplicate-pitch-cases
+  (list (list "same name twice, bare: scale's line" 2
+              (lines "(piece \"P\")" "(scale s ding dong" "  ding)"))
+        (list "alias equal to another pitch's name" 3
+              (lines "(piece \"P\")" "(scale s ding" "  (dong :alias ding))"))
+        (list "alias equal to an earlier alias" 3
+              (lines "(piece \"P\")" "(scale s (ding :alias i)" "  (dong :alias i))"))
+        (list "stroke name twice" 2
+              (lines "(piece \"P\")" "(strokes k G P G)"))))
+
+(define (message-tests cases)
+  (for-each
+   (match-lambda
+     ((name line str)
+      (test-assert (string-append name ": the message says pitch")
+        (says-pitch-only? str))))
+   cases))
+
+(test-group "[collapsed-terms] bad-pitch"
+  (table-tests 'bad-pitch bad-pitch-cases)
+  (message-tests bad-pitch-cases))
+
+(test-group "[collapsed-terms] pitch-ends-in-digit"
+  (table-tests 'pitch-ends-in-digit pitch-ends-in-digit-cases)
+  (message-tests pitch-ends-in-digit-cases))
+
+(test-group "[collapsed-terms] duplicate-pitch"
+  (table-tests 'duplicate-pitch duplicate-pitch-cases)
+  (message-tests duplicate-pitch-cases))
+
+(test-group "[collapsed-terms] the renamed kinds in the check order"
+  (test-equal "duplicate-definition comes before bad-pitch"
+    '(duplicate-definition 3)
+    (string-error (lines "(piece \"P\")" "(scale s a)" "(scale s (b :display 1))")))
+  (test-equal "within a pitch: bad-pitch before pitch-ends-in-digit"
+    '(bad-pitch 2)
+    (string-error (lines "(piece \"P\")" "(scale s (a1 :display 1))"))))
+
+(test-group "[collapsed-terms] pitches as read"
+  (let ((pc (try-read-string parts-defs)))
+    (test-equal "scale-pitches: names in order" '(ding dong deng dung dang)
+      (and pc (map pitch-name (scale-pitches (scale-named pc 'selisir)))))
+    (test-equal "pitch-aliases" '((i nding) (o) (e) (u) (a))
+      (and pc (map pitch-aliases (scale-pitches (scale-named pc 'selisir)))))
+    (test-equal "pitch-display: the name when none is given"
+      '("ding" "dong" "deng" "dung" "dang")
+      (and pc (map pitch-display (scale-pitches (scale-named pc 'selisir)))))
+    (test-equal "pitch-damped: #f when none is given" '(#f #f #f #f #f)
+      (and pc (map pitch-damped (scale-pitches (scale-named pc 'selisir)))))
+    (test-equal "pitch-location: the scale's lines" '(2 2 3 3 3)
+      (and pc (map (lambda (p) (source-location-line (pitch-location p)))
+                   (scale-pitches (scale-named pc 'selisir)))))
+    (test-equal "stroke sets hold pitch records too" '(G P)
+      (and pc (map pitch-name (scale-pitches (scale-named pc 'gong-strokes)))))
+    (test-equal "note-pitch: e1 u1 a1 i2 o2 e2 u2 a2 on reyong"
+      '(2 3 4 0 1 2 3 4)
+      (and pc (map note-pitch
+                   (vector->list
+                    (instrument-notes (instrument-named pc 'reyong))))))
+    (test-equal "note-pitch of strokes: G P" '(0 1)
+      (and pc (map note-pitch
+                   (vector->list
+                    (instrument-notes (instrument-named pc 'gong))))))))
+
+(test-group "[collapsed-terms] :scheme by-pitch"
+  (let ((pc (read-scores+ "(score s :scheme by-pitch"                 ; 14
+                          "  (group \"U\" :scheme by-pitch ugal)"     ; 15
+                          "  (group \"G\" gong))")))                  ; 16
+    (test-assert ":scheme by-pitch reads on a score and a group" (piece? pc))
+    (test-equal "the groups' scheme is by-pitch" '(by-pitch by-pitch)
+      (and pc (map group-scheme (score-groups (score-named pc 's))))))
+  (let ((pc (read-scores+ "(score s (group \"U\" ugal))")))
+    (test-equal "the default scheme is by-pitch" '(by-pitch)
+      (and pc (map group-scheme (score-groups (score-named pc 's))))))
+  (let ((pc (read-scores+ "(score s :scheme by-pitch (group \"U\" ugal))")))
+    (test-equal "a score's :scheme by-pitch reaches its groups" '(by-pitch)
+      (and pc (map group-scheme (score-groups (score-named pc 's))))))
+  (test-equal ":scheme by-degree on a score: bad-option" '(bad-option 14)
+    (score-error "(score s :scheme by-degree (group \"U\" ugal))"))
+  (test-equal ":scheme by-degree on a group: bad-option" '(bad-option 15)
+    (string-error (one-group "(group \"U\" :scheme by-degree ugal)")))
+  (test-equal ":scheme by-pitch as a string: bad-option" '(bad-option 14)
+    (score-error "(score s :scheme \"by-pitch\" (group \"U\" ugal))")))
+
+;;; Piece information
+
+(define info-keys
+  '(composer composition-year transcriber transcription-year source
+    contributor contribution-year performer remarks))
+
+(define (key->option key)
+  (string-append ":" (symbol->string key)))
+
+(define (info-of . strs)
+  "piece-info of the piece read from the lines STRS, or #f if it raises."
+  (let ((pc (apply try-read-string strs)))
+    (and pc (piece-info pc))))
+
+(test-group "[collapsed-terms] piece information"
+  (test-equal "no information: '()" '()
+    (info-of "(piece \"P\")"))
+  (test-equal "one key" '((composer . "I Wayan Beratha"))
+    (info-of "(piece \"P\" :composer \"I Wayan Beratha\")"))
+  (for-each
+   (lambda (key)
+     (test-equal (string-append (key->option key) " reads")
+       (list (cons key "x"))
+       (info-of (string-append "(piece \"P\" " (key->option key) " \"x\")"))))
+   info-keys)
+  (test-equal "all nine, in the order written, keys without the colon"
+    (map (lambda (k) (cons k (symbol->string k))) (reverse info-keys))
+    (info-of
+     (string-append
+      "(piece \"P\""
+      (string-concatenate
+       (map (lambda (k) (string-append " " (key->option k) " \""
+                                       (symbol->string k) "\""))
+            (reverse info-keys)))
+      ")")))
+  (test-equal "written over several lines"
+    '((composer . "I Wayan Beratha") (composition-year . "1964")
+      (source . "Lisa Gold, Music in Bali (2005)")
+      (performer . "Sanggar Çudamani"))
+    (info-of "(piece \"Jaya Semara\""
+             "  :composer \"I Wayan Beratha\" :composition-year \"1964\""
+             "  :source \"Lisa Gold, Music in Bali (2005)\""
+             "  :performer \"Sanggar Çudamani\")"))
+  (test-equal "kept exactly: line breaks" '((remarks . "line one\nline two"))
+    (info-of "(piece \"P\" :remarks \"line one" "line two\")"))
+  (test-equal "kept exactly: spaces at either end" '((remarks . "  two  "))
+    (info-of "(piece \"P\" :remarks \"  two  \")"))
+  (test-equal "kept exactly: an empty string" '((composer . ""))
+    (info-of "(piece \"P\" :composer \"\")"))
+  (test-equal "a year is any string"
+    '((composition-year . "c. 1964") (transcription-year . "1930s")
+      (contribution-year . "unknown"))
+    (info-of "(piece \"P\" :composition-year \"c. 1964\""
+             "  :transcription-year \"1930s\" :contribution-year \"unknown\")"))
+  (let ((pc (try-read-string
+             "(piece \"G\" :composer \"X\" :colotomy gilak :remarks \"Y\" :pickup 1)"
+             "(use gong-kebyar)"
+             "(part :instrument ugal 1:9)")))
+    (test-equal "with :colotomy and :pickup between them: only the information"
+      '((composer . "X") (remarks . "Y"))
+      (and pc (piece-info pc)))
+    (test-equal "and :colotomy and :pickup still read" '(1 9)
+      (and pc (list (piece-pickup pc) (piece-length pc)))))
+  (let ((pc (try-read-string "(piece \"P\" :composer \"X\")"
+                             "(scale s a b)"
+                             "(instrument i s a1 b1)"
+                             "(part :instrument i 1 2)")))
+    (test-equal "the title is unchanged" "P" (and pc (piece-title pc)))
+    (test-equal "the parts are unchanged" '(i)
+      (and pc (map part-name
+                   (filter (lambda (p) (eq? (part-origin p) 'written))
+                           (piece-parts pc)))))))
+
+(test-group "[collapsed-terms] piece information errors"
+  (for-each
+   (lambda (key)
+     (for-each
+      (match-lambda
+        ((what value)
+         (test-equal (string-append (key->option key) " " what ": bad-option")
+           '(bad-option 1)
+           (string-error (string-append "(piece \"P\" " (key->option key)
+                                        " " value ")")))))
+      '(("a symbol" "beratha") ("a number" "1964") ("a list" "(\"a\" \"b\")"))))
+   info-keys)
+  (test-equal "a key with no value, at the end" '(bad-option 1)
+    (string-error "(piece \"P\" :composer)"))
+  (test-equal "a key with no value, followed by another key" '(bad-option 1)
+    (string-error "(piece \"P\" :composer :remarks \"x\")"))
+  (test-equal "a key given twice" '(duplicate-option 1)
+    (string-error "(piece \"P\" :composer \"a\" :composer \"b\")"))
+  (test-equal "a role not among the nine" '(unknown-option 1)
+    (string-error "(piece \"P\" :arranger \"X\")"))
+  (test-equal "keys are case-sensitive" '(unknown-option 1)
+    (string-error "(piece \"P\" :Composer \"X\")"))
+  (test-equal "a bad value on a later line: the piece form's line" '(bad-option 2)
+    (string-error (lines ";; c" "(piece \"P\"" "  :composer 1964)")))
+  (test-equal "not a score option" '(unknown-option 14)
+    (score-error "(score s :composer \"X\" (group \"U\" ugal))"))
+  (test-equal "not a group option" '(unknown-option 15)
+    (string-error (one-group "(group \"U\" :composer \"X\" ugal)"))))
 
 (define runner (test-runner-current))
 (test-end "reader")

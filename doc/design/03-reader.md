@@ -611,12 +611,12 @@ when the milestones are built; the records it fills are in 02,
 - **Error kinds renamed** to the glossary's terms (ADR 0051), with the
   reader's other changes. Tests check kinds, so they change with them:
 
-  | Now | Planned |
-  |---|---|
-  | `bad-degree` | `bad-pitch` |
-  | `duplicate-degree` | `duplicate-pitch` |
-  | `degree-ends-in-digit` | `pitch-ends-in-digit` |
-  | `needs-note-names` | `needs-note-label` |
+  | Now | Planned | Slice |
+  |---|---|---|
+  | `bad-degree` | `bad-pitch` | `feat/collapsed-terms` |
+  | `duplicate-degree` | `duplicate-pitch` | `feat/collapsed-terms` |
+  | `degree-ends-in-digit` | `pitch-ends-in-digit` | `feat/collapsed-terms` |
+  | `needs-note-names` | `needs-note-label` | `feat/collapsed-labels`, with its rule |
 
   Messages say "pitch" and "key", never "degree" or "note name".
 
