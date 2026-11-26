@@ -2,9 +2,9 @@
 
 Status: mostly open questions. Iteration 4 (ADR 0049): CI for the
 Emacs package and what Emacs users install are implemented.
-This answers question 2 for Emacs users only. Planned for iteration 5
-(ADR 0052): the examples in four folders, their committed drawings and
-the CI check that keeps them current. Each question, once decided, gets an
+This answers question 2 for Emacs users only. The examples in four
+folders, their committed drawings and the CI check that keeps them
+current (ADR 0052) since iteration 5's `feat/examples`. Each question, once decided, gets an
 ADR and this document is updated to describe the choice.
 
 ## Responsibility
@@ -80,7 +80,8 @@ Emacs", `feat/emacs-docs`).
 
 ## Examples and their drawings
 
-**Planned** (iteration 5, ADR 0052).
+**Implemented** (iteration 5's `feat/examples`, ADR 0052), tests in
+`tests/examples.scm`, `tests/golden.scm` and `tests/manual.scm`.
 
 Every `.nts` example in the repository is under `examples/`:
 
@@ -131,9 +132,9 @@ examples/
   (`![…](figures/NAME.png)` for the example's first score, or
   `figures/NAME_SCORE.png` with `--score SCORE`), into
   `manual/images/`. It empties each `images/` folder first, so an image
-  no longer needed is deleted. The resolution is
-  chosen by eye when the target is built: sharp enough for the README
-  and the manual, small enough for the repository.
+  no longer needed is deleted. The resolution,
+  chosen by eye, is 144 ppi (`IMAGES_PPI`): sharp on high-resolution
+  screens, and about 60 KB for one of Jaya Semara's scores.
 - **The committed images are Linux's.** They are drawn on Linux with
   the pinned Typst (0.15.1), as CI draws them, so the check doesn't
   depend on Typst drawing the same bytes on every system. CI runs

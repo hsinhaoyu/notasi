@@ -12,7 +12,7 @@ GNU Guile 3.0 project for notating and visualizing Balinese gamelan music. `(not
 - Run one test file: `guile --fresh-auto-compile -L . tests/<name>.scm`
 - Remove SRFI-64 logs: `make clean`
 - Check the Emacs package (tests, byte-compiling, checkdoc, package-lint; needs Emacs, not part of `make check`): `make check-emacs`
-- Draw every score of each example to `build/preview/` (`NAME.png`, or `NAME_SCORE.png` for a file with scores) for a visual check: `make preview` (needs Typst)
+- Redraw the committed drawings (every gallery score into `examples/gallery/images/`, each figure the manual shows into `examples/manual/images/`): `make images` (needs Typst). The committed images are the ones CI draws on Linux: when CI's image check fails, download its `images` artifact and commit those files; images drawn on macOS are for looking only.
 
 Typst is pinned to **0.15.1** (05, "Version pinning"); CI installs exactly that version. `tests/template.scm` needs `typst` on the PATH.
 
@@ -33,13 +33,14 @@ Repository layout (entries marked *planned* don't exist yet):
 ```
 notasi/             Guile modules: piece, reader, expand, style, layout, json, typst, command
 typst/              Typst template notasi.typ; the package's typst.toml (planned, 06)
-scripts/            the notasi command: notasi render, with --all and --list (typst, update, watch planned, 06);
-                    preview.scm, used by make preview
+scripts/            the notasi command: notasi render, with --all and --list (typst, update, watch planned, 06)
 editors/emacs/      notasi-mode, the Emacs package (08), its ERT tests and check.el
-examples/           real pieces (.nts), used as test fixtures
+examples/           pieces (.nts), in four folders (07, ADR 0052): gallery/ and its
+                    images/ (committed), demos/, contrib/ (not tested), and manual/
+                    (the manual's examples, templates/, mistakes/, images/)
 templates/          shared definitions (.nts) loaded with (use NAME)
 tests/              SRFI-64 test files: one per module, plus golden, syntax,
-                    targets, manual, iterations, decisions, readme
+                    targets, manual, examples, iterations, decisions, readme
 tests/golden/       expected JSON figures, one per score of each example (make golden)
 doc/prototypes/     hand-made mockup of the target output (score.typ, piece.json)
 doc/manual/         user manual for musicians (mdBook; style in STYLE.md)
@@ -83,10 +84,10 @@ Deferred work is in `doc/iterations/backlog.md`.
 
 - Any change a user can see (notation, error messages, commands, output) updates the manual in the same PR. Behaviour that isn't implemented yet is never documented there.
 - Read `doc/manual/STYLE.md` before writing a page. It sets the reader, the tone and the outline.
-- Examples are files in `doc/manual/src/examples/`, shown with `{{#include ...}}`. `tests/manual.scm` (under `make check`) checks that each one reads and is used by a page.
-- Mistakes shown on a page are files in `doc/manual/src/mistakes/`: `NAME.nts` and the exact error message in `NAME.txt`. `tests/manual.scm` checks that each fails with that message, so a changed error message means updating its `.txt`.
-- A page can show a drawn score as `![…](figures/NAME.svg)`, or another score of the example as `figures/NAME_SCORE.svg`: `make manual` draws it from `src/examples/NAME.nts` with `scripts/notasi render` (and `--score SCORE`) before building. `figures/` is generated, never committed; `tests/manual.scm` checks each figure has its example.
-- `make manual` builds it (needs `mdbook`, Guile and Typst); CI builds it on every PR and deploys it to GitHub Pages when `main` changes.
+- Examples are files in `examples/manual/`, shown with `{{#include ../../../examples/manual/NAME.nts}}`. `tests/manual.scm` (under `make check`) checks that each one reads and is used by a page.
+- Mistakes shown on a page are files in `examples/manual/mistakes/`: `NAME.nts` and the exact error message in `NAME.txt`. `tests/manual.scm` checks that each fails with that message, so a changed error message means updating its `.txt`.
+- A page can show a drawn score as `![…](figures/NAME.png)`, or another score of the example as `figures/NAME_SCORE.png`. `make images` draws it into `examples/manual/images/`, where it is committed (the CI-drawn copy; see "Commands"), and `make manual` copies it into `figures/`, which is generated. `tests/manual.scm` checks each figure has its example, and `tests/examples.scm` that each has its image.
+- `make manual` builds it (needs only `mdbook`); CI builds it on every PR and deploys it to GitHub Pages when `main` changes.
 
 ## Git workflow
 
@@ -126,5 +127,5 @@ Tests use SRFI-64. Each `tests/*.scm` file is a standalone script that `make che
 
 What to test:
 - Unit tests, one file per module: reader token handling and every error case listed in `doc/design/03-reader.md`, piece derived functions, layout decisions (lanes, system splitting, colours), JSON serialiser escaping.
-- Golden tests: for each score of each file in `examples/`, the generated JSON is compared with `tests/golden/` (`NAME.json` for a file with only the default score, `NAME_SCORE.json` otherwise). When an output change is intended, regenerate them with `make golden` and review the diff in the PR.
-- Typst template test: `tests/template.scm` compiles every golden figure with `typst/notasi.typ` and fails on an error or a warning. Changes to the template are also checked by eye with `make preview`.
+- Golden tests: for each score of each file in `examples/gallery/` and `examples/demos/`, the generated JSON is compared with `tests/golden/` (`NAME.json` for a file with only the default score, `NAME_SCORE.json` otherwise). When an output change is intended, regenerate them with `make golden` and review the diff in the PR.
+- Typst template test: `tests/template.scm` compiles every golden figure with `typst/notasi.typ` and fails on an error or a warning. Changes to the template are also checked by eye with `make images`, and show in the PR as changed images.

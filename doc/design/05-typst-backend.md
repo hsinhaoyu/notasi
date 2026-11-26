@@ -23,11 +23,11 @@ and `notasi --version` (ADR 0048), since iteration 4's
 `notasi render --all`, `--one-file`, `--list`, `--format` and `--ppi`,
 `compile-typst #:ppi`, `render-score` and `render-one-file`, and one
 line per file drawn on success (ADR 0061) since iteration 5's
-`feat/render-all`.
+`feat/render-all`. The manual's figures committed as PNG, and `make
+preview` removed (ADR 0052), since `feat/examples`.
 
-**Planned** for iteration 5 (ADRs 0052, 0056–0059): contract version 4
-and the template's annotation row and part marks; `--save-piece`; the
-manual's figures committed as PNG, and `make preview` removed. Each
+**Planned** for iteration 5 (ADRs 0056–0059): contract version 4 and
+the template's annotation row and part marks; `--save-piece`. Each
 section says what is planned.
 
 ## Responsibility
@@ -439,13 +439,9 @@ Tests (slice 1): `tests/template.scm` compiles every
 `tests/golden/*.json` with `score` (from an entry file made in a
 temporary folder) and fails if `typst compile` fails or prints a
 warning. If `typst` isn't installed it says so and fails, since CI
-always installs it. `make preview` draws each example to
-`build/preview/NAME.png` (not committed) with `render-piece`, for a
-person to check by eye; every PR that changes how figures look is
-checked that way. **Planned** (ADR 0052): `make preview` is removed;
-the committed images of `examples/gallery/` and `examples/manual/`
-show every change to how figures look, and CI fails when one is out of
-date (07).
+always installs it. The committed images of `examples/gallery/` and
+`examples/manual/` (`make images`, ADR 0052) show every change to how
+figures look, and CI fails when one is out of date (07).
 
 ## The entry file and running Typst
 
@@ -457,8 +453,7 @@ under the score when not `null`, in italics. The rest is as below.
 **Implemented** (slice 2, `feat/typst-render`), in `(notasi typst)`,
 tests in `tests/typst.scm`. `(notasi typst)` comes after the reader and
 layout in the pipeline and uses both; they never use it, so ADRs 0004
-and 0008 still hold. `make preview` draws each example with
-`render-piece` (**Planned**: removed, ADR 0052).
+and 0008 still hold.
 
 A standalone figure is drawn from three files in one folder: the figure
 JSON, the template `notasi.typ`, and an **entry file** that Typst
@@ -696,22 +691,16 @@ script's own location, never `.`), then exits with
 `scripts/notasi …` from anywhere, or as `notasi …` with `scripts/` on
 the PATH; installing it properly is an open question (07).
 
-The user manual shows drawn scores: `make manual` first draws each
-`doc/manual/src/examples/NAME.nts` that a page shows as an image
-(`![…](figures/NAME.svg)`) to `doc/manual/src/figures/NAME.svg` with
-`notasi render`, then builds the book. `figures/` is generated, not
-committed, so pictures never go stale. A page can show
-another score of the example as `figures/NAME_SCORE.svg` (ADR 0040),
-drawn with `--score SCORE`. The manual's CI job installs
-Guile and Typst 0.15.1 for this; `tests/manual.scm` checks that every
-image a page shows has an example to draw it from.
-
-**Planned** (ADR 0052): the manual's examples move to
-`examples/manual/`, and the images its pages show are PNG, drawn by
-`make images` with `notasi render --all` into
-`examples/manual/images/` and committed. `make manual` copies them
-into `doc/manual/src/figures/` and draws nothing, so the manual builds
-with mdBook alone (07).
+The user manual shows drawn scores (ADR 0052, since `feat/examples`):
+a page shows an example's first score as `![…](figures/NAME.png)`, or
+its score SCORE as `figures/NAME_SCORE.png` (ADR 0040). `make images`
+draws each with `notasi render` (`--score SCORE`) from
+`examples/manual/NAME.nts` into `examples/manual/images/`, where it is
+committed. `make manual` copies them into `doc/manual/src/figures/`
+(generated, not committed) and draws nothing, so the manual builds
+with mdBook alone (07). `tests/manual.scm` checks that every image a
+page shows has an example to draw it from, and `tests/examples.scm`
+that it has its image.
 
 ## Version pinning
 
@@ -721,12 +710,8 @@ version is **0.15.1**. CI installs exactly that version, so every PR
 compiles the examples with it; upgrading Typst is a deliberate change
 to the pin, with the golden figures and template checked again.
 
-`make preview` (`scripts/preview.scm`) draws each example's every score
-to `build/preview/NAME.png`, or `NAME_SCORE.png` for a file with scores
-(ADR 0040), matching the golden files
-(04). **Planned** (ADR 0052): removed; `make images` draws the
-committed images at one fixed `--ppi`, on Linux with the pinned Typst
-(07).
+`make images` draws the committed images at one fixed `--ppi`, on
+Linux with the pinned Typst (07, ADR 0052).
 
 ## Slices
 
