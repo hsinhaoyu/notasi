@@ -11,7 +11,8 @@ anything until the user says so.
 
 ## Steps
 
-1. Read `doc/design/README.md`, every `doc/design/0*.md`, `doc/manual/`, every ADR in
+1. Read `doc/design/README.md`, `doc/design/glossary.md`, every
+   `doc/design/0*.md`, `doc/manual/`, every ADR in
    `doc/decisions/` whose status is `accepted`, and the repository layout
    in CLAUDE.md.
 
@@ -35,10 +36,23 @@ anything until the user says so.
    user-visible behaviour with no page yet. Use "manual" as the doc side
    in the report.
 
-5. Check that the code doesn't contradict an accepted ADR. A contradiction
+5. Check the terms against the glossary (`doc/design/glossary.md`,
+   ADR 0051). Search the design docs, the manual, the templates'
+   comments, the code's names (procedures, record fields, JSON keys)
+   and its error messages for the words in the glossary's "Not"
+   column, used for the thing the glossary names. Use "glossary" as the
+   doc side in the report. Don't report:
+   - an older name the glossary's "In code / JSON" column says the code
+     still uses, unless the milestone just built touched that code and
+     left it (CLAUDE.md says to rename it then);
+   - a source quoted in its own words (Gold's "beat", a "meter");
+   - the word used for something else (a text "line" that isn't a
+     system).
+
+6. Check that the code doesn't contradict an accepted ADR. A contradiction
    means either the code is wrong or a superseding ADR is missing.
 
-6. Report a table with one row per discrepancy:
+7. Report a table with one row per discrepancy:
    - where in the docs (`file:line`)
    - where in the code (`file:line`), or "missing"
    - what differs, in one sentence
@@ -48,7 +62,7 @@ anything until the user says so.
    Then list any open questions in the docs that the code has already
    answered. If nothing differs, say so plainly.
 
-7. Offer to fix the doc-side items on a `doc/sync` branch from `dev`. Code
+8. Offer to fix the doc-side items on a `doc/sync` branch from `dev`. Code
    fixes and unclear items need the user's decision first. Any fix that
    reverses a documented decision needs a new ADR (see
    `doc/decisions/README.md`).
