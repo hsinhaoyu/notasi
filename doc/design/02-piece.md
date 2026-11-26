@@ -234,7 +234,7 @@ group                                  every setting filled in (ADR 0033)
 
 - `(note-pitch-index instrument note)` (**Implemented**):
   `octave × scale-size + pitch index`, a total order across all pitched
-  instruments sharing a scale. Used to sort lanes. It takes the
+  instruments sharing a scale. Used to sort rows. It takes the
   instrument because a note does not know its scale. For a stroke, which
   has no pitch, raises an `&error` whose irritants are the note name and
   instrument name.
