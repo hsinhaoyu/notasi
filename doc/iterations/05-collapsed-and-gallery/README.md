@@ -32,7 +32,7 @@ Agreed (2026-11-26):
   released. Its group rows are `rows`/`row`, not `lanes`/`lane`
   ([glossary](design_ideas/2026-11-25-glossary.md)).
 - **Removed options get no migration.** `:pattern-names` and
-  `:pattern-level` become unknown keys (`bad-option`), like any other.
+  `:pattern-level` become unknown keys (`unknown-option`), like any other.
 - **The examples move is promoted first**, so the other ideas cite the
   new paths under `examples/`.
 
@@ -101,4 +101,4 @@ Settled before promotion (2026-11-26): the piece's free-text key is
 `:remarks`; PNG resolution is `--ppi N`; the glossary is promoted as
 drafted.
 
-Promoted so far: `glossary.md` (ADR 0051; its rule in CLAUDE.md and `/doc-audit` in #112), `07-environment.md` (ADR 0052), `01-notation.md` (ADRs 0053–0057), `02-piece.md` (ADR 0058).
+Promoted so far: `glossary.md` (ADR 0051; its rule in CLAUDE.md and `/doc-audit` in #112), `07-environment.md` (ADR 0052), `01-notation.md` (ADRs 0053–0057), `02-piece.md` (ADR 0058), `03-reader.md`.

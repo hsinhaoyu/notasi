@@ -803,7 +803,8 @@ pitched and stroke groups alike:
 - **Planned** (ADR 0057): an annotation row option on a score, an
   `:annotation-part` that isn't a part of the group, an unknown
   position, alignment or text, or a level that isn't a whole number
-  from 0 is an error.
+  from 0 is an error, as is another annotation row option without
+  `:annotation-part`.
 
 #### Files without a score, and choosing one
 
