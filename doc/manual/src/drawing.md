@@ -16,7 +16,7 @@ each step of time, as fine as the shortest note.
 Here is a short piece. Save it as `gilak.nts`:
 
 ```scheme
-{{#include examples/drawing.nts}}
+{{#include ../../../examples/manual/drawing.nts}}
 ```
 
 From the notasi folder, run:
@@ -31,7 +31,7 @@ you put the `scripts` folder on your PATH, you can type just
 
 This is what you get:
 
-![The piece above, drawn as a score](figures/drawing.svg)
+![The piece above, drawn as a score](figures/drawing.png)
 
 ## Reading the drawing
 

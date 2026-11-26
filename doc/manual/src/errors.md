@@ -4,7 +4,7 @@ When notasi can't read a file, it stops at the first problem and tells
 you where it is and what is wrong:
 
 ```text
-{{#include mistakes/not-a-number.txt}}
+{{#include ../../../examples/manual/mistakes/not-a-number.txt}}
 ```
 
 This says: in the file `not-a-number.nts`, on line 4, in the part
@@ -16,11 +16,11 @@ tell you about it next.
 ## The piece needs a title
 
 ```scheme
-{{#include mistakes/no-title.nts}}
+{{#include ../../../examples/manual/mistakes/no-title.nts}}
 ```
 
 ```text
-{{#include mistakes/no-title.txt}}
+{{#include ../../../examples/manual/mistakes/no-title.txt}}
 ```
 
 The title must be in double quotes: `(piece "Gilak")`.
@@ -28,11 +28,11 @@ The title must be in double quotes: `(piece "Gilak")`.
 ## Unknown form
 
 ```scheme
-{{#include mistakes/misspelt-form.nts}}
+{{#include ../../../examples/manual/mistakes/misspelt-form.nts}}
 ```
 
 ```text
-{{#include mistakes/misspelt-form.txt}}
+{{#include ../../../examples/manual/mistakes/misspelt-form.txt}}
 ```
 
 The first word inside each pair of brackets says what the line is.
@@ -41,11 +41,11 @@ notasi doesn't know `pice`; check the spelling.
 ## Unknown piece option
 
 ```scheme
-{{#include mistakes/unknown-option.nts}}
+{{#include ../../../examples/manual/mistakes/unknown-option.nts}}
 ```
 
 ```text
-{{#include mistakes/unknown-option.txt}}
+{{#include ../../../examples/manual/mistakes/unknown-option.txt}}
 ```
 
 The `piece` line takes no settings yet, only its title. Check for a
@@ -54,11 +54,11 @@ stray word starting with `:`.
 ## A length that isn't a number
 
 ```scheme
-{{#include mistakes/not-a-number.nts}}
+{{#include ../../../examples/manual/mistakes/not-a-number.nts}}
 ```
 
 ```text
-{{#include mistakes/not-a-number.txt}}
+{{#include ../../../examples/manual/mistakes/not-a-number.txt}}
 ```
 
 Write a length in digits, as a whole number or a fraction above zero:
@@ -67,11 +67,11 @@ Write a length in digits, as a whole number or a fraction above zero:
 ## Missing bracket
 
 ```scheme
-{{#include mistakes/missing-bracket.nts}}
+{{#include ../../../examples/manual/mistakes/missing-bracket.nts}}
 ```
 
 ```text
-{{#include mistakes/missing-bracket.txt}}
+{{#include ../../../examples/manual/mistakes/missing-bracket.txt}}
 ```
 
 Every `(` needs a matching `)`. Here the `piece` line is never closed,
@@ -84,11 +84,11 @@ missing bracket is somewhere before that.
 ### No scale with that name
 
 ```scheme
-{{#include mistakes/undefined-scale.nts}}
+{{#include ../../../examples/manual/mistakes/undefined-scale.nts}}
 ```
 
 ```text
-{{#include mistakes/undefined-scale.txt}}
+{{#include ../../../examples/manual/mistakes/undefined-scale.txt}}
 ```
 
 The instrument names a scale that isn't defined. Here `selisir` is
@@ -97,11 +97,11 @@ misspelt.
 ### Not a note of the scale
 
 ```scheme
-{{#include mistakes/wrong-note-name.nts}}
+{{#include ../../../examples/manual/mistakes/wrong-note-name.nts}}
 ```
 
 ```text
-{{#include mistakes/wrong-note-name.txt}}
+{{#include ../../../examples/manual/mistakes/wrong-note-name.txt}}
 ```
 
 Each note must be a degree (or alias) of the instrument's scale. Here
@@ -110,11 +110,11 @@ Each note must be a degree (or alias) of the instrument's scale. Here
 ### No octave number
 
 ```scheme
-{{#include mistakes/missing-octave.nts}}
+{{#include ../../../examples/manual/mistakes/missing-octave.nts}}
 ```
 
 ```text
-{{#include mistakes/missing-octave.txt}}
+{{#include ../../../examples/manual/mistakes/missing-octave.txt}}
 ```
 
 Notes on a pitched instrument need an octave: write `dong1`, not `dong`.
@@ -122,11 +122,11 @@ Notes on a pitched instrument need an octave: write `dong1`, not `dong`.
 ### Notes out of order
 
 ```scheme
-{{#include mistakes/notes-out-of-order.nts}}
+{{#include ../../../examples/manual/mistakes/notes-out-of-order.nts}}
 ```
 
 ```text
-{{#include mistakes/notes-out-of-order.txt}}
+{{#include ../../../examples/manual/mistakes/notes-out-of-order.txt}}
 ```
 
 List an instrument's notes from lowest to highest, in the order of the
@@ -137,11 +137,11 @@ scale: `ding1 dong1 deng1`.
 ### Hold after a rest
 
 ```scheme
-{{#include mistakes/hold-after-rest.nts}}
+{{#include ../../../examples/manual/mistakes/hold-after-rest.nts}}
 ```
 
 ```text
-{{#include mistakes/hold-after-rest.txt}}
+{{#include ../../../examples/manual/mistakes/hold-after-rest.txt}}
 ```
 
 `_` holds the note before it, so it can't come after a rest or at the
@@ -151,11 +151,11 @@ from 1.
 ### Note number too high
 
 ```scheme
-{{#include mistakes/note-out-of-range.nts}}
+{{#include ../../../examples/manual/mistakes/note-out-of-range.nts}}
 ```
 
 ```text
-{{#include mistakes/note-out-of-range.txt}}
+{{#include ../../../examples/manual/mistakes/note-out-of-range.txt}}
 ```
 
 Numbers count the instrument's notes from its lowest, starting at 1.
@@ -164,11 +164,11 @@ This ugal has five keys, so 6 is too high.
 ### Note not on the instrument
 
 ```scheme
-{{#include mistakes/note-not-on-instrument.nts}}
+{{#include ../../../examples/manual/mistakes/note-not-on-instrument.nts}}
 ```
 
 ```text
-{{#include mistakes/note-not-on-instrument.txt}}
+{{#include ../../../examples/manual/mistakes/note-not-on-instrument.txt}}
 ```
 
 `dong2` is a note of the scale, but this ugal stops at ding2. Check the
@@ -177,11 +177,11 @@ instrument's range, or the octave.
 ### Parts of different lengths
 
 ```scheme
-{{#include mistakes/unequal-length.nts}}
+{{#include ../../../examples/manual/mistakes/unequal-length.nts}}
 ```
 
 ```text
-{{#include mistakes/unequal-length.txt}}
+{{#include ../../../examples/manual/mistakes/unequal-length.txt}}
 ```
 
 Every part lasts the same number of pulses. Count the notes, `_` and
@@ -191,11 +191,11 @@ shorter part.
 ### A repeat without its number
 
 ```scheme
-{{#include mistakes/bad-rep.nts}}
+{{#include ../../../examples/manual/mistakes/bad-rep.nts}}
 ```
 
 ```text
-{{#include mistakes/bad-rep.txt}}
+{{#include ../../../examples/manual/mistakes/bad-rep.txt}}
 ```
 
 A `rep` needs the number of times first, then the notes:
@@ -204,11 +204,11 @@ A `rep` needs the number of times first, then the notes:
 ### A cycle check out of place
 
 ```scheme
-{{#include mistakes/cycle-check.nts}}
+{{#include ../../../examples/manual/mistakes/cycle-check.nts}}
 ```
 
 ```text
-{{#include mistakes/cycle-check.txt}}
+{{#include ../../../examples/manual/mistakes/cycle-check.txt}}
 ```
 
 `||` must fall at the end of a gong cycle. Here the cycle has eight
@@ -218,11 +218,11 @@ before it (see [Gong cycles](gong-cycles.md)).
 ### A piece that isn't whole cycles
 
 ```scheme
-{{#include mistakes/incomplete-cycle.nts}}
+{{#include ../../../examples/manual/mistakes/incomplete-cycle.nts}}
 ```
 
 ```text
-{{#include mistakes/incomplete-cycle.txt}}
+{{#include ../../../examples/manual/mistakes/incomplete-cycle.txt}}
 ```
 
 With a colotomy, a piece is its pickup plus whole cycles. This ugal part
@@ -231,11 +231,11 @@ lasts 7 pulses, one short of the eight-pulse cycle.
 ### A part in two groups
 
 ```scheme
-{{#include mistakes/part-in-two-groups.nts}}
+{{#include ../../../examples/manual/mistakes/part-in-two-groups.nts}}
 ```
 
 ```text
-{{#include mistakes/part-in-two-groups.txt}}
+{{#include ../../../examples/manual/mistakes/part-in-two-groups.txt}}
 ```
 
 In one score, each part can be in only one group (see
@@ -244,11 +244,11 @@ In one score, each part can be in only one group (see
 ### A group naming a part that doesn't exist
 
 ```scheme
-{{#include mistakes/undefined-part.nts}}
+{{#include ../../../examples/manual/mistakes/undefined-part.nts}}
 ```
 
 ```text
-{{#include mistakes/undefined-part.txt}}
+{{#include ../../../examples/manual/mistakes/undefined-part.txt}}
 ```
 
 Check the spelling of the part's name in the group.
@@ -256,11 +256,11 @@ Check the spelling of the part's name in the group.
 ### A position that isn't in the piece
 
 ```scheme
-{{#include mistakes/bad-position.nts}}
+{{#include ../../../examples/manual/mistakes/bad-position.nts}}
 ```
 
 ```text
-{{#include mistakes/bad-position.txt}}
+{{#include ../../../examples/manual/mistakes/bad-position.txt}}
 ```
 
 This cycle has 8 pulses, so there is no pulse 9. A position is
@@ -270,11 +270,11 @@ This cycle has 8 pulses, so there is no pulse 9. A position is
 ### An excerpt that ends before it starts
 
 ```scheme
-{{#include mistakes/bad-range.nts}}
+{{#include ../../../examples/manual/mistakes/bad-range.nts}}
 ```
 
 ```text
-{{#include mistakes/bad-range.txt}}
+{{#include ../../../examples/manual/mistakes/bad-range.txt}}
 ```
 
 `:from` must come before `:to`. Here they are the wrong way round.
@@ -282,11 +282,11 @@ This cycle has 8 pulses, so there is no pulse 9. A position is
 ### A group of names without names
 
 ```scheme
-{{#include mistakes/needs-note-names.nts}}
+{{#include ../../../examples/manual/mistakes/needs-note-names.nts}}
 ```
 
 ```text
-{{#include mistakes/needs-note-names.txt}}
+{{#include ../../../examples/manual/mistakes/needs-note-names.txt}}
 ```
 
 Rows of parts, one row, and `:fill none` show the notes only by their
@@ -296,11 +296,11 @@ names. Add `:note-names yes` to the group or the score (see
 ### Two notes in one place on a single row
 
 ```scheme
-{{#include mistakes/notes-collide.nts}}
+{{#include ../../../examples/manual/mistakes/notes-collide.nts}}
 ```
 
 ```text
-{{#include mistakes/notes-collide.txt}}
+{{#include ../../../examples/manual/mistakes/notes-collide.txt}}
 ```
 
 On a single row, only one note can sound in each column. Here polos is
@@ -310,11 +310,11 @@ rows, or change the music.
 ### Two parts on one key
 
 ```scheme
-{{#include mistakes/notes-collide-key.nts}}
+{{#include ../../../examples/manual/mistakes/notes-collide-key.nts}}
 ```
 
 ```text
-{{#include mistakes/notes-collide-key.txt}}
+{{#include ../../../examples/manual/mistakes/notes-collide-key.txt}}
 ```
 
 When parts share a group's rows, two of them can play the same key only
@@ -326,11 +326,11 @@ of their own, or `:rows parts`.
 ### Pattern names written over each other
 
 ```scheme
-{{#include mistakes/pattern-names-overlap.nts}}
+{{#include ../../../examples/manual/mistakes/pattern-names-overlap.nts}}
 ```
 
 ```text
-{{#include mistakes/pattern-names-overlap.txt}}
+{{#include ../../../examples/manual/mistakes/pattern-names-overlap.txt}}
 ```
 
 In one group, the names of the patterns must either match exactly (the
@@ -342,11 +342,11 @@ their own, or choose another `:pattern-level` (see
 ### A note outside the keys shown
 
 ```scheme
-{{#include mistakes/outside-keys.nts}}
+{{#include ../../../examples/manual/mistakes/outside-keys.nts}}
 ```
 
 ```text
-{{#include mistakes/outside-keys.txt}}
+{{#include ../../../examples/manual/mistakes/outside-keys.txt}}
 ```
 
 The group shows only the keys from `i2` to `e2`, but the ugal plays
@@ -356,11 +356,11 @@ The group shows only the keys from `i2` to `e2`, but the ugal plays
 ### A pattern that doesn't exist
 
 ```scheme
-{{#include mistakes/undefined-pattern.nts}}
+{{#include ../../../examples/manual/mistakes/undefined-pattern.nts}}
 ```
 
 ```text
-{{#include mistakes/undefined-pattern.txt}}
+{{#include ../../../examples/manual/mistakes/undefined-pattern.txt}}
 ```
 
 Check the spelling after the `@` (see [Patterns](patterns.md)).
@@ -368,11 +368,11 @@ Check the spelling after the `@` (see [Patterns](patterns.md)).
 ### A pattern for another instrument
 
 ```scheme
-{{#include mistakes/wrong-instrument.nts}}
+{{#include ../../../examples/manual/mistakes/wrong-instrument.nts}}
 ```
 
 ```text
-{{#include mistakes/wrong-instrument.txt}}
+{{#include ../../../examples/manual/mistakes/wrong-instrument.txt}}
 ```
 
 A pattern can only be played on the instrument named by its
@@ -381,11 +381,11 @@ A pattern can only be played on the instrument named by its
 ### A pulse check out of place
 
 ```scheme
-{{#include mistakes/pulse-check.nts}}
+{{#include ../../../examples/manual/mistakes/pulse-check.nts}}
 ```
 
 ```text
-{{#include mistakes/pulse-check.txt}}
+{{#include ../../../examples/manual/mistakes/pulse-check.txt}}
 ```
 
 `|` must fall at the start of a pulse. Here half a pulse and two whole
@@ -395,11 +395,11 @@ too short, or one is missing, somewhere before the `|`.
 ### Two parts on one instrument
 
 ```scheme
-{{#include mistakes/parts-need-names.nts}}
+{{#include ../../../examples/manual/mistakes/parts-need-names.nts}}
 ```
 
 ```text
-{{#include mistakes/parts-need-names.txt}}
+{{#include ../../../examples/manual/mistakes/parts-need-names.txt}}
 ```
 
 When an instrument has two parts, give each a name with `:name`, as in
@@ -409,11 +409,11 @@ When an instrument has two parts, give each a name with `:name`, as in
 ### A setting after the music
 
 ```scheme
-{{#include mistakes/option-after-music.nts}}
+{{#include ../../../examples/manual/mistakes/option-after-music.nts}}
 ```
 
 ```text
-{{#include mistakes/option-after-music.txt}}
+{{#include ../../../examples/manual/mistakes/option-after-music.txt}}
 ```
 
 Settings such as `:name` come before the first note:
@@ -422,11 +422,11 @@ Settings such as `:name` come before the first note:
 ### A part without its instrument
 
 ```scheme
-{{#include mistakes/part-without-instrument.nts}}
+{{#include ../../../examples/manual/mistakes/part-without-instrument.nts}}
 ```
 
 ```text
-{{#include mistakes/part-without-instrument.txt}}
+{{#include ../../../examples/manual/mistakes/part-without-instrument.txt}}
 ```
 
 A part names its instrument with `:instrument`. The same goes for the
@@ -437,11 +437,11 @@ parts inside a `colotomy`.
 ### No template with that name
 
 ```scheme
-{{#include mistakes/template-not-found.nts}}
+{{#include ../../../examples/manual/mistakes/template-not-found.nts}}
 ```
 
 ```text
-{{#include mistakes/template-not-found.txt}}
+{{#include ../../../examples/manual/mistakes/template-not-found.txt}}
 ```
 
 Check the spelling: here it should be `gong-kebyar`. A name in double
@@ -450,11 +450,11 @@ quotes is a file, looked up from the folder of the piece.
 ### `use` too late
 
 ```scheme
-{{#include mistakes/use-not-first.nts}}
+{{#include ../../../examples/manual/mistakes/use-not-first.nts}}
 ```
 
 ```text
-{{#include mistakes/use-not-first.txt}}
+{{#include ../../../examples/manual/mistakes/use-not-first.txt}}
 ```
 
 Move the `use` line up, right after the `piece` line.
@@ -462,19 +462,19 @@ Move the `use` line up, right after the `piece` line.
 ### Two templates define the same name
 
 ```scheme
-{{#include mistakes/template-conflict.nts}}
+{{#include ../../../examples/manual/mistakes/template-conflict.nts}}
 ```
 
 ```scheme
-{{#include mistakes/templates/my-reyong.nts}}
+{{#include ../../../examples/manual/mistakes/templates/my-reyong.nts}}
 ```
 
 ```scheme
-{{#include mistakes/templates/my-ugal.nts}}
+{{#include ../../../examples/manual/mistakes/templates/my-ugal.nts}}
 ```
 
 ```text
-{{#include mistakes/template-conflict.txt}}
+{{#include ../../../examples/manual/mistakes/template-conflict.txt}}
 ```
 
 Both templates have a `ugal`, and notasi can't tell which one you
@@ -484,15 +484,15 @@ the piece's own definition replaces both.
 ### Music in a template
 
 ```scheme
-{{#include mistakes/part-in-template.nts}}
+{{#include ../../../examples/manual/mistakes/part-in-template.nts}}
 ```
 
 ```scheme
-{{#include mistakes/templates/with-a-part.nts}}
+{{#include ../../../examples/manual/mistakes/templates/with-a-part.nts}}
 ```
 
 ```text
-{{#include mistakes/part-in-template.txt}}
+{{#include ../../../examples/manual/mistakes/part-in-template.txt}}
 ```
 
 A template holds only `scale`, `strokes`, `instrument` and `use` lines.

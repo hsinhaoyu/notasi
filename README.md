@@ -13,8 +13,11 @@ Tools for notating and visualizing Balinese gamelan music, written in GNU Guile 
 - `notasi/typst.scm`: the Guile side of the Typst backend: writes figure files and draws them with Typst
 - `notasi/command.scm`: the `notasi` command (`scripts/notasi`)
 - `tests/`: SRFI-64 test suites
-- `examples/`: example pieces, among them Gold's Jaya Semara
-  (`jaya-semara.nts`) and Tenzer's Baris (`baris.nts`)
+- `examples/`: example pieces, in four folders: `gallery/`, showcase
+  pieces such as Gold's Jaya Semara (`jaya-semara.nts`) and Tenzer's
+  Baris (`baris.nts`), with their drawings in `gallery/images/`;
+  `demos/`, examples of single features; `contrib/`, other people's
+  pieces; and `manual/`, the user manual's examples and drawings
 - `templates/`: shared scales, stroke sets and instruments, loaded with `(use NAME)`
 - `doc/manual/`: the user manual (mdBook)
 - `editors/emacs/`: `notasi-mode`, an Emacs package for writing `.nts` files, with the score drawn beside the text
@@ -63,7 +66,7 @@ or, in Emacs 29:
                  :lisp-dir "editors/emacs" :branch "dev")))
 ```
 
-Open a `.nts` file, such as `examples/jaya-semara.nts`, and its score
+Open a `.nts` file, such as `examples/gallery/jaya-semara.nts`, and its score
 is drawn beside it. The manual's chapter
 [Writing in Emacs](https://hsinhaoyu.github.io/notasi/emacs-installing.html)
 explains the rest.
@@ -72,14 +75,15 @@ explains the rest.
 
 The manual for musicians is at <https://hsinhaoyu.github.io/notasi/>. Its
 source is in `doc/manual/`; build it locally with `make manual`, or preview
-it with `make manual-serve`. Both need [mdBook](https://rust-lang.github.io/mdBook/),
-and Guile and Typst to draw the manual's figures.
+it with `make manual-serve`. Both need only [mdBook](https://rust-lang.github.io/mdBook/):
+the manual's figures are committed images.
 
 ## Running tests
 
     make check
 
-`make check` includes golden tests: each piece in `examples/` is laid
+`make check` includes golden tests: each piece in `examples/gallery/`
+and `examples/demos/` is laid
 out and compared with its saved figure in `tests/golden/`. When you
 change the output on purpose, run `make golden` to rewrite the saved
 figures, and review the diff.
@@ -91,6 +95,8 @@ figures. Run code from the repo root with `guile -L .`.
 tests, byte-compiling, checkdoc and package-lint. It needs Emacs 29.1
 or later, and isn't part of `make check`.
 
-`make preview` draws every score of each piece in `examples/` with
-Typst, to `build/preview/NAME.png` (or `NAME_SCORE.png` for a piece with
-scores), so you can check how it looks.
+`make images` redraws the committed drawings: every score of each
+piece in `examples/gallery/`, and the figures the manual shows. CI
+draws them on Linux and fails when one is out of date; a PR that
+changes how scores look commits the images CI uploads. To draw any
+one piece, use `scripts/notasi render PIECE.nts --all`.

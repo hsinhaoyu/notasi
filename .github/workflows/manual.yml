@@ -13,9 +13,8 @@ on:
 
 env:
   MDBOOK_VERSION: v0.5.4
-  # The manual's figures are drawn with notasi, so it needs Guile and the
-  # tested Typst version (05, "Version pinning").
-  TYPST_VERSION: v0.15.1
+  # The manual's figures are committed images (examples/manual/images/,
+  # 07, ADR 0052), copied by make manual, so mdBook is all it needs.
 
 jobs:
   build:
@@ -29,18 +28,6 @@ jobs:
           mkdir -p "$HOME/.local/bin"
           curl -sSL "$url" | tar -xz -C "$HOME/.local/bin"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-
-      - name: Install Guile
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y guile-3.0
-
-      - name: Install Typst
-        run: |
-          url="https://github.com/typst/typst/releases/download/${TYPST_VERSION}/typst-x86_64-unknown-linux-musl.tar.xz"
-          curl -sSfL "$url" | tar -xJ -C "$RUNNER_TEMP"
-          mv "$RUNNER_TEMP/typst-x86_64-unknown-linux-musl/typst" "$HOME/.local/bin/typst"
-          typst --version
 
       - name: Build
         run: make manual

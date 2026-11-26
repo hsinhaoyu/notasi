@@ -115,7 +115,7 @@ changes the figure, and each later one adds to it.
    render --all`, `--one-file`, `--list`, `--format` and `--ppi`; one
    line per file drawn; `--help`; the manual's page on drawing. First,
    since `make images` uses it.
-2. **`feat/examples`** (07, ADR 0052), with no slices: `examples/`
+2. **`feat/examples`** (done) (07, ADR 0052), with no slices: `examples/`
    in four folders, the manual's examples, templates and mistakes moved
    to `examples/manual/`; the tests reading the new folders, and names
    unique across `examples/`; `make images`, the committed PNGs, and

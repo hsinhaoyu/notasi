@@ -5,7 +5,7 @@ and again, or moved to another tone. A **pattern** gives such a figure a
 name, so you write it once:
 
 ```scheme
-{{#include examples/patterns.nts}}
+{{#include ../../../examples/manual/patterns.nts}}
 ```
 
 - `(pattern norot :instrument reyong …)` names a figure for the reyong.
@@ -33,10 +33,10 @@ own, so that a moved figure is named after the tone it plays. A
 [score](scores.md) can write them over the notes:
 
 ```scheme
-{{#include examples/pattern-names.nts}}
+{{#include ../../../examples/manual/pattern-names.nts}}
 ```
 
-![The norot figures with their names](figures/pattern-names.svg)
+![The norot figures with their names](figures/pattern-names.png)
 
 | Setting | Where | What it does |
 |---|---|---|

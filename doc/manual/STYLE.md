@@ -27,20 +27,27 @@ show it, then show what comes out.
 - **One idea per page**, and a page should fit on a screen or two.
 - **Start from something to try, end with what it produces.** Every page
   that teaches notation has at least one complete example.
-- **Examples are real files.** Put each example in `src/examples/NAME.nts`
-  and show it with `{{#include examples/NAME.nts}}`; never paste notation
+- **Examples are real files.** Put each example in
+  `examples/manual/NAME.nts` (at the top of the repository) and show it
+  with `{{#include ../../../examples/manual/NAME.nts}}`; never paste notation
   into a page by hand. `tests/manual.scm` checks that every example reads
   without errors and that every example is used by a page.
 - **Errors in musician terms.** When showing a mistake, show the error
   message notasi gives and how to fix it. A mistake is a real file too:
-  `src/mistakes/NAME.nts`, with the exact message notasi gives for it in
-  `src/mistakes/NAME.txt`. Show both with `{{#include ...}}`.
+  `examples/manual/mistakes/NAME.nts`, with the exact message notasi
+  gives for it in `examples/manual/mistakes/NAME.txt`. Show both with
+  `{{#include ...}}`.
   `tests/manual.scm` checks that each mistake fails with that message, so
   when a message changes, update its `.txt` file.
 - **Templates in examples.** A template an example or mistake uses goes
-  in a `templates/` folder beside it (`src/examples/templates/`,
-  `src/mistakes/templates/`), and is shown with `{{#include ...}}` too.
-  `tests/manual.scm` doesn't read these as pieces.
+  in a `templates/` folder beside it (`examples/manual/templates/`,
+  `examples/manual/mistakes/templates/`), and is shown with
+  `{{#include ...}}` too. `tests/manual.scm` doesn't read these as pieces.
+- **Drawn scores are PNG.** Show an example's first score as
+  `![…](figures/NAME.png)`, or its score SCORE as
+  `figures/NAME_SCORE.png`. `make images` draws them into
+  `examples/manual/images/`, where they are committed (CI draws the
+  committed ones; see CLAUDE.md), and `make manual` copies them.
 - **No internals.** Don't mention Guile, modules, records or the JSON
   file, except on pages about installing or running notasi.
 - **Link to the full rules** in the notation reference

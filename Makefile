@@ -3,7 +3,7 @@ GUILE_FLAGS = --fresh-auto-compile -L .
 
 TESTS = $(wildcard tests/*.scm)
 
-.PHONY: check check-emacs clean golden manual manual-figures manual-serve preview
+.PHONY: check check-emacs clean golden images manual manual-figures manual-serve
 
 check:
 	@status=0; \
@@ -38,30 +38,41 @@ check-emacs:
 golden:
 	$(GUILE) $(GUILE_FLAGS) tests/golden.scm --update
 
-# Draw every score of each example in examples/ with render-piece, to
-# build/preview/NAME.png (or NAME_SCORE.png for a file with scores), for a
-# person to check how figures look. Needs typst.
-preview:
-	@mkdir -p build/preview
-	@$(GUILE) $(GUILE_FLAGS) scripts/preview.scm
+# The committed drawings (07, ADR 0052): every score of every gallery
+# file into examples/gallery/images/, and each image a manual page links
+# (figures/NAME.png for the example's first score, figures/NAME_SCORE.png
+# for its score SCORE) into examples/manual/images/.  Each folder is
+# emptied first.  Needs Guile and Typst.  The committed images are the
+# ones CI draws on Linux; images drawn elsewhere are for looking only.
+IMAGES_PPI = 144
+NOTASI = scripts/notasi
+MANUAL_SRC = doc/manual/src
+MANUAL_EXAMPLES = examples/manual
+
+images:
+	@mkdir -p examples/gallery/images $(MANUAL_EXAMPLES)/images
+	@rm -f examples/gallery/images/*.png $(MANUAL_EXAMPLES)/images/*.png
+	@for f in examples/gallery/*.nts; do \
+	  $(NOTASI) render $$f --all --format png --ppi $(IMAGES_PPI) \
+	    -o examples/gallery/images/ >/dev/null || exit 1; \
+	done
+	@for f in $$(grep -oh 'figures/[a-z0-9_-]*\.png' $(MANUAL_SRC)/*.md | sed 's|figures/||; s|\.png$$||' | sort -u); do \
+	  n=$${f%%_*}; s=$${f#$$n}; s=$${s#_}; \
+	  $(NOTASI) render $(MANUAL_EXAMPLES)/$$n.nts $${s:+--score $$s} \
+	    --ppi $(IMAGES_PPI) -o $(MANUAL_EXAMPLES)/images/$$f.png >/dev/null || exit 1; \
+	done
 
 clean:
 	rm -f *.log tests/*.log
 	rm -rf doc/manual/book doc/manual/src/figures
 
 # The user manual (doc/manual/), built with mdBook into doc/manual/book/.
-# Draw every figure a manual page shows as figures/NAME.svg from
-# examples/NAME.nts, or figures/NAME_SCORE.svg from its score SCORE
-# (needs Guile and Typst), then build the book.
-MANUAL_SRC = doc/manual/src
-
+# Copy the committed images its pages show from examples/manual/images/
+# into figures/ (generated, not committed), then build the book: mdBook
+# alone, nothing is drawn (07, ADR 0052).
 manual-figures:
 	@mkdir -p $(MANUAL_SRC)/figures
-	@for f in $$(grep -oh 'figures/[a-z0-9_-]*\.svg' $(MANUAL_SRC)/*.md | sed 's|figures/||; s|\.svg$$||' | sort -u); do \
-	  n=$${f%%_*}; s=$${f#$$n}; s=$${s#_}; \
-	  scripts/notasi render $(MANUAL_SRC)/examples/$$n.nts $${s:+--score $$s} \
-	    -o $(MANUAL_SRC)/figures/$$f.svg >/dev/null || exit 1; \
-	done
+	@cp $(MANUAL_EXAMPLES)/images/*.png $(MANUAL_SRC)/figures/
 
 manual: manual-figures
 	mdbook build doc/manual

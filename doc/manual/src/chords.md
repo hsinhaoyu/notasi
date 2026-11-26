@@ -4,7 +4,7 @@ To strike two or more notes at once, put them in round brackets. The
 whole chord lasts as long as one note:
 
 ```scheme
-{{#include examples/chords.nts}}
+{{#include ../../../examples/manual/chords.nts}}
 ```
 
 - `(e2 a2)` strikes deng2 and dang2 together.

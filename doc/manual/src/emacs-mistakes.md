@@ -3,7 +3,7 @@
 Here the part plays `dong2`, which the ugal doesn't have:
 
 ```scheme
-{{#include mistakes/note-not-on-instrument.nts}}
+{{#include ../../../examples/manual/mistakes/note-not-on-instrument.nts}}
 ```
 
 As soon as the picture would be redrawn, Emacs shows the mistake:
@@ -14,7 +14,7 @@ As soon as the picture would be redrawn, Emacs shows the mistake:
   message, with the file and line:
 
 ```text
-{{#include mistakes/note-not-on-instrument.txt}}
+{{#include ../../../examples/manual/mistakes/note-not-on-instrument.txt}}
 ```
 
 - the picture stays as it was, the last one drawn without a mistake, so

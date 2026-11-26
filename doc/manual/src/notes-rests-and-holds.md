@@ -6,7 +6,7 @@ play the ugal, so each also has a name, given with `:name` (see
 [Several parts on one instrument](parts.md)):
 
 ```scheme
-{{#include examples/notes-by-name-and-number.nts}}
+{{#include ../../../examples/manual/notes-by-name-and-number.nts}}
 ```
 
 Both parts play the same melody. A note can be written two ways:
@@ -24,7 +24,7 @@ number.
 Not every pulse strikes a new note:
 
 ```scheme
-{{#include examples/holds-and-rests.nts}}
+{{#include ../../../examples/manual/holds-and-rests.nts}}
 ```
 
 | You write | It means |
@@ -48,7 +48,7 @@ To play the same notes several times, put them in `(rep N …)`, where N
 is how many times:
 
 ```scheme
-{{#include examples/repeats.nts}}
+{{#include ../../../examples/manual/repeats.nts}}
 ```
 
 - `(rep 4 a1 o2)` plays `a1 o2` four times: eight pulses.

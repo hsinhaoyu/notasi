@@ -7,7 +7,7 @@ falls on the last pulse of each cycle. In notasi this pattern is a
 parts and the kempli for the whole piece:
 
 ```scheme
-{{#include examples/gong-cycle.nts}}
+{{#include ../../../examples/manual/gong-cycle.nts}}
 ```
 
 - `:colotomy gilak` on the `piece` line uses the gilak cycle for the
@@ -26,7 +26,7 @@ For a cycle the template doesn't have, or a different version of one,
 write a `colotomy`:
 
 ```scheme
-{{#include examples/own-colotomy.nts}}
+{{#include ../../../examples/manual/own-colotomy.nts}}
 ```
 
 - `(colotomy gilak-kempur 8 …)` names a cycle of eight pulses.

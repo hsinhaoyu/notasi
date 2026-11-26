@@ -4,7 +4,7 @@ An instrument lists the notes it can play: the keys of a gangsa, the
 pots of a reyong, or the strokes of a drum.
 
 ```scheme
-{{#include examples/instruments.nts}}
+{{#include ../../../examples/manual/instruments.nts}}
 ```
 
 Each `instrument` line gives:
