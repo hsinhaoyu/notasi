@@ -20,6 +20,13 @@ figures (ADR 0045) and file names `NAME_SCORE` (ADR 0040) since
 and `notasi --version` (ADR 0048), since iteration 4's
 `feat/emacs-preview-draw`; see "The command line as a contract".
 
+**Planned** for iteration 5 (ADRs 0052, 0056–0059, 0061): contract
+version 4 and the template's annotation row and part marks; `notasi
+render --all`, `--one-file`, `--list`, `--format`, `--ppi` and
+`--save-piece`; one line per file written on success; the manual's
+figures committed as PNG, and `make preview` removed. Each section
+says what is planned.
+
 ## Responsibility
 
 - Guile side: serialise the layout `figure` to JSON, write a small `.typ`
@@ -29,6 +36,57 @@ and `notasi --version` (ADR 0048), since iteration 4's
 The same template draws scores inside Typst documents, where the figure
 JSON arrives inside a side file instead (06, ADR 0016, proposed). So the template
 must work in both places; see "Typst template design", points 6 and 7.
+
+## JSON contract (version 4)
+
+**Planned** (ADR 0059), built over iteration 5. Version 3 below, with
+these changes (04 lists the keys in order, and says how layout fills
+them):
+
+- `version` is 4.
+- `lanes`, `lane` and `sizes.lane_width` become `rows`, `row` and
+  `sizes.row_label_width`, with the same meanings.
+- Each group's `overlays` is gone. In its place, `annotation` is
+  `null` or the group's annotation row: `position` (`"above"` or
+  `"below"`), `label` (a string or `null`) and `items`, each with
+  `start`, `dur` (columns, relative to the system, as an event's),
+  `text`, `align` (`"left"`, `"center"` or `"right"`) and `continued`.
+- Each voice gets `marker`: `null`, or `symbol` (`"none"`, `"dot"`,
+  `"ring"` or `"cross"`), `symbol_size` (a number, a fraction of the
+  cell's narrower side), `symbol_color` and `border` (`"#rrggbb"`) and
+  `border_width` (a length). Every field but `symbol` may be `null`,
+  for the template's default.
+- An event's `text` may be a key number (`"2"`); its shape is
+  unchanged.
+
+An excerpt (one group, arrays shortened):
+
+```json
+{
+  "label": "Gangsa pemade",
+  "subtitle": "norot",
+  "rows": ["u3", "e3", "o3", "i3", "a2"],
+  "key_numbers": null,
+  "voices": [
+    { "name": "polos", "marker": null, "events": [ ... ] },
+    { "name": "sangsih",
+      "marker": { "symbol": "dot", "symbol_size": null,
+                  "symbol_color": null, "border": "#d62728",
+                  "border_width": null },
+      "events": [ ... ] }
+  ],
+  "annotation": {
+    "position": "below",
+    "label": null,
+    "items": [
+      { "start": 4, "dur": 8, "text": "1", "align": "left",
+        "continued": false }
+    ]
+  },
+  "pulse_lines": true,
+  "row_lines": true
+}
+```
 
 ## JSON contract (version 3)
 
@@ -261,7 +319,7 @@ Lessons from the prototype (`doc/prototypes/score.typ`):
   its own header row and group labels, so each can be read alone,
   separated by a 1em gap. No systems: empty content.
 - **Columns:** `label_width` (group label and subtitle), `lane_width`
-  (lane labels), then `steps` columns of `step_width`. **Rows:** a
+  (row labels), then `steps` columns of `step_width`. **Rows:** a
   header row, then one row per lane of each group, all `row_height`.
 - **Header:** at each step whose absolute number (`system.start` + i)
   is a multiple of `steps_per_pulse`, the pulse number
@@ -276,7 +334,7 @@ Lessons from the prototype (`doc/prototypes/score.typ`):
   (`1.1em`), with its subtitle under it in grey italics when not
   `null` (after it, on the same line, for a group of one row, which
   has no room for two lines; `feat/targets`), spanning the group's
-  rows. Lane labels right-aligned, small
+  rows. Row labels right-aligned, small
   (`0.85em`) and grey (`luma(140)`).
 - **Notes** (ADRs 0019, 0020): a block filling its cells exactly, with
   no margin, in `fill`, with a thin white border (`0.5pt`) so that
@@ -314,6 +372,31 @@ third layer over the notes, since a grid can't overlap its cells:
   event whose `fill` is `null` (`:fill none`) is its text alone, which
   also draws the `"-"` of `:holds dash`.
 
+**Planned** for version 4 (ADRs 0056, 0057, 0059), changing
+version 3's drawing, which follows:
+
+- **No overlays**: the third layer is gone.
+- **The annotation row**: one row of `cell_height`, above or below the
+  group's rows as `position` says, inside the group's frame and rules.
+  No fill, no notes, and no row lines or pulse lines through it; cycle
+  lines run through it. Its `label`, when not `null`, is in the
+  row-label column, as a row label is. Each item spans its columns,
+  with its text near-black (`#222222`) on one line: aligned as `align`
+  says when it fits, otherwise left-aligned and cut at the item's last
+  column. A continued item's text is written again.
+- **Part marks**: in a voice with a `marker`, each note gets its
+  symbol (a small filled `dot`, an open `ring` or a `cross`), centred
+  in the note's cell, sized as `symbol_size` × the cell's narrower
+  side, in `symbol_color` (near-black, `#222222`, by default); and,
+  when `border` isn't `null`, a border of that colour and
+  `border_width` in place of the grey one. A note's text and symbol
+  are both drawn, centred, even when they overlap. The default size and
+  width are chosen by eye when built, the width thicker than the grey
+  border but small enough not to hide a gangsa note's fill. A note
+  drawn as text alone (`fill` `null`) gets the symbol but no border.
+- `lanes`, `lane` and `lane_width` are read as `rows`, `row` and
+  `row_label_width`.
+
 **Implemented** for version 3 (ADRs 0039, 0041, 0043, 0044, 0047),
 changing the above:
 
@@ -337,7 +420,7 @@ changing the above:
   `"0.0em"` takes no space, so with neither column the group label sits
   next to the grid.
 - **Frame** (**Implemented**): a vertical line at the left edge of the grid, between the
-  lane labels and the first column, like the rules between groups
+  row labels and the first column, like the rules between groups
   (`0.8pt`, `luma(120)`), from the first group's rule to the last, in
   every system. The template draws it; `lines[0]` stays `none`.
 - **Note borders** (**Implemented**): each block has a thin grey
@@ -355,7 +438,10 @@ warning. If `typst` isn't installed it says so and fails, since CI
 always installs it. `make preview` draws each example to
 `build/preview/NAME.png` (not committed) with `render-piece`, for a
 person to check by eye; every PR that changes how figures look is
-checked that way.
+checked that way. **Planned** (ADR 0052): `make preview` is removed;
+the committed images of `examples/gallery/` and `examples/manual/`
+show every change to how figures look, and CI fails when one is out of
+date (07).
 
 ## The entry file and running Typst
 
@@ -368,7 +454,7 @@ under the score when not `null`, in italics. The rest is as below.
 tests in `tests/typst.scm`. `(notasi typst)` comes after the reader and
 layout in the pipeline and uses both; they never use it, so ADRs 0004
 and 0008 still hold. `make preview` draws each example with
-`render-piece`.
+`render-piece` (**Planned**: removed, ADR 0052).
 
 A standalone figure is drawn from three files in one folder: the figure
 JSON, the template `notasi.typ`, and an **entry file** that Typst
@@ -402,7 +488,8 @@ folder), exactly:
 `(compile-typst typ-path out-path)` runs `typst compile` on TYP-PATH,
 writing OUT-PATH, and returns OUT-PATH. The format comes from
 OUT-PATH's extension: `.pdf`, `.png` (at 144 ppi) or `.svg`; any other
-raises an `&error`. It runs with `--root` set to TYP-PATH's folder, so
+raises an `&error`. **Planned** (ADR 0061): `#:ppi N` sets a PNG's
+resolution (default 144), passed to Typst as `--ppi`. It runs with `--root` set to TYP-PATH's folder, so
 everything the entry file reads must be in that folder. Errors are
 plain `&error`s with a readable message:
 
@@ -432,6 +519,22 @@ debugging. OUT-PATH is relative to the current directory. Returns
 OUT-PATH. The template is found as `typst/notasi.typ` along Guile's
 `%load-path`, like the `.nts` templates (03), so running with `-L .`
 finds the repo's; if it can't be found, that is an `&error`.
+
+**Planned** (ADRs 0058, 0061), for `--all`, `--one-file` and
+`--save-piece`, which read the piece once:
+
+- `(render-score piece score out-path #:key ppi keep-in)` draws one
+  score of a piece already read, as `render-piece` does after reading;
+  `render-piece` becomes reading and then `render-score`, and takes
+  `#:ppi` too.
+- `(render-scores-to-one-file piece scores out-path #:key keep-in)`
+  writes one PDF with each of SCORES on its own page, in order, each
+  page sized to its score, with its title, subtitle and caption as a
+  standalone figure has them. The entry file reads one figure file per
+  score and puts a page break between them.
+- Writing the piece (`--save-piece`) is a module of its own beside
+  `(notasi json)`, as ADR 0058 says; 02 ("Saving the piece") gives its
+  format.
 
 None of these procedures changes the current directory. A relative
 `%load-path` entry such as the `.` from `-L .` only works while the
@@ -484,6 +587,57 @@ and the message, and exits with status 1. OUT defaults to
 (ADR 0040), so drawing several scores of
 one file doesn't overwrite one picture with another.
 
+**Planned** (ADRs 0058, 0061):
+
+```
+notasi render PIECE.nts [--score NAME | --all [--one-file]]
+              [--format pdf|png|svg] [--ppi N] [-o OUT]
+              [--save-piece FILE]
+notasi render PIECE.nts --list [--save-piece FILE]
+```
+
+- **`--all`** draws every score, each to `NAME_SCORE.EXT`, the first
+  included (`jaya-semara_full.pdf`, `jaya-semara_kotekan.pdf`); a file
+  with no `score` form draws its default score to `NAME.EXT`. Without
+  `-o` the files go beside the piece. `-o DIR`, an existing folder or a
+  path ending in `/`, puts them in DIR, named the same. The piece is
+  read once: a notation mistake stops everything. A score Typst fails
+  on prints `notasi: ` and the message, the others are still drawn,
+  and the status is 1 if any failed.
+- **`--format pdf|png|svg`** (default `pdf`) chooses the format, with
+  or without `--all`. With `-o FILE` and no `--format`, FILE's
+  extension chooses, as now; `--format` adds the extension to an `-o
+  FILE` without one.
+- **`--ppi N`**, a whole number greater than 0, sets a PNG's
+  resolution (default 144).
+- **`--one-file`**, with `--all`, writes one PDF, each score on its own
+  page, in score order, each page sized to its score: `NAME.pdf` beside
+  the piece, or `-o FILE.pdf`.
+- **`--list`** prints the file's score names, one per line, in the
+  order written, to standard output, and draws nothing, so it needs no
+  Typst. A file with no `score` form prints nothing. It reads the
+  piece, so a notation mistake is reported as when drawing (status
+  1); otherwise the status is 0.
+- **`--save-piece FILE`** saves the piece (02, "Saving the piece"):
+  JSON for `.json`, an s-expression for `.scm`, JSON to standard
+  output for `-`. The piece is saved once, after it is read and before
+  anything is drawn, so it is saved even when a drawing fails. Saving
+  prints nothing. With `-`, nothing else goes to standard output (no
+  paths, no score names). With `--list`, it lists and saves, and draws
+  nothing.
+- **On success**, one line per file drawn, its path, in score order;
+  one line for one score or for `--one-file`.
+- **Usage errors** (status 2): `--all` with `--score`; `--all` with
+  `-o` naming a file, except with `--one-file`; `--one-file` without
+  `--all`, or with `--format png` or `svg`, or an `-o` that isn't
+  `.pdf`; `--format` disagreeing with `-o`'s extension (`-o out.png
+  --format svg`); `--ppi` when the format isn't PNG, or not a whole
+  number greater than 0; `--list` with `--all`, `--score`, `-o`,
+  `--format`, `--ppi` or `--one-file`; `--save-piece` without a value,
+  or with an extension other than `.json` or `.scm`. Each prints
+  `notasi: `, what is wrong and the usage, as now.
+- `notasi --help` and `notasi render --help` describe the new options.
+
 ### The command line as a contract
 
 **Implemented** (iteration 4's `feat/emacs-preview-draw`, ADR 0048).
@@ -494,11 +648,14 @@ changes the editor package in the same PR:
 
 - **Invocation:** `notasi render PIECE.nts [--score NAME] -o OUT`, with
   OUT's extension `.svg`, `.png` or `.pdf`, and the options in any
-  order.
+  order. **Planned** (ADRs 0058, 0061): the new options above are part
+  of the contract; editors use none of them, so the Emacs package
+  doesn't change.
 - **Exit status:** 0 when the picture was written; 1 for a problem
   with the piece or the drawing; 2 when the command was used wrongly.
 - **On success:** OUT's path, on one line, to standard output, and
-  nothing to standard error.
+  nothing to standard error. **Planned** (ADR 0061): one line per file
+  drawn; drawing one score, as an editor does, is still one line.
 - **A mistake in the notation:** one line to standard error,
   `FILE:LINE: message`, where FILE is the file the mistake is in (the
   piece as given on the command line, or a template it uses) and LINE
@@ -540,6 +697,13 @@ drawn with `--score SCORE`. The manual's CI job installs
 Guile and Typst 0.15.1 for this; `tests/manual.scm` checks that every
 image a page shows has an example to draw it from.
 
+**Planned** (ADR 0052): the manual's examples move to
+`examples/manual/`, and the images its pages show are PNG, drawn by
+`make images` with `notasi render --all` into
+`examples/manual/images/` and committed. `make manual` copies them
+into `doc/manual/src/figures/` and draws nothing, so the manual builds
+with mdBook alone (07).
+
 ## Version pinning
 
 Typst is pre-1.0. Record the tested version in CLAUDE.md and the README;
@@ -551,7 +715,9 @@ to the pin, with the golden figures and template checked again.
 `make preview` (`scripts/preview.scm`) draws each example's every score
 to `build/preview/NAME.png`, or `NAME_SCORE.png` for a file with scores
 (ADR 0040), matching the golden files
-(04).
+(04). **Planned** (ADR 0052): removed; `make images` draws the
+committed images at one fixed `--ppi`, on Linux with the pinned Typst
+(07).
 
 ## Slices
 
