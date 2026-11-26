@@ -101,4 +101,4 @@ Settled before promotion (2026-11-26): the piece's free-text key is
 `:remarks`; PNG resolution is `--ppi N`; the glossary is promoted as
 drafted.
 
-Promoted so far: `glossary.md` (ADR 0051). The rule in CLAUDE.md and the `/doc-audit` check for the glossary's "Not" words follow in a `chore/` PR.
+Promoted so far: `glossary.md` (ADR 0051; its rule in CLAUDE.md and `/doc-audit` in #112), `07-environment.md` (ADR 0052).

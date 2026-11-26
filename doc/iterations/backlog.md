@@ -110,3 +110,9 @@ In the Emacs package (08):
 - **Screenshots of the preview** in the manual's chapter "Writing in
   Emacs", which shows only drawn figures for now
   ([documentation](04-emacs-mode/design_ideas/2026-11-24-documentation.md)).
+
+## Later, from iteration 5
+
+- **Seeing what changed in a committed image**: how a reviewer compares
+  an old and a new PNG in a PR
+  ([the collection of examples](05-collapsed-and-gallery/design_ideas/2026-11-25-examples-collection.md)).
