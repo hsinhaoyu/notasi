@@ -84,11 +84,11 @@ colours:
 | Setting | Where | What it does |
 |---|---|---|
 | `:rows parts` | score or group | One row for each part, instead of one for each note. Give a row its label with `(polos :label "Polos")`. |
-| `:rows single` | score or group | All the group's parts on one row, such as the strokes of two drums played by one person. Two notes can't sound in the same column. |
+| `:rows compact` | score or group | The group's parts merged into as few rows as they need, such as the strokes of two drums played by one person, or a gong and the kempli. Each key or stroke keeps one row for the whole score; keys that never sound at the same time share one, and a row is added where they do (the gong's strokes on one row, the kempli on another). The rows have no labels. |
 | `:fill none` | score or group | Names only, without coloured squares. |
 | `:holds dash` | score or group | A `-` in every column a note is held, as in a sung line. |
 
-On rows of parts or one row, the squares keep their colours, so a
+On rows of parts or compact rows, the squares keep their colours, so a
 `:note-label` is your choice. With `:fill none` there are no squares,
 so the group needs a `:note-label`.
 
@@ -151,7 +151,7 @@ don't overwrite each other.
 - Every part a group names must exist.
 - With `:keys (LOW HIGH)`, a group can't play a note outside that range.
   `:keys` and `:key-numbers` choose rows of keys, so they don't go on a
-  group with `:rows parts` or `:rows single`.
+  group with `:rows parts` or `:rows compact`.
 - When parts share a group's rows, two of them can play the same key at
   once only by striking it together, for the same length (a unison,
   drawn once).
