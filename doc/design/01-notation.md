@@ -244,7 +244,8 @@ about how it is played or printed. It has no options.
   told apart; a piece that prints both as "G", as Tenzer does,
   redefines the strokes. The template defines the common colotomies
   (ADR 0046), `gilak` (8 pulses: gong
-  lanang on 4, kempur on 5 and 7, gong on 8) and `bapang` (16 pulses:
+  lanang on 4, kempur on 5 and 7, gong on 8), `gilak-2` (the same with
+  the gong on 4 instead of the gong lanang, as Baris uses) and `bapang` (16 pulses:
   kempur on 4 and 12, klentong on 8, gong on 16); a piece names one
   with `:colotomy` and writes no `colotomy` form, or defines its own,
   or replaces the template's with one of the same name.

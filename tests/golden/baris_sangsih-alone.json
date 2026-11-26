@@ -64,16 +64,7 @@
                   "start": 2,
                   "dur": 1,
                   "lane": 0,
-                  "text": "neng",
-                  "fill": null,
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 3,
-                  "dur": 1,
-                  "lane": 0,
-                  "text": "-",
+                  "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
                   "continued": false
@@ -91,16 +82,7 @@
                   "start": 5,
                   "dur": 1,
                   "lane": 0,
-                  "text": "neng",
-                  "fill": null,
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 6,
-                  "dur": 1,
-                  "lane": 0,
-                  "text": "-",
+                  "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
                   "continued": false
@@ -109,7 +91,7 @@
                   "start": 7,
                   "dur": 1,
                   "lane": 0,
-                  "text": "nong",
+                  "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
                   "continued": false
@@ -145,15 +127,6 @@
               "name": "sangsih",
               "events": [
                 {
-                  "start": 0,
-                  "dur": 1,
-                  "lane": 0,
-                  "text": "-",
-                  "fill": null,
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
                   "start": 1,
                   "dur": 1,
                   "lane": 0,
@@ -166,16 +139,7 @@
                   "start": 2,
                   "dur": 1,
                   "lane": 0,
-                  "text": "nong",
-                  "fill": null,
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 3,
-                  "dur": 1,
-                  "lane": 0,
-                  "text": "-",
+                  "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
                   "continued": false
@@ -202,16 +166,7 @@
                   "start": 6,
                   "dur": 1,
                   "lane": 0,
-                  "text": "neng",
-                  "fill": null,
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 7,
-                  "dur": 1,
-                  "lane": 0,
-                  "text": "-",
+                  "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
                   "continued": false
@@ -238,16 +193,7 @@
                   "start": 10,
                   "dur": 1,
                   "lane": 0,
-                  "text": "nong",
-                  "fill": null,
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 11,
-                  "dur": 1,
-                  "lane": 0,
-                  "text": "-",
+                  "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
                   "continued": false
@@ -265,16 +211,7 @@
                   "start": 13,
                   "dur": 1,
                   "lane": 0,
-                  "text": "nong",
-                  "fill": null,
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 14,
-                  "dur": 1,
-                  "lane": 0,
-                  "text": "-",
+                  "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
                   "continued": false
@@ -292,16 +229,7 @@
                   "start": 16,
                   "dur": 1,
                   "lane": 0,
-                  "text": "nong",
-                  "fill": null,
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 17,
-                  "dur": 1,
-                  "lane": 0,
-                  "text": "-",
+                  "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
                   "continued": false
@@ -319,16 +247,7 @@
                   "start": 19,
                   "dur": 1,
                   "lane": 0,
-                  "text": "nong",
-                  "fill": null,
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 20,
-                  "dur": 1,
-                  "lane": 0,
-                  "text": "-",
+                  "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
                   "continued": false
@@ -346,16 +265,7 @@
                   "start": 22,
                   "dur": 1,
                   "lane": 0,
-                  "text": "nong",
-                  "fill": null,
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 23,
-                  "dur": 1,
-                  "lane": 0,
-                  "text": "-",
+                  "text": "no'",
                   "fill": null,
                   "text_color": "#222222",
                   "continued": false
@@ -382,16 +292,7 @@
                   "start": 26,
                   "dur": 1,
                   "lane": 0,
-                  "text": "neng",
-                  "fill": null,
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 27,
-                  "dur": 1,
-                  "lane": 0,
-                  "text": "-",
+                  "text": "ne'",
                   "fill": null,
                   "text_color": "#222222",
                   "continued": false
