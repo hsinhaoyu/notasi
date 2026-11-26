@@ -1,6 +1,6 @@
 # 0043 The JSON contract is version 3
 
-Status: accepted (2026-11-23)
+Status: superseded by 0059
 
 Context: Iteration 3 labels the cycle row as well as the pulse row (ADR 0039), lets a score or group choose its background lines (ADR 0041), and numbers the pickup as cycle 0. Version 2 (ADR 0036) has one header label, says nothing about which lines a group draws, and gives the pickup no cycle mark. ADR 0005 has layout decide and the template draw, so these choices belong in the figure, not in the template.
 

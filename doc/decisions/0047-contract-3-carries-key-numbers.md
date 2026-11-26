@@ -1,6 +1,6 @@
 # 0047 Contract version 3 carries key numbers and empty row labels
 
-Status: accepted (2026-11-24)
+Status: superseded by 0059
 
 Context: A score can show a column of key numbers to the left of the row labels (`:key-numbers`, pitched keys only) and can leave the row labels out (`:row-labels no`). ADR 0043's version 3 has no place for the numbers or for a column that is left out, and ADR 0005 has layout decide while the template draws. Version 3 is not built yet.
 

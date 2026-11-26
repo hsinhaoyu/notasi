@@ -510,8 +510,10 @@ All errors at a use carry the part, the time and the chain of uses.
   notes`, two notes on one key that share a column without being a
   unison (the same key, start and length): `notes-collide` (`part` set
   to the second part, `time` set to the first shared column).
-  [iteration 5] The `notes` case only: `compact` adds a row instead
-  (04).
+  [iteration 5] `compact` adds a row where different keys sound
+  together (04), so only one key's notes collide there: two notes on
+  one key whose boxes overlap without being a unison, as on `notes`
+  rows (ADR 0060).
 - [scores] Different pattern names overlapping in one group at the
   chosen level: `pattern-names-overlap` (`part` and `time` set).
   [iteration 5] Removed with `:pattern-names`: an annotation row takes
@@ -599,7 +601,8 @@ when the milestones are built; the records it fills are in 02,
   `:pattern-names` and `:pattern-level` become keys no form takes;
   `:rows single`, `:row-labels yes`/`no` and `:scheme by-degree`
   become values no option takes. `pattern-names-overlap` is removed,
-  and `notes-collide` keeps only its `notes`-rows case.
+  and `notes-collide` keeps only its case of one key, on `notes` and
+  `compact` rows.
 - **`text` is reserved**, as `rep` and `@` are: no pitch or stroke
   may be called `text`.
 - **Colotomies**: the template's `bapang` becomes `bapang-8` and

@@ -790,8 +790,8 @@ pitched and stroke groups alike:
   changes only how the stroke is shown in that score.
 - With `:rows single`, two notes may not fall in one cell (**Planned**:
   removed with `single`; `compact` adds a row instead). With `:rows
-  notes`, two parts may share a cell only as a unison: the same key,
-  start and length, which is drawn once.
+  notes` (**Planned**: and `compact`), two parts may share a cell only
+  as a unison: the same key, start and length, which is drawn once.
 - Pattern names: identical names from several parts of a group (the
   same start, length and text) are written once; different names that
   overlap in one group are an error, naming the parts and the position.
