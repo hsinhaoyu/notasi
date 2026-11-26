@@ -5025,12 +5025,12 @@ STR, or the raised object (or no-error) unchanged."
   "Every setting of G but its members and location, in 02's order."
   (list (group-label g) (group-short g) (group-subtitle g) (group-labels g)
         (group-rows g) (group-note-label g) (group-fill g) (group-holds g)
-        (group-pattern-names g) (group-pattern-level g) (group-scheme g)
+        (group-annotation g) (group-scheme g)
         (group-palette g) (group-colors g)))
 
 (define (default-group-settings label)
   "group-settings of a group LABEL with every option at its default."
-  (list label label #f 'first-long 'notes 'none 'colour 'none 'none 0
+  (list label label #f 'first-long 'notes 'none 'colour 'none #f
         'by-pitch 'pastel1 '()))
 
 (define (member-names g)
@@ -5115,15 +5115,15 @@ STR, or the raised object (or no-error) unchanged."
                              (source-location-line (group-location g))))
            (score-groups (score-named pc 'full))))
     (test-equal "a group without options: the score's settings, else the defaults"
-      (list "Gangsa" "Gangsa" "norot" 'first-long 'notes 'pitch-display-name 'colour 'none 'none 0
+      (list "Gangsa" "Gangsa" "norot" 'first-long 'notes 'pitch-display-name 'colour 'none #f
             'by-pitch 'set1 '((ding . "#000000")))
       (group-settings (car (score-groups (score-named pc 'full)))))
     (test-equal "a group's own :note-label and :palette override the score's"
-      (list "Ugal" "Ugal" #f 'first-long 'notes 'none 'colour 'none 'none 0
+      (list "Ugal" "Ugal" #f 'first-long 'notes 'none 'colour 'none #f
             'by-pitch 'dark2 '((ding . "#000000")))
       (group-settings (cadr (score-groups (score-named pc 'full)))))
     (test-equal "a group's own :colors replace the score's; an empty label"
-      (list "" "" #f 'first-long 'notes 'pitch-display-name 'colour 'none 'none 0
+      (list "" "" #f 'first-long 'notes 'pitch-display-name 'colour 'none #f
             'by-pitch 'set1 '((dong . "#ffffff")))
       (group-settings (caddr (score-groups (score-named pc 'full)))))
     (test-equal "members: (part . row-label), the label the part's name"
@@ -5475,12 +5475,11 @@ colotomy, 4 pulses."
              "  :pulse-label \"Beats\" :font-size \"10pt\""
              "  :note-label pitch-display-name :note-label-octave no :scheme by-pitch :palette set1"
              "  :colors ((ding \"#000000\")) :cell-width \"2em\" :cell-height \"2em\""
-             "  :rows notes :fill colour :holds none :pattern-names none"
-             "  :pattern-level 0 :labels short"
+             "  :rows notes :fill colour :holds none :labels short"
              "  (group \"Ugal\" :short \"U.\" :subtitle \"s\" :labels long"
              "    :note-label pitch-display-name :note-label-octave no :scheme by-pitch :palette set2"
              "    :colors ((dong \"#ffffff\")) :rows notes :fill colour"
-             "    :holds none :pattern-names short :pattern-level 1 ugal)"
+             "    :holds none :annotation-part ugal :annotation-level 1 ugal)"
              "  (group \"Gong\" gong))")))
     (test-assert "a score with every score option, a group with every group option"
       (piece? pc))
@@ -5960,7 +5959,7 @@ colotomy, 4 pulses."
       '(((polos "Pol.") (sangsih "")))
       (and pc (map member-names (score-groups (score-named pc 's)))))
     (test-equal "every other setting as before"
-      (list (list "R" "R" #f 'first-long 'parts 'pitch-display-name 'colour 'none 'none 0
+      (list (list "R" "R" #f 'first-long 'parts 'pitch-display-name 'colour 'none #f
                   'by-pitch 'pastel1 '()))
       (and pc (map group-settings (score-groups (score-named pc 's))))))
   (let ((pc (read-scores+ "(score s :note-label pitch-display-name :note-label-octave no"
@@ -6235,301 +6234,9 @@ colotomy, 4 pulses."
           "(score b (group \"U\" nope))"))))
 
 ;;; ==================================================================
-;;; [scores] Pattern names (slice feat/scores-overlays)
-;;; ==================================================================
-
-(define (pattern-settings g)
-  "G's pattern-names and pattern-level."
-  (list (group-pattern-names g) (group-pattern-level g)))
-
-(define (groups-pattern-settings pc name)
-  (map pattern-settings (score-groups (score-named pc name))))
-
-(test-group "[scores] reading :pattern-names and :pattern-level"
-  (let ((pc (read-scores+ "(score s :pattern-names short :pattern-level 1"
-                          "  (group \"U\" ugal)"
-                          "  (group \"R\" polos sangsih))")))
-    (test-equal "on a score: every group takes them"
-      '((short 1) (short 1))
-      (and pc (groups-pattern-settings pc 's))))
-  (let ((pc (read-scores+ "(score s :pattern-names short :pattern-level 1"
-                          "  (group \"U\" :pattern-names long :pattern-level 0 ugal)"
-                          "  (group \"R\" :pattern-names none polos sangsih)"
-                          "  (group \"G\" :pattern-level 2 gong))")))
-    (test-equal "a group's own values override the score's"
-      '((long 0) (none 1) (short 2))
-      (and pc (groups-pattern-settings pc 's))))
-  (let ((pc (read-scores+ "(score s"
-                          "  (group \"U\" :pattern-names long ugal)"
-                          "  (group \"R\" :pattern-level 3 polos sangsih))")))
-    (test-equal "on groups only: the others keep the defaults"
-      '((long 0) (none 3))
-      (and pc (groups-pattern-settings pc 's))))
-  (let ((pc (read-scores+ "(score s :pattern-names none :pattern-level 0"
-                          "  (group \"U\" ugal))")))
-    (test-equal "the defaults written out" '((none 0))
-      (and pc (groups-pattern-settings pc 's))))
-  (let ((pc (read-scores+ "(score s (group \"U\" ugal))")))
-    (test-equal "not written: none, 0" '((none 0))
-      (and pc (groups-pattern-settings pc 's))))
-  (let ((pc (read-scores+ "(score s :pattern-names long :pattern-level 2"
-                          "  (group \"R\" polos sangsih))")))
-    (test-equal "every other setting as before"
-      (list (list "R" "R" #f 'first-long 'notes 'none 'colour 'none 'long 2
-                  'by-pitch 'pastel1 '()))
-      (and pc (map group-settings (score-groups (score-named pc 's))))))
-  (let ((pc (read-scores+ "(score s :pattern-names short"
-                          "  (group \"G\" gong kempli))")))
-    (test-equal "stroke parts, without patterns" '((short 0))
-      (and pc (groups-pattern-settings pc 's))))
-  (test-assert "a level deeper than any nesting reads"
-    (piece? (read-scores+ "(score s :pattern-names short :pattern-level 5"
-                          "  (group \"R\" polos sangsih))")))
-  (test-assert ":pattern-names needs no note names"
-    (piece? (read-scores+ "(score s (group \"U\" :pattern-names long ugal))"))))
-
-(test-group "[scores] :pattern-names and :pattern-level: bad-option"
-  (for-each
-   (match-lambda
-     ((name options)
-      (test-equal (string-append "on a score: " name) '(bad-option 14)
-        (score-error (string-append "(score s " options " (group \"U\" ugal))")))
-      (test-equal (string-append "on a group: " name) '(bad-option 15)
-        (string-error
-         (one-group (string-append "(group \"U\" " options " ugal)"))))))
-   (list
-    (list ":pattern-names not a choice" ":pattern-names both")
-    (list ":pattern-names yes" ":pattern-names yes")
-    (list ":pattern-names a string" ":pattern-names \"short\"")
-    (list ":pattern-names a number" ":pattern-names 1")
-    (list ":pattern-names with no value" ":pattern-names :note-label pitch-display-name :note-label-octave no")
-    (list ":pattern-level negative" ":pattern-level -1")
-    (list ":pattern-level a decimal" ":pattern-level 1.5")
-    (list ":pattern-level an inexact whole number" ":pattern-level 1.0")
-    (list ":pattern-level a fraction" ":pattern-level 1/2")
-    (list ":pattern-level a string" ":pattern-level \"1\"")
-    (list ":pattern-level a symbol" ":pattern-level one")
-    (list ":pattern-level #t" ":pattern-level #t")
-    (list ":pattern-level with no value" ":pattern-level :pattern-names short")))
-  (test-equal "duplicate-option: :pattern-names" '(duplicate-option 14)
-    (score-error "(score s :pattern-names short :pattern-names long (group \"U\" ugal))"))
-  (test-equal "duplicate-option on a group: :pattern-level" '(duplicate-option 15)
-    (string-error (one-group "(group \"U\" :pattern-level 1 :pattern-level 1 ugal)")))
-  (test-equal "fields: part and time #f" '(bad-option 15 #f #f)
-    (error-fields (one-group "(group \"U\" :pattern-level -1 ugal)"))))
-
-;;; Patterns for pattern-names-overlap, on lines 14 to 19, all on reyong
-;;; (so a group of their parts is one pitched instrument). alpha and
-;;; other share the short name "A"; outer and outer-a are both "O" at
-;;; depth 0, with different patterns inside (one, one / alpha). Parts
-;;; follow from line 20, each 4 pulses long like polos and sangsih.
-(define overlap-patterns
-  (list "(pattern alpha :instrument reyong :short \"A\" :long \"Alpha\" 1 2)"  ; 14
-        "(pattern beta :instrument reyong :short \"B\" :long \"Beta\" 3 4)"    ; 15
-        "(pattern other :instrument reyong :short \"A\" :long \"Other\" 2 1)"  ; 16
-        "(pattern one :instrument reyong :short \"C\" 1)"                     ; 17
-        "(pattern outer :instrument reyong :short \"O\" @one @one)"           ; 18
-        "(pattern outer-a :instrument reyong :short \"O\" @alpha)"))          ; 19
-
-(define (overlap+ . more)
-  "scores+ with overlap-patterns on lines 14 to 19, then MORE from 20."
-  (apply scores+ (append overlap-patterns more)))
-
-(define (overlap-fields . more)
-  "(KIND LINE PART TIME) for reading overlap+ with the lines MORE."
-  (error-fields (apply overlap+ more)))
-
-(define (overlap-reads . more)
-  (try-read-string (apply overlap+ more)))
-
-(test-group "[scores] pattern-names-overlap"
-  (for-each
-   (match-lambda
-     ((name expected . more)
-      (test-equal name expected (apply overlap-fields more))))
-   (list
-    (list "two patterns at the same time: the later part, the first shared time"
-          '(pattern-names-overlap 23 b 0)
-          "(part :instrument reyong :name a @alpha @beta)"                     ; 20
-          "(part :instrument reyong :name b @beta @alpha)"                     ; 21
-          "(score s :pattern-names short"                          ; 22
-          "  (group \"R\" a b))")                                  ; 23
-    (list "the same name, shifted: not identical"
-          '(pattern-names-overlap 23 b 1)
-          "(part :instrument reyong :name a @alpha 1 2)"
-          "(part :instrument reyong :name b 1 @alpha 2)"
-          "(score s :pattern-names short" "  (group \"R\" a b))")
-    (list "the same pattern and time, renamed at a use"
-          '(pattern-names-overlap 23 b 0)
-          "(part :instrument reyong :name a @alpha 1 2)"
-          "(part :instrument reyong :name b (@ alpha :short \"Z\") 1 2)"
-          "(score s :pattern-names short" "  (group \"R\" a b))")
-    (list ":pattern-names long: one short name, two long ones"
-          '(pattern-names-overlap 23 b 0)
-          "(part :instrument reyong :name a @alpha 1 2)"
-          "(part :instrument reyong :name b @other 1 2)"
-          "(score s :pattern-names long" "  (group \"R\" a b))")
-    (list "half pulses: the time where they start to share"
-          '(pattern-names-overlap 23 b 1/2)
-          "(part :instrument reyong :name a 1:1/2 @alpha 1 2 3)"
-          ;; Keys 5 and 6, so that no key is shared (notes-collide).
-          "(part :instrument reyong :name b @beta 5 6)"
-          "(score s :pattern-names short" "  (group \"R\" a b))")
-    (list "the later part in member order, not file order"
-          '(pattern-names-overlap 23 a 0)
-          "(part :instrument reyong :name a @alpha @beta)"
-          "(part :instrument reyong :name b @beta @alpha)"
-          "(score s :pattern-names short" "  (group \"R\" b a))")
-    (list "three parts: the earliest shared time decides"
-          '(pattern-names-overlap 24 c 1)
-          "(part :instrument reyong :name a 1 2 @alpha)"                       ; 20: A 2-4
-          "(part :instrument reyong :name b 1 @beta 2)"                        ; 21: B 1-3
-          "(part :instrument reyong :name c 1 @one 2 3)"                       ; 22: C 1-2
-          "(score s :pattern-names short" "  (group \"R\" a b c))") ; 23, 24
-    (list ":pattern-level 1: the spans inside"
-          '(pattern-names-overlap 23 b 0)
-          "(part :instrument reyong :name a @outer 1 2)"
-          "(part :instrument reyong :name b @outer-a 1 2)"
-          "(score s :pattern-names short :pattern-level 1" "  (group \"R\" a b))")
-    (list "the score's :pattern-names: at the group's line"
-          '(pattern-names-overlap 24 b 0)
-          "(part :instrument reyong :name a @alpha @beta)"
-          "(part :instrument reyong :name b @beta @alpha)"
-          "(score s :pattern-names short"                          ; 22
-          "  (group \"U\" ugal)"                                   ; 23
-          "  (group \"R\" a b))")                                  ; 24
-    (list "a group's own :pattern-names"
-          '(pattern-names-overlap 23 b 0)
-          "(part :instrument reyong :name a @alpha @beta)"
-          "(part :instrument reyong :name b @beta @alpha)"
-          "(score s" "  (group \"R\" :pattern-names long a b))")
-    (list "a group's :pattern-level over the score's"
-          '(pattern-names-overlap 23 b 0)
-          "(part :instrument reyong :name a @outer 1 2)"
-          "(part :instrument reyong :name b @outer-a 1 2)"
-          "(score s :pattern-names short :pattern-level 0"
-          "  (group \"R\" :pattern-level 1 a b))")
-    (list "the second group's line, the first group's own spans fine"
-          '(pattern-names-overlap 25 c 0)
-          "(part :instrument reyong :name a @alpha @beta)"                     ; 20
-          "(part :instrument reyong :name b @beta @alpha)"                     ; 21
-          "(part :instrument reyong :name c @alpha @alpha)"                    ; 22
-          "(score s :pattern-names short"                          ; 23
-          "  (group \"A\" a)"                                    ; 24
-          "  (group \"R\" b c))")))                              ; 25
-  (for-each
-   (match-lambda
-     ((name . more)
-      (test-assert name (piece? (apply overlap-reads more)))))
-   (list
-    (list "identical spans from two parts are merged"
-          "(part :instrument reyong :name a @alpha @beta)"
-          "(part :instrument reyong :name b @alpha @beta)"
-          "(score s :pattern-names short" "  (group \"R\" a b))")
-    (list ":pattern-names short: the same short name, different long names"
-          "(part :instrument reyong :name a @alpha 1 2)"
-          "(part :instrument reyong :name b @other 1 2)"
-          "(score s :pattern-names short" "  (group \"R\" a b))")
-    (list "a name given at a use, identical to the other part's"
-          "(part :instrument reyong :name a @alpha 1 2)"
-          "(part :instrument reyong :name b (@ beta :short \"A\") 1 2)"
-          "(score s :pattern-names short" "  (group \"R\" a b))")
-    (list "spans that only touch share no time"
-          "(part :instrument reyong :name a @alpha 1 2)"
-          "(part :instrument reyong :name b 1 2 @beta)"
-          "(score s :pattern-names short" "  (group \"R\" a b))")
-    (list ":pattern-names none: overlapping spans are not checked"
-          "(part :instrument reyong :name a @alpha @beta)"
-          "(part :instrument reyong :name b @beta @alpha)"
-          "(score s" "  (group \"R\" a b))")
-    (list "a group's :pattern-names none over the score's short"
-          "(part :instrument reyong :name a @alpha @beta)"
-          "(part :instrument reyong :name b @beta @alpha)"
-          "(score s :pattern-names short" "  (group \"R\" :pattern-names none a b))")
-    (list "level 0: different spans inside identical ones"
-          "(part :instrument reyong :name a @outer 1 2)"
-          "(part :instrument reyong :name b @outer-a 1 2)"
-          "(score s :pattern-names short" "  (group \"R\" a b))")
-    (list "level 1: different spans at depth 0 are not checked"
-          "(part :instrument reyong :name a @alpha 1 2)"
-          "(part :instrument reyong :name b @beta 1 2)"
-          "(score s :pattern-names short :pattern-level 1" "  (group \"R\" a b))")
-    (list "the parts in different groups"
-          "(part :instrument reyong :name a @alpha @beta)"
-          "(part :instrument reyong :name b @beta @alpha)"
-          "(score s :pattern-names short" "  (group \"R\" a) (group \"S\" b))")
-    (list "a part without patterns beside one with them"
-          "(part :instrument reyong :name a @alpha @beta)"
-          "(score s :pattern-names short" "  (group \"R\" polos a))")
-    (list "one part: its own spans follow one another"
-          "(part :instrument reyong :name a @alpha @beta)"
-          "(score s :pattern-names long" "  (group \"R\" a))")))
-  (test-assert "pattern-names-overlap is a &notasi-syntax-error with file #f"
-    (let ((c (catch-syntax-error
-              (lambda ()
-                (read-piece-string
-                 (overlap+ "(part :instrument reyong :name a @alpha @beta)"
-                           "(part :instrument reyong :name b @beta @alpha)"
-                           "(score s :pattern-names short" "  (group \"R\" a b))"))))))
-      (and (notasi-syntax-error? c)
-           (eq? 'pattern-names-overlap (notasi-syntax-error-kind c))
-           (not (notasi-syntax-error-file c))
-           (null? (notasi-syntax-error-uses c)))))
-  (let ((t (let ((c (catch-syntax-error
-                     (lambda ()
-                       (read-piece-string
-                        (overlap+ "(part :instrument reyong :name a 1:1/2 @alpha 1 2 3)"
-                                  "(part :instrument reyong :name b @beta 1 2)"
-                                  "(score s :pattern-names short"
-                                  "  (group \"R\" a b))"))))))
-             (and (notasi-syntax-error? c) (notasi-syntax-error-time c)))))
-    (test-assert "the time is an exact rational"
-      (and (rational? t) (exact? t))))
-  (let* ((path (write-temp-file "overlap.nts"
-                                (overlap+ "(part :instrument reyong :name a @alpha @beta)"
-                                          "(part :instrument reyong :name b @beta @alpha)"
-                                          "(score s :pattern-names short"
-                                          "  (group \"R\" a b))")))
-         (c (catch-syntax-error (lambda () (read-piece-file path)))))
-    (test-equal "from a file: kind, file, line, part and time"
-      (list 'pattern-names-overlap path 23 'b 0)
-      (and (notasi-syntax-error? c)
-           (list (notasi-syntax-error-kind c) (notasi-syntax-error-file c)
-                 (notasi-syntax-error-line c) (notasi-syntax-error-part c)
-                 (notasi-syntax-error-time c))))))
-
-(test-group "[scores] check order: pattern names"
-  (for-each
-   (match-lambda
-     ((name expected . more)
-      (test-equal name expected (string-error (apply overlap+ more)))))
-   (list
-    (list "a bad :pattern-level before the overlap, in one group"
-          '(bad-option 23)
-          "(part :instrument reyong :name a @alpha @beta)"
-          "(part :instrument reyong :name b @beta @alpha)"
-          "(score s :pattern-names short"
-          "  (group \"R\" :pattern-level -1 a b))")
-    (list "needs-note-label before the overlap, in one group"
-          '(needs-note-label 23)
-          "(part :instrument reyong :name a @alpha @beta)"
-          "(part :instrument reyong :name b @beta @alpha)"
-          "(score s :pattern-names short"
-          "  (group \"R\" :rows parts :fill none a b))")
-    (list "a later group's member before an earlier overlap"
-          '(undefined-part 24)
-          "(part :instrument reyong :name a @alpha @beta)"
-          "(part :instrument reyong :name b @beta @alpha)"
-          "(score s :pattern-names short"
-          "  (group \"R\" a b)"
-          "  (group \"U\" nope))")
-    (list "a score's overlap before a later score's errors"
-          '(pattern-names-overlap 23)
-          "(part :instrument reyong :name a @alpha @beta)"
-          "(part :instrument reyong :name b @beta @alpha)"
-          "(score x :pattern-names short"
-          "  (group \"R\" a b))"
-          "(score y (group \"U\" nope))"))))
+;;; [scores] Pattern names: :pattern-names, :pattern-level and
+;;; pattern-names-overlap were removed in feat/collapsed-annotation (ADR
+;;; 0057); the annotation row's tests replace them.
 
 ;;; ==================================================================
 ;;; [template] The gong-kebyar template (milestone feat/targets)
@@ -7333,13 +7040,7 @@ ROW-LABELS? DISPLAY), KEYS as keys-shown gives it."
               "(part :instrument reyong :name b - || - - i3 - | - - - - ||)"
               "(score s :note-label pitch-display-name :note-label-octave no (group \"R\" :rows compact a b))")))
       (and m (string-contains m "cycle 1, pulse 3"))))
-  (test-assert "pattern-names-overlap: cycle 1, pulse 2"
-    (let ((m (gilak-score-message
-              "(pattern p :instrument reyong :short \"p\" i3 o3)"
-              "(part :instrument reyong :name a - || @p @p - - - - ||)"
-              "(part :instrument reyong :name b - || - @p @p - - - ||)"
-              "(score s :pattern-names short (group \"R\" a b))")))
-      (and m (string-contains m "cycle 1, pulse 2"))))
+
   (test-assert "without a colotomy, still a pulse number"
     (let ((c (catch-syntax-error
               (lambda ()
@@ -8254,6 +7955,498 @@ polos and sangsih with OPTIONS (strings, joined by spaces)."
           "(score s" "  (group \"R\" :part-marker ((ugal :symbol dot)) polos polos))")
     (list "groups in order: the first group's marker" '(bad-option 15)
           "(score s" "  (group \"R\" :part-marker ((ugal :symbol dot)) polos)"
+          "  (group \"N\" nope))"))))
+
+;;; ==================================================================
+;;; [annotation] Slice feat/collapsed-annotation (01, "Tokens", "Free
+;;; text", `pattern` and its operators, "The annotation row" and the
+;;; Rules; 02, "Iteration 5" and invariant 11; 03, "Iteration 5" and
+;;; the [iteration 5] annotation, text and removed-key cases; ADR
+;;; 0057): pattern annotations, `(text ...)` in parts, the group's
+;;; annotation row, `text` reserved, and `:pattern-names`,
+;;; `:pattern-level` and `pattern-names-overlap` removed.
+;;; ==================================================================
+;;; Choices made where the docs are not explicit:
+;;; - The group's `annotation` is an annotation-row record whose `part`
+;;;   is the group's member record (eq?), as part-marker's entries are.
+;;; - `:annotation-label ""` is read as #f (02: "#f for \"\""); a label
+;;;   is kept as written otherwise.
+;;; - `:annotation-level` takes any exact integer from 0, even one with
+;;;   no spans at that level.
+;;; - A `:annotation-…` option without `:annotation-part` is
+;;;   `missing-option` with the group's options, so before its members
+;;;   (check 16: "its options, then each group in order (its options,
+;;;   its members, ...)"); whether the part is a member comes after the
+;;;   members.
+;;; - A bad `(text ...)` is `bad-text` at the text list's line with
+;;;   `part` and `time` set in a part; in a pattern's body, where the
+;;;   pattern is defined, `part` is #f and `time` is within the pattern.
+;;; - `:annotation` written on a group (it is a pattern's option and an
+;;;   operator) is `unknown-option`.
+;;; - The new accessors are looked up when a test runs
+;;;   (`labels-accessor`), so the file compiles before they exist.
+
+;;; parts-defs (lines 1 to 9), then:
+;;;   polos:   pair 0-4 (up 0-2, down 2-4), a text at 4, up 4-6,
+;;;            down 6-8 with the use's annotation "fall"
+;;;   sangsih: notes, a text at 4 two pulses long
+;;;   ugal, gong: no patterns, no text
+;;;   kantil:  down 0-2, up 2-4, down 4-6, up 6-8
+;;; Scores start on line 18; a score's first group is on line 19.
+(define ann-lines
+  (list "(pattern up :instrument reyong :short \"U\" :long \"Up\" :annotation \"going up\" 4 5)" ; 10
+        "(pattern down :instrument reyong :short \"D\" 5 4)"                      ; 11
+        "(pattern pair :instrument reyong :short \"P\" @up @down)"                ; 12
+        "(part :instrument reyong :name polos @pair (text \"angsel\") @up (@ down :annotation \"fall\"))" ; 13
+        "(part :instrument reyong :name sangsih 1 2 3 4 (text \"end\" 2) 5 6 7 8)" ; 14
+        "(part :instrument ugal 1 2 3 4 5 6 1 2)"                                ; 15
+        "(part :instrument gong G - - - P - - -)"                                ; 16
+        "(part :instrument reyong :name kantil @down @up @down @up)"))           ; 17
+
+(define (ann+ . more)
+  "parts-defs, ann-lines, then the lines MORE from line 18."
+  (apply defs+ (append ann-lines more)))
+
+(define (read-ann+ . more)
+  (try-read-string (apply ann+ more)))
+
+(define (ann-group-line . options)
+  "ann+ with a score s on line 18 and, on line 19, a group \"R\" of
+polos and sangsih with OPTIONS (strings, joined by spaces)."
+  (ann+ "(score s"
+        (string-append "  (group \"R\" " (string-join options " ")
+                       " polos sangsih))")))
+
+(define (ann-row-fields row)
+  "ROW's (PART-NAME POSITION ALIGN LEVEL TEXT LABEL), or #f for #f."
+  (and row
+       (cons (part-name ((labels-accessor 'annotation-row-part) row))
+             (map (lambda (name) ((labels-accessor name) row))
+                  '(annotation-row-position annotation-row-align
+                    annotation-row-level annotation-row-text
+                    annotation-row-label)))))
+
+(define (score-annotations pc name)
+  "ann-row-fields of each group of score NAME, or #f if PC is #f or an
+accessor is missing."
+  (and pc
+       (guard (c (#t #f))
+         (map (lambda (g)
+                (ann-row-fields ((labels-accessor 'group-annotation) g)))
+              (score-groups (score-named pc name))))))
+
+(define (ann-reads . options)
+  "score-annotations of score s read from ann-group-line with OPTIONS."
+  (score-annotations (try-read-string (apply ann-group-line options)) 's))
+
+(define (part-span-annotations pc name)
+  "(NAME SHORT LONG ANNOTATION START END DEPTH) of each span of part
+NAME, sorted by start then depth, or #f."
+  (and pc
+       (guard (c (#t #f))
+         (sort (map (lambda (s)
+                      (list (pattern-name (pattern-span-pattern s))
+                            (pattern-span-short s) (pattern-span-long s)
+                            ((labels-accessor 'pattern-span-annotation) s)
+                            (pattern-span-start s) (pattern-span-end s)
+                            (pattern-span-depth s)))
+                    (part-spans (part-named pc name)))
+               (lambda (a b)
+                 (or (< (list-ref a 4) (list-ref b 4))
+                     (and (= (list-ref a 4) (list-ref b 4))
+                          (< (list-ref a 6) (list-ref b 6)))))))))
+
+(define (part-texts-of pc name)
+  "Part NAME's texts as (START LENGTH TEXT), or #f."
+  (and pc
+       (guard (c (#t #f))
+         (map (lambda (t)
+                (map (lambda (acc) ((labels-accessor acc) t))
+                     '(free-text-start free-text-length free-text-text)))
+              ((labels-accessor 'part-texts) (part-named pc name))))))
+
+;;; ------------------------------------------------------------------
+;;; Pattern annotations
+
+(test-group "[annotation] reading a pattern's :annotation"
+  (let ((pc (read-ann+)))
+    (test-assert "the fixture reads" (piece? pc))
+    (test-equal "the pattern's annotation" "going up"
+      (and pc (guard (c (#t c))
+                ((labels-accessor 'pattern-annotation)
+                 (find-named pattern-name 'up (piece-patterns pc))))))
+    (test-equal "#f for none" #f
+      (and pc (guard (c (#t c))
+                ((labels-accessor 'pattern-annotation)
+                 (find-named pattern-name 'down (piece-patterns pc))))))
+    (test-equal "names kept beside it" '("U" "Up")
+      (and pc (let ((up (find-named pattern-name 'up (piece-patterns pc))))
+                (list (pattern-short up) (pattern-long up)))))
+    (test-equal "each span's annotation in force: the use's, else the pattern's, else #f"
+      '((pair "P" "P" #f 0 4 0)
+        (up "U" "Up" "going up" 0 2 1)
+        (down "D" "D" #f 2 4 1)
+        (up "U" "Up" "going up" 4 6 0)
+        (down "D" "D" "fall" 6 8 0))
+      (part-span-annotations pc 'polos)))
+  (let ((pc (try-read-string
+             (defs+ "(pattern a :instrument reyong :annotation \"x\" 1)"     ; 10
+                    "(part :instrument reyong :name p (@ a :annotation \"y\") @a)"))))
+    (test-equal "a use's annotation over the pattern's, that use only"
+      '((a "a" "a" "y" 0 1 0) (a "a" "a" "x" 1 2 0))
+      (part-span-annotations pc 'p))))
+
+(test-group "[annotation] a pattern's :annotation: option kinds"
+  (for-each
+   (match-lambda
+     ((name expected . forms)
+      (test-equal name expected (string-error (apply defs+ forms)))))
+   (list (list "a number" '(bad-option 10)
+               "(pattern a :instrument reyong :annotation 3 1)")
+         (list "a symbol" '(bad-option 10)
+               "(pattern a :instrument reyong :annotation norot 1)")
+         (list "no value" '(bad-option 10)
+               "(pattern a :instrument reyong :annotation :short \"x\" 1)")
+         (list "twice" '(duplicate-option 10)
+               "(pattern a :instrument reyong :annotation \"x\" :annotation \"y\" 1)")
+         (list "after the first token" '(option-after-body 10)
+               "(pattern a :instrument reyong 1 :annotation \"x\")")
+         (list "multi-line: the form's line" '(bad-option 10)
+               "(pattern a" "  :instrument reyong :annotation 3" "  1)"))))
+
+(test-group "[annotation] :annotation at a use: option kinds at the (@ ...) line"
+  (for-each
+   (match-lambda
+     ((name kind use)
+      (test-equal name (list kind 20 'p 1 '())
+        (use-error (pat+ "(part :instrument reyong :name p 1"              ; 19
+                         (string-append "  " use ")"))))))      ; 20
+   (list (list "a number" 'bad-option "(@ two :annotation 3)")
+         (list "a symbol" 'bad-option "(@ two :annotation x)")
+         (list "no value" 'bad-option "(@ two :annotation)")
+         (list "twice" 'duplicate-option "(@ two :annotation \"a\" :annotation \"b\")"))))
+
+;;; ------------------------------------------------------------------
+;;; Free text
+
+(test-group "[annotation] a part's texts"
+  (let ((pc (read-ann+)))
+    (test-equal "a point between patterns" '((4 #f "angsel"))
+      (part-texts-of pc 'polos))
+    (test-equal "with a length" '((4 2 "end"))
+      (part-texts-of pc 'sangsih))
+    (test-equal "none: '()" '()
+      (part-texts-of pc 'ugal))
+    (test-equal "a generated part: '()" '()
+      (part-texts-of pc 'kempli))
+    (test-equal "the events are as without the text"
+      '((0 1 (0)) (1 1 (1)) (2 1 (2)) (3 1 (3)) (4 1 (4)) (5 1 (5))
+        (6 1 (6)) (7 1 (7)))
+      (and pc (part-triples pc 'sangsih))))
+  (let ((pc (try-read-string
+             (defs+ "(pattern t :instrument reyong (text \"t\") 1 2)"       ; 10
+                    "(part :instrument reyong :name p 1:1/2 (text \"a\")"   ; 11
+                    "  (rep 2 @t (text \"r\" 1/2)) 3:1 (text \"z\" 3))"))))
+    (test-equal "through patterns and rep, sorted by start"
+      '((1/2 #f "a") (1/2 #f "t") (5/2 1/2 "r") (5/2 #f "t") (9/2 1/2 "r")
+        (11/2 3 "z"))
+      (part-texts-of pc 'p))
+    (test-equal "a text takes no time: the part's length" 11/2
+      (and pc (piece-length pc))))
+  (test-assert "parts with texts still have equal lengths"
+    (piece? (try-read-string
+             (defs+ "(part :instrument reyong :name a 1 2 (text \"x\" 5) 3)"
+                    "(part :instrument reyong :name b (text \"y\") 1 2 3)"))))
+  (test-equal "a text doesn't make the part longer: unequal-length as without it"
+    '(unequal-length 11)
+    (string-error (defs+ "(part :instrument reyong :name a 1 2 3)"
+                         "(part :instrument reyong :name b 1 2 (text \"x\" 1))"))))
+
+(test-group "[annotation] bad-text in a part, at the text list's line"
+  (for-each
+   (match-lambda
+     ((name time text)
+      (test-equal name (list 'bad-text 10 'p time)
+        (error-fields (defs+ (string-append
+                              "(part :instrument reyong :name p 1 " text " 2)"))))))
+   (list (list "no string" 1 "(text)")
+         (list "a number" 1 "(text 5)")
+         (list "a symbol" 1 "(text angsel)")
+         (list "length 0" 1 "(text \"a\" 0)")
+         (list "a negative length" 1 "(text \"a\" -2)")
+         (list "an inexact length" 1 "(text \"a\" 1.5)")
+         (list "a length that is a string" 1 "(text \"a\" \"2\")")
+         (list "a length that is a symbol" 1 "(text \"a\" two)")
+         (list "too many items" 1 "(text \"a\" 1 2)")))
+  (test-equal "on its own line" '(bad-text 11 p 1)
+    (error-fields (defs+ "(part :instrument reyong :name p 1"     ; 10
+                         "  (text \"a\" 0) 2)")))                  ; 11
+  (test-equal "at its time" '(bad-text 10 p 3/2)
+    (error-fields (defs+ "(part :instrument reyong :name p 1:1/2 2 3 (text 1) 4)")))
+  (test-equal "in a rep" '(bad-text 11 p 1)
+    (error-fields (defs+ "(part :instrument reyong :name p 1 (rep 2"   ; 10
+                         "  (text)) 2)")))                              ; 11
+  (test-equal "the earlier of a bad text and a bad note" '(bad-text 10 p 1)
+    (error-fields (defs+ "(part :instrument reyong :name p 1 (text 5) 9)")))
+  (test-equal "the earlier of a bad note and a bad text" '(note-out-of-range 10 p 1)
+    (error-fields (defs+ "(part :instrument reyong :name p 1 9 (text 5))"))))
+
+(test-group "[annotation] bad-text in a pattern's body, where it is defined"
+  (test-equal "never used: still an error, part #f, time within the pattern"
+    '(bad-text 10 #f 1)
+    (error-fields (defs+ "(pattern a :instrument reyong 1 (text 5))")))
+  (test-equal "on its own line" '(bad-text 11 #f 1)
+    (error-fields (defs+ "(pattern a :instrument reyong 1"           ; 10
+                         "  (text \"a\" -1))")))                      ; 11
+  (test-equal "before the parts (step 11 before 13)" '(bad-text 11 #f 0)
+    (error-fields (defs+ "(part :instrument reyong :name p 9)"
+                         "(pattern a :instrument reyong (text))"))))
+
+;;; ------------------------------------------------------------------
+;;; `text` is reserved
+
+(test-group "[annotation] reserved-name: text"
+  (table-tests 'reserved-name
+   (list (list "a bare pitch called text: the scale's line" 2
+               (lines "(piece \"P\")" "(scale s ding" "  text)"))
+         (list "a listed pitch called text: its own line" 3
+               (lines "(piece \"P\")" "(scale s ding" "  (text :alias t))"))
+         (list "an alias text" 3
+               (lines "(piece \"P\")" "(scale s ding" "  (dong :alias text))"))
+         (list "an alias text in a list" 3
+               (lines "(piece \"P\")" "(scale s ding" "  (dong :alias (o text)))"))
+         (list "a stroke called text" 2
+               (lines "(piece \"P\")" "(strokes k G text)"))
+         (list "a stroke alias text" 2
+               (lines "(piece \"P\")" "(strokes k (G :alias text))")))))
+
+;;; ------------------------------------------------------------------
+;;; Removed: :pattern-names, :pattern-level, pattern-names-overlap
+
+(test-group "[annotation] :pattern-names and :pattern-level are unknown keys"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (apply score-error more))))
+   (list (list ":pattern-names on a score" '(unknown-option 14)
+               "(score s :pattern-names short (group \"U\" ugal))")
+         (list ":pattern-names none on a score" '(unknown-option 14)
+               "(score s :pattern-names none (group \"U\" ugal))")
+         (list ":pattern-level on a score" '(unknown-option 14)
+               "(score s :pattern-level 1 (group \"U\" ugal))")
+         (list ":pattern-names on a group" '(unknown-option 15)
+               "(score s" "  (group \"U\" :pattern-names long ugal))")
+         (list ":pattern-level on a group" '(unknown-option 15)
+               "(score s" "  (group \"U\" :pattern-level 0 ugal))"))))
+
+(test-group "[annotation] pattern-names-overlap is gone"
+  (test-assert "different patterns at one time in one group read"
+    (piece? (read-ann+ "(score s (group \"R\" :annotation-part polos polos kantil))")))
+  (test-assert "and without an annotation row"
+    (piece? (read-ann+ "(score s (group \"R\" polos kantil))"))))
+
+;;; ------------------------------------------------------------------
+;;; The annotation row: reading
+
+(test-group "[annotation] the annotation row: the default"
+  (let ((pc (read-ann+)))
+    ;; Five written parts and the generated kempli: six groups.
+    (test-equal "the default score: #f in every group" '(#f #f #f #f #f #f)
+      (score-annotations pc 'default)))
+  (test-equal "groups without the options: #f" '(#f #f)
+    (score-annotations (read-ann+ "(score s (group \"U\" ugal) (group \"R\" polos sangsih))")
+                       's)))
+
+(test-group "[annotation] the annotation row: reading"
+  (test-equal ":annotation-part alone: every other option at its default"
+    '((polos below left 0 annotation #f))
+    (ann-reads ":annotation-part polos"))
+  (test-equal "every option"
+    '((sangsih above center 1 short "Kotekan"))
+    (ann-reads ":annotation-part sangsih :annotation-position above"
+               ":annotation-align center :annotation-level 1"
+               ":annotation-text short :annotation-label \"Kotekan\""))
+  (test-equal "options in any order, :annotation-part last"
+    '((polos below right 0 long "L"))
+    (ann-reads ":annotation-label \"L\" :annotation-text long"
+               ":annotation-align right :annotation-part polos"))
+  (test-equal ":annotation-label \"\": #f"
+    '((polos below left 0 annotation #f))
+    (ann-reads ":annotation-part polos :annotation-label \"\""))
+  (for-each
+   (match-lambda
+     ((option value expected)
+      (test-equal (string-append option " " value)
+        (list expected)
+        (ann-reads ":annotation-part polos" option value))))
+   (list (list ":annotation-position" "above" '(polos above left 0 annotation #f))
+         (list ":annotation-position" "below" '(polos below left 0 annotation #f))
+         (list ":annotation-align" "left" '(polos below left 0 annotation #f))
+         (list ":annotation-align" "center" '(polos below center 0 annotation #f))
+         (list ":annotation-align" "right" '(polos below right 0 annotation #f))
+         (list ":annotation-level" "0" '(polos below left 0 annotation #f))
+         (list ":annotation-level" "2" '(polos below left 2 annotation #f))
+         (list ":annotation-level" "7" '(polos below left 7 annotation #f))
+         (list ":annotation-text" "short" '(polos below left 0 short #f))
+         (list ":annotation-text" "long" '(polos below left 0 long #f))
+         (list ":annotation-text" "annotation" '(polos below left 0 annotation #f))))
+  (let ((pc (try-read-string (ann-group-line ":annotation-part sangsih"))))
+    (test-assert "the row's part is the group's member record"
+      (and pc
+           (guard (c (#t #f))
+             (let* ((g (car (score-groups (score-named pc 's))))
+                    (row ((labels-accessor 'group-annotation) g)))
+               (and ((labels-accessor 'annotation-row?) row)
+                    (eq? ((labels-accessor 'annotation-row-part) row)
+                         (find (lambda (p) (eq? (part-name p) 'sangsih))
+                               (map car (group-members g)))))))))
+    (test-equal "the members are unchanged" '((polos "polos") (sangsih "sangsih"))
+      (and pc (member-names (car (score-groups (score-named pc 's))))))
+    (test-equal "the label settings keep their defaults"
+      (list default-label-settings)
+      (score-label-settings pc 's)))
+  (test-equal "a member written with :label"
+    '((polos below left 0 annotation #f))
+    (score-annotations
+     (read-ann+ "(score s (group \"R\" :annotation-part polos (polos :label \"Polos\") sangsih))")
+     's))
+  (test-equal "on parts rows, compact rows, a stroke group and a group of one"
+    '((polos below left 0 annotation #f)
+      (gong above left 0 annotation #f)
+      (ugal below left 0 short "U"))
+    (score-annotations
+     (read-ann+ "(score s"
+                "  (group \"R\" :rows parts :annotation-part polos polos sangsih)"
+                "  (group \"G\" :rows compact :annotation-part gong :annotation-position above gong kempli)"
+                "  (group \"U\" :annotation-part ugal :annotation-text short :annotation-label \"U\" ugal))")
+     's))
+  (test-equal "only the group that asks has a row"
+    '(#f (kantil below left 0 annotation #f))
+    (score-annotations
+     (read-ann+ "(score s (group \"U\" ugal) (group \"K\" :annotation-part kantil kantil))")
+     's))
+  (let ((pc (read-ann+ "(score s (group \"R\" :annotation-part polos polos))"
+                       "(score t (group \"R\" polos))")))
+    (test-equal "a row in one score, not another"
+      '(((polos below left 0 annotation #f)) (#f))
+      (and pc (list (score-annotations pc 's) (score-annotations pc 't)))))
+  (test-assert "with other options around them"
+    (piece? (try-read-string
+             (ann-group-line ":rows parts :annotation-part polos :holds dash"
+                             ":part-marker ((sangsih :symbol dot)) :annotation-align right")))))
+
+;;; ------------------------------------------------------------------
+;;; The annotation row: errors
+
+(test-group "[annotation] the annotation row on a score: option-wrong-level"
+  (for-each
+   (match-lambda
+     ((name option)
+      (test-equal name '(option-wrong-level 18)
+        (string-error (ann+ (string-append "(score s " option)
+                            "  (group \"R\" :annotation-part polos polos))")))))
+   (list (list ":annotation-part" ":annotation-part polos")
+         (list ":annotation-position" ":annotation-position above")
+         (list ":annotation-align" ":annotation-align center")
+         (list ":annotation-level" ":annotation-level 1")
+         (list ":annotation-text" ":annotation-text short")
+         (list ":annotation-label" ":annotation-label \"L\"")))
+  (test-equal "even with a bad value" '(option-wrong-level 18)
+    (string-error (ann+ "(score s :annotation-position middle (group \"R\" polos))"))))
+
+(test-group "[annotation] the annotation row: bad-option at the group's line"
+  (for-each
+   (match-lambda
+     ((name . options)
+      (test-equal name '(bad-option 19)
+        (string-error (apply ann-group-line options)))))
+   (list (list ":annotation-part a string" ":annotation-part \"polos\"")
+         (list ":annotation-part a number" ":annotation-part 1")
+         (list ":annotation-part a list" ":annotation-part (polos)")
+         (list ":annotation-part #t" ":annotation-part #t")
+         (list ":annotation-part with no value" ":annotation-part :annotation-align left")
+         (list ":annotation-position left" ":annotation-part polos" ":annotation-position left")
+         (list ":annotation-position middle" ":annotation-part polos" ":annotation-position middle")
+         (list ":annotation-position a string" ":annotation-part polos" ":annotation-position \"above\"")
+         (list ":annotation-position a number" ":annotation-part polos" ":annotation-position 1")
+         (list ":annotation-align centre" ":annotation-part polos" ":annotation-align centre")
+         (list ":annotation-align middle" ":annotation-part polos" ":annotation-align middle")
+         (list ":annotation-align above" ":annotation-part polos" ":annotation-align above")
+         (list ":annotation-align a string" ":annotation-part polos" ":annotation-align \"left\"")
+         (list ":annotation-level negative" ":annotation-part polos" ":annotation-level -1")
+         (list ":annotation-level a decimal" ":annotation-part polos" ":annotation-level 1.5")
+         (list ":annotation-level inexact whole" ":annotation-part polos" ":annotation-level 1.0")
+         (list ":annotation-level a fraction" ":annotation-part polos" ":annotation-level 1/2")
+         (list ":annotation-level a symbol" ":annotation-part polos" ":annotation-level one")
+         (list ":annotation-level a string" ":annotation-part polos" ":annotation-level \"1\"")
+         (list ":annotation-text name" ":annotation-part polos" ":annotation-text name")
+         (list ":annotation-text annotations" ":annotation-part polos" ":annotation-text annotations")
+         (list ":annotation-text none" ":annotation-part polos" ":annotation-text none")
+         (list ":annotation-text a string" ":annotation-part polos" ":annotation-text \"short\"")
+         (list ":annotation-label a symbol" ":annotation-part polos" ":annotation-label Kotekan")
+         (list ":annotation-label a number" ":annotation-part polos" ":annotation-label 1")
+         (list ":annotation-text with no value" ":annotation-part polos" ":annotation-text")))
+  (for-each
+   (match-lambda
+     ((name part . options)
+      (test-equal name (list 'bad-option 19 part #f)
+        (error-fields (apply ann-group-line options)))))
+   (list (list "a part of the piece, not of the group" 'ugal ":annotation-part ugal")
+         (list "no part at all" 'nope ":annotation-part nope")
+         (list "a generated part not in the group" 'kempli ":annotation-part kempli")))
+  (test-equal "a member of another group of the score" '(bad-option 19 ugal #f)
+    (error-fields (ann+ "(score s"
+                        "  (group \"R\" :annotation-part ugal polos sangsih)"
+                        "  (group \"U\" ugal))")))
+  (test-equal "in the second group: its line" '(bad-option 20 polos #f)
+    (error-fields (ann+ "(score s"
+                        "  (group \"U\" ugal)"
+                        "  (group \"G\" :annotation-part polos gong))"))))
+
+(test-group "[annotation] another annotation option without :annotation-part: missing-option"
+  (for-each
+   (match-lambda
+     ((name option)
+      (test-equal name '(missing-option 19)
+        (string-error (ann-group-line option)))))
+   (list (list ":annotation-position" ":annotation-position above")
+         (list ":annotation-align" ":annotation-align center")
+         (list ":annotation-level" ":annotation-level 1")
+         (list ":annotation-text" ":annotation-text short")
+         (list ":annotation-label" ":annotation-label \"L\"")
+         (list ":annotation-label \"\"" ":annotation-label \"\"")))
+  (test-equal "several of them" '(missing-option 19)
+    (string-error (ann-group-line ":annotation-align right :annotation-level 0"))))
+
+(test-group "[annotation] the annotation row: other option kinds"
+  (test-equal "duplicate-option: :annotation-part twice" '(duplicate-option 19)
+    (string-error (ann-group-line ":annotation-part polos :annotation-part sangsih")))
+  (test-equal "duplicate-option: :annotation-align twice" '(duplicate-option 19)
+    (string-error (ann-group-line ":annotation-part polos :annotation-align left"
+                                  ":annotation-align right")))
+  (test-equal "an unknown :annotation-… key" '(unknown-option 19)
+    (string-error (ann-group-line ":annotation-part polos :annotation-color \"#000000\"")))
+  (test-equal ":annotation (a pattern's option) on a group" '(unknown-option 19)
+    (string-error (ann-group-line ":annotation \"norot\""))))
+
+(test-group "[annotation] the annotation row: check order"
+  (for-each
+   (match-lambda
+     ((name expected . more)
+      (test-equal name expected (string-error (apply ann+ more)))))
+   (list
+    (list "a bad value before the members" '(bad-option 19)
+          "(score s" "  (group \"R\" :annotation-part polos :annotation-align middle polos nope))")
+    (list "missing-option before the members" '(missing-option 19)
+          "(score s" "  (group \"R\" :annotation-align center polos nope))")
+    (list "the members before whether the part is a member" '(undefined-part 19)
+          "(score s" "  (group \"R\" :annotation-part ugal polos nope))")
+    (list "part-in-two-groups before it too" '(part-in-two-groups 19)
+          "(score s" "  (group \"R\" :annotation-part ugal polos polos))")
+    (list "the score's options before its groups" '(option-wrong-level 18)
+          "(score s :annotation-level 1" "  (group \"R\" :annotation-position middle polos))")
+    (list "groups in order: the first group's row" '(bad-option 19)
+          "(score s" "  (group \"R\" :annotation-part ugal polos)"
           "  (group \"N\" nope))"))))
 
 (define runner (test-runner-current))

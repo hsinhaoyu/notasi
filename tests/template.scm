@@ -1968,6 +1968,90 @@ sangsih's long note starts (it is continued in the second)."
                 (list (rows3-system 0 (marked-groups #t))
                       (rows3-system 4 (marked-groups #f)))))
 
+;;; Slice feat/collapsed-annotation (05, "JSON contract (version 4)",
+;;; its annotation bullet, and the template's "No overlays" and "The
+;;; annotation row" bullets; 04, "The annotation row" and the version 4
+;;; keys table; ADRs 0057, 0059): a hand-written version 4 figure whose
+;;; groups have `annotation` in place of `overlays`.  Two systems; a
+;;; notes group with a row below, labelled, whose items are aligned
+;;; left, center and right, one far longer than its two columns (it
+;;; must be cut), and one cut by the system break and continued in the
+;;; second system (its text written again); a parts group with a row
+;;; above, label null, a one-column item and a free text item; a group
+;;; with annotation null; and a stroke group with a row and no items.
+;;; Only compiling without a warning is tested; how the row looks is
+;;; checked by eye (make preview).
+
+(define (ann-item start dur text align continued)
+  (string-append
+   "{ \"start\": " (number->string start) ", \"dur\": " (number->string dur)
+   ", \"text\": \"" text "\", \"align\": \"" align "\", \"continued\": "
+   (if continued "true" "false") " }"))
+
+(define (ann-json position label items)
+  (string-append
+   "{ \"position\": \"" position "\", \"label\": " label
+   ", \"items\": [" (string-join items ", ") "] }"))
+
+(define (ann-group label rows voices annotation)
+  (string-append
+   "{ \"label\": \"" label "\", \"subtitle\": null, \"rows\": " rows
+   ", \"key_numbers\": null, \"voices\": " voices
+   ", \"annotation\": " annotation
+   ", \"pulse_lines\": true, \"row_lines\": true }"))
+
+(define (annotated-groups first?)
+  "The groups of one system; FIRST? for the first system, where the
+last item of the gangsa's row starts (it is continued in the second)."
+  (list
+   (ann-group "Gangsa" "[\"i3\", \"a2\", \"u1\"]"
+              (string-append
+               "["
+               (marked-voice "polos" "null"
+                             (list (marked-event 0 1 2 "\"u\"" "\"#decbe4\"" #f)
+                                   (marked-event 2 2 0 "\"i\"" "\"#fbb4ae\"" #f)))
+               "]")
+              (ann-json "below" "\"Pola\""
+                        (if first?
+                            (list (ann-item 0 1 "1" "left" #f)
+                                  (ann-item 1 2 "a very long annotation that cannot fit in two columns" "center" #f)
+                                  (ann-item 3 1 "norot" "right" #f))
+                            (list (ann-item 0 2 "norot" "right" #t)
+                                  (ann-item 2 2 "6" "center" #f)))))
+   (ann-group "Parts" "[\"polos\", \"sangsih\"]"
+              (string-append
+               "["
+               (marked-voice "polos" "null"
+                             (list (marked-event 0 1 0 "\"o\"" "\"#ccebc5\"" #f)))
+               ", "
+               (marked-voice "sangsih"
+                             (marker-json "dot" "null" "null" "\"#d62728\"" "null")
+                             (list (marked-event 1 2 1 "null" "\"#fbb4ae\"" #f)))
+               "]")
+              (ann-json "above" "null"
+                        (list (ann-item 0 1 "M" "center" #f)
+                              (ann-item 1 3 "angsel" "left" #f))))
+   (ann-group "Ugal" "[\"i3\"]"
+              (string-append
+               "["
+               (marked-voice "ugal" "null"
+                             (list (marked-event 0 4 0 "\"i\"" "\"#fbb4ae\"" #f)))
+               "]")
+              "null")
+   (ann-group "Gong" "[\"Gong\", \"P\"]"
+              (string-append
+               "["
+               (marked-voice "gong" "null"
+                             (list (marked-event 0 1 1 "\"P\"" "\"#e6e6e6\"" #f)
+                                   (marked-event 2 1 0 "\"Gong\"" "\"#e6e6e6\"" #f)))
+               "]")
+              (ann-json "below" "\"Gong\"" '()))))
+
+(define v4-annotation
+  (rows3-figure "0.0em" "3.6em"
+                (list (rows3-system 0 (annotated-groups #t))
+                      (rows3-system 4 (annotated-groups #f)))))
+
 ;;; The tests.
 
 (test-begin "template")
@@ -2011,7 +2095,9 @@ sangsih's long note starts (it is continued in the second)."
       (check-figure "version 3: key_width and lane_width both 0.0em"
                     "v3-rows-off.json" v3-rows-off)
       (check-figure "version 4: part markers (dot, ring, cross, none; borders)"
-                    "v4-markers.json" v4-markers))
+                    "v4-markers.json" v4-markers)
+      (check-figure "version 4: annotation rows above and below, aligned, cut and continued"
+                    "v4-annotation.json" v4-annotation))
     (test-assert "typst is installed (CI installs 0.15.1)" #f))
 
 (define runner (test-runner-current))

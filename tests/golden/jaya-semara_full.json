@@ -664,24 +664,7 @@
               ]
             }
           ],
-          "overlays": [
-            {
-              "start": 4,
-              "dur": 32,
-              "row": 0,
-              "rows": 5,
-              "text": "norot",
-              "continued": false
-            },
-            {
-              "start": 36,
-              "dur": 32,
-              "row": 0,
-              "rows": 5,
-              "text": "norot",
-              "continued": false
-            }
-          ],
+          "annotation": null,
           "pulse_lines": true,
           "row_lines": true
         },
@@ -779,24 +762,7 @@
               ]
             }
           ],
-          "overlays": [
-            {
-              "start": 4,
-              "dur": 32,
-              "row": 0,
-              "rows": 4,
-              "text": "pokok",
-              "continued": false
-            },
-            {
-              "start": 36,
-              "dur": 32,
-              "row": 0,
-              "rows": 4,
-              "text": "pokok",
-              "continued": false
-            }
-          ],
+          "annotation": null,
           "pulse_lines": true,
           "row_lines": true
         },
@@ -966,24 +932,7 @@
               ]
             }
           ],
-          "overlays": [
-            {
-              "start": 4,
-              "dur": 32,
-              "row": 0,
-              "rows": 5,
-              "text": "fill",
-              "continued": false
-            },
-            {
-              "start": 36,
-              "dur": 32,
-              "row": 0,
-              "rows": 5,
-              "text": "fill",
-              "continued": false
-            }
-          ],
+          "annotation": null,
           "pulse_lines": true,
           "row_lines": true
         },
@@ -1081,24 +1030,7 @@
               ]
             }
           ],
-          "overlays": [
-            {
-              "start": 4,
-              "dur": 32,
-              "row": 0,
-              "rows": 4,
-              "text": "pokok",
-              "continued": false
-            },
-            {
-              "start": 36,
-              "dur": 32,
-              "row": 0,
-              "rows": 4,
-              "text": "pokok",
-              "continued": false
-            }
-          ],
+          "annotation": null,
           "pulse_lines": true,
           "row_lines": true
         },
@@ -1160,24 +1092,7 @@
               ]
             }
           ],
-          "overlays": [
-            {
-              "start": 4,
-              "dur": 32,
-              "row": 0,
-              "rows": 2,
-              "text": "jegogan",
-              "continued": false
-            },
-            {
-              "start": 36,
-              "dur": 32,
-              "row": 0,
-              "rows": 2,
-              "text": "jegogan",
-              "continued": false
-            }
-          ],
+          "annotation": null,
           "pulse_lines": true,
           "row_lines": true
         },
@@ -1398,7 +1313,7 @@
               ]
             }
           ],
-          "overlays": [],
+          "annotation": null,
           "pulse_lines": true,
           "row_lines": true
         }

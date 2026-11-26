@@ -166,13 +166,13 @@
   (make-event start duration notes))
 
 (define (mk-part name instrument . events)
-  (make-part name instrument events 'written '() loc))
+  (make-part name instrument events 'written '() '() loc))
 
 (define* (mk-group* label parts
                     #:key (short label) (subtitle #f) (labels 'first-long)
                     (rows 'notes) (note-label 'none) (note-label-octave? #t)
                     (fill 'colour)
-                    (holds 'none) (pattern-names 'none) (pattern-level 0)
+                    (holds 'none) (annotation #f)
                     (keys 'used) (row-label-octave? #t) (key-numbers? #f)
                     (row-labels 'pitch-display-name) (display '())
                     (part-marker '())
@@ -182,8 +182,8 @@
 setting at its default unless given."
   (make-group label short subtitle labels rows
               (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
-              note-label note-label-octave? fill holds pattern-names
-              pattern-level keys row-label-octave? key-numbers? row-labels
+              note-label note-label-octave? fill holds annotation
+              keys row-label-octave? key-numbers? row-labels
               display part-marker
               scheme palette colors background location))
 
@@ -276,7 +276,7 @@ one score holding GROUPS."
 
 (test-group "part record"
   (let* ((events (list (ev 0 1 0) (ev 1 1 1)))
-         (p (make-part 'polos reyong events 'written '() loc)))
+         (p (make-part 'polos reyong events 'written '() '() loc)))
     (test-assert "predicate" (part? p))
     (test-eq "name" 'polos (part-name p))
     (test-eq "instrument" reyong (part-instrument p))
@@ -286,12 +286,12 @@ one score holding GROUPS."
     (test-eq "location" loc (part-location p)))
   (test-equal "origin is one of written, timekeeper, colotomy"
     '(written timekeeper colotomy)
-    (map (lambda (o) (part-origin (make-part 'x gong '() o '() loc)))
+    (map (lambda (o) (part-origin (make-part 'x gong '() o '() '() loc)))
          '(written timekeeper colotomy)))
-  (let* ((pat (make-pattern 'polos-1 reyong "1" "Norot polos on 1" loc))
-         (s1 (make-pattern-span pat "1" "Norot polos on 1" 0 2 0))
-         (s2 (make-pattern-span pat "6" "Norot polos on 6" 2 4 0))
-         (p (make-part 'polos reyong (list (ev 0 1 3)) 'written (list s1 s2) loc)))
+  (let* ((pat (make-pattern 'polos-1 reyong "1" "Norot polos on 1" #f loc))
+         (s1 (make-pattern-span pat "1" "Norot polos on 1" #f 0 2 0))
+         (s2 (make-pattern-span pat "6" "Norot polos on 6" #f 2 4 0))
+         (p (make-part 'polos reyong (list (ev 0 1 3)) 'written (list s1 s2) '() loc)))
     (test-equal "spans, in order" (list s1 s2) (part-spans p))
     (test-eq "the location comes after the spans" loc (part-location p))))
 
@@ -300,7 +300,8 @@ one score holding GROUPS."
          (s (mk-part 'sangsih reyong))
          (members (list (cons p "polos") (cons s "S.")))
          (g (make-group "Reyong" "Rey." "polos + sangsih" 'short 'parts
-                        members 'pitch-display-name #t 'none 'dash 'long 1
+                        members 'pitch-display-name #t 'none 'dash
+                        (make-annotation-row p 'above 'center 1 'long "Names")
                         'used #t #f 'pitch-display-name '() '()
                         'by-pitch '("#111111" "#eeeeee")
                         '((ding . "#000000")) 'vertical loc))
@@ -320,8 +321,11 @@ one score holding GROUPS."
     (test-eq "background" 'vertical (group-background g))
     (test-eq "fill" 'none (group-fill g))
     (test-eq "holds" 'dash (group-holds g))
-    (test-eq "pattern-names" 'long (group-pattern-names g))
-    (test-equal "pattern-level" 1 (group-pattern-level g))
+    (test-equal "annotation: the row, its level and text"
+      '(above 1 long)
+      (let ((row (group-annotation g)))
+        (list (annotation-row-position row) (annotation-row-level row)
+              (annotation-row-text row))))
     (test-eq "scheme" 'by-pitch (group-scheme g))
     (test-equal "palette: a list of colours" '("#111111" "#eeeeee")
       (group-palette g))
@@ -329,11 +333,11 @@ one score holding GROUPS."
     (test-eq "location" loc (group-location g))
     (test-equal "a default group: its settings"
       (list "polos" "polos" #f 'first-long 'notes (list (cons p "polos"))
-            'none 'colour 'none 'none 0 'by-pitch 'pastel1 '() #f)
+            'none 'colour 'none #f 'by-pitch 'pastel1 '() #f)
       (list (group-label d) (group-short d) (group-subtitle d)
             (group-labels d) (group-rows d) (group-members d)
             (group-note-label d) (group-fill d) (group-holds d)
-            (group-pattern-names d) (group-pattern-level d)
+            (group-annotation d)
             (group-scheme d) (group-palette d) (group-colors d)
             (group-location d)))
     (test-equal "palette: a name" 'set1
@@ -390,7 +394,7 @@ one score holding GROUPS."
          (g (mk-group "Reyong" p))
          (full (mk-score 'full (list g) #:title "Test" #:to 8))
          (other (mk-score 'other '() #:title "Test" #:to 8))
-         (pat (make-pattern 'polos-1 reyong "1" "1" loc))
+         (pat (make-pattern 'polos-1 reyong "1" "1" #f loc))
          (pc (make-piece "Test" 8 0 '()
                          (list selisir gong-strokes)
                          (list reyong gong)
@@ -446,7 +450,7 @@ one score holding GROUPS."
       (not (or (part? c) (piece? c) (colotomy? p))))))
 
 (test-group "pattern record"
-  (let ((pat (make-pattern 'polos-1 reyong "1" "Norot polos on 1" loc)))
+  (let ((pat (make-pattern 'polos-1 reyong "1" "Norot polos on 1" #f loc)))
     (test-assert "predicate" (pattern? pat))
     (test-eq "name" 'polos-1 (pattern-name pat))
     (test-eq "instrument" reyong (pattern-instrument pat))
@@ -455,8 +459,8 @@ one score holding GROUPS."
     (test-eq "location" loc (pattern-location pat))))
 
 (test-group "pattern-span record"
-  (let* ((pat (make-pattern 'polos-1 reyong "1" "Norot polos on 1" loc))
-         (s (make-pattern-span pat "6" "Norot polos on 6" 3/2 7/2 1)))
+  (let* ((pat (make-pattern 'polos-1 reyong "1" "Norot polos on 1" #f loc))
+         (s (make-pattern-span pat "6" "Norot polos on 6" #f 3/2 7/2 1)))
     (test-assert "predicate" (pattern-span? s))
     (test-eq "pattern" pat (pattern-span-pattern s))
     (test-equal "short: the names in force at the use" "6" (pattern-span-short s))
@@ -476,10 +480,10 @@ one score holding GROUPS."
            (group? (mk-score 's '()))
            (piece? (mk-score 's '()))
            (pattern? (mk-part 'p reyong))
-           (pattern-span? (make-pattern 'p reyong "p" "p" loc))
-           (part? (make-pattern 'p reyong "p" "p" loc))
-           (pattern? (make-pattern-span (make-pattern 'p reyong "p" "p" loc)
-                                        "p" "p" 0 1 0)))))
+           (pattern-span? (make-pattern 'p reyong "p" "p" #f loc))
+           (part? (make-pattern 'p reyong "p" "p" #f loc))
+           (pattern? (make-pattern-span (make-pattern 'p reyong "p" "p" #f loc)
+                                        "p" "p" #f 0 1 0)))))
 
 ;;; note-pitch-index
 
@@ -633,13 +637,13 @@ constructor of another arity fails the tests instead of the file."
          (low (inst-note reyong 1))
          (high (inst-note reyong 5))
          (g (rows3-group "Reyong" "Rey." #f 'first-long 'notes members
-                         'none #t 'colour 'none 'none 0
+                         'none #t 'colour 'none #f
                          (cons low high) #f #t 'none '() '()
                          'by-pitch 'pastel1 '() 'grid loc))
          (k (mk-part 'gong gong))
          (s (rows3-group "Gong" "Gong" #f 'first-long 'notes
                          (list (cons k "gong"))
-                         'none #t 'colour 'none 'none 0
+                         'none #t 'colour 'none #f
                          'all #t #f 'pitch-display-name
                          '((G . "Gong") (P . "Kempur")) '()
                          'by-pitch 'pastel1 '() 'vertical loc)))
@@ -657,15 +661,15 @@ constructor of another arity fails the tests instead of the file."
       '((G . "Gong") (P . "Kempur"))
       (and (group? s) (group-display s)))
     (test-equal "the other fields keep their places"
-      (list "Gong" 'notes 'none 0 'by-pitch 'pastel1 '() 'vertical loc)
+      (list "Gong" 'notes 'none #f 'by-pitch 'pastel1 '() 'vertical loc)
       (and (group? s)
            (list (group-label s) (group-rows s) (group-note-label s)
-                 (group-pattern-level s) (group-scheme s) (group-palette s)
+                 (group-annotation s) (group-scheme s) (group-palette s)
                  (group-colors s) (group-background s) (group-location s))))
     (test-equal "keys: used"
       'used
       (let ((u (rows3-group "U" "U" #f 'first-long 'notes members
-                            'none #t 'colour 'none 'none 0
+                            'none #t 'colour 'none #f
                             'used #t #f 'pitch-display-name '() '()
                             'by-pitch 'pastel1 '() 'grid #f)))
         (and (group? u) (group-keys u))))))
@@ -1116,7 +1120,7 @@ make-group raises."
   (labels-make-group
    label label #f 'first-long rows
    (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
-   note-label note-label-octave? fill 'none 'none 0
+   note-label note-label-octave? fill 'none #f
    keys row-label-octave? key-numbers? row-labels display '()
    'by-pitch 'pastel1 '() 'grid location))
 
@@ -1130,25 +1134,25 @@ make-group raises."
          (low (inst-note reyong 1))
          (high (inst-note reyong 5))
          (g (labels-make-group "Reyong" "Rey." "sub" 'short 'parts members
-                               'key-number #f 'none 'dash 'long 2
+                               'key-number #f 'none 'dash #f
                                (cons low high) #f #t 'pitch-name
                                '((G . "Gong")) '()
                                'by-pitch '("#111111") '((ding . "#000000"))
                                'vertical loc)))
-    (test-assert "make-group takes 23 arguments (with part-marker)" (group? g))
+    (test-assert "make-group takes the label fields in their places" (group? g))
     (test-eq "note-label" 'key-number (group-field 'group-note-label g))
     (test-eq "note-label-octave?" #f (group-field 'group-note-label-octave? g))
     (test-eq "row-label-octave?" #f (group-field 'group-row-label-octave? g))
     (test-eq "row-labels: a symbol" 'pitch-name (group-field 'group-row-labels g))
     (test-equal "the other fields keep their places"
-      (list "Reyong" "Rey." "sub" 'short 'parts members 'none 'dash 'long 2
+      (list "Reyong" "Rey." "sub" 'short 'parts members 'none 'dash #f
             #t '((G . "Gong")) 'by-pitch '("#111111") '((ding . "#000000"))
             'vertical loc)
       (and (group? g)
            (list (group-label g) (group-short g) (group-subtitle g)
                  (group-labels g) (group-rows g) (group-members g)
-                 (group-fill g) (group-holds g) (group-pattern-names g)
-                 (group-pattern-level g) (group-key-numbers? g)
+                 (group-fill g) (group-holds g) (group-annotation g)
+                 (group-key-numbers? g)
                  (group-display g) (group-scheme g) (group-palette g)
                  (group-colors g) (group-background g) (group-location g))))
     (test-assert "keys: the range's note records, in its place"
@@ -1290,7 +1294,7 @@ make-group raises."
   (markers-make-group
    label label #f 'first-long rows
    (map (lambda (p) (cons p (symbol->string (part-name p)))) parts)
-   'none #t 'colour 'none 'none 0
+   'none #t 'colour 'none #f
    'used #t #f 'pitch-display-name display
    part-marker
    'by-pitch 'pastel1 '() 'grid #f))
@@ -1321,12 +1325,12 @@ make-group raises."
          (m (marker 'dot #f #f "#d62728" #f))
          (members (list (cons polos "polos") (cons sangsih "sangsih")))
          (g (markers-make-group "Reyong" "Rey." "sub" 'short 'parts members
-                                'key-number #f 'none 'dash 'long 2
+                                'key-number #f 'none 'dash #f
                                 'all #f #t 'pitch-name '((G . "Gong"))
                                 (list (cons sangsih m))
                                 'by-pitch '("#111111") '((ding . "#000000"))
                                 'vertical loc)))
-    (test-assert "make-group takes 23 arguments" (group? g))
+    (test-assert "make-group takes part-marker in its place" (group? g))
     (test-assert "part-marker: the (part . marker) pairs as given"
       (and (group? g)
            (match ((piece-proc 'group-part-marker) g)
@@ -1339,15 +1343,15 @@ make-group raises."
       (and (group? g) (group-scheme g)))
     (test-equal "the other fields keep their places"
       (list "Reyong" "Rey." "sub" 'short 'parts members 'key-number #f
-            'none 'dash 'long 2 'all #f #t 'pitch-name
+            'none 'dash #f 'all #f #t 'pitch-name
             '("#111111") '((ding . "#000000")) 'vertical loc)
       (and (group? g)
            (list (group-label g) (group-short g) (group-subtitle g)
                  (group-labels g) (group-rows g) (group-members g)
                  ((piece-proc 'group-note-label) g)
                  ((piece-proc 'group-note-label-octave?) g)
-                 (group-fill g) (group-holds g) (group-pattern-names g)
-                 (group-pattern-level g) (group-keys g)
+                 (group-fill g) (group-holds g) (group-annotation g)
+                 (group-keys g)
                  ((piece-proc 'group-row-label-octave?) g)
                  (group-key-numbers? g)
                  ((piece-proc 'group-row-labels) g)
@@ -1378,7 +1382,7 @@ make-group raises."
     (raises? (lambda ()
                (apply make-group
                       (list "U" "U" #f 'first-long 'notes '()
-                            'none #t 'colour 'none 'none 0
+                            'none #t 'colour 'none #f
                             'used #t #f 'pitch-display-name '()
                             'by-pitch 'pastel1 '() 'grid #f))))))
 
@@ -1388,6 +1392,267 @@ make-group raises."
      (test-assert (format #f "~a is exported" name) (exported-by-piece? name)))
    '(make-marker marker? marker-symbol marker-symbol-size marker-symbol-color
      marker-border marker-border-width group-part-marker)))
+
+;;; ------------------------------------------------------------------
+;;; Slice feat/collapsed-annotation (iteration 5; 02, "Iteration 5":
+;;; pattern `annotation`, pattern-span `annotation`, part `texts`, the
+;;; `free-text` and `annotation-row` records, the group's `annotation`,
+;;; and the paragraph on constructor places; ADR 0057).
+;;; Choices made where the docs are not explicit:
+;;; - Constructor places, from 02's paragraph: (make-pattern name
+;;;   instrument short long annotation location), (make-pattern-span
+;;;   pattern short long annotation start end depth), (make-part name
+;;;   instrument events origin spans texts location), (make-free-text
+;;;   start length text), (make-annotation-row part position align
+;;;   level text label), and make-group with one field `annotation`
+;;;   where pattern-names and pattern-level were: (make-group label
+;;;   short subtitle labels rows members note-label note-label-octave?
+;;;   fill holds annotation keys row-label-octave? key-numbers?
+;;;   row-labels display part-marker scheme palette colors background
+;;;   location), 22 arguments; the old 23 raise. Each old arity of the
+;;;   other constructors raises too.
+;;; - The records hold what they are given and check nothing (the
+;;;   reader checks values and invariant 11).
+;;; - group-pattern-names and group-pattern-level are no longer
+;;;   exported ("removed").
+;;; - Constructors whose arity changes are called through apply, and the
+;;;   new names are looked up when a test runs (`piece-proc`), so the
+;;;   file compiles before the code exists.
+
+(define (ann-try thunk)
+  "THUNK's value, or the condition it raises."
+  (guard (c (#t c)) (thunk)))
+
+(define (ann-pattern name instrument short long annotation)
+  "make-pattern with this slice's six arguments, or the condition."
+  (ann-try (lambda ()
+             (apply make-pattern
+                    (list name instrument short long annotation loc)))))
+
+(define (ann-span pattern short long annotation start end depth)
+  "make-pattern-span with this slice's seven arguments, or the condition."
+  (ann-try (lambda ()
+             (apply make-pattern-span
+                    (list pattern short long annotation start end depth)))))
+
+(define* (ann-part name instrument #:key (events '()) (origin 'written)
+                   (spans '()) (texts '()))
+  "make-part with this slice's seven arguments, or the condition."
+  (ann-try (lambda ()
+             (apply make-part
+                    (list name instrument events origin spans texts loc)))))
+
+(define (free-text . fields)
+  "make-free-text applied to FIELDS, or the condition."
+  (ann-try (lambda () (apply (piece-proc 'make-free-text) fields))))
+
+(define (free-text-fields ft)
+  "FT's (START LENGTH TEXT), or #f when it isn't a free-text."
+  (and ((piece-proc 'free-text?) ft)
+       (map (lambda (name) ((piece-proc name) ft))
+            '(free-text-start free-text-length free-text-text))))
+
+(define (annotation-row . fields)
+  "make-annotation-row applied to FIELDS, or the condition."
+  (ann-try (lambda () (apply (piece-proc 'make-annotation-row) fields))))
+
+(define (annotation-row-fields row)
+  "ROW's (PART POSITION ALIGN LEVEL TEXT LABEL), or #f when it isn't an
+annotation-row."
+  (and ((piece-proc 'annotation-row?) row)
+       (map (lambda (name) ((piece-proc name) row))
+            '(annotation-row-part annotation-row-position
+              annotation-row-align annotation-row-level
+              annotation-row-text annotation-row-label))))
+
+(define (ann-make-group . args)
+  "make-group applied to ARGS, or the condition it raises."
+  (ann-try (lambda () (apply make-group args))))
+
+(define* (ann-group label members #:key (annotation #f) (part-marker '()))
+  "A group of MEMBERS ((part . row-label) pairs) through this slice's
+make-group, every other setting at its default; or the condition."
+  (ann-make-group label label #f 'first-long 'notes members
+                  'none #t 'colour 'none
+                  annotation
+                  'used #t #f 'pitch-display-name '() part-marker
+                  'by-pitch 'pastel1 '() 'grid #f))
+
+(test-group "[annotation] the pattern's annotation"
+  (let ((pat (ann-pattern 'polos-1 reyong "1" "Norot polos on 1" "norot on 1")))
+    (test-assert "make-pattern takes six arguments" (pattern? pat))
+    (test-equal "annotation" "norot on 1"
+      (and (pattern? pat) ((piece-proc 'pattern-annotation) pat)))
+    (test-equal "the other fields keep their places"
+      (list 'polos-1 reyong "1" "Norot polos on 1" loc)
+      (and (pattern? pat)
+           (list (pattern-name pat) (pattern-instrument pat)
+                 (pattern-short pat) (pattern-long pat)
+                 (pattern-location pat)))))
+  (let ((pat (ann-pattern 'p reyong "p" "p" #f)))
+    (test-equal "#f for none" #f
+      (and (pattern? pat) ((piece-proc 'pattern-annotation) pat))))
+  (test-assert "make-pattern with the old five arguments raises"
+    (raises? (lambda () (apply make-pattern (list 'p reyong "p" "p" loc))))))
+
+(test-group "[annotation] the pattern-span's annotation"
+  (let* ((pat (ann-pattern 'polos-1 reyong "1" "Norot polos on 1" "norot on 1"))
+         (s (ann-span pat "6" "Norot polos on 6" "norot on 6" 3/2 7/2 1)))
+    (test-assert "make-pattern-span takes seven arguments" (pattern-span? s))
+    (test-equal "annotation: the one in force at the use" "norot on 6"
+      (and (pattern-span? s) ((piece-proc 'pattern-span-annotation) s)))
+    (test-equal "the other fields keep their places"
+      (list pat "6" "Norot polos on 6" 3/2 7/2 1)
+      (and (pattern-span? s)
+           (list (pattern-span-pattern s) (pattern-span-short s)
+                 (pattern-span-long s) (pattern-span-start s)
+                 (pattern-span-end s) (pattern-span-depth s)))))
+  (let* ((pat (ann-pattern 'p reyong "p" "p" #f))
+         (s (ann-span pat "p" "p" #f 0 1 0)))
+    (test-equal "#f for none" #f
+      (and (pattern-span? s) ((piece-proc 'pattern-span-annotation) s))))
+  (test-assert "make-pattern-span with the old six arguments raises"
+    (raises? (lambda ()
+               (apply make-pattern-span
+                      (list (ann-pattern 'p reyong "p" "p" #f) "p" "p" 0 1 0))))))
+
+(test-group "[annotation] the free-text record"
+  (test-equal "a point: length #f" '(3/2 #f "angsel")
+    (free-text-fields (free-text 3/2 #f "angsel")))
+  (test-equal "with a length" '(4 2 "norot")
+    (free-text-fields (free-text 4 2 "norot")))
+  (test-equal "fractions kept exact" '(1/4 1/2 "x")
+    (free-text-fields (free-text 1/4 1/2 "x")))
+  (test-assert "free-text? is #f for an event"
+    (not ((piece-proc 'free-text?) (make-event 0 1 '(0)))))
+  (test-assert "event? is #f for a free-text: it is not an event"
+    (let ((ft (free-text 0 #f "x")))
+      (and ((piece-proc 'free-text?) ft) (not (event? ft)))))
+  (test-assert "make-free-text takes three arguments: two raise"
+    (raises? (lambda () (apply (piece-proc 'make-free-text) '(0 "x"))))))
+
+(test-group "[annotation] the part's texts"
+  (let* ((t1 (free-text 1 #f "angsel"))
+         (t2 (free-text 2 2 "norot"))
+         (p (ann-part 'polos reyong #:events (list (ev 0 1 3))
+                      #:texts (list t1 t2))))
+    (test-assert "make-part takes seven arguments" (part? p))
+    (test-equal "texts: as given" (list t1 t2)
+      (and (part? p) ((piece-proc 'part-texts) p)))
+    (test-equal "the other fields keep their places"
+      (list 'polos reyong 'written '() loc)
+      (and (part? p)
+           (list (part-name p) (part-instrument p) (part-origin p)
+                 (part-spans p) (part-location p))))
+    (test-equal "events unchanged" '((0 1 (3)))
+      (and (part? p)
+           (map (lambda (e) (list (event-start e) (event-duration e)
+                                  (event-notes e)))
+                (part-events p)))))
+  (let* ((pat (ann-pattern 'p reyong "p" "p" #f))
+         (s (ann-span pat "p" "p" #f 0 1 0))
+         (p (ann-part 'polos reyong #:spans (list s))))
+    (test-equal "spans keep their place, just before texts" (list s)
+      (and (part? p) (part-spans p)))
+    (test-equal "'() for none" '()
+      (and (part? p) ((piece-proc 'part-texts) p))))
+  (test-assert "make-part with the old six arguments raises"
+    (raises? (lambda ()
+               (apply make-part (list 'x reyong '() 'written '() loc))))))
+
+(test-group "[annotation] the annotation-row record"
+  (let* ((p (ann-part 'polos reyong))
+         (row (annotation-row p 'above 'center 1 'short "Kotekan")))
+    (test-equal "every field kept"
+      (list p 'above 'center 1 'short "Kotekan")
+      (annotation-row-fields row))
+    (test-assert "annotation-row? is #f for a part"
+      (not ((piece-proc 'annotation-row?) p))))
+  (let ((p (ann-part 'polos reyong)))
+    (test-equal "the defaults as the reader fills them; label #f for \"\""
+      (list p 'below 'left 0 'annotation #f)
+      (annotation-row-fields (annotation-row p 'below 'left 0 'annotation #f)))
+    (for-each
+     (lambda (align)
+       (test-eq (format #f "align ~a" align) align
+         (and=> (annotation-row-fields (annotation-row p 'below align 0 'long #f))
+                caddr)))
+     '(left center right))
+    (for-each
+     (lambda (text)
+       (test-eq (format #f "text ~a" text) text
+         (and=> (annotation-row-fields (annotation-row p 'below 'left 0 text #f))
+                (lambda (f) (list-ref f 4)))))
+     '(short long annotation)))
+  (test-assert "make-annotation-row takes six arguments: five raise"
+    (raises? (lambda ()
+               (apply (piece-proc 'make-annotation-row)
+                      (list (ann-part 'polos reyong) 'below 'left 0 'annotation))))))
+
+(test-group "[annotation] the group's annotation"
+  (let* ((polos (ann-part 'polos reyong))
+         (sangsih (ann-part 'sangsih reyong))
+         (members (list (cons polos "polos") (cons sangsih "sangsih")))
+         (row (annotation-row polos 'above 'right 2 'long "Pola"))
+         (m (ann-try (lambda ()
+                       ((piece-proc 'make-marker) 'dot #f #f #f #f))))
+         (g (ann-make-group "Reyong" "Rey." "sub" 'short 'parts members
+                            'key-number #f 'none 'dash
+                            row
+                            'all #f #t 'pitch-name '((G . "Gong"))
+                            (list (cons sangsih m))
+                            'by-pitch '("#111111") '((ding . "#000000"))
+                            'vertical loc)))
+    (test-assert "make-group takes 22 arguments" (group? g))
+    (test-eq "annotation: the annotation-row record" row
+      (and (group? g) ((piece-proc 'group-annotation) g)))
+    (test-equal "holds keeps its place, just before annotation" 'dash
+      (and (group? g) (group-holds g)))
+    (test-equal "keys keeps its place, just after annotation" 'all
+      (and (group? g) (group-keys g)))
+    (test-equal "the other fields keep their places"
+      (list "Reyong" "Rey." "sub" 'short 'parts members 'key-number #f
+            'none #f #t 'pitch-name '((G . "Gong"))
+            'by-pitch '("#111111") '((ding . "#000000")) 'vertical loc)
+      (and (group? g)
+           (list (group-label g) (group-short g) (group-subtitle g)
+                 (group-labels g) (group-rows g) (group-members g)
+                 ((piece-proc 'group-note-label) g)
+                 ((piece-proc 'group-note-label-octave?) g)
+                 (group-fill g)
+                 ((piece-proc 'group-row-label-octave?) g)
+                 (group-key-numbers? g)
+                 ((piece-proc 'group-row-labels) g)
+                 (group-display g)
+                 (group-scheme g) (group-palette g) (group-colors g)
+                 (group-background g) (group-location g))))
+    (test-equal "part-marker keeps its value" (list (cons sangsih m))
+      (and (group? g) ((piece-proc 'group-part-marker) g))))
+  (let ((g (ann-group "U" (list (cons (ann-part 'polos reyong) "polos")))))
+    (test-equal "#f for none, as the reader fills it" #f
+      (and (group? g) ((piece-proc 'group-annotation) g))))
+  (test-assert "make-group with the old 23 arguments raises"
+    (raises? (lambda ()
+               (apply make-group
+                      (list "U" "U" #f 'first-long 'notes '()
+                            'none #t 'colour 'none 'none 0
+                            'used #t #f 'pitch-display-name '() '()
+                            'by-pitch 'pastel1 '() 'grid #f))))))
+
+(test-group "[annotation] exports"
+  (for-each
+   (lambda (name)
+     (test-assert (format #f "~a is exported" name) (exported-by-piece? name)))
+   '(pattern-annotation pattern-span-annotation part-texts
+     make-free-text free-text? free-text-start free-text-length free-text-text
+     make-annotation-row annotation-row? annotation-row-part
+     annotation-row-position annotation-row-align annotation-row-level
+     annotation-row-text annotation-row-label group-annotation))
+  (for-each
+   (lambda (name)
+     (test-assert (format #f "~a is no longer exported" name)
+       (not (exported-by-piece? name))))
+   '(group-pattern-names group-pattern-level)))
 
 (define runner (test-runner-current))
 (test-end "piece")

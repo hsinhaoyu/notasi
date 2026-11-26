@@ -201,7 +201,10 @@ FAIL is called for a bad duration."
 ;;; A fragment: music timed from 0, to be placed in a part (or another
 ;;; fragment) at some time.  EVENTS are (START DURATION NOTES), newest
 ;;; first; CHECKS are (TIME . KIND) for its `|' and `||'; SPANS are
-;;; (START END DEPTH PATTERN SHORT LONG) for its pattern uses; LENGTH is
+;;; (START END DEPTH PATTERN SHORT LONG ANNOTATION) for its pattern uses,
+;;; and (START END text STRING LENGTH) for its free text (ADR 0057),
+;;; END being START + LENGTH, or START for a point, so that placing a
+;;; fragment shifts both alike; LENGTH is
 ;;; its length; DURATION the current duration at its end; LEAD the
 ;;; length of a leading `_', which holds the note before the fragment;
 ;;; LAST what ends it: note, rest, lead (only a lead hold) or none; USES
@@ -242,6 +245,12 @@ FAIL is called for a bad duration."
 
 (define (rep-form? token)
   (and (pair? token) (eq? (car token) 'rep)))
+
+(define (text-form? token)
+  (and (pair? token) (eq? (car token) 'text)))
+
+(define (positive-exact-rational? x)
+  (and (number? x) (exact-rational? x) (positive? x)))
 
 (define (pattern-use-form? token)
   (and (pair? token) (eq? (car token) '@)))
@@ -318,7 +327,7 @@ moved by the context's step."
        (bad 'bad-option "option `~a' needs a value, but `~a' follows it" key next))
       (((? key? key) value . rest)
        (let ((name (string->symbol (substring (symbol->string key) 1))))
-         (unless (memq name '(step short long))
+         (unless (memq name '(step short long annotation))
            (bad 'unknown-option "a pattern use has no option `~a'" key))
          (when (assq name seen)
            (bad 'duplicate-option "option `~a' given twice" key))
@@ -407,6 +416,10 @@ own span, or #f when only checking a definition."
            ((pattern . tokens)
             (let* ((short (or (assq-ref options 'short) (pattern-short pattern)))
                    (long (or (assq-ref options 'long) (pattern-long pattern)))
+                   ;; The annotation in force: the use's, else the
+                   ;; pattern's (ADR 0057).
+                   (annotation (or (assq-ref options 'annotation)
+                                   (pattern-annotation pattern)))
                    (fragment
                     (parameterize ((current-uses
                                     (cons (cons name (pattern-line pattern))
@@ -425,7 +438,7 @@ own span, or #f when only checking a definition."
                              (fragment-checks fragment)
                              (cons (list 0 (fragment-length fragment)
                                          (context-depth context)
-                                         pattern short long)
+                                         pattern short long annotation)
                                    (fragment-spans fragment))
                              (fragment-length fragment)
                              #f          ; the part's duration is kept
@@ -548,6 +561,22 @@ hold; inside a `rep' or a pattern it becomes the fragment's lead."
        (match (expand-use token time offset context)
          (#f (loop rest time duration previous events checks spans lead))
          (fragment (place fragment 1 rest))))
+      (((? text-form? token) . rest)
+       ;; Free text (ADR 0057): takes no time, and the duration and what
+       ;; came before stay as they were, so `_' after it holds the note
+       ;; before it.
+       (match token
+         (('text (? string? text))
+          (loop rest time duration previous events checks
+                (cons (list time time 'text text #f) spans) lead))
+         (('text (? string? text) (? positive-exact-rational? length))
+          (loop rest time duration previous events checks
+                (cons (list time (+ time length) 'text text length) spans)
+                lead))
+         (_ (expansion-error-at
+             'bad-text (+ offset time) (list-line token)
+             "free text is (text \"TEXT\") or (text \"TEXT\" LENGTH), LENGTH a number of pulses above zero: ~s"
+             token))))
       ((token . rest)
        (match (split-duration token fail)
          (('/ . #f) (loop rest time duration previous events checks spans lead))
@@ -594,36 +623,46 @@ hold; inside a `rep' or a pattern it becomes the fragment's lead."
 
 (define* (expand-part tokens instrument #:key cycle (pickup 0) (patterns '()))
   "Turn TOKENS, a part's music on INSTRUMENT, into timed events.  Return
-(values EVENTS LENGTH SPANS): event records with exact rational starts
-and durations in pulses, sorted by start; the written length in pulses
-(trailing rests included); and a pattern-span for each pattern use,
-sorted by start.  CYCLE and PICKUP are the piece's colotomy length and
-pickup, for `||' checks; without CYCLE, `||' is an error.  PATTERNS is
-an alist from a pattern's name to (PATTERN . TOKENS).  Raise an
-&expansion-error on a mistake."
-  (let ((fragment (parameterize ((current-uses '()))
-                    (expand-fragment tokens 1 0 #t
-                                     (top-context instrument cycle pickup
-                                                  patterns #f)))))
+(values EVENTS LENGTH SPANS TEXTS): event records with exact rational
+starts and durations in pulses, sorted by start; the written length in
+pulses (trailing rests included); a pattern-span for each pattern use,
+sorted by start; and a free-text for each `(text ...)', sorted by start,
+in the order written at one time.  CYCLE and PICKUP are the piece's
+colotomy length and pickup, for `||' checks; without CYCLE, `||' is an
+error.  PATTERNS is an alist from a pattern's name to (PATTERN .
+TOKENS).  Raise an &expansion-error on a mistake."
+  (let* ((fragment (parameterize ((current-uses '()))
+                     (expand-fragment tokens 1 0 #t
+                                      (top-context instrument cycle pickup
+                                                   patterns #f))))
+         (written (reverse (fragment-spans fragment))))
     (values (reverse-map (match-lambda
                            ((start duration notes)
                             (make-event start duration notes)))
                          (fragment-events fragment))
             (fragment-length fragment)
-            (sort (reverse-map (match-lambda
-                                 ((start end depth pattern short long)
-                                  (make-pattern-span pattern short long
-                                                     start end depth)))
-                               (fragment-spans fragment))
+            (sort (filter-map (match-lambda
+                                ((_ _ 'text . _) #f)
+                                ((start end depth pattern short long annotation)
+                                 (make-pattern-span pattern short long annotation
+                                                    start end depth)))
+                              written)
                   (lambda (a b)
-                    (< (pattern-span-start a) (pattern-span-start b)))))))
+                    (< (pattern-span-start a) (pattern-span-start b))))
+            (stable-sort (filter-map (match-lambda
+                                       ((start _ 'text text length)
+                                        (make-free-text start length text))
+                                       (_ #f))
+                                     written)
+                         (lambda (a b)
+                           (< (free-text-start a) (free-text-start b)))))))
 
 (define* (expand-tokens tokens instrument #:key cycle (pickup 0) (patterns '()))
   "Like `expand-part', returning (EVENTS . LENGTH)."
   (call-with-values
       (lambda () (expand-part tokens instrument #:cycle cycle #:pickup pickup
                               #:patterns patterns))
-    (lambda (events length spans) (cons events length))))
+    (lambda (events length spans texts) (cons events length))))
 
 (define* (check-pattern tokens instrument #:key (patterns '()))
   "Check a pattern's body TOKENS where it is defined, against its

@@ -24,11 +24,13 @@ make-source-location source-location?
 
             make-pattern pattern?
             pattern-name pattern-instrument pattern-short pattern-long
+            pattern-annotation
             pattern-location
 
             make-pattern-span pattern-span?
             pattern-span-pattern pattern-span-short pattern-span-long
-            pattern-span-start pattern-span-end pattern-span-depth
+            pattern-span-annotation pattern-span-start pattern-span-end
+            pattern-span-depth
 
             make-colotomy colotomy?
             colotomy-name colotomy-length colotomy-timekeeper
@@ -50,7 +52,14 @@ make-source-location source-location?
 
             make-part part?
             part-name part-instrument part-events part-origin
-            part-spans part-location
+            part-spans part-texts part-location
+
+            make-free-text free-text?
+            free-text-start free-text-length free-text-text
+
+            make-annotation-row annotation-row?
+            annotation-row-part annotation-row-position annotation-row-align
+            annotation-row-level annotation-row-text annotation-row-label
 
             make-event event?
             event-start event-duration event-notes
@@ -67,7 +76,7 @@ make-source-location source-location?
             group-label group-short group-subtitle group-labels group-rows
             group-members group-note-label group-note-label-octave?
             group-fill group-holds
-            group-pattern-names group-pattern-level group-scheme
+            group-annotation group-scheme
             group-palette group-colors group-background group-location
             group-keys group-row-label-octave? group-key-numbers?
             group-row-labels group-display group-part-marker
@@ -143,35 +152,62 @@ make-source-location source-location?
 
 ;;; EVENTS are sorted by start.
 (define-record-type <part>
-  (make-part name instrument events origin spans location)
+  (make-part name instrument events origin spans texts location)
   part?
   (name       part-name)
   (instrument part-instrument)
   (events     part-events)
   (origin     part-origin)       ; written, timekeeper or colotomy
   (spans      part-spans)        ; pattern-spans, sorted by start
+  (texts      part-texts)        ; free-texts, sorted by start (ADR 0057)
   (location   part-location))
+
+;;; Free text written in a part, `(text STRING [LENGTH])' (ADR 0057):
+;;; not an event, it takes no time.  LENGTH is #f for a point, which
+;;; runs to the next text in an annotation row.
+(define-record-type <free-text>
+  (make-free-text start length text)
+  free-text?
+  (start  free-text-start)              ; pulses
+  (length free-text-length)             ; pulses, or #f
+  (text   free-text-text))
+
+;;; A group's annotation row (ADR 0057): a text-only row ABOVE or BELOW
+;;; its rows, from PART's patterns at LEVEL (their SHORT or LONG name or
+;;; ANNOTATION) and its free text, aligned LEFT, CENTER or RIGHT; LABEL
+;;; is #f for none.
+(define-record-type <annotation-row>
+  (make-annotation-row part position align level text label)
+  annotation-row?
+  (part     annotation-row-part)
+  (position annotation-row-position)
+  (align    annotation-row-align)
+  (level    annotation-row-level)
+  (text     annotation-row-text)
+  (label    annotation-row-label))
 
 ;;; A pattern: a named figure for one INSTRUMENT (ADR 0029).  Its body
 ;;; is used up by expansion; the piece keeps its names for its spans.
 (define-record-type <pattern>
-  (make-pattern name instrument short long location)
+  (make-pattern name instrument short long annotation location)
   pattern?
   (name       pattern-name)
   (instrument pattern-instrument)
   (short      pattern-short)
   (long       pattern-long)
+  (annotation pattern-annotation)       ; a string, or #f
   (location   pattern-location))
 
 ;;; One use of a pattern in a part: the names in force at that use, its
 ;;; START and END in pulses, and its DEPTH (0 for a use in the part, 1
 ;;; inside such a pattern, ...).
 (define-record-type <pattern-span>
-  (make-pattern-span pattern short long start end depth)
+  (make-pattern-span pattern short long annotation start end depth)
   pattern-span?
   (pattern pattern-span-pattern)
   (short   pattern-span-short)
   (long    pattern-span-long)
+  (annotation pattern-span-annotation)  ; in force at this use, or #f
   (start   pattern-span-start)
   (end     pattern-span-end)
   (depth   pattern-span-depth))
@@ -230,7 +266,7 @@ make-source-location source-location?
 ;;; group of the default score.
 (define-record-type <group>
   (make-group label short subtitle labels rows members note-label
-              note-label-octave? fill holds pattern-names pattern-level keys
+              note-label-octave? fill holds annotation keys
               row-label-octave? key-numbers? row-labels display part-marker
               scheme palette colors background location)
   group?
@@ -245,8 +281,7 @@ make-source-location source-location?
   (note-label-octave? group-note-label-octave?)
   (fill          group-fill)
   (holds         group-holds)
-  (pattern-names group-pattern-names)
-  (pattern-level group-pattern-level)
+  (annotation    group-annotation)      ; annotation-row, or #f
   (keys          group-keys)            ; used | all | (LOW . HIGH) notes
   (row-label-octave? group-row-label-octave?)
   (key-numbers?  group-key-numbers?)

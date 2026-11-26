@@ -448,7 +448,7 @@
               ]
             }
           ],
-          "overlays": [],
+          "annotation": null,
           "pulse_lines": true,
           "row_lines": true
         }
