@@ -11,22 +11,70 @@
 // A length from the figure, e.g. "10.5em" or "4mm".
 #let _len(s) = eval(s)
 
+// Defaults for a part's marks (ADR 0056), chosen by eye: a symbol a
+// fraction of the cell's narrower side, and a border thicker than the
+// grey one but thin enough not to hide a small note's colour.
+#let _default-symbol-size = 0.3
+#let _default-symbol-color = "#222222"
+#let _default-border-width = "1.5pt"
+
+// A value of a voice's marker, or DEFAULT when the marker leaves it out.
+#let _mark(marker, key, default) = {
+  let v = marker.at(key, default: none)
+  if v == none { default } else { v }
+}
+
+// The marker's symbol, centred in the cell and sized from it.
+#let _symbol(marker) = layout(size => {
+  let kind = marker.at("symbol", default: "none")
+  let d = calc.min(size.width, size.height) * _mark(marker, "symbol_size", _default-symbol-size)
+  let c = rgb(_mark(marker, "symbol_color", _default-symbol-color))
+  let w = calc.max(d * 0.18, 0.4pt)
+  let shape = if kind == "dot" {
+    circle(radius: d / 2, fill: c)
+  } else if kind == "ring" {
+    circle(radius: d / 2 - w / 2, stroke: w + c)
+  } else if kind == "cross" {
+    box(width: d, height: d, {
+      place(line(start: (0pt, 0pt), end: (d, d), stroke: w + c))
+      place(line(start: (0pt, d), end: (d, 0pt), stroke: w + c))
+    })
+  }
+  if shape != none { shape }
+})
+
 // The content of one note's cell: a block filling the cell in the
 // note's colour, with its name when the figure gives one (ADR 0019,
-// 0020). A note with no colour is just its name.
-#let _note(e) = {
+// 0020). A note with no colour is just its name. A voice's MARKER (or
+// none) adds its symbol and its border (ADR 0056), on every piece of a
+// cut note; a "-" of a held note gets neither.
+#let _note(e, marker) = {
   let name = if e.text != none and not e.continued {
     align(center + horizon,
       text(fill: rgb(e.text_color), weight: "bold", e.text))
   }
+  let dash = e.fill == none and e.text == "-"
+  // The symbol takes no room, so the label stays centred with it.
+  let symbol = if marker != none and not dash {
+    place(center + horizon, _symbol(marker))
+  }
+  let border = if marker != none { marker.at("border", default: none) }
   if e.fill == none {
-    name
+    if symbol == none { name } else {
+      block(width: 100%, height: 100%, { symbol; name })
+    }
   } else {
     // A thin grey border, the same on every edge (ADR 0041): centred on
     // the block's edge, so two touching notes share one line. It keeps
-    // repeated strokes apart and outlines a note against the paper.
-    block(width: 100%, height: 100%, fill: rgb(e.fill),
-      stroke: 0.5pt + luma(150), name)
+    // repeated strokes apart and outlines a note against the paper. A
+    // marked part's border takes its place.
+    let stroke = if border != none {
+      _len(_mark(marker, "border_width", _default-border-width)) + rgb(border)
+    } else {
+      0.5pt + luma(150)
+    }
+    block(width: 100%, height: 100%, fill: rgb(e.fill), stroke: stroke,
+      if symbol == none { name } else { symbol; name })
   }
 }
 
@@ -118,9 +166,10 @@
         }
       }
       for v in g.voices {
+        let marker = v.at("marker", default: none)
         for e in v.events {
           cells.push(grid.cell(x: first + e.start, y: row + e.row,
-            colspan: e.dur, inset: 0pt, _note(e)))
+            colspan: e.dur, inset: 0pt, _note(e, marker)))
         }
       }
       // Pattern names, written over the notes (ADR 0036); a continued
