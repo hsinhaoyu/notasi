@@ -8,7 +8,7 @@
 ;;; 04-layout.md ("Golden tests") and 05-typst-backend.md (`notasi
 ;;; render --score`), not from the implementation.
 ;;;
-;;; - examples/gallery/jaya-semara.nts and examples/baris.nts read, and their
+;;; - examples/gallery/jaya-semara.nts and examples/gallery/baris.nts read, and their
 ;;;   scores are exactly the targets' scores, in the targets' order.
 ;;; - examples/demos/tenzer1.nts reads, with the colotomy gilak, a one-pulse
 ;;;   pickup, and a generated `gong' part (origin `colotomy').

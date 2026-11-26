@@ -244,7 +244,7 @@ notasi and the real test (`feat/emacs-preview-draw`).
   and exits with 1; and when it contains `NOTASI-PROBLEM`, prints
   `notasi: typst is not installed` and exits with 1. The tests use it, so they need
   neither Guile nor Typst. It changes when the contract does.
-- **One real test** draws `examples/jaya-semara.nts` with
+- **One real test** draws `examples/gallery/jaya-semara.nts` with
   `scripts/notasi`, skipped when Guile or Typst is missing.
 - **`make check-emacs`** runs the tests, byte-compiles with warnings as
   errors, and runs `checkdoc` and `package-lint`. It is separate from

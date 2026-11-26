@@ -178,4 +178,5 @@ lines) but no longer its look. notasi colours each pitch rather than
 each part (ADR 0017); draws square notes that fill their cells, with
 names only where an instrument asks for them, and strokes as grey boxes
 (ADRs 0019, 0020); and leaves the background white. The two examples'
-drawings (`make preview`) are the reference now.
+drawings, committed in `examples/gallery/images/` (`make images`, ADR
+0052), are the reference now.
