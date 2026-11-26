@@ -59,8 +59,8 @@ in one sweep.
 | **polos / sangsih** | The two interlocking parts of a kotekan | | |
 | **pattern** | A named figure for one instrument, played in parts with `@NAME` | `pattern` | motif |
 | **pattern use** | One `@NAME` or `(@ NAME ...)` in a part | `span` | |
-| **annotation** | **Planned.** Text written on a pattern, shown in the annotation row | | remark, comment |
-| **free text** | **Planned.** `(text ...)` in a part, shown in the annotation row | | |
+| **annotation** | Text written on a pattern, shown in the annotation row | `annotation` | remark, comment |
+| **free text** | `(text ...)` in a part, shown in the annotation row | `free-text`, `part-texts` | |
 
 ## Scores and drawing
 
@@ -73,9 +73,9 @@ in one sweep.
 | **pitch column** | The column of row labels (`:row-labels`) | | |
 | **key-number column** | The column of key numbers (`:key-numbers`) | | |
 | **note label** | What is written in a note, chosen with `:note-label` | `text` (JSON) | note name |
-| **collapsed** | **Planned.** A group drawn with fewer rows than keys: `:rows parts` or `compact` | | |
+| **collapsed** | A group drawn with fewer rows than keys: `:rows parts` or `compact` | | |
 | **part marker** | A symbol and border telling a part's notes apart in a group (`:part-marker`) | `marker` (record and JSON) | |
-| **annotation row** | **Planned.** A text-only row above or below a group | | annotation lane |
+| **annotation row** | A text-only row above or below a group | `annotation-row`; JSON `annotation` | annotation lane |
 | **system** | One horizontal block of the figure, e.g. one gong cycle | `system` | line |
 | **figure** | Layout's output for one score: the JSON Typst draws | `figure` | |
 
@@ -83,4 +83,4 @@ in one sweep.
 
 | Term | Meaning | In code / JSON | Not |
 |---|---|---|---|
-| **gallery / manual / demos / contrib** | **Planned.** The folders of `examples/` (07) | | |
+| **gallery / manual / demos / contrib** | The folders of `examples/` (07) | | |

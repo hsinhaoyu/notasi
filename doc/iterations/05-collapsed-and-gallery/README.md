@@ -121,7 +121,7 @@ changes the figure, and each later one adds to it.
    unique across `examples/`; `make images`, the committed PNGs, and
    CI failing on an out-of-date image; `make manual` copying the
    images; `make preview` removed; README and CLAUDE.md.
-3. **`feat/collapsed`** (01–05, ADRs 0051, 0053–0057, 0059, 0060), in
+3. **`feat/collapsed`** (done) (01–05, ADRs 0051, 0053–0057, 0059, 0060), in
    five slices:
    1. `feat/collapsed-terms` (done): the glossary's names in code (`pitch`,
       `scale-pitches`, `note-pitch`, the error kinds), in the reader's
@@ -144,9 +144,13 @@ changes the figure, and each later one adds to it.
       parts, overlapping).
    4. `feat/collapsed-markers` (done): `:part-marker`, each voice's `marker`,
       and the template's marks.
-   5. `feat/collapsed-annotation`: the annotation row, pattern
+   5. `feat/collapsed-annotation` (done): the annotation row, pattern
       annotations and `(text ...)`, in place of `:pattern-names`,
-      `:pattern-level` and the overlays.
+      `:pattern-level` and the overlays. Jaya Semara's `full` and
+      `kotekan` scores drop their pattern names here (the gallery
+      milestone decides its annotation rows); the manual's example
+      becomes an annotation row with `:annotation` and `(text ...)`,
+      and the `pattern-names-overlap` mistake goes.
 4. **`feat/save-piece`** (02, 05, ADR 0058), with no slices:
    `--save-piece` as JSON and as an s-expression, its golden files,
    and its manual section. After `feat/collapsed`, so it saves the

@@ -27,11 +27,12 @@ line per file drawn on success (ADR 0061) since iteration 5's
 preview` removed (ADR 0052), since `feat/examples`. Contract version
 4's `rows`, `row` and `row_label_width` since `feat/collapsed-labels`;
 each voice's `marker` and the template's part marks (ADR 0056) since
-`feat/collapsed-markers`.
+`feat/collapsed-markers`; the rest of contract version 4 and the
+template's annotation row (ADRs 0057, 0059), without overlays, since
+`feat/collapsed-annotation`.
 
-**Planned** for iteration 5 (ADRs 0057–0059): the rest of contract
-version 4 and the template's annotation row; `--save-piece`. Each
-section says what is planned.
+**Planned** for iteration 5 (ADR 0058): `--save-piece`. Each section
+says what is planned.
 
 ## Responsibility
 
@@ -45,11 +46,9 @@ must work in both places; see "Typst template design", points 6 and 7.
 
 ## JSON contract (version 4)
 
-ADR 0059, built over iteration 5. Version 3 below, with these changes
-(04 lists the keys in order, and says how layout fills them). The
-first two are **Implemented** since `feat/collapsed-labels`, and each
-voice's `marker` since `feat/collapsed-markers`, and the template reads
-them; the annotation row is **Planned**:
+**Implemented** (ADR 0059), built over iteration 5's `feat/collapsed`:
+version 3 below, with these changes (04 lists the keys in order, and
+says how layout fills them). The template reads them all:
 
 - `version` is 4.
 - `lanes`, `lane` and `sizes.lane_width` become `rows`, `row` and
@@ -381,8 +380,8 @@ third layer over the notes, since a grid can't overlap its cells:
   event whose `fill` is `null` (`:fill none`) is its text alone, which
   also draws the `"-"` of `:holds dash`.
 
-**Planned** for version 4 (ADRs 0057, 0059), except the part marks,
-changing version 3's drawing, which follows:
+**Implemented** for version 4 (ADRs 0056, 0057, 0059), changing
+version 3's drawing, which follows:
 
 - **No overlays**: the third layer is gone.
 - **The annotation row**: one row of `cell_height`, above or below the
@@ -392,7 +391,9 @@ changing version 3's drawing, which follows:
   row-label column, as a row label is. Each item spans its columns,
   with its text near-black (`#222222`) on one line: aligned as `align`
   says when it fits, otherwise left-aligned and cut at the item's last
-  column. A continued item's text is written again.
+  column. A continued item's text is written again. A figure without
+  `annotation` (version 3) is drawn without the row. The text is 0.9em,
+  with 2pt of room at each end.
 - **Part marks**: in a voice with a `marker`, each note gets its
   symbol (a small filled `dot`, an open `ring` or a `cross`), centred
   in the note's cell, sized as `symbol_size` × the cell's narrower

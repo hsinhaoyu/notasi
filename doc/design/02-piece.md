@@ -17,12 +17,15 @@ default since `feat/drawing-header`, and the score's and group's
 and invariant 9 since `feat/drawing-output`. The glossary's names
 (`pitch`, `scale-pitches`, `note-pitch`) and the piece's `info` since
 iteration 5's `feat/collapsed-terms`; the group's label settings,
-`group-row-keys` and `note-row-label` since `feat/collapsed-labels`.
-Tests in `tests/piece.scm`.
+`group-row-keys` and `note-row-label` since `feat/collapsed-labels`;
+`rows` `compact` since `feat/collapsed-compact`; the `marker` record
+and the group's `part-marker` since `feat/collapsed-markers`; pattern
+and span annotations, a part's `texts`, the `free-text` and
+`annotation-row` records and the group's `annotation` since
+`feat/collapsed-annotation`, so every record change of "Iteration 5"
+is built. Tests in `tests/piece.scm`.
 
-**Planned** for iteration 5: the rest of the record changes in
-"Iteration 5" below (pattern annotations, free text, the group's new
-settings, the remaining renames), and saving the piece (ADR 0058).
+**Planned** for iteration 5: saving the piece (ADR 0058).
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -125,6 +128,7 @@ pattern
   instrument : instrument              the instrument it is written for
   short      : string
   long       : string
+  annotation : string | #f             `:annotation`
   location   : source location
 
 part
@@ -133,6 +137,7 @@ part
   events     : list of event           sorted by start
   origin     : symbol                  written | timekeeper | colotomy
   spans      : list of pattern-span    the pattern uses, sorted by start
+  texts      : list of free-text       `(text ...)`, sorted by start
   location   : source location
 
 event
@@ -144,6 +149,7 @@ pattern-span
   pattern  : pattern
   short    : string                    the names in force at this use: the
   long     : string                    pattern's, unless the use gave others
+  annotation : string | #f             likewise: the use's, else the pattern's
   start    : rational                  pulses
   end      : rational
   depth    : integer                   0 for a pattern used in the part,
@@ -179,7 +185,7 @@ group                                  every setting filled in (ADR 0033)
   short         : string               the short label
   subtitle      : string | #f
   labels        : symbol               long | short | first-long
-  rows          : symbol               notes | parts | single
+  rows          : symbol               notes | parts | compact
   members       : list of (part . row-label)
                                        row-label: a string, the part's
                                        name unless `:label` gave one
@@ -188,23 +194,23 @@ group                                  every setting filled in (ADR 0033)
   note-label-octave? : boolean         octave numbers in note labels
   fill          : symbol               colour | none
   holds         : symbol               none | dash
-  pattern-names : symbol               none | short | long
-  pattern-level : integer
+  annotation    : annotation-row | #f  the annotation row; #f for none
   keys          : symbol | (note . note)   used | all, or the
                                        lowest and highest note shown
                                        (`:keys (LOW HIGH)`); `used`
-                                       for `parts` and `single` rows
+                                       for `parts` and compact rows
   row-label-octave? : boolean          octave numbers on
                                        row labels
   key-numbers?  : boolean              a column of key
                                        numbers; #f for strokes, `parts`
-                                       and `single` rows
+                                       and compact rows
   row-labels    : symbol               none | pitch-name |
                                        pitch-display-name: the pitch
                                        column
   display       : list of (symbol . string)   stroke name
                                        and the form shown for it in this
                                        score (`:display`); '() for none
+  part-marker   : list of (part . marker)   the marked parts; '() for none
   background    : symbol               grid | vertical |
                                        horizontal | empty
   scheme        : symbol               e.g. by-pitch
@@ -286,7 +292,7 @@ construction, since events are built from the tokens.
    group's parts are either all pitched or all on stroke instruments
    (ADR 0034).
 7. A group with `fill` `none` has a `note-label` other than `none`
-   (ADR 0054); `parts`, `single` and compact rows need none.
+   (ADR 0054); `parts` and compact rows need none.
 8. Part names are unique in the piece, generated parts included, and
    score names are unique.
 9. Score names contain no `_` (ADR 0040).
@@ -297,19 +303,19 @@ construction, since events are built from the tokens.
     `display` is a stroke of an instrument in the group. A group with
     `key-numbers?` is pitched, with `rows` `notes`.
 11. The parts in a group's `part-marker` are members of the group,
-    each in one entry (since `feat/collapsed-markers`). **Planned**:
-    its `annotation-part` too.
+    each in one entry (since `feat/collapsed-markers`), and so is its
+    annotation row's part (since `feat/collapsed-annotation`).
 
 ## Iteration 5
 
-**Planned** (ADRs 0051, 0054–0057). The records above change as
-follows when the milestones are built; the reader fills every new
-field, so layout never sees a missing one.
+**Implemented** (ADRs 0051, 0054–0057), slice by slice in
+`feat/collapsed`. The records above changed as follows; the reader
+fills every new field, so layout never sees a missing one.
 
 Renamed to the glossary's terms (ADR 0051), when a milestone next
 touches them, in the slice named:
 
-| Now | Planned | Slice |
+| Before | Now | Slice |
 |---|---|---|
 | record `degree` (`make-degree`, `degree?`, `degree-…`) | `pitch` (`make-pitch`, `pitch?`, `pitch-…`) | **Implemented** (`feat/collapsed-terms`) |
 | `scale-degrees` | `scale-pitches` | **Implemented** (`feat/collapsed-terms`) |
@@ -322,7 +328,8 @@ New and changed fields:
 The piece's `info` (accessor `piece-info`, the last argument of
 `make-piece`) is **Implemented** since `feat/collapsed-terms`: the
 piece information keys without the colon (`composer`, `remarks`, ...),
-kept as written, never printed. The rest is Planned:
+kept as written, never printed. The rest, since
+`feat/collapsed-annotation` unless marked:
 
 ```
 pattern
@@ -337,23 +344,29 @@ part
                                        by start, written or reached
                                        through patterns and `rep`
 
-free-text                              (new) takes no time
+free-text                              takes no time
   start       : rational               pulses
   length      : rational | #f          `(text STRING LENGTH)`; #f for a
                                        point, which runs to the next text
   text        : string
 
 group (note-label, note-label-octave?, row-labels and
-row-label-octave? are Implemented since feat/collapsed-labels; see
-the group record above)
+row-label-octave? since feat/collapsed-labels; see the group record
+above)
   rows              : symbol           notes | parts | compact
   part-marker       : list of (part . marker)   '() for none
-                                       (Implemented since
-                                       feat/collapsed-markers)
+                                       (since feat/collapsed-markers)
   annotation        : annotation-row | #f       #f: no annotation row
   scheme            : symbol           e.g. by-pitch
   colors            : list of (symbol . string) pitch name and "#rrggbb"
   (pattern-names and pattern-level are removed)
+
+  Constructor places (feat/collapsed-annotation): make-pattern takes
+  annotation after long; make-pattern-span, annotation after long;
+  make-part, texts after spans; make-group, one field annotation where
+  pattern-names and pattern-level were. The new records are
+  (make-free-text start length text) and (make-annotation-row part
+  position align level text label).
 
   part-marker goes in make-group just after display, before scheme
   (feat/collapsed-markers); marker is (make-marker symbol symbol-size
@@ -364,7 +377,7 @@ the group record above)
   note-names? was, row-label-octave? where octave-numbers? was, and
   row-labels where row-labels? was.
 
-marker                                 a part's marks (Implemented since
+marker                                 a part's marks (since
                                        feat/collapsed-markers)
   symbol       : symbol                none | dot | ring | cross
   symbol-size  : number | #f           fraction of the cell's narrower
@@ -373,7 +386,7 @@ marker                                 a part's marks (Implemented since
   border       : string | #f           "#rrggbb"; #f: the normal border
   border-width : string | #f           a Typst length; #f: the default
 
-annotation-row                         (new)
+annotation-row
   part      : part                     a member of the group
   position  : symbol                   above | below
   align     : symbol                   left | center | right
