@@ -1,6 +1,6 @@
 # 0046 Common colotomies are defined in the gong-kebyar template
 
-Status: accepted (2026-11-23)
+Status: superseded by 0053
 
 Context: Iteration 2 left colotomies out of the `gong-kebyar` template (recorded in 01, not in an ADR): every piece defined its own. Gilak is used in many compositions, and three of the examples repeated the same definition. A template may already hold `colotomy` forms (01, "use").
 

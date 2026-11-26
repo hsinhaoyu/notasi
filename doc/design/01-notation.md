@@ -2,7 +2,7 @@
 
 Status: implemented (iterations 2 and 3).
 The music below is read since milestone 1 (`feat/music`): options,
-`part`, degrees, strokes and instruments, durations, `rep`, colotomies
+`part`, pitches, strokes and instruments, durations, `rep`, colotomies
 and patterns; scores, groups and every printing option since
 milestone 2 (`feat/scores`); parts written with `:instrument`, also
 inside a colotomy (ADR 0038), and `gilak` and `bapang` in the
@@ -12,6 +12,19 @@ Labelled number rows (ADR 0039) and the pickup shown as cycle 0 since
 `feat/drawing-lines`; `:keys`, `:octave-numbers`, `:display`,
 `:key-numbers` and `:row-labels` since `feat/drawing-rows`; no `_` in
 score names (ADR 0040) since `feat/drawing-output`.
+
+**Planned** for iteration 5 (ADRs 0053–0057): information about a
+piece; `bapang-8`, `bapang-16` and `gegaboran` in the template, in
+place of `bapang`; `:note-label`, a widened `:row-labels`, and
+`:row-label-octave` and `:note-label-octave`, in place of
+`:note-names` and `:octave-numbers`; `:rows compact` in place of
+`single`; `:part-marker`; the annotation row, pattern annotations and
+`(text ...)`, in place of `:pattern-names` and `:pattern-level`;
+`:scheme by-pitch` in place of `by-degree`; the glossary's terms
+(ADR 0051): pitch, pitch name and pitch display name, not degree.
+Until they are built, the reader takes the old options and names. The
+removed ones get no migration: once the new ones are built, they are
+unknown keys or values, errors like any other.
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -33,11 +46,11 @@ notation and the `piece` records must not throw away anything a player
 would need. In particular:
 
 - **Every token has a musical meaning, and display is kept separate.**
-  Tokens say what sounds and when. How the music looks (display forms,
+  Tokens say what sounds and when. How the music looks (display names,
   colours, scores, system breaks) never changes what sounds, and nothing
   that matters for sound is expressed only through display.
 - **Notes stay symbolic.** Playback would turn notes into pitches with
-  a tuning table looked up by note name (ADR 0003), not by storing
+  a tuning table looked up by pitch name (ADR 0003), not by storing
   frequencies on notes.
 - **Durations are exact.** Times are exact rationals in pulses, so a
   player can tell when each note starts and stops.
@@ -86,7 +99,7 @@ A short piece:
 
 (score full
   (group "Ugal" ugal)
-  (group "Gong, kempli" :note-names yes  gong kempli))
+  (group "Gong, kempli" :note-label pitch-display-name  gong kempli))
 ```
 
 The gong and kempli parts are generated from the colotomy `gilak`,
@@ -97,7 +110,7 @@ which comes from the template (ADR 0046).
 Optional settings are written as `:key value` pairs (ADR 0026):
 
 ```scheme
-(piece "Jaya Semara: pangecet" :colotomy bapang :pickup 1)
+(piece "Jaya Semara: pangecet" :colotomy bapang-16 :pickup 1)
 (part :instrument pemade :name polos  o3:1/4 - o3 - || ...)
 ```
 
@@ -122,6 +135,38 @@ Exactly one per file, first.
 | `:pickup P` | 0 | The piece starts P pulses before the end of a cycle. A whole number of pulses, at most one cycle. An error without a colotomy. |
 
 A piece with a colotomy is its pickup plus whole cycles.
+
+**Planned** (iteration 5): information
+about the piece, all optional, every value a string:
+
+| Option | Meaning |
+|---|---|
+| `:composer STRING` | Who composed the music. |
+| `:composition-year STRING` | When it was composed. |
+| `:transcriber STRING` | Who wrote it down in notasi, or in the source notasi follows. |
+| `:transcription-year STRING` | When it was transcribed. |
+| `:source STRING` | Where the transcription comes from: a book, a recording, a teacher. |
+| `:contributor STRING` | Who contributed the file, e.g. to `examples/contrib/` (07). |
+| `:contribution-year STRING` | When it was contributed. |
+| `:performer STRING` | Who plays the music the transcription follows: `"Sanggar Çudamani, 2005"`. |
+| `:remarks STRING` | Free text about the piece: its history, what is left out. |
+
+```scheme
+(piece "Jaya Semara: pangecet" :colotomy bapang-16 :pickup 1
+  :composer "I Wayan Beratha" :composition-year "1964"
+  :source "Lisa Gold, Music in Bali (2005), figure 3.1 and activities 3.1-3.2"
+  :performer "Sanggar Çudamani")
+```
+
+- notasi checks only that each value is a string, and keeps it exactly
+  as written, line breaks included. A year can be `"1964"`, `"1930s"`
+  or `"c. 1964"`; two people, "traditional" or "unknown" are written
+  however the writer likes.
+- The information is data, never printed: no score option draws it,
+  and the figure doesn't change. It is kept in the piece (02) and in
+  the saved piece (05).
+- Other roles (an arranger, a performance year apart) are added when a
+  piece needs them.
 
 ### `(use TEMPLATE)`
 
@@ -149,13 +194,15 @@ Rules (**Implemented** for the v1 forms):
 - Names are resolved after all templates are loaded, so if a piece
   replaces a scale, the template's instruments use the replacement.
 
-### `(scale NAME DEGREE ...)`
+### `(scale NAME PITCH ...)`
 
-Names the degrees of a scale, in ascending order within one octave.
+Names the pitches of a scale, in ascending order within one octave.
 Used to validate instrument notes and to order them by pitch. Unpitched
 instruments use a stroke set instead (see `strokes` below).
 
-Each DEGREE is a bare name (`ding`) or a list of a name and options:
+Each PITCH is a bare name (`ding`) or a list of a name and options.
+In the glossary's terms (ADR 0051), `selisir` is the scale name, `ding`
+a pitch name, and its `:display`, `i`, its pitch display name:
 
 ```scheme
 (scale selisir
@@ -165,9 +212,9 @@ Each DEGREE is a bare name (`ding`) or a list of a name and options:
 
 | Option | Default | Meaning |
 |---|---|---|
-| `:alias NAME` or `:alias (NAME ...)` | none | Other names for the degree. An alias can be used anywhere the degree name can: `i2` means `ding2` in instrument definitions, parts and patterns. |
-| `:display STRING` | the degree name | The form drawn in the grid. Any text, including Unicode symbols. |
-| `:damped STRING` | the display form | The form drawn for a note that is cut short (see "Which name a note shows"). |
+| `:alias NAME` or `:alias (NAME ...)` | none | Other names for the pitch. An alias can be used anywhere the pitch name can: `i2` means `ding2` in instrument definitions, parts and patterns. |
+| `:display STRING` | the pitch name | The pitch display name: how the pitch is drawn. Any text, including Unicode symbols. |
+| `:damped STRING` | the pitch display name | The damped form, drawn for a note that is cut short (see "What a note shows"). |
 
 Tenzer writes Baris in syllables, `nang` for a ringing note and `na'`
 for a damped one:
@@ -177,11 +224,12 @@ for a damped one:
 ```
 
 Rules:
-- Degree names and aliases must be unique within the scale.
+- Pitch names and aliases must be unique within the scale.
 - Names and aliases must not end in a digit, so that the octave number
   in `ding2` is unambiguous.
-- No degree may be called `rep` or `@`, which are reserved list heads.
-- The reader resolves aliases: the piece always stores the degree's own
+- No pitch may be called `rep`, `@` or (**Planned**) `text`, which are
+  reserved list heads.
+- The reader resolves aliases: the piece always stores the pitch's own
   name, so `i2` and `ding2` are the same note.
 
 ### `(strokes NAME STROKE ...)`
@@ -190,8 +238,9 @@ Names the strokes of unpitched instruments (gongs, drums, kempli). It
 works like `scale`, but strokes have no pitch and no octave, so they are
 not in any order.
 
-Each STROKE uses the same syntax and options as a scale degree: a bare
-name (`G`) or a name with options (`(GL :display "G")`). Following
+Each STROKE uses the same syntax and options as a pitch: a bare
+name (`G`) or a name with options (`(GL :display "G")`); its
+`:display` is its stroke display name. Following
 Gold's symbols, the gongs of the `gong-kebyar` template are one
 instrument with strokes `G` (gong wadon), `GL` (gong lanang), `P`
 (kempur) and `T` (klentong).
@@ -201,15 +250,15 @@ Rules:
 - A stroke set and a scale cannot share a name, because an instrument
   refers to either by name.
 - Stroke names may end in a digit, since there is no octave number.
-- No stroke may be called `rep` or `@`.
+- No stroke may be called `rep`, `@` or (**Planned**) `text`.
 
 ### `(instrument NAME SCALE-OR-STROKES NOTE ...)`
 
 An instrument is its keys (or strokes) in ascending order, and nothing
 about how it is played or printed. It has no options.
 
-- With a scale, each NOTE is `DEGREE` followed by an octave number:
-  `ding2`. The degree must be in the scale. Notes must be listed in
+- With a scale, each NOTE is a key: a pitch name followed by an octave
+  number, `ding2`. The pitch must be in the scale. Notes must be listed in
   ascending pitch order.
 - Octave numbers are shared by all instruments: `o2` on the ugal and
   `o2` on the jublag are the same pitch. They are not tied to any
@@ -234,11 +283,27 @@ about how it is played or printed. It has no options.
   told apart; a piece that prints both as "G", as Tenzer does,
   redefines the strokes. The template defines the common colotomies
   (ADR 0046), `gilak` (8 pulses: gong
-  lanang on 4, kempur on 5 and 7, gong on 8), `gilak-2` (the same with
-  the gong on 4 instead of the gong lanang, as Baris uses) and `bapang` (16 pulses:
-  kempur on 4 and 12, klentong on 8, gong on 16); a piece names one
+  lanang on 4, kempur on 5 and 7, gong on 8) and `gilak-2` (the same with
+  the gong on 4 instead of the gong lanang, as Baris uses); a piece names one
   with `:colotomy` and writes no `colotomy` form, or defines its own,
   or replaces the template's with one of the same name.
+
+  Bapang (ADR 0053): **Implemented** today as `bapang` (16 pulses:
+  kempur on 4 and 12, klentong on 8, gong on 16). **Planned**: `bapang`
+  is replaced by two colotomies named for their length, and the
+  template gets `gegaboran`. Pulses are Gold's kempli beats:
+
+  | Colotomy | Pulses | Strokes | Source |
+  |---|---|---|---|
+  | `bapang-8` | 8 | kempur on 2 and 6, klentong on 4, gong on 8 | Gold, figure 5.11, p. 110 |
+  | `bapang-16` | 16 | kempur on 4 and 12, klentong on 8, gong on 16 | Gold, p. 58 (Jaya Semara), p. 142 |
+  | `gegaboran` | 16 | the strokes of `bapang-16` | Gold, figure 5.11, p. 110 |
+
+  Plain `bapang` then is an unknown colotomy. `gegaboran` is in the
+  template though no example uses it, an exception to ADR 0046's rule,
+  so a writer can name the meter they mean. Other lengths (Gold's
+  32-pulse bapang, p. 142) are written in the piece as a `colotomy`;
+  notasi has no operation that stretches one.
 
 - With a stroke set, each NOTE is a stroke from that set (`G`, `dag`),
   in any order. The order sets the note indices and the order of the
@@ -248,7 +313,25 @@ about how it is played or printed. It has no options.
 ### `(colotomy NAME LENGTH :key value ... (part ...) ...)`
 
 A colotomic meter (ADRs 0030, 0038): a cycle of LENGTH pulses and the
-gong parts that mark it. The common ones come from the `gong-kebyar`
+gong parts that mark it.
+
+What a colotomy is (**Planned** wording for the manual and the
+template's comments, ADR 0053):
+
+- "Colotomic" is a word from Western writing about gamelan; there is no
+  single Balinese term, and each meter has its own name, such as gilak
+  or bapang (Gold, p. 42). `colotomy` is notasi's word for one named
+  meter at one length.
+- The same meter can be played at more than one length (bapang at 8, 16
+  and 32 pulses). Each length is its own colotomy.
+- The gongs alone don't tell meters apart: 16-pulse bapang and
+  gegaboran share their strokes and differ in drumming, mood and genre,
+  which a `colotomy` doesn't record. Its name is the writer's label for
+  the meter.
+- A length from a source says whose count it is: notasi's pulses are
+  kempli strokes (ADR 0009), Gold's beats.
+
+The rest of this section is **Implemented**. The common ones come from the `gong-kebyar`
 template (ADR 0046); a piece writes a `colotomy` form for a
 meter the template lacks, or to change one. The template's `gilak`:
 
@@ -315,8 +398,8 @@ Rules:
 
 | Token | Meaning |
 |---|---|
-| `e2`, `ding2` | Strike a note by name (degree or alias, then octave). |
-| `5` | Strike key 5 of the instrument (1-based). Not a cipher degree. |
+| `e2`, `ding2` | Strike a key by name (pitch name or alias, then octave number). |
+| `5` | Strike key number 5 of the instrument (1-based). Not a cipher digit. |
 | `e2:2`, `5:1/4` | Strike with a duration in pulses. The duration stays in force for the following tokens until another is written. |
 | `_` | Hold: the previous note keeps sounding for one more duration. Gold's cipher dot. |
 | `-`, `-:3` | Rest: nothing is struck for one duration, and the previous note is damped. |
@@ -327,6 +410,7 @@ Rules:
 | `@NAME` | Play the pattern NAME (see `pattern`). |
 | `(@ NAME :key value ...)` | Play the pattern NAME, changed by operators. |
 | `/` | Visual separator for the reader of the file; ignored, takes no time. |
+| `(text STRING)`, `(text STRING LENGTH)` | **Planned** (ADR 0057). Free text, shown in an annotation row: at this point, or across LENGTH pulses from it. Takes no time. |
 
 Durations:
 - A part starts with a duration of 1 pulse, so its first note sets its
@@ -350,6 +434,20 @@ Rules:
   `4 1/2`, or as `pulse P` without a colotomy: "part `ugal`, cycle 2,
   pulse 4 1/2: `||` is not at the end of a cycle". An error inside a
   pattern names the whole chain of uses, with the line of each form.
+
+Free text (**Planned**, ADR 0057):
+- It is written where it happens, so it moves with the music. It may be
+  written inside a pattern, so that every use carries it, and `rep`
+  repeats it.
+- It is shown only in the annotation row of a group whose
+  `:annotation-part` is this part (see `score`), whatever that row's
+  `:annotation-level`; elsewhere it is ignored, without a warning.
+- `(text STRING)` runs from its point to the next text in the
+  annotation row, or to the end of the system, and starts at its point
+  whatever the alignment.
+- Where free text overlaps a pattern's text, the free text is drawn and
+  the pattern's text is cut where it starts.
+- STRING must be a string, and LENGTH a duration greater than 0.
 
 Characters to avoid as tokens: `.` (pair syntax) and `#` (reader
 extensions). A lone `.` is not a rest: Guile's `read` takes it as pair
@@ -376,6 +474,7 @@ A named figure, written for one instrument (ADR 0029):
 | `:instrument INSTRUMENT` | required | The instrument the pattern is written for. |
 | `:short STRING` | NAME | A short name, which a score can print over the notes. |
 | `:long STRING` | the short name | A long name, likewise. |
+| `:annotation STRING` | none | **Planned** (ADR 0057). A text about the pattern ("norot on 1"), which an annotation row can show instead of its name. |
 
 - NAME must not start with `:` or `@`.
 - The body is ordinary part tokens: notes, key numbers, durations, `_`,
@@ -400,11 +499,12 @@ The list form applies operators, written as options:
 
 | Operator | Meaning |
 |---|---|
-| `:step N` | Move every note N degrees along the scale (i o e u a, then i in the next octave); key numbers move N keys. The figure keeps its shape on the keys. |
+| `:step N` | Move every note N pitches along the scale (i o e u a, then i in the next octave); key numbers move N keys. The figure keeps its shape on the keys. |
 | `:short S`, `:long L` | Names for this use, replacing the pattern's, so that a moved figure can be named after what it now plays. |
+| `:annotation A` | **Planned** (ADR 0057). The annotation for this use, replacing the pattern's. |
 
 ```scheme
-(@ polos-1 :step -1 :short "6")    ; a degree lower, named "6" here
+(@ polos-1 :step -1 :short "6")    ; a pitch lower, named "6" here
 ```
 
 Operators apply only to patterns, not to `rep` blocks or parts.
@@ -425,8 +525,8 @@ Rules:
   a cycle. A `|` or `||` inside it is checked where it is used, against
   the piece's time.
 - **Each use is recorded** in the piece: its part, start, end, nesting
-  level, and the names in force at that use, so that a score can mark
-  the span.
+  level, and the names in force at that use (and, **Planned**, its
+  annotation), so that a score can name it in an annotation row.
 
 Errors where the pattern is defined: no `:instrument`, or an unknown
 one; a note, key number or stroke the instrument does not have; a
@@ -441,10 +541,12 @@ outside the instrument's range.
 How the music is printed (ADR 0031). A file may have several scores:
 
 ```scheme
-(score full :pattern-names short
-  (group "Gangsa pemade" :short "Pem." :subtitle "norot"  polos sangsih)
-  (group "Jublag"        :short "Jub."  jublag)
-  (group "Gong, kempli"  :note-names yes  gong kempli))
+(score full
+  (group "Gangsa pemade" :short "Pem." :subtitle "norot"
+         :annotation-part polos  polos sangsih)
+  (group "Jublag"        :short "Jub."  :rows compact  jublag)
+  (group "Gong, kempli"  :rows compact :note-label pitch-display-name
+    gong kempli))
 ```
 
 - NAME names the score.
@@ -496,40 +598,165 @@ In the grid:
 
 | Option | Level | Default | Meaning |
 |---|---|---|---|
-| `:note-names yes/no` | score, group | `no` | Write each note's or stroke's name in its cell. By default a note is only a colour, strokes too. |
-| `:pattern-names none/short/long` | score, group | `none` | Write pattern names over the notes, across each use of a pattern. |
-| `:pattern-level N` | score, group | `0` | Which level of nested patterns to name: 0 for patterns used directly in the part, 1 for patterns inside those, and so on. |
-| `:fill colour/none` | score, group | `colour` | `none` draws the names alone, without a coloured box. |
+| `:note-label none/pitch-name/pitch-display-name/key-number` | score, group | `none` | **Planned** (ADR 0054). What is written in each note: nothing (colour only), its pitch name (`dong2`), its pitch display name (`o2`), or its key number (`2` on the jublag, from 1 at the lowest key). See "What a note shows". |
+| `:note-label-octave yes/no` | score, group | `yes` | **Planned** (ADR 0054). With `pitch-name` or `pitch-display-name`, whether a note's label ends in its octave number (`o2`) or not (`o`). |
+| `:fill colour/none` | score, group | `colour` | `none` draws the labels alone, without a coloured box. |
 | `:holds none/dash` | score, group | `none` | `dash` writes "-" in every step a note is held, as in a sung line. |
-| `:rows notes/parts/single` | score, group | `notes` | `notes`: one row per key or stroke used. `parts`: one row per part, labelled. `single`: all the group's parts on one row. |
+| `:rows notes/parts/compact` | score, group | `notes` | What a row stands for. `notes`: one row per key or stroke used. `parts`: one row per part, labelled. `compact` (**Planned**, ADR 0055): the group's parts merged into one line, with a row added where keys sound together. |
 | `:keys used/all/(LOW HIGH)` | score, group | `used` | With `:rows notes`, which rows a group has: the keys or strokes played in the score's range, every key or stroke of the instrument, or the keys from LOW up to HIGH, both included (`:keys (a1 u2)`). |
-| `:octave-numbers yes/no` | score, group | `yes` | Write the octave number after each row label (`i2`), or the display form alone (`i`). Only rows of pitched keys change. |
-| `:key-numbers yes/no` | score, group | `no` | A column of key numbers to the left of the row labels: each row's key on its instrument, from 1 (on the ugal, `a1` is key 4). Pitched keys only. |
-| `:row-labels yes/no` | score, group | `yes` | The column of row labels (note names, stroke names or parts' labels); with `no` the column is left out. |
-| `:display ((STROKE STRING) ...)` | score, group | none | Show these strokes with these forms in this score, in row labels and note names, instead of their own display forms: `:display ((GL "G"))`. |
+| `:row-labels none/pitch-name/pitch-display-name` | score, group | `pitch-display-name` | **Planned** (ADR 0054). The pitch column on `notes` rows: each row's pitch name (`dong2`) or pitch display name (`o2`); on `parts` rows the part's label, on `compact` rows nothing. `none` leaves the column out on every kind of row. |
+| `:row-label-octave yes/no` | score, group | `yes` | **Planned** (ADR 0054). Whether the pitch column's labels end in the octave number (`i2`) or not (`i`). Only rows of pitched keys change. |
+| `:key-numbers yes/no` | score, group | `no` | A column of key numbers to the left of the pitch column: each row's key on its instrument, from 1 (on the ugal, `a1` is key 4). Pitched keys on `notes` rows only. |
+| `:display ((STROKE STRING) ...)` | score, group | none | Show these strokes with these stroke display names in this score, in row labels and note labels: `:display ((GL "G"))`. |
 | `:background grid/vertical/horizontal/empty` | score, group | `grid` | The lines behind the notes: pulse lines and a line between every two rows (`grid`), pulse lines only (`vertical`), row lines only (`horizontal`), or neither (`empty`). The lines between groups and the cycle lines are always drawn (ADR 0041). |
+| `:part-marker ((PART :key value ...) ...)` | group | none | **Planned** (ADR 0056). Tells the group's parts apart: each entry gives a part of the group a symbol, a border, or both (see "Telling parts apart"). |
+
+**Implemented** until the planned options above are built, and then
+removed, with no migration:
+
+- `:note-names yes/no` (default `no`): write each note's or stroke's
+  name in its cell. Replaced by `:note-label`.
+- `:octave-numbers yes/no` (default `yes`): the octave number after
+  each row label and note label. Replaced by `:row-label-octave` and
+  `:note-label-octave`.
+- `:row-labels yes/no` (default `yes`): `yes` is today's
+  `pitch-display-name`, `no` is `none`.
+- `:rows single`: all the group's parts on one row, an error where two
+  notes fall in one cell. Replaced by `compact`.
+- `:pattern-names none/short/long` (default `none`) and
+  `:pattern-level N` (default `0`): pattern names written over the
+  notes, across each use of a pattern, at one level of nesting.
+  Replaced by the annotation row.
+
+The annotation row (**Planned**, ADR 0057): one row of text only, with
+no background and no notes, above or below a group's rows. Its options
+are set on a group, never on a score:
+
+| Option | Default | Meaning |
+|---|---|---|
+| `:annotation-part PART` | no annotation row | Turns the annotation row on, taking its text from PART, a part of the group. |
+| `:annotation-position above/below` | `below` | Where the row goes. |
+| `:annotation-align left/center/right` | `left` | How text is aligned in its span. |
+| `:annotation-level N` | `0` | Which level of nested patterns to name: 0 for the patterns the part uses directly, 1 for the patterns inside those, and so on. |
+| `:annotation-text short/long/annotation` | `annotation` | What a pattern shows: its short name, its long name, or its annotation (its long name when it has none). |
+| `:annotation-label STRING` | `""` | The row's label, in the pitch column. |
+
+- Each use of a pattern at the chosen level writes its text across the
+  use's columns. Where there is no pattern at that level, the row is
+  empty; free text (`(text ...)`) in the part is shown too.
+- The row is always one line. Text longer than its span is cut at the
+  span's end, and is then left-aligned whatever `:annotation-align`
+  says, so its start shows.
+- At a system break a span is split, and its text is written again on
+  the next system.
+- Cycle lines run through the annotation row; pulse lines don't. The
+  group's frame encloses it.
+- With `:row-labels none` there is no pitch column, and the annotation
+  row has no label.
 
 Colour and size (ADR 0032):
 
 | Option | Level | Default | Meaning |
 |---|---|---|---|
-| `:scheme NAME` | score, group | `by-degree` | How notes are coloured (04, "Note style"). |
+| `:scheme NAME` | score, group | `by-degree`; **Planned**: `by-pitch` | How notes are coloured (04, "Note style"). `by-pitch` (ADR 0056, `by-degree` renamed, with no migration) colours each note by its pitch, the same in every octave. |
 | `:palette NAME` or `:palette (COLOUR ...)` | score, group | `pastel1` | The colours, by name or as a list of `"#rrggbb"`. |
-| `:colors ((DEGREE COLOUR) ...)` | score, group | none | Colours for particular degrees, e.g. `((ding "#000000"))`. |
+| `:colors ((PITCH COLOUR) ...)` | score, group | none | Colours for particular pitches, by pitch name, e.g. `((ding "#000000"))`. |
 | `:font-size LENGTH` | score | `"8pt"` on its own page; the document's size in a document | The base text size. |
 | `:cell-width LENGTH`, `:cell-height LENGTH` | score | `"2em"`, `"2em"` | The grid cell. Equal sizes make square notes. |
 
 A LENGTH is a string holding a Typst length, a number and a unit
 (`"8pt"`, `"2em"`, `"4mm"`). Sizes in `em` scale with `:font-size`.
 
-#### Which name a note shows
+#### What a note shows
 
-With `:note-names yes`, a note shows its damped form (`:damped`) when it
-lasts no longer than one column of the grid, and its display form
-otherwise. Without a damped form, the display form is used for both.
-The test uses the note's written duration: strokes, which are to be
-drawn one column wide (04, ADR 0042), still show `du` or `du'` as
-written.
+**Implemented**, with `:note-names yes`: a note shows its damped form
+(`:damped`) when it lasts no longer than one column of the grid, and
+its pitch display name otherwise. Without a damped form, the pitch
+display name is used for both. The test uses the note's written
+duration: strokes, which are to be drawn one column wide (04,
+ADR 0042), still show `du` or `du'` as written.
+
+**Planned** (ADR 0054), with `:note-label`:
+
+| `:note-label` | A jublag `o2` | Kendang `du` | Gong lanang `GL` |
+|---|---|---|---|
+| `none` | nothing | nothing | nothing |
+| `pitch-name` | `dong2` | `du` | `GL` |
+| `pitch-display-name` | `o2` | `du'` | `GL`, or `G` with `:display ((GL "G"))` |
+| `key-number` | `2` | `du'` | `GL` (or `G`) |
+
+- `pitch-display-name` shows the damped form on a one-column note, as
+  above; `pitch-name` and `key-number` always show the plain form.
+- Strokes have no keys, so `key-number` shows a stroke's display name,
+  as `pitch-display-name` does, and a score set to `key-number` keeps
+  its gongs and kempli readable. The octave options don't apply to
+  strokes.
+- The pitch column and the notes are set apart, so a group can write
+  `o` in the column and `dong2` in the notes:
+
+  ```scheme
+  (group "Jublag"
+         :row-labels pitch-display-name  :row-label-octave no
+         :note-label pitch-name          :note-label-octave yes
+    jublag)
+  ```
+
+- On collapsed rows (`parts`, `compact`) a row stands for no pitch, so
+  a note shows which it is by its colour and, if asked, its label:
+
+  | | `notes` rows | `parts` rows | `compact` rows |
+  |---|---|---|---|
+  | Pitch column (`:row-labels`) | the pitch, in the chosen form | the part's label | blank |
+  | Key-number column (`:key-numbers`) | the key | error on the group; ignored from the score | error on the group; ignored from the score |
+
+#### Compact rows
+
+**Planned** (ADR 0055). `:rows compact` merges the group's parts into
+one line, and adds a row only where different keys sound together:
+
+- Two notes sound together when their boxes, as drawn, would overlap:
+  from a note's start to its start plus its drawn length. A held note
+  counts for its whole length, a stroke for its one column (ADR 0042).
+- Each key or stroke keeps one row for the whole score. Rows are filled
+  in the order of the group's keys (highest pitch first; strokes in
+  instrument order), each key going to the first row where it never
+  sounds with a key already there. So the gong and kempli take two
+  rows, G, P and T on one and K on the other, every time; where no two
+  keys ever sound together, all share one row.
+- A chord is one note, its labels joined (`i o`), with the look of its
+  lowest note, as on `parts` rows. A unison (two parts on the same key,
+  start and length) is one note, drawn once, as on `notes` rows.
+- Its rows have no labels.
+
+#### Telling parts apart
+
+**Planned** (ADR 0056). By default a group's parts are drawn alike:
+each note takes its pitch's colour, whichever part plays it. A group
+can mark its parts with `:part-marker`, on every kind of rows and for
+pitched and stroke groups alike:
+
+```scheme
+(group "Gangsa pemade"
+       :part-marker ((sangsih :symbol dot :border "#d62728"))
+  polos sangsih)
+```
+
+| Key | Value | Default |
+|---|---|---|
+| `:symbol` | `none`, `dot`, `ring`, `cross`: small, centred in the note's cell | `none` |
+| `:symbol-size` | a fraction of the cell's narrower side, e.g. `0.3` | chosen by eye when built |
+| `:symbol-color` | `"#rrggbb"` | near-black, as note labels |
+| `:border` | `"#rrggbb"`: a border of that colour, thicker than the normal one | none (the normal border) |
+| `:border-width` | a LENGTH, e.g. `"1pt"` | thicker than the normal border, chosen by eye when built |
+
+- A part with no entry is drawn as without `:part-marker`. Colour
+  stays the pitch colour.
+- A symbol and a note label in one note are both drawn, in the middle
+  of the cell, even if they overlap; the writer chooses a combination
+  that reads well.
+- A unison drawn once (on `notes` and `compact` rows) is drawn under
+  the first part that plays it, with that part's marks only. On `parts`
+  rows each part shows it, with its own marks.
 
 #### Rules
 
@@ -546,24 +773,37 @@ written.
 - `:from` must come before `:to`, and both must lie in the piece.
 - `:rows parts`, `:rows single` and `:fill none` need `:note-names yes`
   on the group, since without names those rows would not show pitch.
+  **Planned** (ADR 0054): only `:fill none` needs a label (a
+  `:note-label` other than `none`), since it draws no box; `parts` and
+  `compact` rows may be colour only.
 - `:keys`: LOW and HIGH are keys of the group's
   instrument, written as in a part, LOW not above HIGH; a range is an
   error on a group of strokes, which has only `used` and `all`; `:keys`
-  on a `:rows parts` or `single` group is an error, and ignored when it
-  comes from the score. A note outside the keys shown is an error
+  on a `:rows parts` or `single` (**Planned**: `compact`) group is an
+  error, and ignored when it comes from the score. A note outside the keys shown is an error
   naming the part, the note, its position and the range.
 - `:key-numbers yes` written on a group of strokes, or on
-  a `:rows parts` or `single` group, is an error; coming from the score,
+  a `:rows parts` or `single` (**Planned**: `compact`) group, is an error; coming from the score,
   it is ignored there.
 - `:display`: each STROKE is a stroke of an instrument in
   the group (on a score, of an instrument in one of its groups); it
   changes only how the stroke is shown in that score.
-- With `:rows single`, two notes may not fall in one cell. With `:rows
+- With `:rows single`, two notes may not fall in one cell (**Planned**:
+  removed with `single`; `compact` adds a row instead). With `:rows
   notes`, two parts may share a cell only as a unison: the same key,
   start and length, which is drawn once.
 - Pattern names: identical names from several parts of a group (the
   same start, length and text) are written once; different names that
   overlap in one group are an error, naming the parts and the position.
+  **Planned**: removed with `:pattern-names`; the annotation row takes
+  one part, so names can't clash.
+- **Planned** (ADR 0056): `:part-marker` on a score, a part not in the
+  group, an unknown key or symbol, a colour not `"#rrggbb"`, a size
+  outside 0 to 1, or a width that isn't a LENGTH is an error.
+- **Planned** (ADR 0057): an annotation row option on a score, an
+  `:annotation-part` that isn't a part of the group, an unknown
+  position, alignment or text, or a level that isn't a whole number
+  from 0 is an error.
 
 #### Files without a score, and choosing one
 
@@ -573,20 +813,21 @@ with every option at its default.
 
 `notasi render FILE --score NAME` prints the score NAME. Without
 `--score`, the first score in the file is printed. A file drawn from a
-chosen score is named `FILE_NAME.pdf` (ADR 0040).
+chosen score is named `FILE_NAME.pdf` (ADR 0040). **Planned**:
+`--all` draws every score, and `--list` lists their names (05).
 
 ## Reading Gold's cipher in this notation
 
 | Gold's cipher | This notation |
 |---|---|
-| 1 2 3 5 6 | i o e u a (degrees, not keys) |
+| 1 2 3 5 6 | i o e u a (pitch names, not key numbers) |
 | a dot under or over a digit (low or high octave) | the octave number of the instrument's key |
 | a dot between digits (an empty beat, the note sustained) | `_` |
 | the last note falls on the gong | it ends a cycle: put `\|\|` after it |
 | read starting from the gong stroke | a one-pulse pickup on the gong |
 | one cipher per beat | one pulse per note, the default pace |
 
-Two traps: bare numbers are keys, not cipher degrees (`3` is the
+Two traps: bare numbers are key numbers, not pitch names (`3` is the
 instrument's third key, not ndeng); and Gold's dot is a hold, not a
 rest.
 
@@ -604,7 +845,9 @@ Later extensions of the notation are listed in the
 
 ## Open questions
 
-None for iteration 3: its design ideas' questions were settled before
+None for iteration 5: its design ideas' questions were settled before
+promotion. To be chosen by eye when built: the default `:symbol-size`
+and `:border-width` of `:part-marker`. None for iteration 3: its design ideas' questions were settled before
 promotion. None for iteration 2. The three questions of v1 are answered: parts
 have equal length, and only colotomy parts shorter than their cycle
 repeat; a rest damps (ADR 0028); octave numbers are shared across

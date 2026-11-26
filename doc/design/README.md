@@ -103,7 +103,7 @@ Each decision's context and consequences are in its record in
 7. Guile 3.0, standard library first: [0007](../decisions/0007-guile-3-standard-library-first.md)
 8. One pitched instrument per group: [0011](../decisions/0011-one-pitched-instrument-per-group.md)
 9. No analysis: [0015](../decisions/0015-no-analysis.md)
-10. Notes are coloured by pitch: [0017](../decisions/0017-notes-are-coloured-by-pitch.md)
+10. Notes are coloured by pitch; parts are marked only when asked: [0056](../decisions/0056-coloured-by-pitch-parts-marked-when-asked.md) (replaces [0017](../decisions/0017-notes-are-coloured-by-pitch.md))
 11. One `notasi` command with subcommands: [0018](../decisions/0018-one-notasi-command.md)
 12. Notes are square blocks; note names are optional: [0019](../decisions/0019-square-notes-optional-names.md)
 13. A plain white grid; notes fill their cells: [0020](../decisions/0020-plain-grid-notes-fill-cells.md)
