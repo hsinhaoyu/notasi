@@ -20,12 +20,15 @@ figures (ADR 0045) and file names `NAME_SCORE` (ADR 0040) since
 and `notasi --version` (ADR 0048), since iteration 4's
 `feat/emacs-preview-draw`; see "The command line as a contract".
 
-**Planned** for iteration 5 (ADRs 0052, 0056–0059, 0061): contract
-version 4 and the template's annotation row and part marks; `notasi
-render --all`, `--one-file`, `--list`, `--format`, `--ppi` and
-`--save-piece`; one line per file written on success; the manual's
-figures committed as PNG, and `make preview` removed. Each section
-says what is planned.
+`notasi render --all`, `--one-file`, `--list`, `--format` and `--ppi`,
+`compile-typst #:ppi`, `render-score` and `render-one-file`, and one
+line per file drawn on success (ADR 0061) since iteration 5's
+`feat/render-all`.
+
+**Planned** for iteration 5 (ADRs 0052, 0056–0059): contract version 4
+and the template's annotation row and part marks; `--save-piece`; the
+manual's figures committed as PNG, and `make preview` removed. Each
+section says what is planned.
 
 ## Responsibility
 
@@ -488,8 +491,9 @@ folder), exactly:
 `(compile-typst typ-path out-path)` runs `typst compile` on TYP-PATH,
 writing OUT-PATH, and returns OUT-PATH. The format comes from
 OUT-PATH's extension: `.pdf`, `.png` (at 144 ppi) or `.svg`; any other
-raises an `&error`. **Planned** (ADR 0061): `#:ppi N` sets a PNG's
-resolution (default 144), passed to Typst as `--ppi`. It runs with `--root` set to TYP-PATH's folder, so
+raises an `&error`. **Implemented** (ADR 0061): `#:ppi N` sets a PNG's
+resolution (default 144), passed to Typst as `--ppi`; `#:ppi` given
+for a `.pdf` or `.svg` is an `&error`, as on the command line. It runs with `--root` set to TYP-PATH's folder, so
 everything the entry file reads must be in that folder. Errors are
 plain `&error`s with a readable message:
 
@@ -520,19 +524,19 @@ OUT-PATH. The template is found as `typst/notasi.typ` along Guile's
 `%load-path`, like the `.nts` templates (03), so running with `-L .`
 finds the repo's; if it can't be found, that is an `&error`.
 
-**Planned** (ADRs 0058, 0061), for `--all`, `--one-file` and
-`--save-piece`, which read the piece once:
+**Implemented** (ADR 0061), for `--all` and `--one-file`, which read
+the piece once:
 
 - `(render-score piece score out-path #:key ppi keep-in)` draws one
   score of a piece already read, as `render-piece` does after reading;
   `render-piece` becomes reading and then `render-score`, and takes
   `#:ppi` too.
-- `(render-scores-to-one-file piece scores out-path #:key keep-in)`
+- `(render-one-file piece scores out-path #:key keep-in)`
   writes one PDF with each of SCORES on its own page, in order, each
   page sized to its score, with its title, subtitle and caption as a
   standalone figure has them. The entry file reads one figure file per
   score and puts a page break between them.
-- Writing the piece (`--save-piece`) is a module of its own beside
+- **Planned** (ADR 0058): writing the piece (`--save-piece`) is a module of its own beside
   `(notasi json)`, as ADR 0058 says; 02 ("Saving the piece") gives its
   format.
 
@@ -587,7 +591,8 @@ and the message, and exits with status 1. OUT defaults to
 (ADR 0040), so drawing several scores of
 one file doesn't overwrite one picture with another.
 
-**Planned** (ADRs 0058, 0061):
+**Implemented** (ADR 0061), except `--save-piece` (**Planned**, ADR
+0058):
 
 ```
 notasi render PIECE.nts [--score NAME | --all [--one-file]]
@@ -600,7 +605,9 @@ notasi render PIECE.nts --list [--save-piece FILE]
   included (`jaya-semara_full.pdf`, `jaya-semara_kotekan.pdf`); a file
   with no `score` form draws its default score to `NAME.EXT`. Without
   `-o` the files go beside the piece. `-o DIR`, an existing folder or a
-  path ending in `/`, puts them in DIR, named the same. The piece is
+  path ending in `/`, puts them in DIR, named the same; a DIR that
+  doesn't exist is made, with any missing folders above it. A path is
+  printed as DIR, one `/`, and the name. The piece is
   read once: a notation mistake stops everything. A score Typst fails
   on prints `notasi: ` and the message, the others are still drawn,
   and the status is 1 if any failed.
@@ -618,7 +625,7 @@ notasi render PIECE.nts --list [--save-piece FILE]
   Typst. A file with no `score` form prints nothing. It reads the
   piece, so a notation mistake is reported as when drawing (status
   1); otherwise the status is 0.
-- **`--save-piece FILE`** saves the piece (02, "Saving the piece"):
+- **Planned** (ADR 0058): **`--save-piece FILE`** saves the piece (02, "Saving the piece"):
   JSON for `.json`, an s-expression for `.scm`, JSON to standard
   output for `-`. The piece is saved once, after it is read and before
   anything is drawn, so it is saved even when a drawing fails. Saving
@@ -633,8 +640,9 @@ notasi render PIECE.nts --list [--save-piece FILE]
   `.pdf`; `--format` disagreeing with `-o`'s extension (`-o out.png
   --format svg`); `--ppi` when the format isn't PNG, or not a whole
   number greater than 0; `--list` with `--all`, `--score`, `-o`,
-  `--format`, `--ppi` or `--one-file`; `--save-piece` without a value,
-  or with an extension other than `.json` or `.scm`. Each prints
+  `--format`, `--ppi` or `--one-file`; (**Planned**) `--save-piece`
+  without a value, or with an extension other than `.json` or `.scm`.
+  An unknown `--format` value is one too. Each prints
   `notasi: `, what is wrong and the usage, as now.
 - `notasi --help` and `notasi render --help` describe the new options.
 
@@ -648,14 +656,14 @@ changes the editor package in the same PR:
 
 - **Invocation:** `notasi render PIECE.nts [--score NAME] -o OUT`, with
   OUT's extension `.svg`, `.png` or `.pdf`, and the options in any
-  order. **Planned** (ADRs 0058, 0061): the new options above are part
-  of the contract; editors use none of them, so the Emacs package
-  doesn't change.
+  order. The new options above (ADR 0061; **Planned**: `--save-piece`,
+  ADR 0058) are part of the contract; editors use none of them, so the
+  Emacs package doesn't change.
 - **Exit status:** 0 when the picture was written; 1 for a problem
   with the piece or the drawing; 2 when the command was used wrongly.
 - **On success:** OUT's path, on one line, to standard output, and
-  nothing to standard error. **Planned** (ADR 0061): one line per file
-  drawn; drawing one score, as an editor does, is still one line.
+  nothing to standard error. With `--all`, one line per file drawn
+  (ADR 0061); drawing one score, as an editor does, is still one line.
 - **A mistake in the notation:** one line to standard error,
   `FILE:LINE: message`, where FILE is the file the mistake is in (the
   piece as given on the command line, or a template it uses) and LINE

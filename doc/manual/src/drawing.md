@@ -72,7 +72,18 @@ scripts/notasi render gilak.nts -o gilak.svg
 ```
 
 The ending of the name (`.pdf`, `.png` or `.svg`) chooses the kind of
-file.
+file. Or choose it with `--format`, and keep the usual name:
+
+```text
+scripts/notasi render gilak.nts --format png
+```
+
+This writes `gilak.png`. A PNG is drawn at 144 pixels per inch; for a
+smaller or sharper picture, give another number with `--ppi`:
+
+```text
+scripts/notasi render gilak.nts --format png --ppi 300
+```
 
 ## Choosing a score
 
@@ -85,6 +96,41 @@ scripts/notasi render gilak.nts --score second
 
 This writes `gilak_second.pdf`.
 
+To see which scores a file has, without drawing anything:
+
+```text
+scripts/notasi render gilak.nts --list
+```
+
+notasi prints their names, one per line, in the order they are
+written. A file without any `score` prints nothing.
+
+## Drawing every score
+
+To draw all the scores of a file at once, use `--all`:
+
+```text
+scripts/notasi render gilak.nts --all
+```
+
+Each score gets its own file, named after the piece and the score,
+such as `gilak_second.pdf`, the first score's too, and notasi prints
+each name. To put them in a folder instead of beside the piece, name
+the folder with `-o`, ending it with `/`; notasi makes the folder if it
+isn't there yet:
+
+```text
+scripts/notasi render gilak.nts --all --format png -o pictures/
+```
+
+To get every score in one PDF, one score to a page, add `--one-file`:
+
+```text
+scripts/notasi render gilak.nts --all --one-file
+```
+
+This writes `gilak.pdf`.
+
 Standalone drawings use a plain sans-serif font found on your computer
 (Helvetica, Arial, DejaVu Sans or Liberation Sans), so they may look a
 little different from one computer to another.
@@ -93,7 +139,8 @@ little different from one computer to another.
 
 If the piece has a mistake, notasi prints the same messages as in
 [Error messages](errors.md) and draws nothing. Fix the mistake and run
-it again.
+it again. With `--all`, if one score can't be drawn, notasi says so and
+still draws the others.
 
 If Typst isn't installed, notasi says so and tells you where to get it.
 
