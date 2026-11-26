@@ -298,11 +298,6 @@
           "notes": ["deng3"]
         },
         {
-          "start": 4,
-          "dur": "1/4",
-          "notes": ["deng3"]
-        },
-        {
           "start": "17/4",
           "dur": "1/4",
           "notes": ["deng3"]
@@ -422,11 +417,6 @@
         },
         {
           "start": "15/4",
-          "dur": "1/4",
-          "notes": ["ding3"]
-        },
-        {
-          "start": 4,
           "dur": "1/4",
           "notes": ["ding3"]
         },

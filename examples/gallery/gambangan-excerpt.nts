@@ -28,13 +28,13 @@
 (part :instrument reyong :name sangsih
   o3:1/4 - e3 o3 | - e3 o3 - | e3 o3 - e3 | o3 e3 - e3 |
   /
-  e3 e3 e3 i3 | - e3 i3 - | i3 e3 - i3 | e3 - i3 e3 |)
+  - e3 e3 i3 | - e3 i3 - | i3 e3 - i3 | e3 - i3 e3 |)
 
 ;; Polos: dang and ding, then dung and dang.
 (part :instrument reyong :name polos
   -:1/4 a2 i3 - | a2 i3 - a2 | i3 - a2 i3 | - i3 a2 i3 |
   /
-  i3 u2 a2 - | u2 a2 - u2 | a2 - u2 a2 | - u2 a2 - |)
+  - u2 a2 - | u2 a2 - u2 | a2 - u2 a2 | - u2 a2 - |)
 
 ;; The kotekan in grid format: one row per kettle, colour only, the two
 ;; parts together.
