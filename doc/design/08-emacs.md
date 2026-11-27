@@ -347,7 +347,7 @@ own branch and PR into `dev`, started with `/start-milestone <branch>`:
      the hidden file `.notasi-preview-FILE` (`.notasi-preview-jaya-semara.nts`);
      the picture `DIR/NAME.svg`, or `DIR/piece.svg` without a score
      name. `notasi-preview-redraw` returns the drawing's process.
-   - **`notasi --version`** prints `notasi 0.4.0-dev` on `dev`, from
+   - **`notasi --version`** prints `notasi 0.5.0-dev` on `dev`, from
      `notasi-version` in `(notasi command)`. The mode runs it once per
      program found; when its numbers (ignoring `-dev`) are older than
      the package's, the preview's header line says "This notasi (0.3.0)

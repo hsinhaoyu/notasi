@@ -1,6 +1,10 @@
 # Iteration 5: collapsed scores and the gallery
 
-Status: building
+Status: done
+
+Closed on 2026-11-27 and tagged `v0.5.0-dev` on `dev`: the acceptance
+test passes (`make check`, and CI's image check). Not released:
+`/release` (v0.5.0 on `main`) was skipped, and can still be run.
 
 ## Goal
 

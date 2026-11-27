@@ -179,4 +179,4 @@ between versions of notasi.
 scripts/notasi --version
 ```
 
-prints notasi's version, for example `notasi 0.4.0-dev`.
+prints notasi's version, for example `notasi 0.5.0-dev`.

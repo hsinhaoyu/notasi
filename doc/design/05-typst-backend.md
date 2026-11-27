@@ -695,7 +695,7 @@ can't start, and the shell says so.
 
 **`notasi --version`** prints `notasi VERSION` on one line to standard
 output and exits with status 0, where VERSION is notasi's version
-(`0.4.0`, or `0.4.0-dev` on `dev`, as the tags are written without
+(`0.5.0`, or `0.5.0-dev` on `dev`, as the tags are written without
 the `v`). It is kept in one place, in `(notasi command)`, and set when
 a version is tagged. `notasi --help` lists it in the usage.
 
