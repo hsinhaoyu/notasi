@@ -1,0 +1,595 @@
+{
+  "version": 1,
+  "title": "Gambangan excerpt: Reyong kotekan",
+  "length": 8,
+  "pickup": 0,
+  "info": {},
+  "colotomies": [],
+  "scales": [
+    {
+      "name": "selisir",
+      "pitched": true,
+      "pitches": [
+        {
+          "name": "ding",
+          "aliases": ["i"],
+          "display": "i",
+          "damped": null
+        },
+        {
+          "name": "dong",
+          "aliases": ["o"],
+          "display": "o",
+          "damped": null
+        },
+        {
+          "name": "deng",
+          "aliases": ["e"],
+          "display": "e",
+          "damped": null
+        },
+        {
+          "name": "dung",
+          "aliases": ["u"],
+          "display": "u",
+          "damped": null
+        },
+        {
+          "name": "dang",
+          "aliases": ["a"],
+          "display": "a",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/selisir.nts",
+        "line": 5
+      }
+    },
+    {
+      "name": "kempli-strokes",
+      "pitched": false,
+      "pitches": [
+        {
+          "name": "K",
+          "aliases": [],
+          "display": "K",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 10
+      }
+    },
+    {
+      "name": "gong-strokes",
+      "pitched": false,
+      "pitches": [
+        {
+          "name": "G",
+          "aliases": [],
+          "display": "G",
+          "damped": null
+        },
+        {
+          "name": "GL",
+          "aliases": [],
+          "display": "GL",
+          "damped": null
+        },
+        {
+          "name": "P",
+          "aliases": [],
+          "display": "P",
+          "damped": null
+        },
+        {
+          "name": "T",
+          "aliases": [],
+          "display": "T",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 11
+      }
+    },
+    {
+      "name": "kendang-strokes",
+      "pitched": false,
+      "pitches": [
+        {
+          "name": "dag",
+          "aliases": [],
+          "display": "dag",
+          "damped": null
+        },
+        {
+          "name": "dug",
+          "aliases": [],
+          "display": "dug",
+          "damped": null
+        },
+        {
+          "name": "du",
+          "aliases": [],
+          "display": "du",
+          "damped": null
+        }
+      ],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 12
+      }
+    }
+  ],
+  "instruments": [
+    {
+      "name": "jegogan",
+      "scale": "selisir",
+      "keys": ["ding1", "dong1", "deng1", "dung1", "dang1"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 16
+      }
+    },
+    {
+      "name": "jublag",
+      "scale": "selisir",
+      "keys": ["ding2", "dong2", "deng2", "dung2", "dang2"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 17
+      }
+    },
+    {
+      "name": "calung",
+      "scale": "selisir",
+      "keys": ["ding2", "dong2", "deng2", "dung2", "dang2"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 18
+      }
+    },
+    {
+      "name": "panyacah",
+      "scale": "selisir",
+      "keys": ["ding3", "dong3", "deng3", "dung3", "dang3"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 19
+      }
+    },
+    {
+      "name": "ugal",
+      "scale": "selisir",
+      "keys": ["dong1", "deng1", "dung1", "dang1", "ding2", "dong2", "deng2", "dung2", "dang2", "ding3"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 20
+      }
+    },
+    {
+      "name": "pemade",
+      "scale": "selisir",
+      "keys": ["dong2", "deng2", "dung2", "dang2", "ding3", "dong3", "deng3", "dung3", "dang3", "ding4"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 21
+      }
+    },
+    {
+      "name": "kantilan",
+      "scale": "selisir",
+      "keys": ["dong3", "deng3", "dung3", "dang3", "ding4", "dong4", "deng4", "dung4", "dang4", "ding5"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 22
+      }
+    },
+    {
+      "name": "trompong",
+      "scale": "selisir",
+      "keys": ["dang1", "ding2", "dong2", "deng2", "dung2", "dang2", "ding3", "dong3", "deng3", "dung3"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 23
+      }
+    },
+    {
+      "name": "reyong",
+      "scale": "selisir",
+      "keys": ["deng2", "dung2", "dang2", "ding3", "dong3", "deng3", "dung3", "dang3", "ding4", "dong4", "deng4", "dung4"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 24
+      }
+    },
+    {
+      "name": "kempli",
+      "scale": "kempli-strokes",
+      "keys": ["K"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 27
+      }
+    },
+    {
+      "name": "gong",
+      "scale": "gong-strokes",
+      "keys": ["G", "GL", "P", "T"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 28
+      }
+    },
+    {
+      "name": "kendang",
+      "scale": "kendang-strokes",
+      "keys": ["dag", "dug", "du"],
+      "source": {
+        "file": "./templates/gong-kebyar.nts",
+        "line": 29
+      }
+    }
+  ],
+  "patterns": [],
+  "parts": [
+    {
+      "name": "sangsih",
+      "instrument": "reyong",
+      "origin": "written",
+      "events": [
+        {
+          "start": 0,
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "1/2",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "3/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "5/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "3/2",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": 2,
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "9/4",
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "11/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": 3,
+          "dur": "1/4",
+          "notes": ["dong3"]
+        },
+        {
+          "start": "13/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "15/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "17/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "9/2",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "19/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "21/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "11/2",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": 6,
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "25/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "27/4",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": 7,
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "15/2",
+          "dur": "1/4",
+          "notes": ["deng3"]
+        },
+        {
+          "start": "31/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/gambangan-readme.nts",
+        "line": 4
+      }
+    },
+    {
+      "name": "polos",
+      "instrument": "reyong",
+      "origin": "written",
+      "events": [
+        {
+          "start": "1/4",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "1/2",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": 1,
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "5/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "7/4",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": 2,
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "5/2",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "11/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "13/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "7/2",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "15/4",
+          "dur": "1/4",
+          "notes": ["ding3"]
+        },
+        {
+          "start": "17/4",
+          "dur": "1/4",
+          "notes": ["dung2"]
+        },
+        {
+          "start": "9/2",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": 5,
+          "dur": "1/4",
+          "notes": ["dung2"]
+        },
+        {
+          "start": "21/4",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "23/4",
+          "dur": "1/4",
+          "notes": ["dung2"]
+        },
+        {
+          "start": 6,
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "13/2",
+          "dur": "1/4",
+          "notes": ["dung2"]
+        },
+        {
+          "start": "27/4",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        },
+        {
+          "start": "29/4",
+          "dur": "1/4",
+          "notes": ["dung2"]
+        },
+        {
+          "start": "15/2",
+          "dur": "1/4",
+          "notes": ["dang2"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": {
+        "file": "examples/gallery/gambangan-readme.nts",
+        "line": 8
+      }
+    },
+    {
+      "name": "kempli",
+      "instrument": "kempli",
+      "origin": "timekeeper",
+      "events": [
+        {
+          "start": 0,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 1,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 2,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 3,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 4,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 5,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 6,
+          "dur": 1,
+          "notes": ["K"]
+        },
+        {
+          "start": 7,
+          "dur": 1,
+          "notes": ["K"]
+        }
+      ],
+      "spans": [],
+      "texts": [],
+      "source": null
+    }
+  ],
+  "scores": [
+    {
+      "name": "kotekan",
+      "title": "Gambangan excerpt: Reyong kotekan",
+      "subtitle": null,
+      "caption": "Source: Balinese Ceremonial Music - Gambangan, transcr. Colin McPhee (1940)",
+      "from": 0,
+      "to": 8,
+      "system_length": null,
+      "breaks": [],
+      "cycle_numbers": false,
+      "pulse_numbers": true,
+      "numbering": "gong-last",
+      "background": "grid",
+      "cycle_label": "Cycle",
+      "pulse_label": "Pulse",
+      "font_size": null,
+      "cell_width": "2em",
+      "cell_height": "2em",
+      "groups": [
+        {
+          "label": "Reyong",
+          "short": "Reyong",
+          "subtitle": null,
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "sangsih",
+              "label": "sangsih"
+            },
+            {
+              "part": "polos",
+              "label": "polos"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": false,
+          "key_numbers": true,
+          "row_labels": "pitch-name",
+          "display": [],
+          "part_marker": [],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/gambangan-readme.nts",
+            "line": 13
+          }
+        }
+      ],
+      "source": {
+        "file": "examples/gallery/gambangan-readme.nts",
+        "line": 12
+      }
+    }
+  ]
+}
