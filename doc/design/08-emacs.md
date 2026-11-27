@@ -6,10 +6,11 @@ Status: implemented (iteration 4): milestone 1, `feat/emacs-package`
 shown, how a drawing is made, mistakes, finding notasi); and milestone
 3, `feat/emacs-docs` (the documentation; the acceptance test's run by
 hand was deferred, see "Documentation"). ADRs 0048 (the command line it depends on),
-0049 (installing) and 0050 (the package). Planned in iteration 6
-(ADR 0062): the README's Emacs section has an owner. Its layout entry
-has moved to `CONTRIBUTING.md` (iteration 6, `feat/contributing`; see
-"Documentation").
+0049 (installing) and 0050 (the package). Iteration 6
+(ADRs 0062, 0066): the README's Emacs section has an owner and points
+to the manual (`feat/readme-sections`),
+and its layout entry has moved to `CONTRIBUTING.md` (`feat/contributing`;
+see "Documentation"). Planned: `/readme-sync` keeps the section current.
 
 ## Responsibility
 
@@ -268,9 +269,10 @@ notasi and the real test (`feat/emacs-preview-draw`).
 **Implemented** (`feat/emacs-docs`). The reader knows Emacs; the documentation takes them from
 nothing to a drawn score.
 
-- **README:** a short "Using notasi in Emacs" section: what to install,
-  the Emacs configuration, and "open a `.nts` file", linking to the
-  manual.
+- **README:** a short "Using notasi in Emacs" section: what
+  `notasi-mode` does, in a sentence, and a link to the manual's
+  chapter, where the instructions are (ADR 0066, since
+  `feat/readme-sections`).
 - **The manual:** a chapter "Writing in Emacs", for musicians, in the
   manual's style: installing (Guile and Typst, with the commands of 07;
   then the package); a first score in Emacs; when something is wrong;
@@ -280,14 +282,13 @@ nothing to a drawn score.
 
 Decided when `feat/emacs-docs` started:
 
-- **README:** the section comes after "Drawing a score". It says to
-  install Guile 3.0 and Typst 0.15.1 (linking to the manual's
-  commands), gives one block of configuration, `use-package :vc` for
-  Emacs 30 and later and `package-vc-install` for Emacs 29, both with
-  `:url "https://github.com/hsinhaoyu/notasi"`, `:lisp-dir
-  "editors/emacs"` and `:branch "dev"` (until notasi is released to
-  `main`), and says to open a `.nts` file. It links to the manual's
-  chapter. The layout list loses "(in progress)".
+- **The configuration** (on the manual's "Installing for Emacs" page,
+  ADR 0066; in the README until `feat/readme-sections`):
+  `use-package :vc` for Emacs 30 and later and `package-vc-install`
+  for Emacs 29, both with `:url "https://github.com/hsinhaoyu/notasi"`,
+  `:lisp-dir "editors/emacs"` and `:branch "dev"` (until notasi is
+  released to `main`). The README's section comes after "Drawing a
+  score" and links to the chapter.
 - **The manual's chapter** is a part of its own, "Writing in Emacs",
   of six short pages: Installing (Guile, Typst, the package); Your
   first score in Emacs; When something is wrong (the marked line and
@@ -302,8 +303,10 @@ Decided when `feat/emacs-docs` started:
   downloaded with `curl` and unpacked into `~/.local/bin` as CI does,
   with the file names for macOS (Apple silicon, Intel) and Linux. Not
   `brew install typst`, which installs the newest Typst.
-- **Tests:** ERT tests check that the README's Emacs code blocks read
-  as Lisp and use that `:url`, `:lisp-dir` and `:branch`; that the
+- **Tests:** ERT tests check that the manual's installing page's
+  Emacs code blocks read as Lisp and use that `:url`, `:lisp-dir` and
+  `:branch` (the README's until ADR 0066), and that the README's
+  section links to the chapter; that the
   manual's "Keys and settings" page names every setting and every key
   of `notasi-mode-map`; and that the mode's docstring mentions the
   preview and its keys. `tests/readme.scm` checks that README has the
@@ -323,14 +326,15 @@ Iteration 6 (ADR 0062; the README's rules are in 07, "The README"):
 - **Implemented** (`feat/contributing`): **the layout entry** for
   `editors/emacs/` has moved with "Layout" to `CONTRIBUTING.md`, and
   so have its checks in `tests/readme.scm`, which check that
-  `CONTRIBUTING.md` lists `editors/emacs/`, not "in progress". The ERT
-  tests on the README's Emacs code blocks, and `tests/readme.scm`'s
-  checks that the README has the section and links to the manual, stay
-  on the README.
-- **Planned:** **"Using notasi in Emacs"** is an `owner: claude`
-  section of the README: Claude keeps it in step with the package, and
-  `/readme-sync` updates it. Its place, after "Drawing a score", and
-  what it says stay as above.
+  `CONTRIBUTING.md` lists `editors/emacs/`, not "in progress".
+  `tests/readme.scm`'s checks that the README has the section and
+  links to the manual stay on the README.
+- **Implemented** (`feat/readme-sections`): **"Using notasi in Emacs"**
+  is an `owner: claude` section of the README: Claude keeps it in step
+  with the package. It points to the manual's chapter (ADR 0066); the
+  configuration and its ERT tests are on the manual's installing
+  page. **Planned:** `/readme-sync` updates it
+  (`feat/readme-sync`).
 
 ## Not in this design
 

@@ -99,12 +99,12 @@ and 08 ("Documentation").
    published sources and the rule for `examples/contrib/`); the rule in
    `CONTRIBUTING.md`. Before the README, whose "Licence" section links
    to these files.
-3. **`feat/readme-sections`** (07, 08, ADR 0062): the README's eight
+3. **`feat/readme-sections`** (done) (07, 08, ADR 0062): the README's eight
    sections in order, each with its `owner:` marker, at most about 150
    lines; `tests/readme.scm` checks the markers, the relative links,
    and the "Drawing a score" commands on a copy of
    `examples/gallery/jaya-semara.nts`. The milestone adds the user's
-   sections (the sentence on how settled notasi is, "Why notasi",
+   sections (the sentence on how settled notasi is, "Why notasi" (removed, ADR 0067),
    "Licence") with their `owner: user` markers; the user writes their
    text in its PR before it merges.
 4. **`feat/readme-sync`** (07, ADR 0062): the `/readme-sync` skill

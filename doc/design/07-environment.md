@@ -8,8 +8,10 @@ current (ADR 0052) since iteration 5's `feat/examples`; the gallery's
 LilyPond files and their hand-drawn images (ADR 0064). Iteration 6:
 `CONTRIBUTING.md`, with "Layout" and "Running tests" moved from the
 README, and their checks (ADR 0062, `feat/contributing`); the
-licences (ADRs 0063, 0065, `feat/licences`). Planned in iteration 6: the README for users, with an
-owner for each section, and its checks (ADR 0062).
+licences (ADRs 0063, 0065, `feat/licences`); the README for users,
+with an owner for each section, and its checks (ADR 0062,
+`feat/readme-sections`). Planned in iteration 6: `/readme-sync` and the
+README step in `/doc-audit`.
 Each question, once decided, gets an ADR and this document is updated
 to describe the choice.
 
@@ -173,8 +175,10 @@ examples/
 
 ## The README
 
-**Partly implemented** (iteration 6, ADR 0062): `CONTRIBUTING.md` and
-its checks (`feat/contributing`). The rest is **Planned**.
+**Implemented** (iteration 6, ADR 0062): `CONTRIBUTING.md` and its
+checks (`feat/contributing`); the sections, their owners and the tests
+(`feat/readme-sections`). "Keeping it current" is **Planned**
+(`feat/readme-sync`).
 
 The README is for users: musicians who write and draw gamelan scores
 with notasi. Developers read `CONTRIBUTING.md`.
@@ -182,13 +186,13 @@ with notasi. Developers read `CONTRIBUTING.md`.
 ### Sections and owners
 
 Each section has one owner. The user writes theirs; Claude keeps its
-own in step with the code and never edits the user's.
+own in step with the code and never edits the user's. There is no
+"Why notasi" or "What it can do" section (ADR 0067).
 
 | Section | Owner |
 |---|---|
-| The title, the one-line description, the gallery picture and its caption, and one sentence on how settled notasi is ("young; the notation may still change") | user |
-| Why notasi: what it does for a gamelan musician, in three to five sentences | user |
-| What it can do: a short list in musician terms, each item linking to its manual chapter | claude |
+| The title and the part before the first heading: what notasi is, the Gambangan passage on a staff and drawn by notasi, its notation, and Jaya Semara | user |
+| What is notasi for? | user |
 | Installing: Guile, Typst, getting notasi; the details in the manual | claude |
 | Drawing a score: commands that work on `examples/gallery/jaya-semara.nts` right after installing | claude |
 | Using notasi in Emacs (08) | claude |
@@ -234,7 +238,21 @@ repository page.
   into a temporary folder, runs each command of the "Drawing a score"
   code block there, and checks that the files they should write
   appear. Nothing is written into `examples/`. It needs Typst, as
-  `tests/template.scm` does.
+  `tests/template.scm` does. Decided when `feat/readme-sections`
+  started (2026-11-27):
+  - The commands are written as a musician types them in the cloned
+    repository: `scripts/notasi render examples/gallery/jaya-semara.nts
+    …`. The test copies the piece to the same path,
+    `examples/gallery/jaya-semara.nts`, under the temporary folder, and
+    runs each line there, with `scripts/notasi` meaning the
+    repository's.
+  - Each command line ends with a comment, `# writes FILE, …` or
+    `# prints …`. The test checks that each command succeeds and that
+    each file after "writes" appears.
+- **Headings aren't checked:** the README's headings may change. Only
+  the two sections the tests must find are named: "Drawing a score"
+  (the commands) and "Using notasi in Emacs" (08). The picture at the
+  top isn't pinned to one image: the link check covers it.
 - **`CONTRIBUTING.md`** (**Implemented**, `feat/contributing`): the
   checks that were on the README's layout
   and test commands (every module in `notasi/` mentioned, every
