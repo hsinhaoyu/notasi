@@ -54,3 +54,26 @@ Thinking, not the design (ADRs 0023, 0024). All from the discussion of
 - [Licences](design_ideas/2026-11-27-licences.md): the code under
   MIT; the manual and examples under CC BY 4.0; contributions to
   `examples/contrib/` under CC BY 4.0, credited to their contributors.
+
+## Promotion
+
+In dependency order (ADR 0023). No change to the glossary or to
+01–06:
+
+1. `07-environment.md`: the README is for users, with an `owner:`
+   marker on each section and `todo:` briefs (a new ADR, narrowing
+   0014); `CONTRIBUTING.md` with "Layout" and "Running tests";
+   what `tests/readme.scm` checks (markers, links, the "Drawing a
+   score" commands); `/readme-sync` and the README step in
+   `/doc-audit`; the licences and the contribution rule for
+   `examples/contrib/` (a new ADR, "Code is MIT; the manual and
+   examples are CC BY 4.0").
+2. `08-emacs.md`: "Using notasi in Emacs" is an `owner: claude`
+   section, and the `editors/emacs/` layout entry, with its check,
+   moves to `CONTRIBUTING.md`.
+3. The build order in `doc/design/README.md`.
+
+The rule in CLAUDE.md ("Design documents") follows in its own PR after
+promotion, as the glossary's did (#112).
+
+Promoted so far: none.
