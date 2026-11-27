@@ -39,7 +39,10 @@ Agreed (2026-11-27), in this order. 02 and 05 don't change: no record
 and no figure JSON changes.
 
 1. `01-notation.md`, with the new ADR (notes can be coloured by key)
-   and `glossary.md` (`by-key`, octave palette)
+   and `glossary.md` (`by-key`, octave palette): promoted, with ADR
+   0062. Decided while promoting: an octave palette with `by-pitch` is
+   an error; every list of an octave palette has the same number of
+   colours.
 2. `03-reader.md`
 3. `04-layout.md`
 
