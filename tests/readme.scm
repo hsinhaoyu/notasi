@@ -44,11 +44,10 @@
 ;;;   report.
 ;;; - README's own `make <target>' mentions are still checked.  07 moves
 ;;;   the checks that were on the README's layout and test commands to
-;;;   CONTRIBUTING.md, but the README keeps `make' commands elsewhere
-;;;   (its "User manual" section names `make manual' and
-;;;   `make manual-serve'), and a stale target there misleads a user as
-;;;   much as one in CONTRIBUTING.md.  None of the later checks (links,
-;;;   the "Drawing a score" commands) covers them.
+;;;   CONTRIBUTING.md, but a `make' command the README names elsewhere
+;;;   would mislead a user as much as a stale one in CONTRIBUTING.md,
+;;;   and none of the later checks (links, the "Drawing a score"
+;;;   commands) covers it.  The README names none at present.
 ;;; - "Moved from the README" is checked as: CONTRIBUTING.md has `## '
 ;;;   headings "Layout" and "Running tests", and README.md has neither.
 ;;;   The README is not checked for leftover module paths: a user section
