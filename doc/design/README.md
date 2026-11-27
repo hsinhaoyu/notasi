@@ -96,6 +96,20 @@ See [its README](../iterations/05-collapsed-and-gallery/README.md).
 5. **Implemented.** `feat/gallery`: the acceptance test: Jaya Semara and Baris in the
    gallery
 
+### Iteration 6: a workflow for the README
+
+See [its README](../iterations/06-readme-workflow/README.md).
+
+1. **Planned.** `feat/contributing`: `CONTRIBUTING.md`, with "Layout"
+   and "Running tests" moved from the README, and their checks; the
+   README rule in CLAUDE.md
+2. **Planned.** `feat/licences`: `LICENSE` (MIT), `doc/manual/LICENSE`
+   and `examples/LICENSE` (CC BY 4.0), and the contribution rule
+3. **Planned.** `feat/readme-sections`: the README's sections and
+   owners, and `tests/readme.scm`'s markers, links and commands
+4. **Planned.** `feat/readme-sync`: the `/readme-sync` skill, and the
+   README step in `/doc-audit`
+
 ### Deferred
 
 Scores in Typst documents (06) and the old "v2 features" are in the
