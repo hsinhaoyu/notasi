@@ -2771,8 +2771,8 @@ fresh Emacs loading a copy of the package from outside any clone."
 
 ;; Written from 08 ("Documentation", "Decided when `feat/emacs-docs'
 ;; started") before the README section, the manual's chapter, the
-;; Commentary and the docstring: the README's Emacs configuration
-;; reads as Lisp and installs from the right place, the manual's
+;; Commentary and the docstring: the Emacs configuration reads as Lisp
+;; and installs from the right place, the manual's
 ;; "Keys and settings" page names every setting and key, the chapter
 ;; is in the manual, and the docstring and Commentary point to it.
 
@@ -2794,7 +2794,7 @@ fresh Emacs loading a copy of the package from outside any clone."
   '(:url "https://github.com/hsinhaoyu/notasi"
     :lisp-dir "editors/emacs"
     :branch "dev")
-  "What the README's configuration must install the package from.")
+  "What the configuration must install the package from.")
 
 (defun notasi-mode-tests--file-text (file)
   "Return the text of FILE, or nil if it doesn't exist."
@@ -2854,13 +2854,23 @@ A form that can't be read signals an error."
         (walk (cdr x))))
     (nreverse found)))
 
-(defun notasi-mode-tests--readme-forms ()
-  "Return the forms read from README's Emacs code blocks."
-  (let ((section (notasi-mode-tests--readme-section "Using notasi in Emacs")))
-    (and section
-         (apply #'append
-                (mapcar #'notasi-mode-tests--read-all
-                        (notasi-mode-tests--elisp-blocks section))))))
+;; The configuration is on the manual's "Installing for Emacs" page;
+;; the README's section only points to the manual (ADR 0066).
+
+(defconst notasi-mode-tests--install-page
+  (expand-file-name "emacs-installing.md" notasi-mode-tests--manual-src)
+  "The manual's page that gives the Emacs configuration.")
+
+(defun notasi-mode-tests--install-page-blocks ()
+  "Return the elisp code blocks of the manual's installing page."
+  (let ((text (notasi-mode-tests--file-text notasi-mode-tests--install-page)))
+    (and text (notasi-mode-tests--elisp-blocks text))))
+
+(defun notasi-mode-tests--install-forms ()
+  "Return the forms read from the manual's installing page."
+  (apply #'append
+         (mapcar #'notasi-mode-tests--read-all
+                 (notasi-mode-tests--install-page-blocks))))
 
 (defun notasi-mode-tests--should-install-from (plist)
   "Check that PLIST has the `:url', `:lisp-dir' and `:branch' of 08."
@@ -2870,23 +2880,25 @@ A form that can't be read signals an error."
                    (list key (plist-get notasi-mode-tests--vc-plist key))))))
 
 (ert-deftest notasi-mode-test-readme-has-emacs-section ()
-  "README has a section \"Using notasi in Emacs\" with Lisp code blocks."
+  "README has a section \"Using notasi in Emacs\" linking to the chapter."
   (let ((section (notasi-mode-tests--readme-section "Using notasi in Emacs")))
     (should section)
-    (should (notasi-mode-tests--elisp-blocks section))))
+    (should (string-match-p
+             (regexp-quote "https://hsinhaoyu.github.io/notasi/emacs-installing.html")
+             section))))
 
-(ert-deftest notasi-mode-test-readme-code-reads ()
-  "Every elisp code block in README's Emacs section reads as Lisp."
-  (let ((section (notasi-mode-tests--readme-section "Using notasi in Emacs")))
-    (should section)
-    (dolist (block (notasi-mode-tests--elisp-blocks section))
+(ert-deftest notasi-mode-test-install-page-code-reads ()
+  "Every elisp code block on the manual's installing page reads as Lisp."
+  (let ((blocks (notasi-mode-tests--install-page-blocks)))
+    (should blocks)
+    (dolist (block blocks)
       (should-not (condition-case err
                       (progn (notasi-mode-tests--read-all block) nil)
                     (error (list 'unreadable block err)))))))
 
-(ert-deftest notasi-mode-test-readme-use-package ()
-  "README configures Emacs 30 with `use-package' and `:vc' from `dev'."
-  (let* ((forms (notasi-mode-tests--readme-forms))
+(ert-deftest notasi-mode-test-install-page-use-package ()
+  "The manual configures Emacs 30 with `use-package' and `:vc' from `dev'."
+  (let* ((forms (notasi-mode-tests--install-forms))
          (found (notasi-mode-tests--subforms
                  (lambda (x) (and (eq (car x) 'use-package)
                                   (eq (cadr x) 'notasi-mode)
@@ -2896,9 +2908,9 @@ A form that can't be read signals an error."
     (dolist (form found)
       (notasi-mode-tests--should-install-from (cadr (memq :vc form))))))
 
-(ert-deftest notasi-mode-test-readme-package-vc-install ()
-  "README configures Emacs 29 with `package-vc-install' from `dev'."
-  (let* ((forms (notasi-mode-tests--readme-forms))
+(ert-deftest notasi-mode-test-install-page-package-vc-install ()
+  "The manual configures Emacs 29 with `package-vc-install' from `dev'."
+  (let* ((forms (notasi-mode-tests--install-forms))
          (found (notasi-mode-tests--subforms
                  (lambda (x)
                    (and (eq (car x) 'package-vc-install)
