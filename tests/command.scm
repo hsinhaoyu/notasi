@@ -57,7 +57,81 @@
 ;;; Helpers
 
 (define repo-dir (getcwd))
-(define example-path (string-append repo-dir "/examples/demos/tenzer1.nts"))
+;;; ------------------------------------------------------------------
+;;; The pieces tenzer1.nts and gilak.nts.  They were examples in
+;;; examples/demos/ until 2026-11-28; the tests that use them now write
+;;; them, exactly as they were, into a temporary folder.
+
+(define demo-dir
+  (mkdtemp (string-append (or (getenv "TMPDIR") "/tmp") "/notasi-demo-XXXXXX")))
+
+(define (write-demo name text)
+  "Write TEXT to NAME in demo-dir and return its path."
+  (let ((path (string-append demo-dir "/" name)))
+    (call-with-output-file path (lambda (port) (display text port)))
+    path))
+
+(define tenzer1-file
+  (write-demo "tenzer1.nts"
+   ";; Eight-pulse gong cycle with ugal melody, after a figure in Michael
+;; Tenzer, Balinese Gamelan Music, 3rd edition (Tuttle Publishing,
+;; 2011); the gongs come from the gilak colotomy, and the kempli is added by notasi.
+;; Each note is one kempli pulse. The piece opens on the gong, a one-pulse
+;; pickup, then one cycle that ends on the gong again, as the source
+;; figure shows. The ugal line continues (\"etc.\") beyond this.
+;;
+;; The source writes the melody in syllables (nang ning nong neng).
+;; These are the selisir pitches, written here in short form by vowel:
+;; nang = a, ning = i, nong = o, neng = e. Drawn lowest to highest, they
+;; are four adjacent ugal keys: a1 i2 o2 e2. The figure does not give
+;; the register; this places them in the middle of the ugal.
+
+(piece \"Eight-pulse gong cycle\" :colotomy gilak :pickup 1)
+
+(use gong-kebyar)
+
+;; The gongs come from gilak, in the template: gong lanang on pulse 4,
+;; kempur on 5 and 7, and the gong (wadon) on 8, ending the cycle.
+
+;; pulse:   8 || 1  2  3  4  5  6  7  8
+(part :instrument ugal  a1 || o2 i2 e2 o2 a1 o2 i2 a1 ||)
+"))
+
+(define gilak-file
+  (write-demo "gilak.nts"
+   ";; Gilak: an eight-pulse cycle, gong lanang on pulse 4, kempur on 5 and
+;; 7, gong on 8,
+;; with a one-pulse pickup on the gong. A plain ugal melody over three
+;; cycles; two scores, the whole piece and one cycle of it.
+
+(piece \"Gilak\" :colotomy gilak :pickup 1)
+
+(use gong-kebyar)
+
+(part :instrument ugal  a1 || o2 i2 e2 o2 | a1 o2 i2 a1
+             || e2 u2 e2 o2 | i2 o2 e2 a1
+             || o2 i2 e2 o2 | a1 o2 i2 a1 ||)
+
+;; The whole piece, a cycle per system, with the pickup on a system of
+;; its own: long labels on the first system, short ones after.
+(score full :breaks ((1 1) (2 1) (3 1))
+  (group \"Ugal\" :short \"U.\" ugal)
+  (group \"Gong\" :short \"G.\" gong))
+
+;; The second cycle alone, Tenzer's way: the gong numbered 1, so the
+;; cycle runs from its pulse 2 to its pulse 1.
+(score second-cycle :from (2 2) :to (2 1) :numbering gong-first :labels short
+  (group \"Ugal\" :short \"U.\" ugal)
+  (group \"Gong\" :short \"G.\" gong))
+"))
+
+(define (remove-demo-dir)
+  (for-each (lambda (f) (when (file-exists? f) (delete-file f)))
+            (list tenzer1-file gilak-file))
+  (rmdir demo-dir))
+
+
+(define example-path tenzer1-file)
 (define script-path (string-append repo-dir "/scripts/notasi"))
 (define usage-text "notasi render PIECE.nts")
 
@@ -222,7 +296,7 @@ each string in ALSO."
 ;;; second-cycle.
 
 (define gilak (tmp-path "gilak.nts"))
-(copy-file (string-append repo-dir "/examples/demos/gilak.nts") gilak)
+(copy-file gilak-file gilak)
 
 (define (same-bytes? a b)
   (and (file-exists? a) (file-exists? b)
@@ -270,7 +344,7 @@ each string in ALSO."
 (mkdir named-dir)
 (define (named-path name) (string-append named-dir "/" name))
 (define named-gilak (named-path "gilak.nts"))
-(copy-file (string-append repo-dir "/examples/demos/gilak.nts") named-gilak)
+(copy-file gilak-file named-gilak)
 
 (test-group "render --score, default OUT PIECE_NAME.pdf"
   (for-each
@@ -1055,6 +1129,8 @@ while (notasi save) doesn't exist."
 
 (define runner (test-runner-current))
 (test-end "command")
+
+(remove-demo-dir)
 
 (exit (zero? (+ (test-runner-fail-count runner)
                 (test-runner-xpass-count runner))))

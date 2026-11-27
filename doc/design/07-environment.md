@@ -114,8 +114,10 @@ examples/
 
 - **The pieces:** `gallery/` holds `jaya-semara`, `baris`,
   `gambangan-excerpt` and `gambangan-readme`, and one LilyPond file,
-  `gambangan-readme-piano.ly`, the same passage on a staff; `demos/`
-  holds `gilak` and `tenzer1`.
+  `gambangan-readme-piano.ly`, the same passage on a staff. `demos/`
+  is empty for now, kept in git by an empty `.gitkeep`: `gilak` and
+  `tenzer1` were removed on 2026-11-28, and the tests that used them
+  write those pieces into a temporary folder themselves.
 - **Names** are unique across `examples/`: a test fails if two folders
   hold a file of the same name. Golden files keep their names, with no
   folder: `tests/golden/NAME.json`, or `NAME_SCORE.json` for a file

@@ -9,7 +9,8 @@
 ;;;   and images/).
 ;;; - The pieces: gallery/ holds jaya-semara, baris, gambangan-excerpt
 ;;;   and gambangan-readme, and one LilyPond file, gambangan-readme-piano
-;;;   (ADR 0064); demos/ holds gilak and tenzer1; no .nts lies directly
+;;;   (ADR 0064); demos/ holds no .nts for now (an empty .gitkeep keeps
+;;;   it in git; gilak and tenzer1 were removed 2026-11-28); no .nts lies directly
 ;;;   in examples/.
 ;;; - Names are unique across examples/: no two folders hold a .nts file
 ;;;   of the same name.
@@ -204,9 +205,12 @@ paths.  None if DIR doesn't exist."
   '("gambangan-readme-piano.ly")
   (sorted (files-in gallery ".ly")))
 
-(test-equal "demos/ holds gilak and tenzer1"
-  '("gilak.nts" "tenzer1.nts")
+(test-equal "demos/ holds no .nts for now"
+  '()
   (sorted (files-in demos ".nts")))
+
+(test-assert "examples/demos/.gitkeep exists"
+  (regular-file? (string-append demos "/.gitkeep")))
 
 (test-equal "no .nts file lies directly in examples/"
   '()
