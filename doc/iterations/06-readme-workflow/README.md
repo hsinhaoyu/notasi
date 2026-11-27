@@ -76,4 +76,4 @@ In dependency order (ADR 0023). No change to the glossary or to
 The rule in CLAUDE.md ("Design documents") follows in its own PR after
 promotion, as the glossary's did (#112).
 
-Promoted so far: none.
+Promoted so far: `07-environment.md` (ADRs 0062, 0063).

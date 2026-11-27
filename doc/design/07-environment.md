@@ -4,8 +4,11 @@ Status: mostly open questions. Iteration 4 (ADR 0049): CI for the
 Emacs package and what Emacs users install are implemented.
 This answers question 2 for Emacs users only. The examples in four
 folders, their committed drawings and the CI check that keeps them
-current (ADR 0052) since iteration 5's `feat/examples`. Each question, once decided, gets an
-ADR and this document is updated to describe the choice.
+current (ADR 0052) since iteration 5's `feat/examples`. Planned in
+iteration 6: the README for users, with an owner for each section, its
+checks and `CONTRIBUTING.md` (ADR 0062); the licences (ADR 0063).
+Each question, once decided, gets an ADR and this document is updated
+to describe the choice.
 
 ## Responsibility
 
@@ -119,6 +122,7 @@ examples/
   stays where it is.
 - **Contributions** are credited with the piece information keys
   `:contributor`, `:source` and `:transcriber` (01), by convention.
+  **Planned** (ADR 0063): a review rule, under "Licences" below.
 
 ### Drawings
 
@@ -153,6 +157,126 @@ examples/
   draws nothing. Its CI workflow then needs only mdBook.
 - **`make preview`** and `scripts/preview.scm` are removed. To draw any
   one file, `demos/` included, use `notasi render --all`.
+
+## The README
+
+**Planned** (iteration 6, ADR 0062).
+
+The README is for users: musicians who write and draw gamelan scores
+with notasi. Developers read `CONTRIBUTING.md`.
+
+### Sections and owners
+
+Each section has one owner. The user writes theirs; Claude keeps its
+own in step with the code and never edits the user's.
+
+| Section | Owner |
+|---|---|
+| The title, the one-line description, the gallery picture and its caption, and one sentence on how settled notasi is ("young; the notation may still change") | user |
+| Why notasi: what it does for a gamelan musician, in three to five sentences | user |
+| What it can do: a short list in musician terms, each item linking to its manual chapter | claude |
+| Installing: Guile, Typst, getting notasi; the details in the manual | claude |
+| Drawing a score: commands that work on `examples/gallery/jaya-semara.nts` right after installing | claude |
+| Using notasi in Emacs (08) | claude |
+| User manual: where it is | claude |
+| Licence: the code is MIT, the manual and examples CC BY 4.0 (below) | user |
+
+- **Markers.** Each section says its owner in an HTML comment on the
+  line after its heading, which GitHub doesn't show. The part before
+  the first `## ` heading has it after the `# ` title:
+
+  ```markdown
+  ## Drawing a score
+  <!-- owner: claude -->
+  ```
+
+- **Briefs.** `<!-- todo: ... -->` under any heading says what to
+  write there. Claude writes it and removes the brief; in a user's
+  section the text is then the user's, to edit or keep.
+- **Length.** About 150 lines at most; what doesn't fit goes into the
+  manual, and the README links to it. A guideline, not a test.
+
+### CONTRIBUTING.md
+
+A new file at the top of the repository, for developers, Claude's,
+with no markers: "Layout" and "Running tests", moved from the README,
+and the contribution rule for `examples/contrib/` (below). It is
+released to `main` like the README, where GitHub links it from the
+repository page.
+
+### Tests
+
+`tests/readme.scm` (under `make check`) checks:
+
+- **Markers:** every section of the README has one `owner:` marker,
+  `user` or `claude`.
+- **Links:** every relative link and image path in the README points
+  to a file that exists. Links to the manual's site aren't checked:
+  the tests have no network.
+- **The commands run:** it copies `examples/gallery/jaya-semara.nts`
+  into a temporary folder, runs each command of the "Drawing a score"
+  code block there, and checks that the files they should write
+  appear. Nothing is written into `examples/`. It needs Typst, as
+  `tests/template.scm` does.
+- **`CONTRIBUTING.md`:** the checks that were on the README's layout
+  and test commands (every module in `notasi/` mentioned, every
+  `notasi/*.scm` path existing, every `make` target in the Makefile,
+  the `editors/emacs/` entry) check `CONTRIBUTING.md` instead.
+
+The README's length, and that Claude kept out of the user's sections,
+aren't tested: the user sees both in the PR.
+
+### Keeping it current
+
+- **`/readme-sync`**, a skill only the user runs. On its own branch
+  and PR, Claude updates the `owner: claude` sections that no longer
+  match the code, the manual and the iterations that are done, and
+  fixes their spelling and grammar; writes the sections that have a
+  `todo:` brief, and removes the brief; and posts suggestions for the
+  `owner: user` sections (a stale fact, a spelling mistake, a new
+  feature worth naming) as review comments on the PR, each on its
+  line, never in the file. The user makes the edits they accept and
+  resolves the rest.
+- **When:** as an iteration closes, after its last milestone is merged
+  and before `/release`, so the README on `main` matches the release;
+  and whenever the user wants.
+- **`/doc-audit`** compares the README with the code and the manual,
+  and reports drift in its table with "README" as the doc side.
+- **The user's own edits** need no process: edit, commit, ship.
+
+## Licences
+
+**Planned** (iteration 6, ADR 0063).
+
+| Part | Licence, in | Credit goes to |
+|---|---|---|
+| The code: everything not listed below | MIT, `LICENSE` at the top of the repository | the user |
+| The user manual, `doc/manual/` | CC BY 4.0, `doc/manual/LICENSE` | the user |
+| `examples/`: `gallery/`, `demos/`, `manual/` and their images | CC BY 4.0, `examples/LICENSE` | the user, except the published sources it names |
+| `examples/contrib/` | CC BY 4.0, `examples/LICENSE` | each file's contributor |
+
+- **GitHub** reads the top-level `LICENSE` and shows "MIT license" on
+  the repository page. A `LICENSE` in a folder covers that folder.
+- **Published sources.** `examples/LICENSE` names the examples whose
+  notes come from a published source, with their sources, and says the
+  user licenses only their own work in them (the encoding as a notasi
+  file, the comments); each source keeps its rights. An example may name
+  its source with `:source` or in a comment; `examples/LICENSE` is the
+  one list.
+- **Contributions to `examples/contrib/`.** Contributors keep their
+  copyright and license their files under CC BY 4.0. `examples/LICENSE`
+  and `CONTRIBUTING.md` say: "By adding a file to `examples/contrib/`,
+  you license it under CC BY 4.0 and confirm you have the right to:
+  it's your own transcription or composition, or its source allows
+  it." Opening the PR is the agreement: no CLA, no signed commits.
+- **Credit in contributed files** is given with `:contributor`,
+  `:transcriber` and `:source` (01), so it travels with the file. A
+  file without them is asked about before it is merged: a review rule,
+  not a test, since `contrib/` is not read by the tests.
+- **The README** ends with the user's "Licence" section, linking to
+  the three files.
+- **Releases:** the licence files reach `main` with the folders they
+  cover.
 
 ## Open questions
 
