@@ -49,8 +49,6 @@ in one sweep.
 | **damped form** | The form drawn for a note one column long: `na'` (`:damped`) | `damped` | |
 | **instrument** | A named list of keys, or of strokes | `instrument` | |
 | **by-pitch** | The colour scheme that colours each note by its pitch, the same in every octave (`:scheme by-pitch`) | `by-pitch` | by-degree |
-| **by-key** | The colour scheme that colours each note by its key: the pitch's hue, lighter as the octave rises (`:scheme by-key`, ADR 0062; planned) | `by-key` | by-octave, by-register |
-| **octave palette** | A palette for `by-key`: one colour ramp per scale position, a colour per octave, lowest first (`pastel1-octaves`) | | octave ramps, gradient |
 
 ## Music
 

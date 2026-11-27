@@ -63,14 +63,7 @@ Neither target needs them; the design leaves room for them.
 - Instrument pictures, "etc." at line ends, colons after labels, systems
   side by side
 - A level above groups (brackets)
-- More colour schemes: by part (by key, the octave as well as the pitch, is taken up by iteration 6: [colouring notes by key](06-colour-by-key/design_ideas/2026-11-27-colour-by-key.md))
-- A writer's own colour scheme, a Guile procedure giving each key its
-  colour, named from a score: `make-style #:scheme` already takes one,
-  but a score can't name it
-  ([colouring notes by key](06-colour-by-key/design_ideas/2026-11-27-colour-by-key.md), "Later")
-- A sheet of a palette's colours, pitches by octaves, for tuning and
-  checking palettes; at most a manual page for now
-  ([colouring notes by key](06-colour-by-key/design_ideas/2026-11-27-colour-by-key.md), "Later")
+- More colour schemes (by part, by octave)
 
 ## Later, from iteration 3
 
