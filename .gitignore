@@ -13,3 +13,6 @@
 
 # Emacs undo-tree history files.
 *.~undo-tree~
+
+# Vim swap files.
+*.swp

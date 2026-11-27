@@ -7,7 +7,7 @@
 ;; (cycle 0, pulse 8) and his beat b is our pulse b - 1. The scores print
 ;; his numbers with :numbering gong-first.
 ;;
-;; The music is the same cycle as examples/demos/tenzer1.nts: the ugal line is
+;; The music is the cycle of Tenzer's ugal figure (once a demo, tenzer1): the ugal line is
 ;; identical, and the gongs are the template's gilak-2 colotomy (gilak with
 ;; the gong, not the gong lanang, on 4).
 

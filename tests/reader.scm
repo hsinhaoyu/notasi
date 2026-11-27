@@ -59,7 +59,7 @@
 ;;; `piece-pickup` and `piece-colotomies`. Existing tests now expect the
 ;;; generated `kempli` at the end of `piece-parts`, and, when the piece
 ;;; has a `kempli` instrument, a default group for it; tests of part
-;;; lines and files look at the written parts only. examples/demos/tenzer1.nts
+;;; lines and files look at the written parts only. tenzer1.nts (written by this test)
 ;;; loses its written kempli part (the generated one has the same
 ;;; strokes).
 ;;; Choices made where the docs are not explicit:
@@ -377,6 +377,80 @@ none (what v1 called piece-groups)."
 (define (member-parts g)
   "The part records of G's members, in order."
   (map car (group-members g)))
+
+;;; ------------------------------------------------------------------
+;;; The pieces tenzer1.nts and gilak.nts.  They were examples in
+;;; examples/demos/ until 2026-11-28; the tests that use them now write
+;;; them, exactly as they were, into a temporary folder.
+
+(define demo-dir
+  (mkdtemp (string-append (or (getenv "TMPDIR") "/tmp") "/notasi-demo-XXXXXX")))
+
+(define (write-demo name text)
+  "Write TEXT to NAME in demo-dir and return its path."
+  (let ((path (string-append demo-dir "/" name)))
+    (call-with-output-file path (lambda (port) (display text port)))
+    path))
+
+(define tenzer1-file
+  (write-demo "tenzer1.nts"
+   ";; Eight-pulse gong cycle with ugal melody, after a figure in Michael
+;; Tenzer, Balinese Gamelan Music, 3rd edition (Tuttle Publishing,
+;; 2011); the gongs come from the gilak colotomy, and the kempli is added by notasi.
+;; Each note is one kempli pulse. The piece opens on the gong, a one-pulse
+;; pickup, then one cycle that ends on the gong again, as the source
+;; figure shows. The ugal line continues (\"etc.\") beyond this.
+;;
+;; The source writes the melody in syllables (nang ning nong neng).
+;; These are the selisir pitches, written here in short form by vowel:
+;; nang = a, ning = i, nong = o, neng = e. Drawn lowest to highest, they
+;; are four adjacent ugal keys: a1 i2 o2 e2. The figure does not give
+;; the register; this places them in the middle of the ugal.
+
+(piece \"Eight-pulse gong cycle\" :colotomy gilak :pickup 1)
+
+(use gong-kebyar)
+
+;; The gongs come from gilak, in the template: gong lanang on pulse 4,
+;; kempur on 5 and 7, and the gong (wadon) on 8, ending the cycle.
+
+;; pulse:   8 || 1  2  3  4  5  6  7  8
+(part :instrument ugal  a1 || o2 i2 e2 o2 a1 o2 i2 a1 ||)
+"))
+
+(define gilak-file
+  (write-demo "gilak.nts"
+   ";; Gilak: an eight-pulse cycle, gong lanang on pulse 4, kempur on 5 and
+;; 7, gong on 8,
+;; with a one-pulse pickup on the gong. A plain ugal melody over three
+;; cycles; two scores, the whole piece and one cycle of it.
+
+(piece \"Gilak\" :colotomy gilak :pickup 1)
+
+(use gong-kebyar)
+
+(part :instrument ugal  a1 || o2 i2 e2 o2 | a1 o2 i2 a1
+             || e2 u2 e2 o2 | i2 o2 e2 a1
+             || o2 i2 e2 o2 | a1 o2 i2 a1 ||)
+
+;; The whole piece, a cycle per system, with the pickup on a system of
+;; its own: long labels on the first system, short ones after.
+(score full :breaks ((1 1) (2 1) (3 1))
+  (group \"Ugal\" :short \"U.\" ugal)
+  (group \"Gong\" :short \"G.\" gong))
+
+;; The second cycle alone, Tenzer's way: the gong numbered 1, so the
+;; cycle runs from its pulse 2 to its pulse 1.
+(score second-cycle :from (2 2) :to (2 1) :numbering gong-first :labels short
+  (group \"Ugal\" :short \"U.\" ugal)
+  (group \"Gong\" :short \"G.\" gong))
+"))
+
+(define (remove-demo-dir)
+  (for-each (lambda (f) (when (file-exists? f) (delete-file f)))
+            (list tenzer1-file gilak-file))
+  (rmdir demo-dir))
+
 
 (test-begin "reader")
 
@@ -4392,9 +4466,9 @@ line 12."
                  (string-in dir "(piece \"P\")" "(use \"bf.nts\")"))))))
 
 ;;; ------------------------------------------------------------------
-;;; examples/demos/tenzer1.nts reads end to end
+;;; tenzer1.nts (written by this test) reads end to end
 
-(define tenzer-file "examples/demos/tenzer1.nts")
+(define tenzer-file tenzer1-file)
 
 (test-group "tenzer1"
   (let ((pc (read-file tenzer-file)))
@@ -5552,8 +5626,8 @@ colotomy, 4 pulses."
   (test-equal ":numbering after the positions still applies to them" '(9 17 ())
     (gilak-range ":from (2 2) :to (2 1) :numbering gong-first")))
 
-(test-group "[scores] :from, :to and :breaks in examples/demos/gilak.nts"
-  (let ((pc (try-read (lambda () (read-piece-file "examples/demos/gilak.nts")))))
+(test-group "[scores] :from, :to and :breaks in gilak.nts"
+  (let ((pc (try-read (lambda () (read-piece-file gilak-file)))))
     (test-equal "two scores" '(full second-cycle)
       (and pc (map score-name (piece-scores pc))))
     (test-equal "full: the whole piece, breaks at each cycle" '(0 25 (1 9 17))
@@ -8454,6 +8528,8 @@ NAME, sorted by start then depth, or #f."
 
 (remove-temp-files)
 (remove-tpl-root)
+
+(remove-demo-dir)
 
 (exit (zero? (+ (test-runner-fail-count runner)
                 (test-runner-xpass-count runner))))

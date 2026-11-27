@@ -10,9 +10,11 @@
 ;;;
 ;;; - examples/gallery/jaya-semara.nts and examples/gallery/baris.nts read, and their
 ;;;   scores are exactly the targets' scores, in the targets' order.
-;;; - examples/demos/tenzer1.nts reads, with the colotomy gilak, a one-pulse
-;;;   pickup, and a generated `gong' part (origin `colotomy').
-;;; - Each of the three has its golden files in tests/golden/, named per
+;;; - tenzer1.nts reads, with the colotomy gilak, a one-pulse pickup, and
+;;;   a generated `gong' part (origin `colotomy').  It was an example in
+;;;   examples/demos/ until 2026-11-28; this test now writes it into a
+;;;   temporary folder, and it has no golden files.
+;;; - Each of the two targets has its golden files in tests/golden/, named per
 ;;;   04: NAME.json for a piece with only the default score, else
 ;;;   NAME_SCORE.json for each score (ADR 0040, since feat/drawing-output;
 ;;;   NAME.SCORE.json before).  (tests/golden.scm compares them.)
@@ -20,8 +22,6 @@
 ;;;   temporary folder, with `render FILE --score NAME -o OUT', exiting 0.
 ;;;   Needs Typst on the PATH.
 ;;; Choices made where the docs are not explicit:
-;;; - tenzer1's golden names are derived from its scores as read, since
-;;;   whether it gets `score' forms is not decided.
 ;;; - The drawing tests read the examples where they are (no copies):
 ;;;   only the output goes to the temporary folder.
 ;;; - An SVG is a file starting with "<svg" or "<?xml", as in
@@ -74,13 +74,87 @@
 ;;; ------------------------------------------------------------------
 ;;; Helpers
 
+;;; ------------------------------------------------------------------
+;;; The pieces tenzer1.nts and gilak.nts.  They were examples in
+;;; examples/demos/ until 2026-11-28; the tests that use them now write
+;;; them, exactly as they were, into a temporary folder.
+
+(define demo-dir
+  (mkdtemp (string-append (or (getenv "TMPDIR") "/tmp") "/notasi-demo-XXXXXX")))
+
+(define (write-demo name text)
+  "Write TEXT to NAME in demo-dir and return its path."
+  (let ((path (string-append demo-dir "/" name)))
+    (call-with-output-file path (lambda (port) (display text port)))
+    path))
+
+(define tenzer1-file
+  (write-demo "tenzer1.nts"
+   ";; Eight-pulse gong cycle with ugal melody, after a figure in Michael
+;; Tenzer, Balinese Gamelan Music, 3rd edition (Tuttle Publishing,
+;; 2011); the gongs come from the gilak colotomy, and the kempli is added by notasi.
+;; Each note is one kempli pulse. The piece opens on the gong, a one-pulse
+;; pickup, then one cycle that ends on the gong again, as the source
+;; figure shows. The ugal line continues (\"etc.\") beyond this.
+;;
+;; The source writes the melody in syllables (nang ning nong neng).
+;; These are the selisir pitches, written here in short form by vowel:
+;; nang = a, ning = i, nong = o, neng = e. Drawn lowest to highest, they
+;; are four adjacent ugal keys: a1 i2 o2 e2. The figure does not give
+;; the register; this places them in the middle of the ugal.
+
+(piece \"Eight-pulse gong cycle\" :colotomy gilak :pickup 1)
+
+(use gong-kebyar)
+
+;; The gongs come from gilak, in the template: gong lanang on pulse 4,
+;; kempur on 5 and 7, and the gong (wadon) on 8, ending the cycle.
+
+;; pulse:   8 || 1  2  3  4  5  6  7  8
+(part :instrument ugal  a1 || o2 i2 e2 o2 a1 o2 i2 a1 ||)
+"))
+
+(define gilak-file
+  (write-demo "gilak.nts"
+   ";; Gilak: an eight-pulse cycle, gong lanang on pulse 4, kempur on 5 and
+;; 7, gong on 8,
+;; with a one-pulse pickup on the gong. A plain ugal melody over three
+;; cycles; two scores, the whole piece and one cycle of it.
+
+(piece \"Gilak\" :colotomy gilak :pickup 1)
+
+(use gong-kebyar)
+
+(part :instrument ugal  a1 || o2 i2 e2 o2 | a1 o2 i2 a1
+             || e2 u2 e2 o2 | i2 o2 e2 a1
+             || o2 i2 e2 o2 | a1 o2 i2 a1 ||)
+
+;; The whole piece, a cycle per system, with the pickup on a system of
+;; its own: long labels on the first system, short ones after.
+(score full :breaks ((1 1) (2 1) (3 1))
+  (group \"Ugal\" :short \"U.\" ugal)
+  (group \"Gong\" :short \"G.\" gong))
+
+;; The second cycle alone, Tenzer's way: the gong numbered 1, so the
+;; cycle runs from its pulse 2 to its pulse 1.
+(score second-cycle :from (2 2) :to (2 1) :numbering gong-first :labels short
+  (group \"Ugal\" :short \"U.\" ugal)
+  (group \"Gong\" :short \"G.\" gong))
+"))
+
+(define (remove-demo-dir)
+  (for-each (lambda (f) (when (file-exists? f) (delete-file f)))
+            (list tenzer1-file gilak-file))
+  (rmdir demo-dir))
+
+
 (define (example-file name)
-  "Example NAME's path: examples/gallery/NAME.nts, or examples/demos/
-when it isn't in the gallery (07, ADR 0052)."
+  "Example NAME's path: examples/gallery/NAME.nts, or the piece this
+test writes into demo-dir (tenzer1, an example until 2026-11-28)."
   (let ((gallery (string-append "examples/gallery/" name ".nts")))
     (if (file-exists? gallery)
         gallery
-        (string-append "examples/demos/" name ".nts"))))
+        (string-append demo-dir "/" name ".nts"))))
 
 (define (read-example name)
   "Example NAME as a piece, or #f if reading it raises."
@@ -92,14 +166,6 @@ when it isn't in the gallery (07, ADR 0052)."
 
 (define (part-named pc name)
   (find (lambda (p) (eq? (part-name p) name)) (piece-parts pc)))
-
-(define (golden-names name pc)
-  "The golden file names (without .json) of example NAME, per 04."
-  (match (piece-scores pc)
-    (((? (lambda (s) (not (score-location s))))) (list name))
-    (scores (map (lambda (s)
-                   (string-append name "_" (symbol->string (score-name s))))
-                 scores))))
 
 (define (golden-path name) (string-append "tests/golden/" name ".json"))
 
@@ -196,11 +262,11 @@ when it isn't in the gallery (07, ADR 0052)."
  targets)
 
 ;;; ------------------------------------------------------------------
-;;; examples/demos/tenzer1.nts: the gongs come from the colotomy gilak
+;;; tenzer1.nts: the gongs come from the colotomy gilak
 
 (test-group "tenzer1"
   (let ((pc (read-example "tenzer1")))
-    (test-assert "examples/demos/tenzer1.nts reads" (piece? pc))
+    (test-assert "tenzer1.nts reads" (piece? pc))
     (test-equal "one colotomy, gilak"
       '(gilak)
       (and pc (map (lambda (entry) (colotomy-name (cdr entry)))
@@ -226,15 +292,7 @@ when it isn't in the gallery (07, ADR 0052)."
          (let ((path (golden-path (string-append name "_" (symbol->string score)))))
            (test-assert (string-append path " exists") (file-exists? path))))
        scores)))
-   targets)
-  (let ((pc (read-example "tenzer1")))
-    (test-assert "(tenzer1 reads, so its golden names are known)" (piece? pc))
-    (when pc
-      (for-each
-       (lambda (golden)
-         (test-assert (string-append (golden-path golden) " exists")
-           (file-exists? (golden-path golden))))
-       (golden-names "tenzer1" pc)))))
+   targets))
 
 ;;; ------------------------------------------------------------------
 ;;; Every score of the two targets draws: notasi render FILE --score NAME
@@ -340,6 +398,8 @@ when it isn't in the gallery (07, ADR 0052)."
 
 (define runner (test-runner-current))
 (test-end "targets")
+
+(remove-demo-dir)
 
 (exit (zero? (+ (test-runner-fail-count runner)
                 (test-runner-xpass-count runner))))
