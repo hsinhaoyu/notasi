@@ -63,17 +63,18 @@ carries the octave, and hue still carries the pitch.
   pitches and octaves, for tuning palettes and checking custom ones. At
   most a page in the manual for now.
 
-## Open
+## Open, then decided (2026-11-27)
 
 1. **`:scheme by-key` with a palette that has no octaves** (`pastel1`,
-   or `:palette ("#..." ...)`). Is it an error, or does it colour by
-   pitch? Suggestion: `by-key`'s default palette is `pastel1-octaves`,
-   and a plain palette is an error naming `by-key`.
-2. **Writing an octave palette as a list.** Suggestion: one list per
-   scale position, low octave first:
+   or `:palette ("#..." ...)`): `by-key`'s default palette is
+   `pastel1-octaves`, and a plain palette with `by-key` is a reader
+   error naming `by-key`. It fails loudly, rather than quietly
+   colouring by pitch.
+2. **Writing an octave palette as a list:** one list per scale
+   position, lowest octave first:
    `:palette (("#944a4b" "#c36d6b" "#ea9892" "#ffcdc9") ...)`.
-3. **Key names in `:colors`.** Keys are written `i2` or `ding2`, so
-   both forms should be accepted there.
+3. **Key names in `:colors`:** both forms are accepted, `i2` and
+   `ding2`, as keys are written elsewhere.
 
 ## Notes for promotion
 
