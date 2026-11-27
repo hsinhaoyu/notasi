@@ -139,3 +139,30 @@ In the Emacs package (08):
 - **Drawing every score from Emacs**: the package draws one score
   with `-o`; a command that runs `notasi render --all` could come later
   ([drawing every score](05-collapsed-and-gallery/design_ideas/2026-11-25-render-all-scores.md)).
+
+## Later, from the discussion of 2026-11-27
+
+- **Balinese musical symbols** (`U+1B61`–`U+1B6A`: dong, deng, dung,
+  dang, dang surang, ding, daeng, deung, daing, dang gede). They already
+  work as a pitch's `:alias` and `:display` (01: "Any text, including
+  Unicode symbols"): tried on 2026-11-27 with Typst 0.15.1, in row
+  labels and with `:note-label pitch-display-name`. The likely use is
+  `(ding :alias i :display "᭦")`, typed as letters and drawn as
+  symbols; the extra tones would serve a seven-tone pelog scale. What
+  is missing:
+  - **A font.** Typst's own fonts have no Balinese glyphs; without one
+    the symbols are drawn wrong. Noto Sans Balinese (SIL OFL) covers
+    all ten. Decide how notasi finds it (installed by the user, or
+    shipped and passed with `--font-path`/`TYPST_FONT_PATHS`), and
+    install it in CI before a committed image uses the symbols (07).
+  - **Size.** The symbols are small marks next to the octave digit; a
+    way to draw display names larger may be wanted.
+  - **A demo and a manual page**, once the font question is settled.
+- **The reader depends on the locale (a bug).** `notasi/reader.scm`
+  opens `.nts` files with `call-with-input-file`, so Guile decodes them
+  in the locale's encoding. Under `LANG=C` (common on CI machines and
+  for programs started without a UTF-8 locale) a file with non-ASCII
+  text is misread: the Balinese scale above fails with "`???` is used
+  twice in `selisir`", and a `coding: utf-8` comment doesn't help.
+  Fix: always read `.nts` files as UTF-8 (`#:encoding "UTF-8"`), with
+  a test that reads a non-ASCII file under `LANG=C`.
