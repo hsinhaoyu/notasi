@@ -84,7 +84,7 @@ See [its README](../iterations/04-emacs-mode/README.md).
    chapter, and the install on a fresh Emacs (the acceptance test's run by
    hand is deferred, see the backlog)
 
-### Iteration 5: collapsed scores and the gallery (building)
+### Iteration 5: collapsed scores and the gallery (done, tagged v0.5.0-dev)
 
 See [its README](../iterations/05-collapsed-and-gallery/README.md).
 

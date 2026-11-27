@@ -63,7 +63,7 @@ Neither target needs them; the design leaves room for them.
 - Instrument pictures, "etc." at line ends, colons after labels, systems
   side by side
 - A level above groups (brackets)
-- More colour schemes (by part, by octave)
+- More colour schemes: by part (by key, the octave as well as the pitch, is taken up by iteration 6: [colouring notes by key](06-colour-by-key/design_ideas/2026-11-27-colour-by-key.md))
 
 ## Later, from iteration 3
 

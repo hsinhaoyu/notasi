@@ -17,7 +17,7 @@
 (define notasi-version
   ;; notasi's version (05, "The command line as a contract"): the
   ;; version being built, with -dev until it is tagged.
-  "0.4.0-dev")
+  "0.5.0-dev")
 
 (define usage
   "usage: notasi render PIECE.nts [--score NAME | --all [--one-file]]
