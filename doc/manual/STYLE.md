@@ -54,6 +54,7 @@ show it, then show what comes out.
   (`https://github.com/hsinhaoyu/notasi/blob/dev/doc/design/01-notation.md`)
   rather than repeating every detail.
 - British spelling (colour, centre), matching the rest of the repository.
+- Manual typography follows Hugo Book: system font stack, no web fonts; see `theme/custom.css`.
 
 ## Outline
 

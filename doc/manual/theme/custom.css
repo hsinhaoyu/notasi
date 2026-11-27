@@ -1,0 +1,48 @@
+/* Typography from Hugo Book (github.com/alex-shpak/hugo-book, fb4c9f4).
+   Only type is changed; colours and layout stay mdBook's.
+   mdBook sets the root font size to 62.5% (1rem = 10px), and its
+   body to 1.6rem (16px, Hugo Book's 100%); so Hugo Book's rem sizes,
+   which assume 16px, are given here in px. */
+
+:root {
+    /* code font: ui-monospace, SFMono-Regular, Consolas, ... */
+    --mono-font: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+    /* inline code: 0.875em */
+    --code-font-size: 0.875em;
+    /* text column: max-width 50rem */
+    --content-max-width: 800px;
+}
+
+/* body font: system-ui, 'Segoe UI', Roboto, ... */
+html {
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
+        "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+/* body: weight 400, line height 1.6 */
+.content main {
+    font-weight: 400;
+    line-height: 1.6;
+}
+.content p, .content ol, .content ul { line-height: 1.6; }
+
+/* headings: weight inherit, line height 1.2, margin-top 1.5em */
+.content h1, .content h2, .content h3,
+.content h4, .content h5, .content h6 {
+    font-weight: inherit;
+    line-height: 1.2;
+    margin-block-start: 1.5em;
+}
+/* sizes: h1 2rem, h2 1.5rem, h3 1.25rem, h4 1.125rem, h5 1rem, h6 0.875rem */
+.content h1 { font-size: 32px; }
+.content h2 { font-size: 24px; }
+.content h3 { font-size: 20px; }
+.content h4 { font-size: 18px; }
+.content h5 { font-size: 16px; }
+.content h6 { font-size: 14px; }
+
+/* inline code: light grey background (mdBook's), thin border, small radius */
+:not(pre) > code.hljs {
+    border: 1px solid var(--table-border-color);
+    border-radius: 2.4px; /* 0.15rem */
+}

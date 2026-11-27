@@ -10,5 +10,9 @@ src = "src"
 create-missing = false
 
 [output.html]
+# Hugo Book typography; theme/fonts/fonts.css is empty, so no web fonts.
+additional-css = ["theme/custom.css"]
+# No chapter numbers ("1.", "2.") in the sidebar.
+no-section-label = true
 git-repository-url = "https://github.com/hsinhaoyu/notasi"
 edit-url-template = "https://github.com/hsinhaoyu/notasi/edit/dev/doc/manual/{path}"
