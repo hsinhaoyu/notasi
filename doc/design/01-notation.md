@@ -25,6 +25,10 @@ and `(text ...)`, in place of `:pattern-names` and `:pattern-level`
 (ADR 0057), since `feat/collapsed-annotation`. The removed options got
 no migration: they are unknown keys or values, errors like any other.
 
+**Planned** for iteration 6 (ADR 0062): `:scheme by-key`, octave
+palettes (`pastel1-octaves`, or written as lists) and keys in
+`:colors`; see "Colouring by key".
+
 Everything in this document is **Implemented** unless it says otherwise.
 
 ## Goals
@@ -646,14 +650,51 @@ Colour and size (ADR 0032):
 
 | Option | Level | Default | Meaning |
 |---|---|---|---|
-| `:scheme NAME` | score, group | `by-pitch` | How notes are coloured (04, "Note style"). `by-pitch` (ADR 0056, `by-degree` renamed, with no migration) colours each note by its pitch, the same in every octave. |
-| `:palette NAME` or `:palette (COLOUR ...)` | score, group | `pastel1` | The colours, by name or as a list of `"#rrggbb"`. |
-| `:colors ((PITCH COLOUR) ...)` | score, group | none | Colours for particular pitches, by pitch name, e.g. `((ding "#000000"))`. |
+| `:scheme NAME` | score, group | `by-pitch` | How notes are coloured (04, "Note style"). `by-pitch` (ADR 0056, `by-degree` renamed, with no migration) colours each note by its pitch, the same in every octave. **Planned** (ADR 0062): `by-key` colours each note by its key, lighter as the octave rises (see "Colouring by key"). |
+| `:palette NAME` or `:palette (COLOUR ...)` | score, group | `pastel1` | The colours, by name or as a list of `"#rrggbb"`. **Planned** (ADR 0062): under `by-key`, an octave palette, by name (`pastel1-octaves`, the default there) or as lists, `((COLOUR ...) ...)`. |
+| `:colors ((PITCH COLOUR) ...)` | score, group | none | Colours for particular pitches, by pitch name, e.g. `((ding "#000000"))`. **Planned** (ADR 0062): under `by-key`, keys too, `((i2 "#000000"))`. |
 | `:font-size LENGTH` | score | `"8pt"` on its own page; the document's size in a document | The base text size. |
 | `:cell-width LENGTH`, `:cell-height LENGTH` | score | `"2em"`, `"2em"` | The grid cell. Equal sizes make square notes. |
 
 A LENGTH is a string holding a Typst length, a number and a unit
 (`"8pt"`, `"2em"`, `"4mm"`). Sizes in `em` scale with `:font-size`.
+
+#### Colouring by key
+
+**Planned** (ADR 0062). `:scheme by-key` colours each pitched note by
+its key: the same pitch keeps its hue in every octave, and gets lighter
+as the octave rises.
+
+```scheme
+(score registers :scheme by-key
+  (group "Jublag" jublag)
+  (group "Gangsa pemade" polos sangsih))
+```
+
+- **Octaves are the keys' octave numbers**: `o2` is in octave 2, on
+  every instrument. Octave 1 is the jegogan's lowest, and each octave
+  starts at ding.
+- **An octave palette** gives each scale position a ramp, one colour
+  per octave, lowest first. The default under `by-key` is
+  `pastel1-octaves`: `pastel1`'s hues in octaves 1 to 4, darkest at
+  octave 1 (its colours are in 04, "Note style"). Written as lists,
+  one list per scale position, lowest octave first:
+
+  ```scheme
+  :palette (("#944a4b" "#c36d6b" "#ea9892" "#ffcdc9") ...)
+  ```
+
+  Every list has the same number of colours: the palette's octaves. A
+  scale with more pitches than the palette has ramps reuses them from
+  the first, as a palette's colours are reused.
+- **A key outside the palette's octaves** takes the nearest octave's
+  colour: with `pastel1-octaves`, the kantilan's `i5` is drawn in
+  `i4`'s colour. There is no warning.
+- **`:colors` takes pitches and keys**: `((ding "#000000"))` sets ding
+  in every octave, `((i2 "#000000"))` or `((ding2 "#000000"))` sets
+  that key only, and a key wins over its pitch.
+- Strokes stay grey, and the text colour is chosen by contrast with the
+  fill, as under `by-pitch`.
 
 #### What a note shows
 
@@ -785,6 +826,14 @@ pitched and stroke groups alike:
 - (ADR 0056) `:part-marker` on a score, a part not in the
   group, an unknown key or symbol, a colour not `"#rrggbb"`, a size
   outside 0 to 1, or a width that isn't a LENGTH is an error.
+- (**Planned**, ADR 0062) A plain palette (a name such as `pastel1`,
+  or a list of colours) with `:scheme by-key` is an error naming
+  `by-key`, and an octave palette with `by-pitch` is an error naming
+  `by-key`: each scheme takes its own kind of palette. Every list of
+  an octave palette written as lists has the same number of colours. Under `by-pitch`, a key in `:colors` is an error, as
+  any name that isn't a pitch of the group's scale is. Under `by-key`,
+  a key in `:colors` must be a pitch of the scale with an octave
+  number.
 - (ADR 0057) An annotation row option on a score, an
   `:annotation-part` that isn't a part of the group, an unknown
   position, alignment or text, or a level that isn't a whole number
@@ -831,6 +880,8 @@ Later extensions of the notation are listed in the
 
 ## Open questions
 
+Iteration 6: none for 01; the colours of `pastel1-octaves` are checked
+by eye before 04 is promoted.
 None for iteration 5: its design ideas' questions were settled before
 promotion; the default `:symbol-size` and `:border-width` of
 `:part-marker` were chosen by eye in `feat/collapsed-markers` (0.3 and
