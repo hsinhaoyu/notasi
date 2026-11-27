@@ -2,6 +2,7 @@
 
 % Gambangan, reyong kotekan, on a staff: the passage of
 % gambangan-readme.nts, a small cropped illustration for the README.
+% Source: Colin McPhee, Balinese Ceremonial Music (1940), "Gambangan".
 % Drawn by `make lilypond' (ADR 0064) into
 % examples/gallery/images/gambangan-readme-piano.png, with:
 %   lilypond -dcrop -dno-print-pages --png -dresolution=200 gambangan-readme-piano.ly

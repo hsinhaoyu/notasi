@@ -103,7 +103,7 @@ See [its README](../iterations/06-readme-workflow/README.md).
 1. **Implemented.** `feat/contributing`: `CONTRIBUTING.md`, with "Layout"
    and "Running tests" moved from the README, and their checks; the
    README rule in CLAUDE.md
-2. **Planned.** `feat/licences`: `LICENSE` (MIT), `doc/manual/LICENSE`
+2. **Implemented.** `feat/licences`: `LICENSE` (MIT), `doc/manual/LICENSE`
    and `examples/LICENSE` (CC BY 4.0), and the contribution rule
 3. **Planned.** `feat/readme-sections`: the README's sections and
    owners, and `tests/readme.scm`'s markers, links and commands

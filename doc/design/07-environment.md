@@ -7,9 +7,9 @@ folders, their committed drawings and the CI check that keeps them
 current (ADR 0052) since iteration 5's `feat/examples`; the gallery's
 LilyPond files and their hand-drawn images (ADR 0064). Iteration 6:
 `CONTRIBUTING.md`, with "Layout" and "Running tests" moved from the
-README, and their checks (ADR 0062, `feat/contributing`). Planned in
-iteration 6: the README for users, with an owner for each section, and
-its checks (ADR 0062); the licences (ADR 0063).
+README, and their checks (ADR 0062, `feat/contributing`); the
+licences (ADRs 0063, 0065, `feat/licences`). Planned in iteration 6: the README for users, with an
+owner for each section, and its checks (ADR 0062).
 Each question, once decided, gets an ADR and this document is updated
 to describe the choice.
 
@@ -211,8 +211,8 @@ own in step with the code and never edits the user's.
 
 ### CONTRIBUTING.md
 
-**Implemented** (`feat/contributing`), except the contribution rule,
-**Planned** with the licences (`feat/licences`).
+**Implemented** (`feat/contributing`; the contribution rule,
+`feat/licences`).
 
 A new file at the top of the repository, for developers, Claude's,
 with no markers: "Layout" and "Running tests", moved from the README,
@@ -264,7 +264,9 @@ aren't tested: the user sees both in the PR.
 
 ## Licences
 
-**Planned** (iteration 6, ADR 0063).
+**Implemented** (iteration 6, `feat/licences`, ADRs 0063, 0065), tests in
+`tests/licences.scm`, except the README's "Licence" section,
+**Planned** with the README's sections (`feat/readme-sections`).
 
 | Part | Licence, in | Credit goes to |
 |---|---|---|
@@ -275,12 +277,12 @@ aren't tested: the user sees both in the PR.
 
 - **GitHub** reads the top-level `LICENSE` and shows "MIT license" on
   the repository page. A `LICENSE` in a folder covers that folder.
-- **Published sources.** `examples/LICENSE` names the examples whose
-  notes come from a published source, with their sources, and says the
-  user licenses only their own work in them (the encoding as a notasi
-  file, the comments); each source keeps its rights. An example may name
-  its source with `:source` or in a comment; `examples/LICENSE` is the
-  one list.
+- **Published sources** (ADR 0065). `examples/LICENSE` names the
+  published books the user's examples transcribe, not the files, and
+  says that each such example names its source in the file itself
+  (with `:source`, in a comment or in a caption), that the user
+  licenses only their own work in them (the encoding as a notasi file,
+  the comments), and that each source keeps its rights.
 - **Contributions to `examples/contrib/`.** Contributors keep their
   copyright and license their files under CC BY 4.0. `examples/LICENSE`
   and `CONTRIBUTING.md` say: "By adding a file to `examples/contrib/`,
@@ -291,6 +293,22 @@ aren't tested: the user sees both in the PR.
   `:transcriber` and `:source` (01), so it travels with the file. A
   file without them is asked about before it is merged: a review rule,
   not a test, since `contrib/` is not read by the tests.
+- **The files** (decided when `feat/licences` started, 2026-11-27):
+  - `LICENSE` is the MIT licence, "Copyright (c) 2026 Hsin-Hao Yu".
+  - `doc/manual/LICENSE` and `examples/LICENSE` are short notices: what
+    the file covers, the licence's name, and a link to its full text
+    at creativecommons.org.
+  - `examples/LICENSE` names three books (ADR 0065): Gold, *Music in
+    Bali* (2005); Tenzer, *Balinese Gamelan Music* (2011); McPhee,
+    *Balinese Ceremonial Music* (1940).
+  - A file in `contrib/` names its contributor and source in itself,
+    and `examples/LICENSE` says so: the source keeps its rights, and
+    the contributor's PR confirms they may share it.
+- **Tests** (`tests/licences.scm`, under `make check`): each of the
+  three files exists and names its licence ("MIT", "CC BY 4.0");
+  `examples/LICENSE` and `CONTRIBUTING.md` both contain the
+  contribution sentence above, word for word. Nothing checks the
+  examples' sources (ADR 0065).
 - **The README** ends with the user's "Licence" section, linking to
   the three files.
 - **Releases:** the licence files reach `main` with the folders they
