@@ -63,6 +63,7 @@ doc/decisions/      decision log (ADRs)
 - Any change to behaviour, notation, the piece records or the JSON contract updates `doc/design/` in the same PR. Keep each doc's `Status:` line and its Implemented / Planned / Open questions labels accurate.
 - Reversing or narrowing a documented decision requires a new ADR in `doc/decisions/` (format and rules in its README), and the old ADR's status becomes `superseded by NNNN`. `tests/decisions.scm` checks the format.
 - Never edit an accepted ADR except its `Status:` line.
+- The README is for users (ADR 0062): each section has an owner, marked `<!-- owner: user -->` or `<!-- owner: claude -->` on the line after its heading. Keep `owner: claude` sections in step with the code; never edit an `owner: user` section: suggest changes as review comments on the PR. A `<!-- todo: ... -->` brief asks you to write that text and remove the brief. Developer material goes in `CONTRIBUTING.md`, not the README.
 - `gh pr create --body` replaces `.github/pull_request_template.md`, so copy its docs checkboxes into every PR description and tick each only if those docs were updated or aren't needed.
 
 ## Iterations
@@ -120,9 +121,9 @@ Write idiomatic Guile 3, not another language translated into Scheme:
 - Modules: export explicitly with `#:export`, so a module's public surface is its export list.
 - Macros: use one when a procedure can't do the job: a new binding form, control over evaluation (delay, short-circuit), a declarative mini-language (likely for instrument/notation definitions), or compile-time checks. Prefer `syntax-rules`; use `syntax-case` only for what it alone can do (e.g. building identifiers, checking syntax at expansion). Don't write a macro just to save a little typing or where a higher-order procedure works.
 
-## Keeping README.md current
+## Keeping README.md and CONTRIBUTING.md current
 
-`tests/readme.scm` runs under `make check` and fails when README.md is out of sync with the code: a module file in `notasi/` that README doesn't mention, a `notasi/*.scm` path in README that doesn't exist, or a `make <target>` in README that the Makefile lacks. When you add, rename, or remove a module, Makefile target, or user-facing workflow, update README.md in the same change. If README needs a new kind of fact that could go stale (e.g. a CLI command), extend `tests/readme.scm` to check it.
+README.md is for musicians; CONTRIBUTING.md, for developers, holds "Layout" and "Running tests" (ADR 0062). `tests/readme.scm` runs under `make check` and fails when they are out of sync with the code: a module file in `notasi/` that CONTRIBUTING.md doesn't mention, a `notasi/*.scm` path in it that doesn't exist, a `make <target>` in either file that the Makefile lacks, or a missing `editors/emacs/` layout entry or README Emacs section. When you add, rename, or remove a module or Makefile target, update CONTRIBUTING.md in the same change; when you change a user-facing workflow, update the README's `owner: claude` sections. If either needs a new kind of fact that could go stale (e.g. a CLI command), extend `tests/readme.scm` to check it.
 
 ## Tests
 

@@ -87,7 +87,7 @@ Each milestone is its own branch and PR into `dev`, started with
 `make check` passes. The design is in 07 ("The README", "Licences")
 and 08 ("Documentation").
 
-1. **`feat/contributing`** (07, 08, ADR 0062): `CONTRIBUTING.md` at
+1. **`feat/contributing`** (done) (07, 08, ADR 0062): `CONTRIBUTING.md` at
    the top of the repository, with "Layout" and "Running tests" moved
    from the README; `tests/readme.scm`'s checks on modules, `make`
    targets and the `editors/emacs/` entry check `CONTRIBUTING.md`;
