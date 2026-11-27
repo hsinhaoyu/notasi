@@ -5,9 +5,11 @@ Emacs package and what Emacs users install are implemented.
 This answers question 2 for Emacs users only. The examples in four
 folders, their committed drawings and the CI check that keeps them
 current (ADR 0052) since iteration 5's `feat/examples`; the gallery's
-LilyPond files and their hand-drawn images (ADR 0064). Planned in
-iteration 6: the README for users, with an owner for each section, its
-checks and `CONTRIBUTING.md` (ADR 0062); the licences (ADR 0063).
+LilyPond files and their hand-drawn images (ADR 0064). Iteration 6:
+`CONTRIBUTING.md`, with "Layout" and "Running tests" moved from the
+README, and their checks (ADR 0062, `feat/contributing`). Planned in
+iteration 6: the README for users, with an owner for each section, and
+its checks (ADR 0062); the licences (ADR 0063).
 Each question, once decided, gets an ADR and this document is updated
 to describe the choice.
 
@@ -208,6 +210,9 @@ own in step with the code and never edits the user's.
 
 ### CONTRIBUTING.md
 
+**Implemented** (`feat/contributing`), except the contribution rule,
+**Planned** with the licences (`feat/licences`).
+
 A new file at the top of the repository, for developers, Claude's,
 with no markers: "Layout" and "Running tests", moved from the README,
 and the contribution rule for `examples/contrib/` (below). It is
@@ -228,10 +233,12 @@ repository page.
   code block there, and checks that the files they should write
   appear. Nothing is written into `examples/`. It needs Typst, as
   `tests/template.scm` does.
-- **`CONTRIBUTING.md`:** the checks that were on the README's layout
+- **`CONTRIBUTING.md`** (**Implemented**, `feat/contributing`): the
+  checks that were on the README's layout
   and test commands (every module in `notasi/` mentioned, every
   `notasi/*.scm` path existing, every `make` target in the Makefile,
-  the `editors/emacs/` entry) check `CONTRIBUTING.md` instead.
+  the `editors/emacs/` entry) check `CONTRIBUTING.md` instead. The
+  `make` targets the README still names are checked too.
 
 The README's length, and that Claude kept out of the user's sections,
 aren't tested: the user sees both in the PR.

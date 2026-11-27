@@ -7,8 +7,9 @@ shown, how a drawing is made, mistakes, finding notasi); and milestone
 3, `feat/emacs-docs` (the documentation; the acceptance test's run by
 hand was deferred, see "Documentation"). ADRs 0048 (the command line it depends on),
 0049 (installing) and 0050 (the package). Planned in iteration 6
-(ADR 0062): the README's Emacs section has an owner, and its layout
-entry moves to `CONTRIBUTING.md` (see "Documentation").
+(ADR 0062): the README's Emacs section has an owner. Its layout entry
+has moved to `CONTRIBUTING.md` (iteration 6, `feat/contributing`; see
+"Documentation").
 
 ## Responsibility
 
@@ -317,20 +318,19 @@ Decided when `feat/emacs-docs` started:
   README and the manual, was deferred when the iteration closed
   (iteration 4's README, "Verification"); it is in the backlog.
 
-**Planned** (iteration 6, ADR 0062; the README's rules are in 07,
-"The README"):
+Iteration 6 (ADR 0062; the README's rules are in 07, "The README"):
 
-- **"Using notasi in Emacs"** is an `owner: claude` section of the
-  README: Claude keeps it in step with the package, and `/readme-sync`
-  updates it. Its place, after "Drawing a score", and what it says
-  stay as above.
-- **The layout entry** for `editors/emacs/` moves with "Layout" to
-  `CONTRIBUTING.md`, and so do its checks in `tests/readme.scm`, which
-  now check that `CONTRIBUTING.md` lists `editors/emacs/`, not "in
-  progress". The
-  ERT tests on the README's Emacs code blocks, and `tests/readme.scm`'s
+- **Implemented** (`feat/contributing`): **the layout entry** for
+  `editors/emacs/` has moved with "Layout" to `CONTRIBUTING.md`, and
+  so have its checks in `tests/readme.scm`, which check that
+  `CONTRIBUTING.md` lists `editors/emacs/`, not "in progress". The ERT
+  tests on the README's Emacs code blocks, and `tests/readme.scm`'s
   checks that the README has the section and links to the manual, stay
   on the README.
+- **Planned:** **"Using notasi in Emacs"** is an `owner: claude`
+  section of the README: Claude keeps it in step with the package, and
+  `/readme-sync` updates it. Its place, after "Drawing a score", and
+  what it says stay as above.
 
 ## Not in this design
 

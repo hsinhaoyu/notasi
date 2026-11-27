@@ -100,7 +100,7 @@ See [its README](../iterations/05-collapsed-and-gallery/README.md).
 
 See [its README](../iterations/06-readme-workflow/README.md).
 
-1. **Planned.** `feat/contributing`: `CONTRIBUTING.md`, with "Layout"
+1. **Implemented.** `feat/contributing`: `CONTRIBUTING.md`, with "Layout"
    and "Running tests" moved from the README, and their checks; the
    README rule in CLAUDE.md
 2. **Planned.** `feat/licences`: `LICENSE` (MIT), `doc/manual/LICENSE`
