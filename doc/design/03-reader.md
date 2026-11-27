@@ -37,6 +37,10 @@ the annotation row, pattern annotations and `(text ...)` (`bad-text`),
 `pattern-names-overlap` removed (ADR 0057). Iteration 5's reader is
 built; see "Iteration 5".
 
+**Planned** for iteration 6 (ADR 0062): `:scheme by-key`, octave
+palettes and keys in `:colors`; see "Iteration 6" and the cases
+tagged **[iteration 6]**.
+
 ## Responsibility
 
 Turn a `.nts` file into a valid `piece` record, with its scores, or fail
@@ -62,7 +66,9 @@ The reader is two modules (ADR 0035):
   depends only on `(notasi piece)`. Its errors carry a time and a chain
   of pattern uses; the reader adds the file and line.
 - `(notasi style)` gives the reader its palette and scheme names, so an
-  unknown palette is reported at its line.
+  unknown palette is reported at its line. **Planned** (ADR 0062): it
+  also says which palette names are octave palettes
+  (`pastel1-octaves`), so the reader can match palette to scheme.
 - Layout still depends only on `(notasi piece)` (and `style`).
 
 ## Public interface
@@ -567,6 +573,21 @@ All errors at a use carry the part, the time and the chain of uses.
   `bad-option`, at the group's line (`part` set to PART where there is
   one). Everything inside the value is `bad-option`, as for
   `:display`.
+- [iteration 6] (**Planned**, ADR 0062) `:scheme` not `by-pitch` or
+  `by-key`; a `:palette` list of lists with an empty list, a colour
+  that is not `"#rrggbb"`, or lists of different lengths: `bad-option`.
+- [iteration 6] (**Planned**) A group whose effective scheme and
+  palette don't match (a plain palette, named or a list of colours,
+  with `by-key`; an octave palette, named or as lists, with
+  `by-pitch`): `bad-option`, its message naming `by-key`. Scheme and
+  palette may be written on different levels, so this is checked on
+  the group's effective settings, at the group's line when either is
+  written on the group, else at the score's line.
+- [iteration 6] (**Planned**) A key in `:colors` (a name ending in an
+  octave number) when the group's effective scheme is `by-pitch`:
+  `bad-option`, its message naming `by-key`, at the same line as
+  above. A name that matches no pitch or key of the group's scale is
+  not an error.
 - [iteration 5] An `:annotation-part` that is not a member of the
   group (defined or not): `bad-option` (`part` set to the name). An
   `:annotation-position` not `above` or `below`; an
@@ -749,6 +770,32 @@ error cases tagged with its feature, and the steps above that they need.
      stroke moves N keys.
 
 The **[scores]** cases are built in milestone 2 (04, "Slices").
+
+## Iteration 6
+
+**Planned** (ADR 0062). The reader reads and checks `by-key` and its
+palettes; layout colours the notes (04). The error cases are tagged
+**[iteration 6]** above. No record changes (02): a group's `scheme`,
+`palette` and `colors` already hold what is read.
+
+- **`:scheme by-key`** is a value `:scheme` takes, on a score or a
+  group.
+- **`:palette`** takes an octave palette: a name `(notasi style)` lists
+  as one (`pastel1-octaves`), or a list of lists of `"#rrggbb"`, one
+  list per scale position, lowest octave first, all the same length.
+  When a group's effective scheme is `by-key` and no palette is
+  written at any level, its palette is `pastel1-octaves`, not
+  `pastel1` (step 12).
+- **`:colors`** entries are `(NAME COLOUR)`. Under `by-key` a NAME is
+  a pitch name, or a key written as in a part (pitch name or alias,
+  then octave number). The reader writes each key in its canonical
+  form for each group, by the group's scale (`i2` becomes `ding2`), as
+  it resolves aliases in parts, so layout sees only pitch names and
+  canonical keys (04). A key whose pitch is not in the group's scale is
+  kept as written, and never used. Under `by-pitch` a key is an error.
+- **Checked after filling in** (step 12): scheme, palette and `:colors`
+  may come from different levels, so they are checked together on each
+  group's effective settings.
 
 ## Open questions
 

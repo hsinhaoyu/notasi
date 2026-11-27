@@ -692,7 +692,9 @@ as the octave rises.
   `i4`'s colour. There is no warning.
 - **`:colors` takes pitches and keys**: `((ding "#000000"))` sets ding
   in every octave, `((i2 "#000000"))` or `((ding2 "#000000"))` sets
-  that key only, and a key wins over its pitch.
+  that key only, and a key wins over its pitch. A key is written as in
+  a part, by pitch name or alias; a pitch alone is written by its name,
+  as under `by-pitch`.
 - Strokes stay grey, and the text colour is chosen by contrast with the
   fill, as under `by-pitch`.
 
@@ -830,10 +832,11 @@ pitched and stroke groups alike:
   or a list of colours) with `:scheme by-key` is an error naming
   `by-key`, and an octave palette with `by-pitch` is an error naming
   `by-key`: each scheme takes its own kind of palette. Every list of
-  an octave palette written as lists has the same number of colours. Under `by-pitch`, a key in `:colors` is an error, as
-  any name that isn't a pitch of the group's scale is. Under `by-key`,
-  a key in `:colors` must be a pitch of the scale with an octave
-  number.
+  an octave palette written as lists has the same number of colours.
+  Under `by-pitch`, a key in `:colors` (a name ending in an octave
+  number, which no pitch name can) is an error naming `by-key`. A name
+  that matches no pitch or key of a group's scale is not an error: it
+  is never used, as for pitch names now.
 - (ADR 0057) An annotation row option on a score, an
   `:annotation-part` that isn't a part of the group, an unknown
   position, alignment or text, or a level that isn't a whole number

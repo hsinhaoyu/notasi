@@ -43,7 +43,12 @@ and no figure JSON changes.
    0062. Decided while promoting: an octave palette with `by-pitch` is
    an error; every list of an octave palette has the same number of
    colours.
-2. `03-reader.md`
+2. `03-reader.md`: promoted (ADR 0062). Decided while promoting: a
+   name in `:colors` that matches nothing is never used, not an error
+   (only a key under `by-pitch` is), which also corrects 01; a
+   scheme/palette mismatch is reported at the group's line when either
+   is written on the group, else at the score's; the reader writes keys
+   in `:colors` in their canonical form for each group.
 3. `04-layout.md`
 
 Then the milestones and the build order are set, and the status
