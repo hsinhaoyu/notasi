@@ -35,7 +35,16 @@ Thinking, not the design (ADRs 0023, 0024). All from the discussion of
 
 ## Promotion
 
-Not yet agreed.
+Agreed (2026-11-27), in this order. 02 and 05 don't change: no record
+and no figure JSON changes.
+
+1. `01-notation.md`, with the new ADR (notes can be coloured by key)
+   and `glossary.md` (`by-key`, octave palette)
+2. `03-reader.md`
+3. `04-layout.md`
+
+Then the milestones and the build order are set, and the status
+becomes `building`.
 
 ## Milestones
 
