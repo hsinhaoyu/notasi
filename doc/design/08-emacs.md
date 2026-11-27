@@ -10,7 +10,7 @@ hand was deferred, see "Documentation"). ADRs 0048 (the command line it depends 
 (ADRs 0062, 0066): the README's Emacs section has an owner and points
 to the manual (`feat/readme-sections`),
 and its layout entry has moved to `CONTRIBUTING.md` (`feat/contributing`;
-see "Documentation"). Planned: `/readme-sync` keeps the section current.
+see "Documentation").
 
 ## Responsibility
 
@@ -333,8 +333,7 @@ Iteration 6 (ADR 0062; the README's rules are in 07, "The README"):
   is an `owner: claude` section of the README: Claude keeps it in step
   with the package. It points to the manual's chapter (ADR 0066); the
   configuration and its ERT tests are on the manual's installing
-  page. **Planned:** `/readme-sync` updates it
-  (`feat/readme-sync`).
+  page.
 
 ## Not in this design
 

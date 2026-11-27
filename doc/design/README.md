@@ -107,8 +107,9 @@ See [its README](../iterations/06-readme-workflow/README.md).
    and `examples/LICENSE` (CC BY 4.0), and the contribution rule
 3. **Implemented.** `feat/readme-sections`: the README's sections and
    owners, and `tests/readme.scm`'s markers, links and commands
-4. **Planned.** `feat/readme-sync`: the `/readme-sync` skill, and the
-   README step in `/doc-audit`
+
+`feat/readme-sync`, the `/readme-sync` skill and a README step in
+`/doc-audit`, was dropped (ADR 0068).
 
 ### Deferred
 

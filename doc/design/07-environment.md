@@ -10,8 +10,7 @@ LilyPond files and their hand-drawn images (ADR 0064). Iteration 6:
 README, and their checks (ADR 0062, `feat/contributing`); the
 licences (ADRs 0063, 0065, `feat/licences`); the README for users,
 with an owner for each section, and its checks (ADR 0062,
-`feat/readme-sections`). Planned in iteration 6: `/readme-sync` and the
-README step in `/doc-audit`.
+`feat/readme-sections`); no `/readme-sync` skill (ADR 0068).
 Each question, once decided, gets an ADR and this document is updated
 to describe the choice.
 
@@ -43,8 +42,8 @@ its version.
 
 **Implemented.**
 
-- Contributors install the tools by hand. The README says Guile 3.0 is
-  required, with no version or install method.
+- Contributors install the tools by hand. The README names Guile 3.0
+  and Typst 0.15.1, and links to the manual's install commands.
 - CI (`.github/workflows/ci.yml`) runs `make check` on every PR to
   `dev` and `main`, on a fresh `ubuntu-latest` machine, with Guile from
   apt. The Guile version is whatever Ubuntu ships, and it changes when
@@ -177,10 +176,9 @@ examples/
 
 ## The README
 
-**Implemented** (iteration 6, ADR 0062): `CONTRIBUTING.md` and its
-checks (`feat/contributing`); the sections, their owners and the tests
-(`feat/readme-sections`). "Keeping it current" is **Planned**
-(`feat/readme-sync`).
+**Implemented** (iteration 6, ADRs 0062, 0067, 0068): `CONTRIBUTING.md`
+and its checks (`feat/contributing`); the sections, their owners and
+the tests (`feat/readme-sections`).
 
 The README is for users: musicians who write and draw gamelan scores
 with notasi. Developers read `CONTRIBUTING.md`.
@@ -267,27 +265,20 @@ aren't tested: the user sees both in the PR.
 
 ### Keeping it current
 
-- **`/readme-sync`**, a skill only the user runs. On its own branch
-  and PR, Claude updates the `owner: claude` sections that no longer
-  match the code, the manual and the iterations that are done, and
-  fixes their spelling and grammar; writes the sections that have a
-  `todo:` brief, and removes the brief; and posts suggestions for the
-  `owner: user` sections (a stale fact, a spelling mistake, a new
-  feature worth naming) as review comments on the PR, each on its
-  line, never in the file. The user makes the edits they accept and
-  resolves the rest.
-- **When:** as an iteration closes, after its last milestone is merged
-  and before `/release`, so the README on `main` matches the release;
-  and whenever the user wants.
-- **`/doc-audit`** compares the README with the code and the manual,
-  and reports drift in its table with "README" as the doc side.
-- **The user's own edits** need no process: edit, commit, ship.
+No skill keeps the README current, and `/doc-audit` doesn't check it
+(ADR 0068):
+
+- **Claude's sections:** Claude updates them in the same change that
+  makes them stale (CLAUDE.md, "Keeping README.md and CONTRIBUTING.md
+  current"), and writes a `todo:` brief when asked.
+- **The user's sections:** the user edits them when they want: edit,
+  commit, ship.
 
 ## Licences
 
 **Implemented** (iteration 6, `feat/licences`, ADRs 0063, 0065), tests in
-`tests/licences.scm`, except the README's "Licence" section,
-**Planned** with the README's sections (`feat/readme-sections`).
+`tests/licences.scm`; the README's "Licence" section with the
+README's sections (`feat/readme-sections`).
 
 | Part | Licence, in | Credit goes to |
 |---|---|---|

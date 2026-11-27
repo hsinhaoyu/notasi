@@ -621,8 +621,10 @@ examples, golden files and manual pages it affects.
      longest label printed in any system.
    - A `notes` group's rows are the notes it plays in the range, not
      in the whole piece.
-   - `examples/gilak.nts` has two scores, so its golden files are
-     `gilak.full.json` and `gilak.second-cycle.json`.
+   - A file with scores has one golden file per score, named
+     `NAME_SCORE.json` (ADR 0040): `examples/gallery/jaya-semara.nts`
+     has `jaya-semara_full.json`, `jaya-semara_kotekan.json` and
+     `jaya-semara_collapsed.json`.
 
 ## Slices (iteration 3)
 

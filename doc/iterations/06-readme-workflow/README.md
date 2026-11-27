@@ -25,10 +25,10 @@ Agreed (2026-11-27):
 2. `tests/readme.scm` checks the markers and the relative links, and
    runs the "Drawing a score" commands on a copy of
    `examples/gallery/jaya-semara.nts`.
-3. `/readme-sync` exists and only the user can run it. Run once, its
-   PR changes only `owner: claude` sections, and its suggestions for
-   the user's sections are review comments on the PR.
-4. `/doc-audit` reports README drift.
+3. Dropped (ADR 0068): `/readme-sync` exists and only the user can
+   run it; its PR changes only `owner: claude` sections, and its
+   suggestions for the user's sections are review comments on the PR.
+4. Dropped (ADR 0068): `/doc-audit` reports README drift.
 5. The licences are in place, as in
    [licences](design_ideas/2026-11-27-licences.md): `LICENSE` (MIT),
    `doc/manual/LICENSE` and `examples/LICENSE` (CC BY 4.0, naming the
@@ -107,8 +107,7 @@ and 08 ("Documentation").
    sections (the sentence on how settled notasi is, "Why notasi" (removed, ADR 0067),
    "Licence") with their `owner: user` markers; the user writes their
    text in its PR before it merges.
-4. **`feat/readme-sync`** (07, ADR 0062): the `/readme-sync` skill
-   (`disable-model-invocation`), and the README step in `/doc-audit`.
+4. **`feat/readme-sync`** (dropped, ADR 0068): the `/readme-sync`
+   skill and the README step in `/doc-audit`.
 
-Then Verify: the acceptance test, with `/readme-sync` run once, and
-`/doc-audit`.
+Then Verify: the acceptance test, and `/doc-audit`.

@@ -177,7 +177,7 @@ Rules, besides those of version 1 below, which still hold:
 ## JSON contract (version 1)
 
 Replaced by version 2; kept for the record. An excerpt of `tests/golden/tenzer1.json`, the figure for
-`examples/demos/tenzer1.nts` (the first group, with its first event shown):
+`examples/demos/tenzer1.nts` (both removed in 2026-11), the first group with its first event shown:
 
 ```json
 {
