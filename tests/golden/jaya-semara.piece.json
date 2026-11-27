@@ -3,7 +3,12 @@
   "title": "Jaya Semara: pangecet",
   "length": 17,
   "pickup": 1,
-  "info": {},
+  "info": {
+    "composer": "I Wayan Beratha",
+    "composition-year": "1964",
+    "source": "Lisa Gold, Music in Bali (2005): the gong pattern from activity 2.4 (p. 43); the jublag, jegogan and panyacah from activities 3.1 and 3.2 (pp. 56-58); the gangsa norot kotekan and the ugal from figure 3.1 (p. 61); the instruments' ranges from figure 2.7 (p. 40)",
+    "remarks": "Not notated: the reyong norot (described but not written out in the book), the alternation with nyog-cag kotekan, dynamics and tempo."
+  },
   "colotomies": [
     {
       "start": 0,
@@ -256,7 +261,7 @@
       "annotation": null,
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 38
+        "line": 33
       }
     },
     {
@@ -267,7 +272,7 @@
       "annotation": null,
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 42
+        "line": 37
       }
     },
     {
@@ -278,7 +283,7 @@
       "annotation": null,
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 46
+        "line": 41
       }
     },
     {
@@ -289,7 +294,7 @@
       "annotation": null,
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 51
+        "line": 46
       }
     },
     {
@@ -300,7 +305,7 @@
       "annotation": null,
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 57
+        "line": 52
       }
     },
     {
@@ -311,7 +316,7 @@
       "annotation": null,
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 59
+        "line": 54
       }
     },
     {
@@ -322,7 +327,7 @@
       "annotation": null,
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 61
+        "line": 56
       }
     },
     {
@@ -333,7 +338,7 @@
       "annotation": null,
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 69
+        "line": 64
       }
     },
     {
@@ -344,7 +349,7 @@
       "annotation": null,
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 74
+        "line": 69
       }
     }
   ],
@@ -660,7 +665,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 88
+        "line": 83
       }
     },
     {
@@ -974,7 +979,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 89
+        "line": 84
       }
     },
     {
@@ -1051,7 +1056,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 90
+        "line": 85
       }
     },
     {
@@ -1168,7 +1173,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 91
+        "line": 86
       }
     },
     {
@@ -1245,7 +1250,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 92
+        "line": 87
       }
     },
     {
@@ -1302,7 +1307,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 93
+        "line": 88
       }
     },
     {
@@ -1495,7 +1500,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/jaya-semara.nts",
-            "line": 104
+            "line": 99
           }
         },
         {
@@ -1527,7 +1532,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/jaya-semara.nts",
-            "line": 105
+            "line": 100
           }
         },
         {
@@ -1559,7 +1564,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/jaya-semara.nts",
-            "line": 106
+            "line": 101
           }
         },
         {
@@ -1591,7 +1596,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/jaya-semara.nts",
-            "line": 107
+            "line": 102
           }
         },
         {
@@ -1623,7 +1628,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/jaya-semara.nts",
-            "line": 108
+            "line": 103
           }
         },
         {
@@ -1659,13 +1664,13 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/jaya-semara.nts",
-            "line": 109
+            "line": 104
           }
         }
       ],
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 102
+        "line": 97
       }
     },
     {
@@ -1707,7 +1712,14 @@
           "note_label_octave": true,
           "fill": "colour",
           "holds": "none",
-          "annotation": null,
+          "annotation": {
+            "part": "polos",
+            "position": "below",
+            "align": "left",
+            "level": 1,
+            "text": "short",
+            "label": null
+          },
           "keys": "used",
           "row_label_octave": true,
           "key_numbers": false,
@@ -1720,7 +1732,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/jaya-semara.nts",
-            "line": 115
+            "line": 111
           }
         },
         {
@@ -1752,13 +1764,13 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/jaya-semara.nts",
-            "line": 116
+            "line": 114
           }
         }
       ],
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 113
+        "line": 109
       }
     },
     {
@@ -1809,7 +1821,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/jaya-semara.nts",
-            "line": 124
+            "line": 123
           }
         },
         {
@@ -1828,7 +1840,14 @@
           "note_label_octave": false,
           "fill": "colour",
           "holds": "none",
-          "annotation": null,
+          "annotation": {
+            "part": "polos",
+            "position": "below",
+            "align": "left",
+            "level": 1,
+            "text": "short",
+            "label": null
+          },
           "keys": "used",
           "row_label_octave": true,
           "key_numbers": false,
@@ -1841,7 +1860,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/jaya-semara.nts",
-            "line": 125
+            "line": 124
           }
         },
         {
@@ -1873,7 +1892,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/jaya-semara.nts",
-            "line": 126
+            "line": 127
           }
         },
         {
@@ -1905,7 +1924,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/jaya-semara.nts",
-            "line": 128
+            "line": 129
           }
         },
         {
@@ -1937,7 +1956,7 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/jaya-semara.nts",
-            "line": 129
+            "line": 130
           }
         },
         {
@@ -1945,7 +1964,7 @@
           "short": "Gong, kempli",
           "subtitle": null,
           "labels": "first-long",
-          "rows": "notes",
+          "rows": "compact",
           "members": [
             {
               "part": "gong",
@@ -1973,13 +1992,13 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/jaya-semara.nts",
-            "line": 130
+            "line": 131
           }
         }
       ],
       "source": {
         "file": "examples/gallery/jaya-semara.nts",
-        "line": 122
+        "line": 121
       }
     }
   ]

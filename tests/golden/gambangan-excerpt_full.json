@@ -134,15 +134,6 @@
                   "continued": false
                 },
                 {
-                  "start": 16,
-                  "dur": 1,
-                  "row": 0,
-                  "text": null,
-                  "fill": "#ccebc5",
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
                   "start": 17,
                   "dur": 1,
                   "row": 0,
@@ -339,15 +330,6 @@
                 },
                 {
                   "start": 15,
-                  "dur": 1,
-                  "row": 2,
-                  "text": null,
-                  "fill": "#fbb4ae",
-                  "text_color": "#222222",
-                  "continued": false
-                },
-                {
-                  "start": 16,
                   "dur": 1,
                   "row": 2,
                   "text": null,

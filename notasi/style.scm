@@ -98,9 +98,10 @@
        (+ (min la lb) 0.05))))
 
 (define (text-color-for fill)
-  "Return the colour of text on FILL: white if it has at least 3:1
-contrast with FILL (WCAG's minimum for bold text), else near-black."
-  (if (>= (contrast-ratio fill white) 3)
+  "Return the colour of text on FILL: white if it has at least 4.5:1
+contrast with FILL (WCAG's minimum for normal text, which note text
+is), else near-black."
+  (if (>= (contrast-ratio fill white) 4.5)
       white
       near-black))
 

@@ -735,10 +735,10 @@ pitched and stroke groups alike:
 | Key | Value | Default |
 |---|---|---|
 | `:symbol` | `none`, `dot`, `ring`, `cross`: small, centred in the note's cell | `none` |
-| `:symbol-size` | a fraction of the cell's narrower side, greater than 0 and at most 1, e.g. `0.3` | `0.3`, chosen by eye |
+| `:symbol-size` | a fraction of the cell's narrower side, greater than 0 and at most 1, e.g. `0.3` | `0.12`, chosen by eye |
 | `:symbol-color` | `"#rrggbb"` | near-black, as note labels |
 | `:border` | `"#rrggbb"`: a border of that colour, thicker than the normal one | none (the normal border) |
-| `:border-width` | a LENGTH, e.g. `"1pt"` | `"1.5pt"`, thicker than the normal border, chosen by eye |
+| `:border-width` | a LENGTH, e.g. `"1pt"` | `"0.8pt"`, a little thicker than the normal border, chosen by eye |
 
 - A part with no entry is drawn as without `:part-marker`. Colour
   stays the pitch colour.
@@ -832,8 +832,9 @@ Later extensions of the notation are listed in the
 ## Open questions
 
 None for iteration 5: its design ideas' questions were settled before
-promotion; the default `:symbol-size` (0.3) and `:border-width`
-(1.5pt) of `:part-marker` were chosen by eye in `feat/collapsed-markers`.
+promotion; the default `:symbol-size` and `:border-width` of
+`:part-marker` were chosen by eye in `feat/collapsed-markers` (0.3 and
+1.5pt) and made subtler in `feat/gallery` (0.12 and 0.8pt).
 None for iteration 3: its design ideas' questions were settled before
 promotion. None for iteration 2. The three questions of v1 are answered: parts
 have equal length, and only colotomy parts shorter than their cycle

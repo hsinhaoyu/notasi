@@ -5,6 +5,10 @@
 ;;; - README.md has a section "Using notasi in Emacs" linking to the
 ;;;   manual, and its layout list no longer calls editors/emacs/ in
 ;;;   progress (doc/design/08-emacs.md, "Documentation").
+;;; - README.md shows a gallery picture (iteration 5's acceptance test,
+;;;   item 4; milestone feat/gallery: jaya-semara_collapsed.png): a
+;;;   Markdown image ![...](examples/gallery/images/jaya-semara_collapsed.png),
+;;;   and that file exists.
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
@@ -85,6 +89,16 @@ heading or the end, or #f if there is no such heading."
 (test-assert "README's layout no longer calls editors/emacs/ in progress"
   (and emacs-layout-item
        (not (string-contains emacs-layout-item "(in progress)"))))
+
+(define gallery-picture "examples/gallery/images/jaya-semara_collapsed.png")
+
+(test-assert "README shows the gallery picture jaya-semara_collapsed.png"
+  (string-match (string-append "!\\[[^]]*\\]\\("
+                               (regexp-quote gallery-picture) "\\)")
+                readme))
+
+(test-assert "README's gallery picture exists"
+  (file-exists? gallery-picture))
 
 (define runner (test-runner-current))
 (test-end "readme")

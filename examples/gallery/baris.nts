@@ -11,7 +11,9 @@
 ;; identical, and the gongs are the template's gilak-2 colotomy (gilak with
 ;; the gong, not the gong lanang, on 4).
 
-(piece "Baris" :colotomy gilak-2 :pickup 1)
+(piece "Baris" :colotomy gilak-2 :pickup 1
+  :source "Michael Tenzer, Balinese Gamelan Music, 3rd edition (Tuttle Publishing, 2011): the figure \"Notation of reyong and kendang parts, with gong, kempur, kempli and calung (core melody)\", and the sung lines below it"
+  :remarks "Tenzer numbers the beats 1-8 with the gong on 1; the scores print his numbers.")
 
 (use gong-kebyar)
 
@@ -142,19 +144,20 @@
 ;; at the left, every note's name written in its coloured cell. The
 ;; reyong is not collapsed: one row per kettle, as in the colour score,
 ;; colour only and no names, so the interlocking polos and sangsih can
-;; be read. Each drum's two
-;; hands share one row (they never strike together, as the composite
-;; drum score shows). The gongs and kempli keep one row per stroke, with
-;; their letters.
+;; be read; below it, a row names the polos's three-against-four
+;; figures. Each drum's two hands share one row (they never strike
+;; together, as the composite drum score shows). The gongs share one
+;; row and the kempli has the other, with their letters.
 (score collapsed :note-label pitch-display-name :note-label-octave no :rows compact
     :caption "Source: Michael Tenzer, Balinese Gamelan Music, 3rd edition (Tuttle Publishing, 2011)."
   (group "Reyong" :subtitle "polos, sangsih" :rows notes :note-label none
+      :annotation-part polos :annotation-text long
     polos sangsih)
   (group "Gangsa-1"         pemade-1)
   (group "Gangsa-2"         pemade-2)
   (group "Ugal"             ugal)
   (group "Calung"           calung)
   (group "Jegogan"          jegogan)
-  (group "Gong, kempli" :rows notes  gong kempli)
+  (group "Gong, kempli"     gong kempli)
   (group "Kendang lanang"   lanang-lh lanang-rh)
   (group "Kendang wadon"    wadon-lh wadon-rh))

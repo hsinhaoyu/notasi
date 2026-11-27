@@ -331,7 +331,40 @@
               ]
             }
           ],
-          "annotation": null,
+          "annotation": {
+            "position": "below",
+            "label": null,
+            "items": [
+              {
+                "start": 0,
+                "dur": 8,
+                "text": "1",
+                "align": "left",
+                "continued": false
+              },
+              {
+                "start": 8,
+                "dur": 8,
+                "text": "6",
+                "align": "left",
+                "continued": false
+              },
+              {
+                "start": 16,
+                "dur": 8,
+                "text": "3",
+                "align": "left",
+                "continued": false
+              },
+              {
+                "start": 24,
+                "dur": 8,
+                "text": "2",
+                "align": "left",
+                "continued": false
+              }
+            ]
+          },
           "pulse_lines": true,
           "row_lines": true
         },

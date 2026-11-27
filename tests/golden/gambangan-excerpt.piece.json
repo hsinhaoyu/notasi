@@ -298,11 +298,6 @@
           "notes": ["deng3"]
         },
         {
-          "start": 4,
-          "dur": "1/4",
-          "notes": ["deng3"]
-        },
-        {
           "start": "17/4",
           "dur": "1/4",
           "notes": ["deng3"]
@@ -422,11 +417,6 @@
         },
         {
           "start": "15/4",
-          "dur": "1/4",
-          "notes": ["ding3"]
-        },
-        {
-          "start": 4,
           "dur": "1/4",
           "notes": ["ding3"]
         },
@@ -660,6 +650,76 @@
       "source": {
         "file": "examples/gallery/gambangan-excerpt.nts",
         "line": 45
+      }
+    },
+    {
+      "name": "marked",
+      "title": "Gambangan (excerpt): reyong kotekan",
+      "subtitle": null,
+      "caption": "Source: Colin McPhee (1940).",
+      "from": 0,
+      "to": 8,
+      "system_length": null,
+      "breaks": [],
+      "cycle_numbers": false,
+      "pulse_numbers": true,
+      "numbering": "gong-last",
+      "background": "grid",
+      "cycle_label": "Cycle",
+      "pulse_label": "Pulse",
+      "font_size": null,
+      "cell_width": "2em",
+      "cell_height": "2em",
+      "groups": [
+        {
+          "label": "Reyong",
+          "short": "Reyong",
+          "subtitle": "sangsih (marked), polos",
+          "labels": "first-long",
+          "rows": "notes",
+          "members": [
+            {
+              "part": "sangsih",
+              "label": "sangsih"
+            },
+            {
+              "part": "polos",
+              "label": "polos"
+            }
+          ],
+          "note_label": "none",
+          "note_label_octave": true,
+          "fill": "colour",
+          "holds": "none",
+          "annotation": null,
+          "keys": "used",
+          "row_label_octave": true,
+          "key_numbers": false,
+          "row_labels": "pitch-display-name",
+          "display": [],
+          "part_marker": [
+            {
+              "part": "sangsih",
+              "symbol": "dot",
+              "symbol_size": null,
+              "symbol_color": null,
+              "border": null,
+              "border_width": null
+            }
+          ],
+          "scheme": "by-pitch",
+          "palette": "pastel1",
+          "colors": [],
+          "background": "grid",
+          "source": {
+            "file": "examples/gallery/gambangan-excerpt.nts",
+            "line": 54
+          }
+        }
+      ],
+      "source": {
+        "file": "examples/gallery/gambangan-excerpt.nts",
+        "line": 53
       }
     }
   ]

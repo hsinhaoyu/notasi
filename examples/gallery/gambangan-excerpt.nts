@@ -28,13 +28,13 @@
 (part :instrument reyong :name sangsih
   o3:1/4 - e3 o3 | - e3 o3 - | e3 o3 - e3 | o3 e3 - e3 |
   /
-  e3 e3 e3 i3 | - e3 i3 - | i3 e3 - i3 | e3 - i3 e3 |)
+  - e3 e3 i3 | - e3 i3 - | i3 e3 - i3 | e3 - i3 e3 |)
 
 ;; Polos: dang and ding, then dung and dang.
 (part :instrument reyong :name polos
   -:1/4 a2 i3 - | a2 i3 - a2 | i3 - a2 i3 | - i3 a2 i3 |
   /
-  i3 u2 a2 - | u2 a2 - u2 | a2 - u2 a2 | - u2 a2 - |)
+  - u2 a2 - | u2 a2 - u2 | a2 - u2 a2 | - u2 a2 - |)
 
 ;; The kotekan in grid format: one row per kettle, colour only, the two
 ;; parts together.
@@ -45,3 +45,12 @@
 (score voices :note-label pitch-display-name :note-label-octave no :rows parts :fill none
   (group "Reyong" :subtitle "sangsih, polos"
     (sangsih :label "Sangsih") (polos :label "Polos")))
+
+;; The kotekan on one row per kettle, as in `full', with the two parts
+;; told apart: each sangsih note has a small dot, the polos notes are
+;; drawn as usual. Where they play the same kettle (ding, from
+;; the second bar), the marks show whose note it is.
+(score marked :caption "Source: Colin McPhee (1940)."
+  (group "Reyong" :subtitle "sangsih (marked), polos" :rows notes
+         :part-marker ((sangsih :symbol dot))
+    sangsih polos))

@@ -11,12 +11,12 @@
 // A length from the figure, e.g. "10.5em" or "4mm".
 #let _len(s) = eval(s)
 
-// Defaults for a part's marks (ADR 0056), chosen by eye: a symbol a
-// fraction of the cell's narrower side, and a border thicker than the
-// grey one but thin enough not to hide a small note's colour.
-#let _default-symbol-size = 0.3
+// Defaults for a part's marks (ADR 0056), chosen by eye to be subtle
+// (feat/gallery): a small symbol, a fraction of the cell's narrower
+// side, and a border a little thicker than the grey one.
+#let _default-symbol-size = 0.12
 #let _default-symbol-color = "#222222"
-#let _default-border-width = "1.5pt"
+#let _default-border-width = "0.8pt"
 
 // A value of a voice's marker, or DEFAULT when the marker leaves it out.
 #let _mark(marker, key, default) = {
@@ -51,7 +51,7 @@
 #let _note(e, marker) = {
   let name = if e.text != none and not e.continued {
     align(center + horizon,
-      text(fill: rgb(e.text_color), weight: "bold", e.text))
+      text(fill: rgb(e.text_color), e.text))
   }
   let dash = e.fill == none and e.text == "-"
   // The symbol takes no room, so the label stays centred with it.
@@ -128,12 +128,12 @@
   if header.cycles != none {
     if header.cycle_label != none {
       cells.push(grid.cell(x: 0, y: row, colspan: 3,
-        align: left + horizon, text(weight: "bold", header.cycle_label)))
+        align: left + horizon, text(header.cycle_label)))
     }
     for m in header.cycles {
       cells.push(grid.cell(x: first + m.column, y: row,
         colspan: span(m.column), align: center + horizon,
-        text(weight: "bold", m.text)))
+        text(m.text)))
     }
     row-lines.push((pulse: header-pulses, under: false))
     row += 1
@@ -141,12 +141,12 @@
   if header.pulses != none {
     if header.pulse_label != none {
       cells.push(grid.cell(x: 0, y: row, colspan: 3,
-        align: left + horizon, text(weight: "bold", header.pulse_label)))
+        align: left + horizon, text(header.pulse_label)))
     }
     for (i, p) in header.pulses.enumerate() {
       if p != none {
         cells.push(grid.cell(x: first + i, y: row, colspan: span(i),
-          align: center + horizon, text(weight: "bold", p)))
+          align: center + horizon, text(p)))
       }
     }
     row-lines.push((pulse: header-pulses, under: false))
@@ -167,7 +167,7 @@
     if height > 0 {
       cells.push(grid.cell(x: 0, y: row, rowspan: height,
         align: horizon + left, inset: (right: 10pt), {
-          text(weight: "bold", size: 1.1em, g.label)
+          text(size: 1.1em, g.label)
           if g.subtitle != none {
             // A one-row group has no room for a second line: the
             // subtitle follows the label on the same line.
@@ -206,11 +206,18 @@
         cells.push(grid.cell(x: first + it.start, y: ann-row, colspan: it.dur,
           inset: 0pt, _annotation-item(it)))
       }
+      // A light line between the annotation row and the group's rows,
+      // across the grid, as a row line is drawn.
+      if rows.len() > 0 {
+        let between = if ann.position == "above" { ann-row + 1 } else { ann-row }
+        cells.push(grid.hline(y: between, start: first,
+          stroke: 0.5pt + luma(170)))
+      }
     }
     let pulses = g.at("pulse_lines", default: true)
     let rules = g.at("row_lines", default: false)
-    // The annotation row has cycle lines only, and no line between it
-    // and the group's rows.
+    // The annotation row has cycle lines only; the line between it and
+    // the group's rows is drawn with its cells.
     if ann != none and ann.position == "above" {
       row-lines.push((pulse: false, under: false))
     }
@@ -248,8 +255,14 @@
       let under = if x >= first and info.under {
         (bottom: 0.5pt + luma(170))
       }
-      if left == none { under } else if under == none { left }
-      else { left + under }
+      // The last pulse is closed on its right, as a pulse is on its
+      // left, in every row: annotation rows and rows without pulse
+      // lines too.
+      let right = if x == cols.len() - 1 {
+        (right: 0.5pt + luma(170))
+      }
+      let parts = (left, under, right).filter(p => p != none)
+      if parts.len() > 0 { parts.sum() }
     },
     ..range(cols.len() * rows-count).map(_ => []))
 
