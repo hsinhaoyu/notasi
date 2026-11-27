@@ -1,6 +1,6 @@
 # Iteration 6: a workflow for the README
 
-Status: deciding
+Status: building
 
 ## Goal
 
@@ -73,7 +73,42 @@ In dependency order (ADR 0023). No change to the glossary or to
    moves to `CONTRIBUTING.md`.
 3. The build order in `doc/design/README.md`.
 
-The rule in CLAUDE.md ("Design documents") follows in its own PR after
-promotion, as the glossary's did (#112).
+The rule in CLAUDE.md ("Design documents") goes into
+`feat/contributing`, which edits CLAUDE.md's README section anyway
+(decided 2026-11-27, when the build order was promoted).
 
-Promoted so far: `07-environment.md` (ADRs 0062, 0063), `08-emacs.md`.
+Promoted so far: `07-environment.md` (ADRs 0062, 0063), `08-emacs.md`,
+and the build order. Promotion is complete.
+
+## Milestones
+
+Each milestone is its own branch and PR into `dev`, started with
+`/start-milestone <branch>`, with no slices. After each one,
+`make check` passes. The design is in 07 ("The README", "Licences")
+and 08 ("Documentation").
+
+1. **`feat/contributing`** (07, 08, ADR 0062): `CONTRIBUTING.md` at
+   the top of the repository, with "Layout" and "Running tests" moved
+   from the README; `tests/readme.scm`'s checks on modules, `make`
+   targets and the `editors/emacs/` entry check `CONTRIBUTING.md`;
+   CLAUDE.md's "Keeping README.md current" names it, and CLAUDE.md
+   gains the README rule under "Design documents" (ADR 0062). First,
+   so the README can lose its developer sections.
+2. **`feat/licences`** (07, ADR 0063): `LICENSE` (MIT),
+   `doc/manual/LICENSE` and `examples/LICENSE` (CC BY 4.0, listing the
+   published sources and the rule for `examples/contrib/`); the rule in
+   `CONTRIBUTING.md`. Before the README, whose "Licence" section links
+   to these files.
+3. **`feat/readme-sections`** (07, 08, ADR 0062): the README's eight
+   sections in order, each with its `owner:` marker, at most about 150
+   lines; `tests/readme.scm` checks the markers, the relative links,
+   and the "Drawing a score" commands on a copy of
+   `examples/gallery/jaya-semara.nts`. The milestone adds the user's
+   sections (the sentence on how settled notasi is, "Why notasi",
+   "Licence") with their `owner: user` markers; the user writes their
+   text in its PR before it merges.
+4. **`feat/readme-sync`** (07, ADR 0062): the `/readme-sync` skill
+   (`disable-model-invocation`), and the README step in `/doc-audit`.
+
+Then Verify: the acceptance test, with `/readme-sync` run once, and
+`/doc-audit`.
