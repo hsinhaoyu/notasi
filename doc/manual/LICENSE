@@ -1,0 +1,18 @@
+The notasi user manual
+
+Copyright (c) 2026 Hsin-Hao Yu
+
+The user manual, everything in this folder (doc/manual/), its text and
+its figures, is licensed under the Creative Commons Attribution 4.0
+International licence (CC BY 4.0). You may share and adapt it, for any
+purpose, as long as you give credit, link to the licence, and say if
+you made changes.
+
+Credit it as: "notasi user manual, by Hsin-Hao Yu".
+
+The licence:    https://creativecommons.org/licenses/by/4.0/
+Its legal code: https://creativecommons.org/licenses/by/4.0/legalcode
+
+The manual's examples and their drawings are in examples/manual/, under
+examples/LICENSE. notasi's code is under the MIT licence, in LICENSE at
+the top of the repository.

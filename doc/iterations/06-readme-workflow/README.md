@@ -94,7 +94,7 @@ and 08 ("Documentation").
    CLAUDE.md's "Keeping README.md current" names it, and CLAUDE.md
    gains the README rule under "Design documents" (ADR 0062). First,
    so the README can lose its developer sections.
-2. **`feat/licences`** (07, ADR 0063): `LICENSE` (MIT),
+2. **`feat/licences`** (done) (07, ADRs 0063, 0065): `LICENSE` (MIT),
    `doc/manual/LICENSE` and `examples/LICENSE` (CC BY 4.0, listing the
    published sources and the rule for `examples/contrib/`); the rule in
    `CONTRIBUTING.md`. Before the README, whose "Licence" section links

@@ -42,7 +42,8 @@ examples/           pieces (.nts), in four folders (07, ADR 0052): gallery/ and 
                     gallery/ also holds LilyPond files (.ly, ADR 0064)
 templates/          shared definitions (.nts) loaded with (use NAME)
 tests/              SRFI-64 test files: one per module, plus golden, syntax,
-                    targets, manual, examples, iterations, decisions, readme
+                    targets, manual, examples, iterations, decisions, readme,
+                    licences
 tests/golden/       expected JSON figures, one per score of each example, and each
                     example's saved piece, NAME.piece.json (make golden)
 doc/prototypes/     hand-made mockup of the target output (score.typ, piece.json)

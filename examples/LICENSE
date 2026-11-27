@@ -1,0 +1,50 @@
+notasi's examples
+
+Copyright (c) 2026 Hsin-Hao Yu, except as said below
+
+The examples, everything in this folder (examples/): gallery/, demos/,
+manual/ and contrib/, with their drawings in each images/ folder, are
+licensed under the Creative Commons Attribution 4.0 International
+licence (CC BY 4.0). You may share and adapt them, for any purpose, as
+long as you give credit, link to the licence, and say if you made
+changes.
+
+The licence:    https://creativecommons.org/licenses/by/4.0/
+Its legal code: https://creativecommons.org/licenses/by/4.0/legalcode
+
+notasi's code is under the MIT licence, in LICENSE at the top of the
+repository.
+
+
+Examples from published sources
+-------------------------------
+
+Some examples transcribe music from these published books:
+
+- Lisa Gold, Music in Bali: Experiencing Music, Expressing Culture
+  (Oxford University Press, 2005)
+- Michael Tenzer, Balinese Gamelan Music, 3rd edition (Tuttle
+  Publishing, 2011)
+- Colin McPhee, Balinese Ceremonial Music (1940)
+
+Each such example names its book in the file itself: with :source, in
+a comment, or in a score's caption.
+
+The music in these examples belongs to the books it comes from, and
+this licence doesn't cover it. It covers only my own work on them:
+writing the music down as a notasi (or LilyPond) file, and the
+comments I added. The same goes for their drawings.
+
+
+Contributed examples: contrib/
+------------------------------
+
+Files in contrib/ are other people's. Each contributor keeps their
+copyright, and each file credits its contributor in the file itself,
+with :contributor, :transcriber and :source. Where a file names a
+published source, that source keeps its rights.
+
+By adding a file to `examples/contrib/`, you license it under CC BY 4.0 and confirm you have the right to: it's your own transcription or composition, or its source allows it.
+
+Opening the pull request is the agreement: there is no contributor
+licence agreement to sign, and commits needn't be signed.
