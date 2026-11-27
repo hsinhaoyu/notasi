@@ -1,6 +1,6 @@
 # 02 — Piece
 
-Status: implemented (iterations 2 and 3). `degree` (with `damped`) and
+Status: implemented (iterations 2, 3 and 5). `degree` (with `damped`) and
 `instrument` (without `show-names?`) since `feat/music-syntax`; times as
 exact rationals in pulses, with `part-end` and `events-at` taking a
 time, since `feat/music-durations`; `pickup`, `colotomies`,

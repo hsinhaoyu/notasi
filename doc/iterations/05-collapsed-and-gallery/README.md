@@ -177,3 +177,15 @@ changes the figure, and each later one adds to it.
      `:remarks` (no composer is named). Comments that explain the
      notation stay.
    - **The README's gallery picture:** `jaya-semara_collapsed.png`.
+
+   Changed while reviewing the drawings (#132):
+   - **The template's look:** no bold but the standalone title; a
+     light line between an annotation row and its group's rows; the
+     last pulse closed on its right, in every row.
+   - **Text colour:** white needs 4.5:1 contrast (normal text) instead
+     of 3:1, since note text is no longer bold.
+   - **Part marks:** subtler defaults, a dot of 0.12 and a border of
+     0.8pt (were 0.3 and 1.5pt).
+   - **Gambangan:** a `marked` score, the sangsih with a dot only; and
+     the first quarter of pulse 5, a stroke in each part by mistake, is
+     a rest.

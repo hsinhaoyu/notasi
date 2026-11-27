@@ -1,6 +1,6 @@
 # 01 — Notation language
 
-Status: implemented (iterations 2 and 3).
+Status: implemented (iterations 2, 3 and 5).
 The music below is read since milestone 1 (`feat/music`): options,
 `part`, pitches, strokes and instruments, durations, `rep`, colotomies
 and patterns; scores, groups and every printing option since

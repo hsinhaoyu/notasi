@@ -1,9 +1,9 @@
 # 04 — Layout
 
-Status: implemented (iterations 2 and 3): iteration 2's milestone 2, all five slices
+Status: implemented (iterations 2, 3 and 5): iteration 2's milestone 2, all five slices
 (`feat/scores-form`, `feat/scores-contract`, `feat/scores-rows`,
 `feat/scores-overlays`, `feat/scores-range`, see "Slices (iteration
-2)"). `layout-score` lays out a score as contract version 3. "Note
+2)"). `layout-score` lays out a score as contract version 4. "Note
 style" is built from a score's options. Modules: `(notasi style)`, `(notasi layout)`; tests
 in `tests/style.scm`, `tests/layout.scm` and `tests/golden.scm`.
 Contract version 3 (ADR 0043) with the header labels and the pickup's
@@ -21,7 +21,8 @@ Compact rows in place of `single` (ADRs 0055, 0060) since
 0056) since `feat/collapsed-markers`. The annotation row in place of
 the overlays (ADR 0057), completing contract version 4 (ADR 0059),
 since `feat/collapsed-annotation`: iteration 5's layout is
-implemented.
+implemented. Text colour at 4.5:1 contrast, since note text stopped
+being bold, in `feat/gallery`.
 
 Everything in this document is **Implemented** unless it says otherwise.
 
