@@ -1,6 +1,6 @@
 # 05 — Typst backend and JSON contract
 
-Status: implemented (iterations 2 and 3). Implemented (v1, all three
+Status: implemented (iterations 2 to 5). Implemented (v1, all three
 slices, see "Slices"): the JSON writer, figure files, the entry file,
 running Typst, `render-piece`, the template and the `notasi render`
 command; contract version 2 (ADR 0036) with the template's header rows
@@ -30,7 +30,10 @@ each voice's `marker` and the template's part marks (ADR 0056) since
 `feat/collapsed-markers`; the rest of contract version 4 and the
 template's annotation row (ADRs 0057, 0059), without overlays, since
 `feat/collapsed-annotation`. `--save-piece` (ADR 0058) since
-`feat/save-piece`: iteration 5's backend is built.
+`feat/save-piece`. The template's look reviewed in `feat/gallery`: no
+bold but the standalone title, a line between an annotation row and
+its group's rows, the last pulse closed on its right, and subtler
+part-marker defaults: iteration 5's backend is built.
 
 ## Responsibility
 
