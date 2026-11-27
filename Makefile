@@ -3,7 +3,7 @@ GUILE_FLAGS = --fresh-auto-compile -L .
 
 TESTS = $(wildcard tests/*.scm)
 
-.PHONY: check check-emacs clean golden images manual manual-figures manual-serve
+.PHONY: check check-emacs clean golden images lilypond manual manual-figures manual-serve
 
 check:
 	@status=0; \
@@ -44,6 +44,8 @@ golden:
 # for its score SCORE) into examples/manual/images/.  Each folder is
 # emptied first.  Needs Guile and Typst.  The committed images are the
 # ones CI draws on Linux; images drawn elsewhere are for looking only.
+# The images of the gallery's LilyPond files (NAME.ly, ADR 0064) are
+# left alone: `make lilypond' draws them.
 IMAGES_PPI = 144
 NOTASI = scripts/notasi
 MANUAL_SRC = doc/manual/src
@@ -51,7 +53,10 @@ MANUAL_EXAMPLES = examples/manual
 
 images:
 	@mkdir -p examples/gallery/images $(MANUAL_EXAMPLES)/images
-	@rm -f examples/gallery/images/*.png $(MANUAL_EXAMPLES)/images/*.png
+	@for p in examples/gallery/images/*.png; do \
+	  [ -f examples/gallery/$$(basename $$p .png).ly ] || rm -f $$p; \
+	done
+	@rm -f $(MANUAL_EXAMPLES)/images/*.png
 	@for f in examples/gallery/*.nts; do \
 	  $(NOTASI) render $$f --all --format png --ppi $(IMAGES_PPI) \
 	    -o examples/gallery/images/ >/dev/null || exit 1; \
@@ -60,6 +65,21 @@ images:
 	  n=$${f%%_*}; s=$${f#$$n}; s=$${s#_}; \
 	  $(NOTASI) render $(MANUAL_EXAMPLES)/$$n.nts $${s:+--score $$s} \
 	    --ppi $(IMAGES_PPI) -o $(MANUAL_EXAMPLES)/images/$$f.png >/dev/null || exit 1; \
+	done
+
+# The gallery's LilyPond files (ADR 0064): each examples/gallery/NAME.ly
+# into examples/gallery/images/NAME.png, cropped to the music.  Needs
+# LilyPond.  Run by hand and committed as drawn; CI doesn't run it.
+LILYPOND ?= lilypond
+LILYPOND_DPI = 200
+
+lilypond:
+	@mkdir -p build/lilypond examples/gallery/images
+	@for f in examples/gallery/*.ly; do \
+	  n=$$(basename $$f .ly); \
+	  $(LILYPOND) -dcrop -dno-print-pages --png -dresolution=$(LILYPOND_DPI) \
+	    -o build/lilypond/$$n $$f || exit 1; \
+	  cp build/lilypond/$$n.cropped.png examples/gallery/images/$$n.png; \
 	done
 
 clean:

@@ -4,7 +4,8 @@ Status: mostly open questions. Iteration 4 (ADR 0049): CI for the
 Emacs package and what Emacs users install are implemented.
 This answers question 2 for Emacs users only. The examples in four
 folders, their committed drawings and the CI check that keeps them
-current (ADR 0052) since iteration 5's `feat/examples`. Planned in
+current (ADR 0052) since iteration 5's `feat/examples`; the gallery's
+LilyPond files and their hand-drawn images (ADR 0064). Planned in
 iteration 6: the README for users, with an owner for each section, its
 checks and `CONTRIBUTING.md` (ADR 0062); the licences (ADR 0063).
 Each question, once decided, gets an ADR and this document is updated
@@ -90,7 +91,7 @@ Every `.nts` example in the repository is under `examples/`:
 
 ```
 examples/
-  gallery/          showcase pieces
+  gallery/          showcase pieces, and LilyPond files (ADR 0064)
     images/         their drawings, committed
   demos/            examples that show a feature
   contrib/          other people's examples
@@ -102,13 +103,15 @@ examples/
 
 | Folder | What it holds | Tested | Drawings committed |
 |---|---|---|---|
-| `gallery/` | Showcase pieces; the README and the manual may show them | golden JSON; images up to date | every score of every file, in `gallery/images/` |
+| `gallery/` | Showcase pieces; the README and the manual may show them. Also LilyPond files (`NAME.ly`, ADR 0064) | golden JSON; images up to date (not the LilyPond ones) | every score of every file, and one image per LilyPond file, in `gallery/images/` |
 | `demos/` | Examples that show a feature; not necessarily whole pieces | golden JSON | no |
 | `contrib/` | Other people's examples; no README in the folder (an empty `.gitkeep` keeps it in git) | no, not even read | no |
 | `manual/` | The manual's examples, shown with `{{#include}}` from here | `tests/manual.scm`; images up to date | those a page shows, in `manual/images/` |
 
-- **The pieces:** `gallery/` holds `jaya-semara`, `baris` and
-  `gambangan-excerpt`; `demos/` holds `gilak` and `tenzer1`.
+- **The pieces:** `gallery/` holds `jaya-semara`, `baris`,
+  `gambangan-excerpt` and `gambangan-readme`, and one LilyPond file,
+  `gambangan-readme-piano.ly`, the same passage on a staff; `demos/`
+  holds `gilak` and `tenzer1`.
 - **Names** are unique across `examples/`: a test fails if two folders
   hold a file of the same name. Golden files keep their names, with no
   folder: `tests/golden/NAME.json`, or `NAME_SCORE.json` for a file
@@ -136,7 +139,8 @@ examples/
   (`![…](figures/NAME.png)` for the example's first score, or
   `figures/NAME_SCORE.png` with `--score SCORE`), into
   `manual/images/`. It empties each `images/` folder first, so an image
-  no longer needed is deleted. The resolution,
+  no longer needed is deleted, except the images of the gallery's
+  LilyPond files. The resolution,
   chosen by eye, is 144 ppi (`IMAGES_PPI`): sharp on high-resolution
   screens, and about 60 KB for one of Jaya Semara's scores.
 - **The committed images are Linux's.** They are drawn on Linux with
@@ -146,8 +150,14 @@ examples/
   uploads the images it drew as a workflow artifact, and the PR commits
   those. `make images` on another system (macOS) is for looking: its
   images may differ in their bytes and are not committed.
+- **LilyPond images** (ADR 0064): `make lilypond` draws each
+  `gallery/NAME.ly` into `gallery/images/NAME.png`, cropped to the
+  music, at 200 dpi (about as wide as a notasi drawing at 144 ppi). It
+  needs LilyPond, and is run by hand: the image is committed as drawn,
+  and CI neither draws nor compares it.
 - **`make check` checks the set of images**, on any system: one in
-  `gallery/images/` for each score of each gallery file, one in
+  `gallery/images/` for each score of each gallery file and for each
+  LilyPond file, one in
   `manual/images/` for each image a manual page links to, and nothing
   else in either folder. A manual page links PNGs only. Only CI
   compares the images' bytes.

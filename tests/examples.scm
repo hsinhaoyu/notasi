@@ -7,17 +7,21 @@
 ;;; - The folders: examples/gallery (with images/), demos, contrib (kept
 ;;;   in git by an empty .gitkeep), manual (with templates/, mistakes/
 ;;;   and images/).
-;;; - The pieces: gallery/ holds jaya-semara, baris and gambangan-excerpt;
-;;;   demos/ holds gilak and tenzer1; no .nts lies directly in examples/.
+;;; - The pieces: gallery/ holds jaya-semara, baris, gambangan-excerpt
+;;;   and gambangan-readme, and one LilyPond file, gambangan-readme-piano
+;;;   (ADR 0064); demos/ holds gilak and tenzer1; no .nts lies directly
+;;;   in examples/.
 ;;; - Names are unique across examples/: no two folders hold a .nts file
 ;;;   of the same name.
 ;;; - Nothing is left behind: the manual's old examples/ and mistakes/
 ;;;   folders are gone, no example .nts is under doc/, scripts/preview.scm
 ;;;   is gone, and the Makefile has an `images' target and no `preview'.
+;;;   It has a `lilypond' target (ADR 0064).
 ;;; - The set of images (07, "make check checks the set of images"):
 ;;;   gallery/images/ holds exactly NAME.png for a gallery file with only
 ;;;   the default score, or NAME_SCORE.png for each score of a file with
-;;;   scores; manual/images/ holds exactly one X.png for each distinct
+;;;   scores, and NAME.png for each gallery LilyPond file NAME.ly (ADR
+;;;   0064); manual/images/ holds exactly one X.png for each distinct
 ;;;   figures/X.png a manual page links to.  Nothing else in either.
 ;;;   Each image starts with the PNG signature (the bytes themselves are
 ;;;   compared only by CI).
@@ -191,9 +195,14 @@ paths.  None if DIR doesn't exist."
 
 ;;; 2. The pieces
 
-(test-equal "gallery/ holds jaya-semara, baris and gambangan-excerpt"
-  '("baris.nts" "gambangan-excerpt.nts" "jaya-semara.nts")
+(test-equal "gallery/ holds jaya-semara, baris, gambangan-excerpt and gambangan-readme"
+  '("baris.nts" "gambangan-excerpt.nts" "gambangan-readme.nts"
+    "jaya-semara.nts")
   (sorted (files-in gallery ".nts")))
+
+(test-equal "gallery/ holds one LilyPond file, gambangan-readme-piano"
+  '("gambangan-readme-piano.ly")
+  (sorted (files-in gallery ".ly")))
 
 (test-equal "demos/ holds gilak and tenzer1"
   '("gilak.nts" "tenzer1.nts")
@@ -236,6 +245,9 @@ paths.  None if DIR doesn't exist."
 (test-assert "the Makefile has an images target"
   (string-match "(^|\n)images:" makefile))
 
+(test-assert "the Makefile has a lilypond target"
+  (string-match "(^|\n)lilypond:" makefile))
+
 (test-assert "the Makefile has no preview target"
   (not (string-match "(^|\n)preview:" makefile)))
 
@@ -249,14 +261,17 @@ paths.  None if DIR doesn't exist."
      (read-or-false (string-append gallery "/" f))))
  gallery-files)
 
-(test-equal "gallery/images/ holds one PNG per score of each gallery file, nothing else"
+(test-equal "gallery/images/ holds one PNG per score of each gallery file and per LilyPond file, nothing else"
   (sorted
-   (append-map
-    (lambda (f)
-      (let ((piece (read-or-false (string-append gallery "/" f))))
-        (if piece (image-names (string-drop-right f 4) piece) '())))
-    gallery-files))
-  (entries gallery-images))
+   (append
+    (append-map
+     (lambda (f)
+       (let ((piece (read-or-false (string-append gallery "/" f))))
+         (if piece (image-names (string-drop-right f 4) piece) '())))
+     gallery-files)
+    (map (lambda (f) (string-append (string-drop-right f 3) ".png"))
+         (files-in gallery ".ly"))))
+  (sorted (entries gallery-images)))
 
 (define linked-pngs
   (sorted (delete-duplicates

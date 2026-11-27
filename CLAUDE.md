@@ -13,6 +13,7 @@ GNU Guile 3.0 project for notating and visualizing Balinese gamelan music. `(not
 - Remove SRFI-64 logs: `make clean`
 - Check the Emacs package (tests, byte-compiling, checkdoc, package-lint; needs Emacs, not part of `make check`): `make check-emacs`
 - Redraw the committed drawings (every gallery score into `examples/gallery/images/`, each figure the manual shows into `examples/manual/images/`): `make images` (needs Typst). The committed images are the ones CI draws on Linux: when CI's image check fails, download its `images` artifact and commit those files; images drawn on macOS are for looking only.
+- Draw the gallery's LilyPond files (`examples/gallery/NAME.ly` into `images/NAME.png`, ADR 0064): `make lilypond` (needs LilyPond). Run it by hand after changing a `.ly` file and commit the image; CI doesn't draw these.
 
 Typst is pinned to **0.15.1** (05, "Version pinning"); CI installs exactly that version. `tests/template.scm` needs `typst` on the PATH.
 
@@ -37,7 +38,8 @@ scripts/            the notasi command: notasi render, with --all and --list (ty
 editors/emacs/      notasi-mode, the Emacs package (08), its ERT tests and check.el
 examples/           pieces (.nts), in four folders (07, ADR 0052): gallery/ and its
                     images/ (committed), demos/, contrib/ (not tested), and manual/
-                    (the manual's examples, templates/, mistakes/, images/)
+                    (the manual's examples, templates/, mistakes/, images/);
+                    gallery/ also holds LilyPond files (.ly, ADR 0064)
 templates/          shared definitions (.nts) loaded with (use NAME)
 tests/              SRFI-64 test files: one per module, plus golden, syntax,
                     targets, manual, examples, iterations, decisions, readme

@@ -1,0 +1,17 @@
+(piece "Gambangan excerpt: Reyong kotekan")
+(use gong-kebyar)
+
+(part :instrument reyong :name sangsih
+  o3:1/4    -   e3  o3 | - e3 o3 - | e3 o3 - e3 | o3    e3  -   e3 |
+  -         e3  e3  i3 | - e3 i3 - | e3 i3 - e3 | i3    -   e3  i3 |)
+
+(part :instrument reyong :name polos
+  -:1/4     a2  i3  - | a2 i3 - a2 | i3 - a2 i3 | - i3 a2   i3  |
+  -         u2  a2  - | u2 a2 - u2 | a2 - u2 a2 | - u2 a2   -   |)
+  
+(score kotekan :caption "Source: Balinese Ceremonial Music - Gambangan, transcr. Colin McPhee (1940)"
+  (group "Reyong"
+    :key-numbers yes
+    :row-labels pitch-name
+    :row-label-octave no
+    sangsih polos))
