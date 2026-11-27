@@ -172,7 +172,8 @@ examples/
 
 ## The README
 
-**Planned** (iteration 6, ADR 0062).
+**Partly implemented** (iteration 6, ADR 0062): `CONTRIBUTING.md` and
+its checks (`feat/contributing`). The rest is **Planned**.
 
 The README is for users: musicians who write and draw gamelan scores
 with notasi. Developers read `CONTRIBUTING.md`.
