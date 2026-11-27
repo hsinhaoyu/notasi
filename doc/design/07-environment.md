@@ -127,7 +127,8 @@ examples/
   stays where it is.
 - **Contributions** are credited with the piece information keys
   `:contributor`, `:source` and `:transcriber` (01), by convention.
-  **Planned** (ADR 0063): a review rule, under "Licences" below.
+  **Implemented** (ADR 0063, `feat/licences`): a review rule, in
+  `CONTRIBUTING.md`, under "Licences" below.
 
 ### Drawings
 

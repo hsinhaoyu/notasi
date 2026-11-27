@@ -357,7 +357,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/gambangan-excerpt.nts",
-        "line": 28
+        "line": 29
       }
     },
     {
@@ -475,7 +475,7 @@
       "texts": [],
       "source": {
         "file": "examples/gallery/gambangan-excerpt.nts",
-        "line": 34
+        "line": 35
       }
     },
     {
@@ -582,13 +582,13 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/gambangan-excerpt.nts",
-            "line": 42
+            "line": 43
           }
         }
       ],
       "source": {
         "file": "examples/gallery/gambangan-excerpt.nts",
-        "line": 41
+        "line": 42
       }
     },
     {
@@ -643,13 +643,13 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/gambangan-excerpt.nts",
-            "line": 46
+            "line": 47
           }
         }
       ],
       "source": {
         "file": "examples/gallery/gambangan-excerpt.nts",
-        "line": 45
+        "line": 46
       }
     },
     {
@@ -713,13 +713,13 @@
           "background": "grid",
           "source": {
             "file": "examples/gallery/gambangan-excerpt.nts",
-            "line": 54
+            "line": 55
           }
         }
       ],
       "source": {
         "file": "examples/gallery/gambangan-excerpt.nts",
-        "line": 53
+        "line": 54
       }
     }
   ]
