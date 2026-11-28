@@ -78,6 +78,17 @@ A notasi file is plain text, so you can write it in any text editor and draw it 
 
 The user manual is at <https://hsinhaoyu.github.io/notasi/>. To work on notasi itself, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Contributing examples
+<!-- owner: claude -->
+
+Other people's pieces go in `examples/contrib/`, one file each, by pull request.
+
+By adding a file to `examples/contrib/`, you license it under CC BY 4.0 and confirm you have the right to: it's your own transcription or composition, or its source allows it.
+
+Opening the pull request is the agreement: there is no contributor licence agreement to sign, and commits needn't be signed.
+
+Credit yourself in the file, with the piece information keys `:contributor`, and `:transcriber` and `:source` where they apply, so the credit travels with the file. A file without them is asked about before it is merged. The tests don't read `contrib/`, so this is a review rule, not a test.
+
 ## Licence
 <!-- owner: user -->
 

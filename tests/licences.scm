@@ -1,12 +1,12 @@
 ;;; The licence files: doc/design/07-environment.md, "Licences" ("The
-;;; files" and "Tests"; ADRs 0063, 0065).  Written from the design doc
+;;; files" and "Tests"; ADRs 0063, 0065, 0069).  Written from the design doc
 ;;; for milestone feat/licences, before the files existed.
 ;;;
 ;;; What it checks:
 ;;; - LICENSE exists and names the MIT licence ("MIT").
 ;;; - doc/manual/LICENSE and examples/LICENSE exist and each names
 ;;;   "CC BY 4.0".
-;;; - examples/LICENSE and CONTRIBUTING.md each contain, word for word,
+;;; - examples/LICENSE and README.md each contain, word for word,
 ;;;   the contribution sentence: "By adding a file to
 ;;;   `examples/contrib/`, you license it under CC BY 4.0 and confirm you
 ;;;   have the right to: it's your own transcription or composition, or
@@ -55,12 +55,12 @@
 (define licence-file "LICENSE")
 (define manual-licence-file "doc/manual/LICENSE")
 (define examples-licence-file "examples/LICENSE")
-(define contributing-file "CONTRIBUTING.md")
+(define readme-file "README.md")
 
 (define licence (slurp-or-empty licence-file))
 (define manual-licence (slurp-or-empty manual-licence-file))
 (define examples-licence (slurp-or-empty examples-licence-file))
-(define contributing (slurp-or-empty contributing-file))
+(define readme (slurp-or-empty readme-file))
 
 (define contribution-sentence
   "By adding a file to `examples/contrib/`, you license it under CC BY 4.0 and confirm you have the right to: it's your own transcription or composition, or its source allows it.")
@@ -89,14 +89,14 @@
 
 ;;; The contribution sentence
 
-(test-assert "CONTRIBUTING.md exists"
-  (file-exists? contributing-file))
+(test-assert "README.md exists"
+  (file-exists? readme-file))
 
 (test-assert "examples/LICENSE has the contribution sentence"
   (contains? examples-licence contribution-sentence))
 
-(test-assert "CONTRIBUTING.md has the contribution sentence"
-  (contains? contributing contribution-sentence))
+(test-assert "README.md has the contribution sentence"
+  (contains? readme contribution-sentence))
 
 (define runner (test-runner-current))
 (test-end "licences")

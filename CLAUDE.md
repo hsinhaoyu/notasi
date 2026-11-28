@@ -47,7 +47,7 @@ tests/              SRFI-64 test files: one per module, plus golden, syntax,
 tests/golden/       expected JSON figures, one per score of each example, and each
                     example's saved piece, NAME.piece.json (make golden)
 doc/prototypes/     hand-made mockup of the target output (score.typ, piece.json)
-doc/manual/         user manual for musicians (mdBook; style in STYLE.md)
+doc/manual/         user manual, for users (mdBook; style in STYLE.md)
 doc/design/         design documents (the current design)
 doc/iterations/     one folder per iteration: README (goal, acceptance test,
                     status, milestones), design_ideas/ (thinking), targets/;
@@ -85,7 +85,7 @@ Deferred work is in `doc/iterations/backlog.md`.
 
 ## User manual
 
-`doc/manual/` is the user manual for musicians, built with mdBook (ADR 0014). Claude writes it, as part of the work rather than at the end:
+`doc/manual/` is the user manual, for users rather than developers (ADR 0070), built with mdBook (ADR 0014). Claude writes it, as part of the work rather than at the end:
 
 - Any change a user can see (notation, error messages, commands, output) updates the manual in the same PR. Behaviour that isn't implemented yet is never documented there.
 - Read `doc/manual/STYLE.md` before writing a page. It sets the reader, the tone and the outline.
@@ -124,7 +124,7 @@ Write idiomatic Guile 3, not another language translated into Scheme:
 
 ## Keeping README.md and CONTRIBUTING.md current
 
-README.md is for musicians; CONTRIBUTING.md, for developers, holds "Layout" and "Running tests" (ADR 0062). `tests/readme.scm` runs under `make check` and fails when they are out of sync with the code: a module file in `notasi/` that CONTRIBUTING.md doesn't mention, a `notasi/*.scm` path in it that doesn't exist, a `make <target>` in either file that the Makefile lacks, or a missing `editors/emacs/` layout entry or README Emacs section. When you add, rename, or remove a module or Makefile target, update CONTRIBUTING.md in the same change; when you change a user-facing workflow, update the README's `owner: claude` sections. If either needs a new kind of fact that could go stale (e.g. a CLI command), extend `tests/readme.scm` to check it.
+README.md is for users, not developers (ADR 0070); CONTRIBUTING.md, for developers, holds "Architecture", "Layout" and "Running tests" (ADR 0062). `tests/readme.scm` runs under `make check` and fails when they are out of sync with the code: a module file in `notasi/` that CONTRIBUTING.md doesn't mention, a `notasi/*.scm` path in it that doesn't exist, a `make <target>` in either file that the Makefile lacks, or a missing `editors/emacs/` layout entry or README Emacs section. When you add, rename, or remove a module or Makefile target, update CONTRIBUTING.md in the same change; when you change a user-facing workflow, update the README's `owner: claude` sections. When you add, rename or remove a module, or change how data moves between modules or which component runs which, update CONTRIBUTING.md's "Architecture" diagram and the list under it in the same PR; no test checks them, and GitHub shows in the PR whether the Mermaid diagram still draws. If either needs a new kind of fact that could go stale (e.g. a CLI command), extend `tests/readme.scm` to check it.
 
 ## Tests
 
