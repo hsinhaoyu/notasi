@@ -1,4 +1,4 @@
-;;; (notasi save) -- Save a piece, as notasi read it, as JSON or as an
+;;; (notasi export-piece) -- Save a piece, as notasi read it, as JSON or as an
 ;;; s-expression (ADR 0058).  See doc/design/02-piece.md, "Saving the
 ;;; piece".
 ;;;
@@ -8,8 +8,8 @@
 ;;; another by name, and a note is its key's name.  The format has a
 ;;; version, but is not yet promised.
 
-(define-module (notasi save)
-  #:use-module (notasi json)
+(define-module (notasi export-piece)
+  #:use-module (notasi json-writer)
   #:use-module (notasi piece)
   #:use-module (ice-9 exceptions)
   #:use-module (ice-9 match)
@@ -261,7 +261,7 @@
 
 (define (piece->json piece)
   "PIECE as the JSON value of a saved piece (02, \"Saving the piece\"),
-as (notasi json) writes it: alists, vectors and `null'."
+as (notasi json-writer) writes it: alists, vectors and `null'."
   (->json (describe-piece piece)))
 
 ;;; ------------------------------------------------------------------

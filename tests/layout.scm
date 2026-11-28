@@ -83,7 +83,7 @@
 ;;; `steps` and `groups`; each group has `overlays`, #() in this slice.
 ;;; Choices made where the docs are not explicit (or disagree):
 ;;; - `lines` and the strings in `header.pulses` are Scheme strings
-;;;   ("none", "pulse", "cycle"; "16"), since (notasi json) writes no
+;;;   ("none", "pulse", "cycle"; "16"), since (notasi json-writer) writes no
 ;;;   symbol but `null`.
 ;;; - The first column of every system has the line "none". 04 says
 ;;;   "`pulse` where another pulse starts", and 05's excerpt, whose
@@ -189,7 +189,7 @@
              (notasi piece)
              (notasi reader)
              (notasi style)
-             (notasi json)
+             (notasi json-writer)
              (notasi layout))
 
 ;;; ------------------------------------------------------------------

@@ -5,10 +5,10 @@
              (notasi expand)
              (notasi reader)
              (notasi layout)
-             (notasi json)
+             (notasi json-writer)
              (notasi style)
              (notasi command)
-             (notasi save)
+             (notasi export-piece)
              (notasi typst))
 
 (test-begin "smoke")

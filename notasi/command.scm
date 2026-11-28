@@ -7,7 +7,7 @@
 (define-module (notasi command)
   #:use-module (notasi piece)
   #:use-module (notasi reader)
-  #:use-module (notasi save)
+  #:use-module (notasi export-piece)
   #:use-module (notasi typst)
   #:use-module (ice-9 exceptions)
   #:use-module (ice-9 match)

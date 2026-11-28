@@ -38,7 +38,7 @@
 ;;; figures.  Choices:
 ;;; - A NAME.piece.json is never a figure: the figures are the other
 ;;;   .json files, so a saved piece is not a figure's orphan.
-;;; - (notasi save) is looked up at run time, so while it doesn't exist
+;;; - (notasi export-piece) is looked up at run time, so while it doesn't exist
 ;;;   the figures are still compared and only the saved pieces fail.
 ;;; - The saved piece of an example that can't be read is neither
 ;;;   compared nor an orphan, as for its figures.
@@ -76,9 +76,9 @@ sorted.  No names if DIR doesn't exist."
 (define (piece-golden-path name)
   (string-append golden-dir "/" name piece-suffix))
 
-;;; save-piece from (notasi save), or #f while it doesn't exist.
+;;; save-piece from (notasi export-piece), or #f while it doesn't exist.
 (define save-piece
-  (let ((iface (false-if-exception (resolve-interface '(notasi save)))))
+  (let ((iface (false-if-exception (resolve-interface '(notasi export-piece)))))
     (and iface
          (module-variable iface 'save-piece)
          (module-ref iface 'save-piece))))
@@ -137,7 +137,7 @@ temporary file; the exception if it raises."
       (const #f)
       (lambda ()
         (guard (e (#t e))
-          (unless save-piece (error "(notasi save) has no save-piece"))
+          (unless save-piece (error "(notasi export-piece) has no save-piece"))
           (save-piece piece path)
           (read-text path)))
       (lambda ()
