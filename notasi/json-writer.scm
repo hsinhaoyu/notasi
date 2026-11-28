@@ -1,11 +1,11 @@
-;;; (notasi json) -- A small JSON writer.  See "JSON writing" in
+;;; (notasi json-writer) -- A small JSON writer.  See "JSON writing" in
 ;;; doc/design/05-typst-backend.md.
 ;;;
 ;;; Scheme values map to JSON as in guile-json: an alist is an object
 ;;; (keys in the given order), a vector is an array, the symbol `null'
 ;;; is null.  Output order is deterministic, which golden tests need.
 
-(define-module (notasi json)
+(define-module (notasi json-writer)
   #:use-module (ice-9 exceptions)
   #:use-module (ice-9 format)
   #:use-module (ice-9 match)

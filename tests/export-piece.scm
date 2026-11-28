@@ -1,17 +1,17 @@
-;;; Tests for (notasi save): saving the piece (ADR 0058).
+;;; Tests for (notasi export-piece): saving the piece (ADR 0058).
 ;;;
 ;;; Written from doc/design/02-piece.md ("Saving the piece", with "The
 ;;; format, decided for `feat/save-piece`", and the records above it)
 ;;; and ADR 0058, not from the implementation.
 ;;;
 ;;; Choices where the spec leaves room (also noted at the tests):
-;;; - (notasi save) is looked up at run time (resolve-interface), so
+;;; - (notasi export-piece) is looked up at run time (resolve-interface), so
 ;;;   while it doesn't exist every test fails instead of the file
 ;;;   stopping.
-;;; - A JSON value is as (notasi json) takes it: an object is an alist
+;;; - A JSON value is as (notasi json-writer) takes it: an object is an alist
 ;;;   (its keys symbols or strings, both accepted here), an array a
 ;;;   vector, null the symbol `null'.  An empty object (`info' with no
-;;;   information) is '(), which (notasi json) writes as {}.
+;;;   information) is '(), which (notasi json-writer) writes as {}.
 ;;; - Lists of records and of values (keys, aliases, breaks, notes, ...)
 ;;;   are JSON arrays (vectors), empty ones included.
 ;;; - The default score has no source location, so its `source' is
@@ -32,24 +32,24 @@
 ;;;   (piece->sexp PIECE), and nothing but whitespace after it.
 ;;; - An unsupported extension raises an &error and writes no file.
 ;;;
-;;; Run from the repo root: guile --fresh-auto-compile -L . tests/save.scm
+;;; Run from the repo root: guile --fresh-auto-compile -L . tests/export-piece.scm
 
 (use-modules (srfi srfi-1)
              (srfi srfi-64)
              (ice-9 exceptions)
              (ice-9 match)
              (ice-9 textual-ports)
-             (notasi json)
+             (notasi json-writer)
              (notasi piece)
              (notasi reader))
 
 ;;; ------------------------------------------------------------------
 ;;; Helpers
 
-(define save-iface (false-if-exception (resolve-interface '(notasi save))))
+(define save-iface (false-if-exception (resolve-interface '(notasi export-piece))))
 
 (define (save-proc name)
-  "The procedure NAME of (notasi save), or one that raises while the
+  "The procedure NAME of (notasi export-piece), or one that raises while the
 module or the procedure doesn't exist."
   (or (and save-iface
            (module-variable save-iface name)
@@ -58,7 +58,7 @@ module or the procedure doesn't exist."
         (raise-exception
          (make-exception (make-error)
                          (make-exception-with-message
-                          (format #f "(notasi save) has no ~a" name)))))))
+                          (format #f "(notasi export-piece) has no ~a" name)))))))
 
 (define piece->json (save-proc 'piece->json))
 (define piece->sexp (save-proc 'piece->sexp))
@@ -157,10 +157,10 @@ the symbol absent if a step doesn't exist."
 
 (test-begin "save")
 
-(test-assert "(notasi save) exists" save-iface)
+(test-assert "(notasi export-piece) exists" save-iface)
 (for-each
  (lambda (name)
-   (test-assert (string-append "(notasi save) exports " (symbol->string name))
+   (test-assert (string-append "(notasi export-piece) exports " (symbol->string name))
      (and save-iface (module-variable save-iface name) #t)))
  '(piece->json piece->sexp save-piece))
 

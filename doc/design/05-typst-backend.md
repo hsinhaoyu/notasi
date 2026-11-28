@@ -7,7 +7,7 @@ command; contract version 2 (ADR 0036) with the template's header rows
 and lines and the entry file's font size, subtitle and caption since
 iteration 2's `feat/scores-contract`, and overlays since
 `feat/scores-overlays`, and choosing a score (`--score`, `render-piece
-#:score`) since `feat/scores-range`. Modules: `(notasi json)`,
+#:score`) since `feat/scores-range`. Modules: `(notasi json-writer)`,
 `(notasi typst)`, `(notasi command)` (Guile), `typst/notasi.typ` (Typst
 template), `scripts/notasi` (the command). Contract version 3 (ADR
 0043) with the template's header labels and centred numbers (ADR 0044)
@@ -244,9 +244,9 @@ behind (an existing file at PATH is left as it was). The rest of
 ## JSON writing
 
 **Implemented** (layout slice 1, `feat/json`). A small JSON writer in
-`(notasi json)` instead of depending on guile-json. It keeps CI to a
+`(notasi json-writer)` instead of depending on guile-json. It keeps CI to a
 plain `apt install guile-3.0`, and its output order is deterministic,
-which golden tests need. Its tests are in `tests/json.scm`.
+which golden tests need. Its tests are in `tests/json-writer.scm`.
 
 ```
 (write-json value #:optional port #:key (pretty? #t))  ; port defaults to (current-output-port)
@@ -548,8 +548,8 @@ the piece once:
   page sized to its score, with its title, subtitle and caption as a
   standalone figure has them. The entry file reads one figure file per
   score and puts a page break between them.
-- Writing the piece (`--save-piece`, ADR 0058) is `(notasi save)`,
-  beside `(notasi json)`; 02 ("Saving the piece") gives its format.
+- Writing the piece (`--save-piece`, ADR 0058) is `(notasi export-piece)`,
+  beside `(notasi json-writer)`; 02 ("Saving the piece") gives its format.
   Drawing one score reads the piece once and then uses `render-score`,
   so the piece read is the one saved.
 

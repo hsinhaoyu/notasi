@@ -1,4 +1,4 @@
-;;; Unit tests for (notasi json): the JSON writer.
+;;; Unit tests for (notasi json-writer): the JSON writer.
 ;;;
 ;;; Written from doc/design/05-typst-backend.md ("JSON writing"), not
 ;;; from the implementation.
@@ -20,7 +20,7 @@
 
 (use-modules (srfi srfi-64)
              (ice-9 exceptions)
-             (notasi json))
+             (notasi json-writer))
 
 ;;; ------------------------------------------------------------------
 ;;; Helpers

@@ -4,7 +4,7 @@
 ;;;
 ;;; The figure is the JSON value of 05's contract itself: alists with
 ;;; symbol keys for objects, vectors for arrays, the symbol `null' for
-;;; null.  `write-json' from (notasi json) writes it as it is.
+;;; null.  `write-json' from (notasi json-writer) writes it as it is.
 
 (define-module (notasi layout)
   #:use-module (notasi piece)

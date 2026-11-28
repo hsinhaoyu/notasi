@@ -7,7 +7,7 @@
 ;;; both; they never use it.
 
 (define-module (notasi typst)
-  #:use-module (notasi json)
+  #:use-module (notasi json-writer)
   #:use-module (notasi layout)
   #:use-module (notasi piece)
   #:use-module (notasi reader)

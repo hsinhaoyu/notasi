@@ -16,18 +16,18 @@ flowchart TB
     piece --> layout["notasi/layout.scm"]:::code
     styles["notasi/style.scm"]:::code -- "colours, labels" --> layout
     layout --> fig(["figure<br>(a laid-out score)"]):::struct
-    fig --> json["notasi/json.scm"]:::code
-    json --> figfile[/"figure file (JSON)"/]:::file
+    fig --> jsonwriter["notasi/json-writer.scm"]:::code
+    jsonwriter --> figfile[/"figure file (JSON)"/]:::file
     figfile --> typ{{"Typst"}}:::prog
     template[/"typst/notasi.typ"/]:::file --> typ
     typ --> out[/"PDF, PNG or SVG"/]:::file
-    piece --> save["notasi/save.scm"]:::code
-    save --> saved[/"saved piece<br>(JSON or s-expression)"/]:::file
+    piece --> exportpiece["notasi/export-piece.scm"]:::code
+    exportpiece --> saved[/"saved piece<br>(JSON or s-expression)"/]:::file
 
     shell{{"a terminal:<br>scripts/notasi render ..."}}:::prog -. "runs" .-> command["notasi/command.scm<br>(run by scripts/notasi)"]:::code
     emacs{{"Emacs, with notasi-mode"}}:::prog -. "runs" .-> command
     command -.-> reader
-    command -.-> save
+    command -.-> exportpiece
     command -.-> typst["notasi/typst.scm"]:::code
     typst -.-> layout
     typst -.-> typ
@@ -53,10 +53,10 @@ There is no analysis module: notasi draws pieces, it doesn't analyse them.
 - `notasi/reader.scm`: parses textual notation into a piece
 - `notasi/expand.scm`: turns a part's notes, rests and durations into timed events
 - `notasi/layout.scm`: lays out scores
-- `notasi/json.scm`: writes JSON (the figure files Typst reads)
+- `notasi/json-writer.scm`: writes JSON (the figure files Typst reads)
 - `notasi/style.scm`: how notes look: palettes and colour schemes
 - `notasi/typst.scm`: the Guile side of the Typst backend: writes figure files and draws them with Typst
-- `notasi/save.scm`: saves a piece, as notasi read it, as JSON or an s-expression
+- `notasi/export-piece.scm`: saves a piece, as notasi read it, as JSON or an s-expression
 - `notasi/command.scm`: the `notasi` command (`scripts/notasi`)
 - `tests/`: SRFI-64 test suites
 - `examples/`: example pieces, in four folders: `gallery/`, showcase pieces such as Gold's Jaya Semara (`jaya-semara.nts`) and Tenzer's Baris (`baris.nts`), with their drawings in `gallery/images/`; `demos/`, examples of single features; `contrib/`, other people's pieces; and `manual/`, the user manual's examples and drawings. `gallery/` also holds LilyPond files (`.ly`), drawn on a staff for comparison.

@@ -48,7 +48,7 @@ label it draws is in the figure.
 so layout reads plain values. `layout-score` replaces `layout-piece`.
 
 The figure is the JSON value of 05's contract itself, version 4 (ADR
-0059), as `(notasi json)` writes it: alists with symbol keys for
+0059), as `(notasi json-writer)` writes it: alists with symbol keys for
 objects, vectors for arrays, the symbol `null` for null. Writing it out
 is then just `write-json`, and layout is tested with `equal?`. Keys come
 in this order:
@@ -103,7 +103,7 @@ with a length) in the range (since `feat/collapsed-annotation`; before,
 the pattern-name spans at the chosen level).
 Since it divides a pulse, the step is 1/k of a pulse, and
 `steps_per_pulse` is k. Every time is then converted to a whole number
-of columns. `(notasi json)` refuses rationals, so a time left
+of columns. `(notasi json-writer)` refuses rationals, so a time left
 unconverted fails loudly.
 
 When the fastest notes are quarter pulses, k is 4; an excerpt without

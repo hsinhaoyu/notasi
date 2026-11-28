@@ -906,7 +906,7 @@ tenzer1.nts (no score form)."
 ;;; --save-piece; 02, "Saving the piece"; ADR 0058).
 ;;;
 ;;; Choices where the spec leaves room:
-;;; - What is saved is checked against save-piece from (notasi save),
+;;; - What is saved is checked against save-piece from (notasi export-piece),
 ;;;   called on the piece read from the same path as given to the
 ;;;   command (so the source file names match): the file's text, or
 ;;;   stdout for `-', must be exactly what save-piece writes.  The
@@ -927,14 +927,14 @@ tenzer1.nts (no score form)."
 ;;;   tested), and no extension; each writes nothing.
 
 (define save-piece-proc
-  (let ((iface (false-if-exception (resolve-interface '(notasi save)))))
+  (let ((iface (false-if-exception (resolve-interface '(notasi export-piece)))))
     (and iface
          (module-variable iface 'save-piece)
          (module-ref iface 'save-piece))))
 
 (define (expected-json nts)
   "What save-piece writes for NTS's piece to standard output, or #f
-while (notasi save) doesn't exist."
+while (notasi export-piece) doesn't exist."
   (and save-piece-proc
        (let ((piece (read-piece-file nts)))
          (call-with-output-string

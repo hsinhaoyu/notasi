@@ -24,7 +24,7 @@ and span annotations, a part's `texts`, the `free-text` and
 `annotation-row` records and the group's `annotation` since
 `feat/collapsed-annotation`, so every record change of "Iteration 5"
 is built. Saving the piece (ADR 0058) since `feat/save-piece`, in
-`(notasi save)`. Tests in `tests/piece.scm` and `tests/save.scm`.
+`(notasi export-piece)`. Tests in `tests/piece.scm` and `tests/export-piece.scm`.
 
 Everything in this document is **Implemented** unless it says otherwise.
 
@@ -438,8 +438,8 @@ one score, 05):
 
 The format, decided for `feat/save-piece`:
 
-- **The module** is `(notasi save)`: `(piece->json piece)` gives the
-  JSON value as `(notasi json)` writes it (alists, vectors, `null`);
+- **The module** is `(notasi export-piece)`: `(piece->json piece)` gives the
+  JSON value as `(notasi json-writer)` writes it (alists, vectors, `null`);
   `(piece->sexp piece)` the tagged list; `(save-piece piece path)`
   writes it, `.json`, `.scm` or `-` (JSON to standard output) choosing
   the format, any other extension an `&error`.

@@ -109,7 +109,7 @@
              (ice-9 popen)
              (ice-9 textual-ports)
              (rnrs bytevectors)
-             (notasi json)
+             (notasi json-writer)
              (notasi layout)
              (notasi piece)
              (notasi reader)
