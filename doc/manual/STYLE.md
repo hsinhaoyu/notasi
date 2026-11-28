@@ -4,8 +4,9 @@ How to write `doc/manual/`. Read this before writing or changing a page.
 
 ## The reader
 
-A musician who plays or studies gamelan and wants a clear score. They
-may never have programmed and have never heard of Scheme. They know
+Anyone who wants clear scores of gamelan music and doesn't work on
+notasi's code: a player, a student, a teacher or a researcher (ADR
+0070). They may never have programmed and have never heard of Scheme. They know
 words like *pokok*, *kotekan*, *polos* and *sangsih*; they don't know
 words like *s-expression*, *record* or *parse*.
 

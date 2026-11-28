@@ -273,7 +273,7 @@ nothing to a drawn score.
   `notasi-mode` does, in a sentence, and a link to the manual's
   chapter, where the instructions are (ADR 0066, since
   `feat/readme-sections`).
-- **The manual:** a chapter "Writing in Emacs", for musicians, in the
+- **The manual:** a chapter "Writing in Emacs", for users, in the
   manual's style: installing (Guile and Typst, with the commands of 07;
   then the package); a first score in Emacs; when something is wrong;
   several scores in one file; the settings and keys; problems ("nothing

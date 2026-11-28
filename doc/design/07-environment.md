@@ -130,8 +130,8 @@ examples/
   stays where it is.
 - **Contributions** are credited with the piece information keys
   `:contributor`, `:source` and `:transcriber` (01), by convention.
-  **Implemented** (ADR 0063, `feat/licences`): a review rule, in
-  `CONTRIBUTING.md`, under "Licences" below.
+  **Implemented** (ADR 0063, `feat/licences`): a review rule, in the
+  README's "Contributing examples" (ADR 0069), under "Licences" below.
 
 ### Drawings
 
@@ -180,23 +180,26 @@ examples/
 and its checks (`feat/contributing`); the sections, their owners and
 the tests (`feat/readme-sections`).
 
-The README is for users: musicians who write and draw gamelan scores
-with notasi. Developers read `CONTRIBUTING.md`.
+The README is for users: anyone who writes and draws gamelan scores
+with notasi without working on its code (ADR 0070). Developers read
+`CONTRIBUTING.md`.
 
 ### Sections and owners
 
 Each section has one owner. The user writes theirs; Claude keeps its
 own in step with the code and never edits the user's. There is no
-"Why notasi" or "What it can do" section (ADR 0067).
+"Why notasi" or "What it can do" section (ADR 0067); "Contributing
+examples" moved here from `CONTRIBUTING.md` (ADR 0069).
 
 | Section | Owner |
 |---|---|
 | The title and the part before the first heading: what notasi is, the Gambangan passage on a staff and drawn by notasi, its notation, and Jaya Semara | user |
-| What is notasi for? | user |
+| Who is notasi for? | user |
 | Installing: Guile, Typst, getting notasi; the details in the manual | claude |
 | Drawing a score: commands that work on `examples/gallery/jaya-semara.nts` right after installing | claude |
 | Using notasi in Emacs (08) | claude |
 | User manual: where it is | claude |
+| Contributing examples: the rule for `examples/contrib/` (below) | claude |
 | Licence: the code is MIT, the manual and examples CC BY 4.0 (below) | user |
 
 - **Markers.** Each section says its owner in an HTML comment on the
@@ -216,12 +219,14 @@ own in step with the code and never edits the user's. There is no
 
 ### CONTRIBUTING.md
 
-**Implemented** (`feat/contributing`; the contribution rule,
-`feat/licences`).
+**Implemented** (`feat/contributing`).
 
 A new file at the top of the repository, for developers, Claude's,
-with no markers: "Layout" and "Running tests", moved from the README,
-and the contribution rule for `examples/contrib/` (below). It is
+with no markers: "Architecture", a Mermaid diagram of the modules,
+data and files and a line on each module, kept current by hand (a
+rule in CLAUDE.md, no test); "Layout" and "Running tests", moved from the README,
+and a line pointing to the README's "Contributing examples" (ADR 0069;
+the rule was here from `feat/licences`). It is
 released to `main` like the README, where GitHub links it from the
 repository page.
 
@@ -240,7 +245,7 @@ repository page.
   appear. Nothing is written into `examples/`. It needs Typst, as
   `tests/template.scm` does. Decided when `feat/readme-sections`
   started (2026-11-27):
-  - The commands are written as a musician types them in the cloned
+  - The commands are written as a user types them in the cloned
     repository: `scripts/notasi render examples/gallery/jaya-semara.nts
     …`. The test copies the piece to the same path,
     `examples/gallery/jaya-semara.nts`, under the temporary folder, and
@@ -297,7 +302,7 @@ README's sections (`feat/readme-sections`).
   the comments), and that each source keeps its rights.
 - **Contributions to `examples/contrib/`.** Contributors keep their
   copyright and license their files under CC BY 4.0. `examples/LICENSE`
-  and `CONTRIBUTING.md` say: "By adding a file to `examples/contrib/`,
+  and the README's "Contributing examples" (ADR 0069) say: "By adding a file to `examples/contrib/`,
   you license it under CC BY 4.0 and confirm you have the right to:
   it's your own transcription or composition, or its source allows
   it." Opening the PR is the agreement: no CLA, no signed commits.
@@ -318,7 +323,7 @@ README's sections (`feat/readme-sections`).
     the contributor's PR confirms they may share it.
 - **Tests** (`tests/licences.scm`, under `make check`): each of the
   three files exists and names its licence ("MIT", "CC BY 4.0");
-  `examples/LICENSE` and `CONTRIBUTING.md` both contain the
+  `examples/LICENSE` and `README.md` both contain the
   contribution sentence above, word for word. Nothing checks the
   examples' sources (ADR 0065).
 - **The README** ends with the user's "Licence" section, linking to
@@ -345,7 +350,7 @@ Depends on: nothing. Affects question 3.
 
 ### 2. A user-friendly installer
 
-How does a musician who is not a programmer install notasi?
+How does a user who is not a programmer install notasi?
 
 | Option | For | Against |
 |---|---|---|
